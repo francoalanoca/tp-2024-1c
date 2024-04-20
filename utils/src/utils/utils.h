@@ -12,13 +12,15 @@
 #include<string.h>
 #include<assert.h>
 #include<signal.h>
-
+#include <errno.h>
 
 
 #define PUERTO "4444"
 
 typedef enum
 {
+ //----------------BASICOS--------------------------------
+    HANDSHAKE = 1,
 	MENSAJE,
 	PAQUETE
 }op_code;
@@ -47,19 +49,29 @@ extern t_log* logger;
 
 void* recibir_buffer(int*, int);
 
-int iniciar_servidor(void);
-int esperar_cliente(int);
+int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
+int esperar_cliente(t_log *logger, const char *name, int socket_servidor);
+int crear_conexion(t_log *logger, const char *server_name, char *ip, char *puerto);
+
 t_list* recibir_paquete(int);
 void recibir_mensaje(int);
 int recibir_operacion(int);
 t_paquete* crear_paquete(void);
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
+
 void liberar_conexion(int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 void iterator(char* value);
 void terminar_programa(int conexion, t_log* logger, t_config* config);
-t_config* iniciar_config(void);
+t_config* iniciar_config(char* path_config);
+int recibir_informacion(int conexion, t_log* logger);
+void crear_servidor(t_log* logger);
+void handshake_cliente(t_config* config, t_log* logger, int conexion);
+/*void* crearServidor(t_log* logger);
+int esperar_cliente2(t_log* logger, const char* name, int socket_servidor) ;
+void procesar_conexion(void *void_args);
+int iniciar_servidor2(t_log* logger,  char* name, char* ip, char* puerto);*/
 
 
 #endif /* UTILS_H_ */
