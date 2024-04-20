@@ -74,3 +74,9 @@ Ante cualquier duda, podés consultar la documentación en el repositorio de
 
 [so-commons-library]: https://github.com/sisoputnfrba/so-commons-library
 [so-deploy]: https://github.com/sisoputnfrba/so-deploy
+
+## Protocolo de comunicación
+Se utilizará un header con el codigo de operación y como payload,una secuencia del tamaño de la estructura seguída por la estructura a enviar.
+
+![protocolo](https://github.com/sisoputnfrba/tp-2024-1c-Pasaron-cosas/assets/17953894/4611bcc5-4d8c-4f86-8fc6-3745d1c5b1c1)
+
