@@ -16,7 +16,7 @@
 t_log *logger;
 t_config_kernel *config_kernel;
 
-void iniciar_config1(){
+void iniciar_config_kernel(){
     config_kernel = malloc(sizeof(t_config_kernel));
      config = config_create("/home/utnso/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config");
     if (config == NULL) {
@@ -62,16 +62,9 @@ int conectar_a(char *ip, int puerto) {
 
 int main() {
     logger = log_create("kernel.log","kernel-log", 1, LOG_LEVEL_DEBUG);
-    iniciar_config1();
+    iniciar_config_kernel();
     
     
-    // Conexión con CPU (cliente)
-    int conexion_cpu = conectar_a(config_kernel->IP_CPU, config_kernel->PUERTO_CPU_DISPATCH);
-    if (conexion_cpu == -1) {
-        log_error(logger, "Error al conectar con la CPU");
-        return EXIT_FAILURE;
-    }
-
     // Conexión con Memoria (cliente)
     int conexion_memoria = conectar_a(config_kernel->IP_MEMORIA, config_kernel->PUERTO_MEMORIA);
     if (conexion_memoria == -1) {
@@ -79,6 +72,14 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    // Conexión con CPU (cliente)
+    int conexion_cpu = conectar_a(config_kernel->IP_CPU, config_kernel->PUERTO_CPU_DISPATCH);
+    if (conexion_cpu == -1) {
+        log_error(logger, "Error al conectar con la CPU");
+        return EXIT_FAILURE;
+    }
+
+    
     // Configuración del socket servidor
     struct sockaddr_in direccionServidor;
     direccionServidor.sin_family = AF_INET;
@@ -115,7 +116,7 @@ void liberar_config() {
     config_destroy(config);
 }
 
-void terminar_programa1(int conexion,t_log* logger,t_config* config){
+void terminar_programa_kernel(int conexion,t_log* logger,t_config* config){
     liberar_config();
     log_destroy(logger);
     close(conexion_cpu);

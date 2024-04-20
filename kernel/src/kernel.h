@@ -29,8 +29,8 @@ int contador_pid;
 
 // Prototipos de funciones
 void iniciar_logger();
-void iniciar_config1();
+void iniciar_config_kernel();
 //void terminar_programa1(int conexion,t_log* logger,t_config* config);
 void atender_cliente(void *arg);
-void terminar_programa1(int conexion,t_log* logger,t_config* config);
+void terminar_programa_kernel(int conexion,t_log* logger,t_config* config);
 #endif /* KERNEL_H_ */
