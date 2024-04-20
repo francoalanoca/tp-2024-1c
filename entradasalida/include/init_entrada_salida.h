@@ -43,4 +43,16 @@ static t_config_entrada_salida *cfg_entrada_salida_start()
     return cfg;
 }
 
+
+typedef enum {
+    GENERICA,
+    STDIN,
+    STDOUT,
+    DIALFS 
+} t_tipo_interfaz_enum;
+
+//PARA CONVERTIR CADENAS EN t_tipo_inferfaz_enum
+t_tipo_interfaz_enum obtener_tipo_interfaz_enum(const char* tipo_interfaz_str);
+
+void iniciar_interface(char* tipo_interfaz_str, int socket_kernel, int socket_memoria);
 #endif //TP_2024_1C_PASARONCOSAS_INIT_ENTRADA_SALIDA_H

@@ -99,6 +99,53 @@ int hacer_handshake (int socket_cliente){
     return recibir_operacion(socket_cliente);
 }
 
+t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) {
+    if (strcmp(tipo_interfaz_str, "GENERICA") == 0) {
+        return GENERICA ;
+    } else if (strcmp(tipo_interfaz_str, "STDIN") == 0) {
+        return STDIN ;
+    } else if (strcmp(tipo_interfaz_str, "STDOUT") == 0) {
+        return STDOUT ;
+    } else if (strcmp(tipo_interfaz_str, "DIALFS") == 0) {
+        return DIALFS ;    
+    } else {
+        // Manejo de error para tipos de interfaz desconocidos
+        return -1; // O podrías lanzar una excepción o manejar el error de otra manera
+    }
+}
+
+    //INICIAR INTERFACE CORRESPONDIENTE
+void iniciar_interface(char* tipo_interfaz_str, int socket_kernel, int socket_memoria){
+      
+      
+      switch (obtener_tipo_interfaz_enum (tipo_interfaz_str)) {
+            
+            case GENERICA :
+
+                log_info(logger_entrada_salida, "Interfaz GENERICA iniciada");
+                break;
+            
+            case STDIN :
+
+                log_info(logger_entrada_salida, "Interfaz STDIN iniciada");
+                break;    
+
+            case STDOUT :
+
+                log_info(logger_entrada_salida, "Interfaz STDOUT iniciada");
+                break;  
+
+            case DIALFS :
+
+                log_info(logger_entrada_salida, "Interfaz DIALFS iniciada");
+                break;                             
+
+            default:
+                log_error(logger_entrada_salida, "Algo anduvo mal en el inicio de ");
+                break;
+        }
+}
+
 
 
 

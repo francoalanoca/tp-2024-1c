@@ -26,6 +26,12 @@ int main(int argc, char *argv[]) {
 
     printf("socket de la memoria : %d",socket_memoria);   
 
+    
+    //INICIAR INTERFACE//
+    iniciar_interface(cfg_entrada_salida->TIPO_INTERFAZ, socket_kernel, socket_memoria);
+
+    
+    
     //HANDSHAKE//
 
     if ( (hacer_handshake (socket_memoria) == HANDSHAKE)){
