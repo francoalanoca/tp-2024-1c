@@ -202,12 +202,23 @@ void liberar_conexion(int socket_cliente)
 	close(socket_cliente);
 }
 
-
-t_config* iniciar_config(void)
+bool config_has_all_properties(t_config *cfg, char **properties)
 {
-	t_config* nuevo_config;
+    for (uint8_t i = 0; properties[i] != NULL; i++)
+    {
+        if (!config_has_property(cfg, properties[i]))
+            return false;
+    }
+    return true;
+}
 
-	return nuevo_config;
+t_config* iniciar_config(char* path_config) {
+    t_config* nuevo_config;
+    if((nuevo_config = config_create(path_config)) == NULL){ //config_create: Devuelve un puntero hacia la estructura creada o NULL en caso de no encontrar el archivo en el path especificado
+        printf("No pude leer la config");
+        exit(2);
+    }
+    return nuevo_config;
 }
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)
@@ -216,4 +227,45 @@ void terminar_programa(int conexion, t_log* logger, t_config* config)
 	  config_destroy(config);
 	  liberar_conexion(conexion);
 
+}
+
+
+// CLIENTE SE INTENTA CONECTAR A SERVER ESCUCHANDO EN IP:PUERTO
+int generar_conexion(t_log* logger, const char* server_name, char* ip, char* puerto) {
+    struct addrinfo hints, *servinfo;
+
+    // Init de hints
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    // Recibe addrinfo
+    getaddrinfo(ip, puerto, &hints, &servinfo);
+
+    errno = 0;
+    // Crea un socket con la informacion recibida (del primero, suficiente)
+    int socket_cliente = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+    int yes=1;
+    setsockopt(socket_cliente, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
+    // Fallo en crear el socket
+    if(socket_cliente == -1) {
+        printf("socket() devolvio: %s \n",strerror(errno));
+        log_error(logger, "Error creando el socket para  %s:%s", ip, puerto);
+        log_error(logger, "y puerto %s", puerto);
+        //freeaddrinfo(servinfo);
+        return 0;
+    }
+
+    // Error conectando
+    if(connect(socket_cliente, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+        log_error(logger, "Error al conectar (a %s)\n", server_name);
+        freeaddrinfo(servinfo);
+        return 0;
+    } else
+        log_info(logger, "Cliente conectado en %s:%s (a %s)\n", ip, puerto, server_name);
+
+    freeaddrinfo(servinfo);
+
+    return socket_cliente;
 }
