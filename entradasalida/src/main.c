@@ -1,11 +1,10 @@
 #include "../include/main.h"
 
 char *path_config;
-char *ip_es;
-
-int main(int argc, char *argv[]) {
-    path_config = argv[1];
-    ip_es = argv[2];
+char *nombre_interfaz;
+int main(char argc, char *argv[]) {
+    nombre_interfaz = argv[1];
+    path_config = argv[2];
     int socket_memoria;
     int socket_kernel;
 
@@ -18,13 +17,13 @@ int main(int argc, char *argv[]) {
 
 
     //CONEXION//
-    socket_kernel = generar_conexion(logger_entrada_salida, "KERNEL", cfg_entrada_salida->IP_KERNEL, cfg_entrada_salida->PUERTO_KERNEL);
+    socket_kernel = crear_conexion(logger_entrada_salida, "KERNEL", cfg_entrada_salida->IP_KERNEL, cfg_entrada_salida->PUERTO_KERNEL);
 
-       printf("socket de la kernel : %d",socket_kernel);
+       printf("socket de la kernel : %d\n",socket_kernel);
 
-    socket_memoria = generar_conexion(logger_entrada_salida, "MEMORIA", cfg_entrada_salida->IP_MEMORIA, cfg_entrada_salida->PUERTO_MEMORIA);
+    socket_memoria = crear_conexion(logger_entrada_salida, "MEMORIA", cfg_entrada_salida->IP_MEMORIA, cfg_entrada_salida->PUERTO_MEMORIA);
 
-    printf("socket de la memoria : %d",socket_memoria);   
+    printf("socket de la memoria : %d\n",socket_memoria);   
 
     
     //INICIAR INTERFACE//
@@ -35,19 +34,19 @@ int main(int argc, char *argv[]) {
     //HANDSHAKE//
 
     if ( (hacer_handshake (socket_memoria) == HANDSHAKE)){
-        log_info(logger_entrada_salida, "Correcto en handshake con memoria");
+        log_info(logger_entrada_salida, "Correcto en handshake con memoria\n");
     }
     else {
-        log_info(logger_entrada_salida, "Error en handshake con memoria");
+        log_info(logger_entrada_salida, "Error en handshake con memoria\n");
         return EXIT_FAILURE;
     }
 
 
     if ( (hacer_handshake (socket_kernel) == HANDSHAKE)){
-        log_info(logger_entrada_salida, "Correcto en handshake con kernel");
+        log_info(logger_entrada_salida, "Correcto en handshake con kernel\n");
     }
     else {
-        log_info(logger_entrada_salida, "Error en handshake con kernel");
+        log_info(logger_entrada_salida, "Error en handshake con kernel\n");
         return EXIT_FAILURE;
     }
    

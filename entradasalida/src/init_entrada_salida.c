@@ -88,10 +88,11 @@ int init(char *path_config) {
         return false;
     }
     //inicializo el archivo de configuracion
-    file_cfg_entrada_salida = iniciar_config(path_config);
+    file_cfg_entrada_salida = iniciar_config(path_config, logger_entrada_salida);
 
     return checkProperties(path_config);
 }
+
 int hacer_handshake (int socket_cliente){
     uint32_t handshake  = HANDSHAKE;
 
@@ -121,8 +122,7 @@ void iniciar_interface(char* tipo_interfaz_str, int socket_kernel, int socket_me
       switch (obtener_tipo_interfaz_enum (tipo_interfaz_str)) {
             
             case GENERICA :
-
-                log_info(logger_entrada_salida, "Interfaz GENERICA iniciada");
+                iniciar_interfaz_generica (socket_memoria);
                 break;
             
             case STDIN :
@@ -141,7 +141,7 @@ void iniciar_interface(char* tipo_interfaz_str, int socket_kernel, int socket_me
                 break;                             
 
             default:
-                log_error(logger_entrada_salida, "Algo anduvo mal en el inicio de ");
+                log_error(logger_entrada_salida, "Algo anduvo mal en el inicio de interface ");
                 break;
         }
 }

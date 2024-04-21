@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "generica.h": "c",
+        "utils.h": "c",
+        "init_entrada_salida.h": "c"
+    }
+}
