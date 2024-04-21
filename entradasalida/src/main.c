@@ -1,15 +1,16 @@
 #include "../include/main.h"
 
 char *path_config;
-char *nombre_interfaz;
+char *nombre_interfaz_custom;
 int main(char argc, char *argv[]) {
-    nombre_interfaz = argv[1];
+    nombre_interfaz_custom = argv[1];
     path_config = argv[2];
     int socket_memoria;
     int socket_kernel;
 
-    printf("iniciando ");
-    if (!init(path_config) || !cargar_configuracion(path_config)) {
+    printf("iniciando\n");
+      printf("nombre de interfaz custom: %s \n",nombre_interfaz_custom);
+    if (!init(path_config) || !cargar_configuracion(nombre_interfaz_custom, path_config)) {
         cerrar_programa();
         printf("No se pudo inicializar entrada salida");
         return EXIT_FAILURE;

@@ -36,7 +36,7 @@ int checkProperties(char *path_config) {
     return true;
 }
 
-int cargar_configuracion(char *path) {
+int cargar_configuracion(char *nombre_interfaz_custom, char *path) {
 
     file_cfg_entrada_salida = config_create(path);
 
@@ -70,12 +70,14 @@ int cargar_configuracion(char *path) {
     cfg_entrada_salida->RETRASO_COMPACTACION = config_get_int_value(file_cfg_entrada_salida, "RETRASO_COMPACTACION");
     log_info(logger_entrada_salida, "RETRASO_COMPACTACION cargado correctamente: %d", cfg_entrada_salida->RETRASO_COMPACTACION);
 
+    cfg_entrada_salida->NOMBRE_INTERFAZ = strdup(nombre_interfaz_custom);
+    log_info(logger_entrada_salida, "NOMBRE_INTERFAZ cargado correctamente: %s", cfg_entrada_salida->NOMBRE_INTERFAZ);
 
     log_info(logger_entrada_salida, "Archivo de configuracion cargado correctamente");
     config_destroy(file_cfg_entrada_salida);
     return true;
 }
-
+ 
 
 
 int init(char *path_config) {

@@ -8,7 +8,7 @@
 
 int checkProperties(char *path_config);
 
-int cargar_configuracion(char *path);
+int cargar_configuracion(char *nombre_interfaz_custom, char *path);
 
 int init(char *path_config);
 
