@@ -29,11 +29,13 @@ int main(int argc, char* argv[]) {
 	char* ip;
 
 
+
      printf("iniciando ");
     if (!init(path_config) || !cargar_configuracion(path_config)) {
         cerrar_programa();
         printf("No se pudo inicializar entrada salida");
         return EXIT_FAILURE;
+
     }
 	log_info(logger_cpu, "empieza el programa");
     crear_servidor_dispatch();
