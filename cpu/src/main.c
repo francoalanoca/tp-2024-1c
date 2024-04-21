@@ -37,11 +37,19 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
 
     }
+    
 	log_info(logger_cpu, "empieza el programa");
     crear_servidor_dispatch();
     log_info(logger_cpu, "se creo el servidor");
      socket_memoria = crear_conexion(logger_cpu, "MEMORIA", cfg_cpu->IP_MEMORIA, cfg_cpu->PUERTO_MEMORIA);
-    handshake_cliente(cfg_cpu, logger_cpu, socket_memoria);
+       
+     if ( (hacer_handshake (socket_memoria) == HANDSHAKE)){
+        log_info(logger_cpu, "Correcto en handshake con kernel");
+    }
+    else {
+        log_info(logger_cpu, "Error en handshake con kernel");
+        return EXIT_FAILURE;
+    }
 
      
    

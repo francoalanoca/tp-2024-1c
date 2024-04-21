@@ -32,3 +32,10 @@ void procesar_conexion(int cliente_socket){
     printf("El socket del cliente es: %d", cliente_socket);
 }
 
+int hacer_handshake (int socket_cliente){
+    uint32_t handshake  = HANDSHAKE;
+
+    send(socket_cliente, &handshake, sizeof(uint32_t), NULL);
+    return recibir_operacion(socket_cliente);
+}
+

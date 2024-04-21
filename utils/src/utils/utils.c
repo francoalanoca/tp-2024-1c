@@ -211,15 +211,6 @@ void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
 	paquete->buffer->size += tamanio + sizeof(int);
 }
 
-bool config_has_all_properties(t_config *cfg, char **properties)
-{
-    for (uint8_t i = 0; properties[i] != NULL; i++)
-    {
-        if (!config_has_property(cfg, properties[i]))
-            return false;
-    }
-    return true;
-}
 
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
@@ -243,17 +234,6 @@ void liberar_conexion(int socket_cliente)
 	close(socket_cliente);
 }
 
-
-
-t_config* iniciar_config(char* path_config) {
-    t_config* nuevo_config;
-    if((nuevo_config = config_create(path_config)) == NULL){ //config_create: Devuelve un puntero hacia la estructura creada o NULL en caso de no encontrar el archivo en el path especificado
-        printf("No pude leer la config");
-        exit(2);
-    }
-    return nuevo_config;
-
-}
 
 bool config_has_all_properties(t_config *cfg, char **properties)
 {
