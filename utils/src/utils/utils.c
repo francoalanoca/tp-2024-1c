@@ -31,6 +31,8 @@ int iniciar_servidor(void)
 	return socket_servidor;
 }
 
+
+
 int esperar_cliente(int socket_servidor)
 {
 
@@ -221,11 +223,13 @@ bool config_has_all_properties(t_config *cfg, char **properties)
     return true;
 }
 
-t_config* iniciar_config(char* path_config) {
+t_config* iniciar_config(char* path_config, t_log* logger) {
     t_config* nuevo_config;
     if((nuevo_config = config_create(path_config)) == NULL){ //config_create: Devuelve un puntero hacia la estructura creada o NULL en caso de no encontrar el archivo en el path especificado
-        printf("No pude leer la config");
-        exit(2);
+        printf("No pude leer la config"); // Usar loggs
+        log_error(logger, "No se pudo leer la config :(");
+		//exit(2); // Por qué 2???
+		exit(EXIT_FAILURE);
     }
     return nuevo_config;
 

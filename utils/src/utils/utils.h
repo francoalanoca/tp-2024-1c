@@ -61,7 +61,7 @@ void liberar_conexion(int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 void iterator(char* value);
 void terminar_programa(int conexion, t_log* logger, t_config* config);
-t_config* iniciar_config(char* path_config);
+t_config* iniciar_config(char* path_config, t_log*);
 bool config_has_all_properties(t_config *cfg, char **properties);
 int generar_conexion(t_log* logger, const char* server_name, char* ip, char* puerto);
 int crear_conexion(char *ip, char* puerto);
