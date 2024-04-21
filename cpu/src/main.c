@@ -3,78 +3,69 @@
 #include <utils/hello.h>
 #include <utils/utils.h>
 #include<commons/config.h>
+#include <pthread.h>
+#include "../include/main.h"
+
+/*void* servidor(void* args) {
+    t_log* logger = (t_log*)args;
+    // Aquí implementa la lógica del servidor
+    // Por ejemplo, aceptar conexiones entrantes y manejarlas
+    // Puedes utilizar la función crear_servidor(logger) aquí si ya está implementada
+    log_info(logger, "Servidor en funcionamiento");
+    // Ejemplo de bucle de escucha (debes implementar esto según tus necesidades)
+    crear_servidor(logger);
+    return NULL;
+}*/
+
+char *path_config;
+
 
 int main(int argc, char* argv[]) {
     decir_hola("CPU");
 
-	int conexion;
+    path_config = argv[1];
+
+	int socket_memoria;
 	char* ip;
-	char* puerto;
 
-	t_log* logger;
-	t_config* config;
 
-    logger = log_create("log.log", "CPU", 1, LOG_LEVEL_DEBUG);
 
-	config = iniciar_config_cpu();
+     printf("iniciando ");
+    if (!init(path_config) || !cargar_configuracion(path_config)) {
+        cerrar_programa();
+        printf("No se pudo inicializar entrada salida");
+        return EXIT_FAILURE;
 
-	config = config_create("/home/utnso/tp-2024-1c-Pasaron-cosas/cpu/cpu.config");
-	
-	 if (config == NULL) {
-        printf("Error al crear el config, finaliza el programa.\n");
-        return 1; 
     }
-	
-
-	/*config_set_value(config, "IP_MEMORIA", "127.0.0.1");
-    config_set_value(config, "PUERTO_MEMORIA", "8002");
-    config_set_value(config, "PUERTO_ESCUCHA_DISPATCH", "8006");
-    config_set_value(config, "PUERTO_ESCUCHA_INTERRUPT", "8007");
-    config_set_value(config, "CANTIDAD_ENTRADAS_TLB", "32");
-    config_set_value(config, "ALGORITMO_TLB", "FIFO");*/
-
-	 if (config_save(config) == -1) {
-        printf("Error al guardar el archivo de configuración.\n");
+    
+	log_info(logger_cpu, "empieza el programa");
+    crear_servidor_dispatch();
+    log_info(logger_cpu, "se creo el servidor");
+     socket_memoria = crear_conexion(logger_cpu, "MEMORIA", cfg_cpu->IP_MEMORIA, cfg_cpu->PUERTO_MEMORIA);
+       
+     if ( (hacer_handshake (socket_memoria) == HANDSHAKE)){
+        log_info(logger_cpu, "Correcto en handshake con kernel");
+    }
+    else {
+        log_info(logger_cpu, "Error en handshake con kernel");
+        return EXIT_FAILURE;
     }
 
-   // log_info(logger, "Valor de la clave 'IP_MEMORIA': %s", config_get_string_value(config, "IP_MEMORIA"));
-	conexion = crear_conexion(config_get_string_value(config,"IP_MEMORIA"), config_get_string_value(config,"PUERTO_MEMORIA"));
+     
+   
 
-    //inicio handshake
-   // enviar_handshake(conexion);
-    size_t bytes;
 
-int32_t handshake = 1;
-int32_t result;
-
-bytes = send(conexion, &handshake, sizeof(int32_t), 0);
-bytes = recv(conexion, &result, sizeof(int32_t), MSG_WAITALL);
-
-if (result == 0) {
-    // Handshake OK
-    log_info(logger,"Handshake OK");
-} else {
-    // Handshake ERROR
-    log_info(logger,"Handshake ERROR");
-}
-    //fin handshake
-
-    enviar_mensaje("MENSAJE A MEMORIA",conexion);
 	
 
-	terminar_programa(conexion, logger, config);
+
+	terminar_programa(socket_memoria, logger_cpu, cfg_cpu);
     return 0;
 }
-
+/*
 t_log* iniciar_logger(void)
 {
 	t_log* nuevo_logger;
 
 	return nuevo_logger;
-}
-
-void enviar_handshake(int conexion)
-{
-    
-}
+}*/
 

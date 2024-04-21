@@ -2,45 +2,79 @@
 
 t_log* logger;
 
+typedef struct {
+    t_log *log;
+    int fd;
+    char *server_name;
+} t_procesar_conexion_args;
 
-int iniciar_servidor(void)
-{
+#define handle_error(msg) \
+           do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
-	int socket_servidor;
 
-	struct addrinfo hints, *servinfo, *p;
+int iniciar_servidor(t_log* logger, const char* name, char* ip, char* puerto) {
+    //printf("ip: %s, puerto: %s", ip, puerto);
+    log_info(logger, "comienza iniciar_servidor");
+    
+    int socket_servidor;
+    struct addrinfo hints, *servinfo;
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
+    // Inicializando hints
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+    log_info(logger, "hizo memset");
+    log_info(logger, "ip:%s, puerto:%d", ip,puerto);
+    // Recibe los addrinfo
+    getaddrinfo(ip, puerto, &hints, &servinfo);
+    log_info(logger, "hizo getaddrinfo");
 
-	getaddrinfo(NULL, PUERTO, &hints, &servinfo);
+    bool conecto = false;
+    log_info(logger, "antes del for");
+    // Itera por cada addrinfo devuelto
+    for (struct addrinfo *p = servinfo; p != NULL; p = p->ai_next) {
+        socket_servidor = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if (socket_servidor == -1) // fallo de crear socket
+            continue;
+        int yes=1;
+        setsockopt(socket_servidor, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
+        if (bind(socket_servidor, p->ai_addr, p->ai_addrlen) == -1) {
+            // Si entra aca fallo el bind
+            handle_error("bind");
+            close(socket_servidor);
+            continue;
+        }
+        // Ni bien conecta uno nos vamos del for
+        conecto = true;
+        break;
+    }
+     log_info(logger, "despues del for");
 
-	socket_servidor = socket(servinfo -> ai_family,
-							 servinfo -> ai_socktype,
-							 servinfo -> ai_protocol);
-							 
-	bind(socket_servidor,servinfo -> ai_addr, servinfo -> ai_addrlen);
+    if(!conecto) {
+        free(servinfo);
+        return 0;
+    }
 
-	listen(socket_servidor, SOMAXCONN);
+    listen(socket_servidor, SOMAXCONN); // Escuchando (hasta SOMAXCONN conexiones simultaneas)
 
-	freeaddrinfo(servinfo);
-	log_trace(logger, "Listo para escuchar a mi cliente");
+    // Aviso al logger
+    log_info(logger, "Escuchando en puerto: %s (%s)\n", ip, puerto, name);
 
-	return socket_servidor;
+    freeaddrinfo(servinfo);
+
+    return socket_servidor;
 }
 
+int esperar_cliente(t_log* logger, const char* name, int socket_servidor) {
+    struct sockaddr_in dir_cliente;
+    socklen_t tam_direccion = sizeof(struct sockaddr_in);
 
+    int socket_cliente = accept(socket_servidor, (void*) &dir_cliente, &tam_direccion);
 
-int esperar_cliente(int socket_servidor)
-{
+    log_info(logger, "Cliente conectado (a %s)\n", name);
 
-	int socket_cliente;
-	socket_cliente = accept(socket_servidor,NULL,NULL);
-	log_info(logger, "Se conecto un cliente!");
-
-	return socket_cliente;
+    return socket_cliente;
 }
 
 int recibir_operacion(int socket_cliente)
@@ -112,48 +146,43 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 	return magic;
 }
 
-int crear_conexion(char *ip, char* puerto)
-{
-	struct addrinfo hints;
-	struct addrinfo *server_info;
+int crear_conexion(t_log* logger, const char* server_name, char* ip, char* puerto) {
+    struct addrinfo hints, *servinfo;
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
+    // Init de hints
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
 
-	getaddrinfo(ip, puerto, &hints, &server_info);
+    // Recibe addrinfo
+    getaddrinfo(ip, puerto, &hints, &servinfo);
 
-	int socket_cliente = 0;
-	socket_cliente = socket(server_info -> ai_family,
-							server_info -> ai_socktype,
-							server_info -> ai_protocol);
+    errno = 0;
+    // Crea un socket con la informacion recibida (del primero, suficiente)
+    int socket_cliente = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
+    int yes=1;
+    setsockopt(socket_cliente, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
+    // Fallo en crear el socket
+    if(socket_cliente == -1) {
+        printf("socket() devolvio: %s \n",strerror(errno));
+        log_error(logger, "Error creando el socket para %s", ip, puerto);
+        log_error(logger, "y puerto %s", puerto);
+        //freeaddrinfo(servinfo);
+        return 0;
+    }
 
-	connect(socket_cliente, server_info -> ai_addr, server_info -> ai_addrlen);
+    // Error conectando
+    if(connect(socket_cliente, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
+        log_error(logger, "Error al conectar (a %s)\n", server_name);
+        freeaddrinfo(servinfo);
+        return 0;
+    } else
+        log_info(logger, "Cliente conectado en %s:%s (a %s)\n", ip, puerto, server_name);
 
-	freeaddrinfo(server_info);
+    freeaddrinfo(servinfo);
 
-	return socket_cliente;
-}
-
-void enviar_mensaje(char* mensaje, int socket_cliente)
-{
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-
-	paquete->codigo_operacion = MENSAJE;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(mensaje) + 1;
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
-
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-
-	void* a_enviar = serializar_paquete(paquete, bytes);
-
-	send(socket_cliente, a_enviar, bytes, 0);
-
-	free(a_enviar);
-	eliminar_paquete(paquete);
+    return socket_cliente;
 }
 
 
@@ -182,6 +211,7 @@ void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
 	paquete->buffer->size += tamanio + sizeof(int);
 }
 
+
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
 	int bytes = paquete->buffer->size + 2*sizeof(int);
@@ -204,14 +234,6 @@ void liberar_conexion(int socket_cliente)
 	close(socket_cliente);
 }
 
-
-
-t_config* iniciar_config_cpu(void)
-{
-	t_config* nuevo_config;
-
-	return nuevo_config;
-}
 
 bool config_has_all_properties(t_config *cfg, char **properties)
 {
@@ -244,43 +266,3 @@ void terminar_programa(int conexion, t_log* logger, t_config* config)
 }
 
 
-// CLIENTE SE INTENTA CONECTAR A SERVER ESCUCHANDO EN IP:PUERTO
-int generar_conexion(t_log* logger, const char* server_name, char* ip, char* puerto) {
-    struct addrinfo hints, *servinfo;
-
-    // Init de hints
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-
-    // Recibe addrinfo
-    getaddrinfo(ip, puerto, &hints, &servinfo);
-
-    errno = 0;
-    // Crea un socket con la informacion recibida (del primero, suficiente)
-    int socket_cliente = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-    int yes=1;
-    setsockopt(socket_cliente, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
-    // Fallo en crear el socket
-    if(socket_cliente == -1) {
-        printf("socket() devolvio: %s \n",strerror(errno));
-        log_error(logger, "Error creando el socket para  %s:%s", ip, puerto);
-        log_error(logger, "y puerto %s", puerto);
-        //freeaddrinfo(servinfo);
-        return 0;
-    }
-
-    // Error conectando
-    if(connect(socket_cliente, servinfo->ai_addr, servinfo->ai_addrlen) == -1) {
-        log_error(logger, "Error al conectar (a %s)\n", server_name);
-        freeaddrinfo(servinfo);
-        return 0;
-    } else 
-        log_info(logger, "Cliente conectado en %s:%s (a %s)\n", ip, puerto, server_name);
-		
-
-    freeaddrinfo(servinfo);
-
-    return socket_cliente;
-}

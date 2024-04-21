@@ -3,8 +3,11 @@
 		"debug.onTaskErrors": "abort",
 		"files.associations": {
 			"*.h": "c",
+<<<<<<< HEAD
 			"init_entradasalida": "c",
 			"*.tcc": "c"
+=======
+>>>>>>> 31115a2089bdaff076e6d266d545bd6c225c0812
 		},
 		"C_Cpp.errorSquiggles": "disabled",
 	},

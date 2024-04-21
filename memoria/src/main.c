@@ -9,6 +9,7 @@ int main(int argc, char* argv[]) {
 	t_config* config;
 	char* puerto;
 	bool flag_conexion_activa;
+	char* nombre = "cliente";
 
 	// Hacer los if correspondientes en caso de fallar
     logger = log_create("memoria.log", "Memoria LOG", 1, LOG_LEVEL_DEBUG);
@@ -22,7 +23,7 @@ int main(int argc, char* argv[]) {
 	log_info(logger, "Servidor listo para recibir al cliente");
 
 	while (1) {
-		int cliente_fd = esperar_cliente(server_fd);
+		int cliente_fd = esperar_cliente(logger, nombre, server_fd);
         //inicio handshake
         size_t bytes;
 

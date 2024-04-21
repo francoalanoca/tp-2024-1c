@@ -48,9 +48,9 @@ extern t_log* logger;
 extern t_log* logger;
 
 void* recibir_buffer(int*, int);
-
-int iniciar_servidor(void);
-int esperar_cliente(int);
+int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
+int esperar_cliente(t_log *logger, const char *name, int socket_servidor);
+int crear_conexion(t_log *logger, const char *server_name, char *ip, char *puerto);
 t_list* recibir_paquete(int);
 void recibir_mensaje(int);
 int recibir_operacion(int);
@@ -62,9 +62,13 @@ void eliminar_paquete(t_paquete* paquete);
 void iterator(char* value);
 void terminar_programa(int conexion, t_log* logger, t_config* config);
 t_config* iniciar_config(char* path_config, t_log*);
+int recibir_informacion(int conexion, t_log* logger);
+void crear_servidor(t_log* logger);
+void handshake_cliente(t_config* config, t_log* logger, int conexion);
 bool config_has_all_properties(t_config *cfg, char **properties);
-int generar_conexion(t_log* logger, const char* server_name, char* ip, char* puerto);
-int crear_conexion(char *ip, char* puerto);
+
+
+
 
 
 
