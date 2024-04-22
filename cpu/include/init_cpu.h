@@ -24,7 +24,7 @@ typedef struct
 {
     char *IP_MEMORIA;
     int PUERTO_MEMORIA;
-    int PUERTO_ESCUCHA_DISPATCH;
+    char* PUERTO_ESCUCHA_DISPATCH;
     int PUERTO_ESCUCHA_INTERRUPT;
     int CANTIDAD_ENTRADAS_TLB;
     char *ALGORITMO_TLB;
