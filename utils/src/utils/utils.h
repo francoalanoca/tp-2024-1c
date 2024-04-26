@@ -22,8 +22,15 @@ typedef enum
  //----------------BASICOS--------------------------------
     HANDSHAKE = 1,
 	MENSAJE,
-	PAQUETE
+	PAQUETE,
+	PCB = 30
 }op_code;
+
+typedef struct {
+    t_log *log;
+    int fd;
+    char *server_name;
+} t_procesar_conexion_args;
 
 typedef struct
 {

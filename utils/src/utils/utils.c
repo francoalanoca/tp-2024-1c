@@ -2,11 +2,12 @@
 
 t_log* logger;
 
+/*
 typedef struct {
     t_log *log;
     int fd;
     char *server_name;
-} t_procesar_conexion_args;
+} t_procesar_conexion_args;*/
 
 #define handle_error(msg) \
            do { perror(msg); exit(EXIT_FAILURE); } while (0)
