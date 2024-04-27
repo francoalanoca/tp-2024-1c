@@ -1,7 +1,7 @@
 #include"../include/servidorCpu.h"
 char* puerto_dispatch;
 int fd_mod2 = -1;
-pcb *pcb_actual;
+//pcb *pcb_actual;
 
 void* crear_servidor_dispatch(){
     log_info(logger_cpu, "empieza crear_servidor_dispatch");

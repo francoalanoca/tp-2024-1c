@@ -30,7 +30,7 @@ typedef struct
 
 }RegistrosCPU;
 
-
+pcb *pcb_actual;
 
 
 int checkProperties(char *path_config);
