@@ -12,7 +12,7 @@
 bool generar_conexiones();
 void *crear_servidor_dispatch();
 int server_escuchar(t_log *logger, char *server_name, int server_socket);
-void procesar_conexion(int cliente_socket);
+void procesar_conexion(void *v_args);
 int hacer_handshake (int socket_cliente);
 
 //void *conectarConMemoria();

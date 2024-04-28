@@ -3,6 +3,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include <stdint.h>
 #include<sys/socket.h>
 #include<unistd.h>
 #include<netdb.h>
@@ -60,30 +61,32 @@ typedef struct
 	t_buffer* buffer;
 } t_paquete;
 
+
+
+typedef struct 
+{
+    uint32_t PC;
+    uint8_t AX;
+    uint8_t BX;
+    uint8_t CX;
+    uint8_t DX;
+    uint32_t EAX;
+    uint32_t EBX;
+    uint32_t ECX;
+    uint32_t EDX;
+    uint32_t SI;
+    uint32_t DI;
+
+
+}t_registros_CPU;
+
 typedef struct 
 {
    int pid;
    int program_counter;
    int quantum;
-   RegistrosCPU registrosCPU;
-}pcb;
-
-typedef struct 
-{
-    unit32_t PC;
-    unit8_t AX;
-    unit8_t BX;
-    unit8_t CX;
-    unit8_t DX;
-    unit32_t EAX;
-    unit32_t EBX;
-    unit32_t ECX;
-    unit32_t EDX;
-    unit32_t SI;
-    unit32_t DI;
-
-
-}RegistrosCPU;
+   t_registros_CPU registrosCPU;
+}t_pcb;
 
 
 extern t_log* logger;

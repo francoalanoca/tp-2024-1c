@@ -78,6 +78,7 @@ void procesar_conexion(void *v_args){
             }
     }    
 }
+}
 
 int hacer_handshake (int socket_cliente){
     uint32_t handshake  = HANDSHAKE;

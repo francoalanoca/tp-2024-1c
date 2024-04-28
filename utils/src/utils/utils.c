@@ -2,7 +2,7 @@
 
 t_log* logger;
 
-pcb *pcb_actual;
+
 
 /*
 typedef struct {
