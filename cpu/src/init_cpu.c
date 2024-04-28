@@ -43,8 +43,8 @@ int cargar_configuracion(char *path) {
     cfg_cpu->PUERTO_MEMORIA = config_get_int_value(file_cfg_cpu, "PUERTO_MEMORIA");
     log_info(logger_cpu, "PUERTO_MEMORIA cargado correctamente: %d", cfg_cpu->PUERTO_MEMORIA);
 
-    cfg_cpu->PUERTO_ESCUCHA_DISPATCH = config_get_int_value(file_cfg_cpu, "PUERTO_ESCUCHA_DISPATCH");
-    log_info(logger_cpu, "PUERTO_ESCUCHA_DISPATCH cargado correctamente: %d", cfg_cpu->PUERTO_ESCUCHA_DISPATCH);
+    cfg_cpu->PUERTO_ESCUCHA_DISPATCH = strdup(config_get_string_value(file_cfg_cpu, "PUERTO_ESCUCHA_DISPATCH"));
+    log_info(logger_cpu, "PUERTO_ESCUCHA_DISPATCH cargado correctamente: %s", cfg_cpu->PUERTO_ESCUCHA_DISPATCH);
 
     cfg_cpu->PUERTO_ESCUCHA_INTERRUPT = config_get_int_value(file_cfg_cpu, "PUERTO_ESCUCHA_INTERRUPT");
     log_info(logger_cpu, "PUERTO_ESCUCHA_INTERRUPT cargado correctamente: %d", cfg_cpu->PUERTO_ESCUCHA_INTERRUPT);
@@ -72,7 +72,7 @@ int init(char *path_config) {
         return false;
     }
     //inicializo el archivo de configuracion
-    file_cfg_cpu = iniciar_config(path_config);
+    file_cfg_cpu = iniciar_config(path_config,logger_cpu);
 
     return checkProperties(path_config);
 }

@@ -22,8 +22,31 @@ typedef enum
  //----------------BASICOS--------------------------------
     HANDSHAKE = 1,
 	MENSAJE,
-	PAQUETE
+	PAQUETE,
+	PCB = 30,
+	PROXIMA_INSTRUCCION = 40
 }op_code;
+
+typedef struct {
+    t_log *log;
+    int fd;
+    char *server_name;
+} t_procesar_conexion_args;
+
+typedef struct {
+    uint8_t idLength;
+    char* id; // el id seria el nombre de la instruccion
+    uint8_t param1Length;
+    char* param1;
+    uint8_t param2Length;
+    char* param2;
+    uint8_t param3Length;
+    char* param3;
+    uint8_t param4Length;
+    char* param4;
+    uint8_t param5Length;
+    char* param5;
+} instr_t;
 
 typedef struct
 {

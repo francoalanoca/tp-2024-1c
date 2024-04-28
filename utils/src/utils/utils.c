@@ -2,11 +2,12 @@
 
 t_log* logger;
 
+/*
 typedef struct {
     t_log *log;
     int fd;
     char *server_name;
-} t_procesar_conexion_args;
+} t_procesar_conexion_args;*/
 
 #define handle_error(msg) \
            do { perror(msg); exit(EXIT_FAILURE); } while (0)
@@ -25,7 +26,7 @@ int iniciar_servidor(t_log* logger, const char* name, char* ip, char* puerto) {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
     log_info(logger, "hizo memset");
-    log_info(logger, "ip:%s, puerto:%d", ip,puerto);
+    //log_info(logger, "ip:%s, puerto:%s", ip,puerto);
     // Recibe los addrinfo
     getaddrinfo(ip, puerto, &hints, &servinfo);
     log_info(logger, "hizo getaddrinfo");
