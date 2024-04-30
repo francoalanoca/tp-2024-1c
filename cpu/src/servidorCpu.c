@@ -72,8 +72,9 @@ void procesar_conexion(void *v_args){
     switch (cop){
             case PCB:
             {
+                t_proceso* proceso = malloc(sizeof(t_proceso)); //REVISAR
                 log_info(logger_cpu, "PCB RECIBIDO");
-               // pcb_actual = deserializar_pcb(cliente_socket);
+               // proceso_actual = deserializar_proceso(cliente_socket); //DEFINIR FUNCION PARA DESERIALIZAR
                 break;
             }
     }    

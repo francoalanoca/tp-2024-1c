@@ -34,9 +34,18 @@ typedef struct {
     char *server_name;
 } t_procesar_conexion_args;
 
+typedef enum
+{
+    SET,
+	SUM,
+	SUB,
+	JNZ,
+	IO_GEN_SLEEP
+}tipo_instruccion;
+
 typedef struct {
     uint8_t idLength;
-    char* id; // el id seria el nombre de la instruccion
+    tipo_instruccion id; // el id seria el nombre de la instruccion
     uint8_t param1Length;
     char* param1;
     uint8_t param2Length;
@@ -87,6 +96,18 @@ typedef struct
    int quantum;
    t_registros_CPU registrosCPU;
 }t_pcb;
+
+typedef struct {
+    char* nombre;
+    char* tipo;//Debe ser un enum?
+}t_interfaz;
+
+typedef struct {
+    t_pcb* pcb; 
+    uint8_t cantidad_instrucciones;
+    t_list* instrucciones;
+    t_list* interfaces;
+}t_proceso;
 
 
 extern t_log* logger;

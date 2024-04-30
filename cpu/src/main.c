@@ -6,8 +6,10 @@
 #include <pthread.h>
 #include "../include/main.h"
 
-t_pcb* pcb_actual;
+
 char *path_config;
+
+extern t_proceso* proceso_actual;
 
 
 int main(int argc, char* argv[]) {
@@ -43,7 +45,7 @@ int main(int argc, char* argv[]) {
     }
 
      
-   ciclo_de_instrucciones(socket_memoria,logger_cpu,cfg_cpu); //TODO: Crear esta funcion, para el fetch mandar mensaje a memoria usando PROXIMA_INSTRUCCION
+   ciclo_de_instrucciones(socket_memoria,logger_cpu,cfg_cpu,proceso_actual); //TODO: Crear esta funcion, para el fetch mandar mensaje a memoria usando PROXIMA_INSTRUCCION
 
 
 	
@@ -53,55 +55,55 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config){
+void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_proceso* proceso){
     instr_t *inst = malloc(sizeof(instr_t));
-    inst = fetch(conexion,logger,config);
+    inst = fetch(conexion,logger,config,proceso);
     tipo_instruccion tipo_inst; //TODO: ver como hacer malloc
     tipo_inst = decode(inst);//TODO: ver como funciona
-    execute(logger, config,inst,tipo_inst);
+    execute(logger, config,inst,tipo_inst, proceso);
     check_interrupt();
-    pcb_actual->program_counter += 1;
+    proceso_actual->pcb->program_counter += 1;
 
 }
 
-instr_t* fetch(int conexion, t_log* logger, t_config* config){
+instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso){
         instr_t *prox_inst = malloc(sizeof(instr_t));
-       prox_inst = pedir_instruccion(pcb_actual);
+       prox_inst = pedir_instruccion(proceso);
        return prox_inst;
 }
 
 tipo_instruccion decode(instr_t* instr){
-    //return instr->id;//TODO: VER IMPLEMENTACION
-    return SET;
+    return instr->id;//TODO: VER IMPLEMENTACION
+   // return SET;
 }
 
 
-void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst){
+void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_proceso* proceso){
 
     switch(tipo_inst){
         case SET:
         {
-            set(inst->param1, inst->param2);
+            set(inst->param1, inst->param2, proceso);
             break;
         }
         case SUM:
         {
-            sum(inst->param1, inst->param2);
+            sum(inst->param1, inst->param2,proceso);
             break;
         }
         case SUB:
         {
-            sub(inst->param1, inst->param2);
+            sub(inst->param1, inst->param2,proceso);
             break;
         }
         case JNZ:
         {
-            jnz(inst->param1, inst->param2);
+            jnz(inst->param1, inst->param2,proceso);
             break;
         }
         case IO_GEN_SLEEP:
         {
-            io_gen_sleep(inst->param1, inst->param2);
+            io_gen_sleep(inst->param1, inst->param2,proceso);
             break;
         }
     }
@@ -110,34 +112,37 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
 
 void check_interrupt(){
     if(verificar_interrupcion_kernel()){
-        generar_interrupcion_a_kernel(pcb_actual);//TODO: en esta funcion no se usara dispatch sino interrupt
+        generar_interrupcion_a_kernel(proceso_actual);//TODO: en esta funcion no se usara dispatch sino interrupt
     }
 }
 
-instr_t* pedir_instruccion(t_pcb* pcb_actual){
-    return pedir_inst_a_memoria(pcb_actual->program_counter, PROXIMA_INSTRUCCION);
+instr_t* pedir_instruccion(t_proceso* proceso){
+    return pedir_inst_a_memoria(proceso->pcb->program_counter, PROXIMA_INSTRUCCION);
 }
 
-void set(uint32_t registro, uint32_t valor){
+void set(uint32_t registro, uint32_t valor, t_proceso* proceso){
     registro = valor;
 }
 
-void sum(uint32_t registro_destino, uint32_t registro_origen){
+void sum(uint32_t registro_destino, uint32_t registro_origen, t_proceso* proceso){
     registro_destino = registro_destino + registro_origen;
 }
 
-void sub(uint32_t registro_destino, uint32_t registro_origen){
+void sub(uint32_t registro_destino, uint32_t registro_origen, t_proceso* proceso){
     registro_destino = registro_destino - registro_origen;
 }
 
-void jnz(uint32_t registro, uint32_t inst){
+void jnz(uint32_t registro, uint32_t inst, t_proceso* proceso){
     if(registro != 0){
-        pcb_actual-> program_counter = inst;
+        proceso_actual-> pcb-> program_counter = inst;
     }
 }
 //void io_gen_sleep(Interfaz interfaz, int unidades_de_trabajo){ //TODO: VER PARAMETROS
-void io_gen_sleep(){
-    //solicitar_envio_interfaz(interfaz,unidades_de_trabajo);
+void io_gen_sleep(char* interfaz, int unidades_de_trabajo, t_proceso* proceso){
+   // t_interfaz interfaz_elegida = malloc(sizeof(t_interfaz));//REVISAR
+   t_interfaz interfaz_elegida;
+    interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
+    //enviar_interfaz_a_kernel(interfaz_elegida, unidades_de_trabajo);//VER IMPLEMENTACION
     printf("Entra a io_gen_sleep");
 }
 
@@ -151,8 +156,14 @@ bool verificar_interrupcion_kernel(){
     return false;
 }
 
-void generar_interrupcion_a_kernel(t_pcb* pcb_actual){
+void generar_interrupcion_a_kernel(t_proceso* proceso_actual){
     printf("entro a generar_interrupcion_a_kernel");
+}
+
+t_interfaz elegir_interfaz(char* interfaz,t_proceso* proceso){
+    t_interfaz interf;
+    return interf;
+
 }
 
 

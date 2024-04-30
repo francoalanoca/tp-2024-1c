@@ -4,6 +4,7 @@ t_log *logger_cpu; // Definición de la variable global
 t_config_cpu *cfg_cpu;
 t_config *file_cfg_cpu;
 
+
 int checkProperties(char *path_config) {
     // config valida
     t_config *config = config_create(path_config);

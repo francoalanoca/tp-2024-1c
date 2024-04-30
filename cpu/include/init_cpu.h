@@ -6,11 +6,7 @@
 #include <utils/utils.h>
 
 
-
-
-
-
-
+extern t_proceso* proceso_actual;
 
 int checkProperties(char *path_config);
 
