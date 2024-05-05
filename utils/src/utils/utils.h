@@ -103,11 +103,17 @@ typedef struct
    int quantum;
    t_registros_CPU registrosCPU;
 }t_pcb;
+typedef enum {
+    GENERICA,
+    STDIN,
+    STDOUT,
+    DIALFS 
+} t_tipo_interfaz_enum;
 
 typedef struct {
     char* nombre;
     //uint8_t nombre_size; creo que no hace falta
-    char* tipo;//Debe ser un enum?
+    t_tipo_interfaz_enum tipo;//Debe ser un enum?
     //uint8_t tipo_size;  creo que no hace falta
 }t_interfaz;
 
