@@ -62,22 +62,40 @@ void procesar_conexion(void *v_args){
 
      op_code cop;
 
+     ///
+   
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    cop = recv(cliente_socket, &(paquete->codigo_operacion), sizeof(op_code), 0);
+    paquete->buffer = malloc(sizeof(t_buffer));
+    recv(cliente_socket, &(paquete->buffer->size), sizeof(uint32_t), 0);
+    paquete->buffer->stream = malloc(paquete->buffer->size);
+    recv(cliente_socket, paquete->buffer->stream, paquete->buffer->size, 0); //agregar &?
+     ///
+
     while (cliente_socket != -1) {
 
-        if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
+       // if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
+        if (cop != sizeof(op_code)) {
             log_info(logger, "DISCONNECT!");
             return;
         }
 
-    switch (cop){
-            case PCB:
+    //switch (cop){
+        switch (cop){
+            case NUEVO_PROCESO:
             {
                 t_proceso* proceso = malloc(sizeof(t_proceso)); //REVISAR
-                log_info(logger_cpu, "PCB RECIBIDO");
-               // proceso_actual = deserializar_proceso(cliente_socket); //DEFINIR FUNCION PARA DESERIALIZAR
+                log_info(logger_cpu, "PROCESO RECIBIDO");
+                proceso = proceso_deserializar(paquete->buffer); //DEFINIR FUNCION PARA DESERIALIZAR
+                proceso_actual = proceso; //Agregar a lista de procesos?
+                free(proceso);
                 break;
             }
-    }    
+           
+    }   
+free(paquete->buffer->stream);
+free(paquete->buffer);
+free(paquete);
 }
 }
 
@@ -86,5 +104,59 @@ int hacer_handshake (int socket_cliente){
 
     send(socket_cliente, &handshake, sizeof(uint32_t), NULL);
     return recibir_operacion(socket_cliente);
+}
+
+void buffer_read(t_buffer *buffer, void *data, uint32_t size){
+	//VER ESTA CAUNDO HAY HECHO LA PARE DE DESEREALIZACION
+	void* stream = buffer->stream;
+    // Deserializamos los campos que tenemos en el buffer
+    memcpy(&data, stream, size);
+    stream += size;
+}
+
+uint8_t buffer_read_uint8(t_buffer *buffer){
+	uint8_t valor = malloc(sizeof(uint8_t));
+	buffer_read(buffer,&valor,sizeof(uint8_t));
+	return valor;
+}
+
+t_pcb *buffer_read_pcb(t_buffer *buffer, uint32_t *length){
+	t_pcb * valor = malloc(length);
+	buffer_read(buffer,&valor,length);//REVISAR
+	return valor;
+}
+
+instr_t *buffer_read_instruccion(t_buffer *buffer, uint32_t *length){
+	instr_t * valor = malloc(length);
+	buffer_read(buffer,&valor,length);//REVISAR
+	return valor;
+}
+
+t_interfaz *buffer_read_interfaz(t_buffer *buffer, uint32_t *length){
+	t_interfaz * valor = malloc(length);
+	buffer_read(buffer,&valor,length);//REVISAR
+	return valor;
+}
+
+t_proceso *proceso_deserializar(t_buffer *buffer) {
+    t_proceso *proceso = malloc(sizeof(t_proceso));
+	
+	int tamanio_pcb = malloc(sizeof(int));
+tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
+//REVISAR ACA (DESERIALIZACION)
+    proceso->pcb = buffer_read_pcb(buffer, tamanio_pcb);
+    proceso->cantidad_instrucciones = buffer_read_uint8(buffer);
+   // proceso->instrucciones = buffer_read_instruccion(buffer);
+   	  for(int i = 0; i < proceso->cantidad_instrucciones; i++){	
+			buffer_read_instruccion(buffer,sizeof(list_get(proceso->instrucciones,i)));
+	  }
+
+   	  for(int i = 0; i < list_size(proceso->interfaces); i++){	
+			buffer_read_interfaz(buffer,sizeof(list_get(proceso->interfaces,i)));
+	  }
+	  
+	  free(tamanio_pcb);
+
+    return proceso;
 }
 

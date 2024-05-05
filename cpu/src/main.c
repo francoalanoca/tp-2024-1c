@@ -9,7 +9,10 @@
 
 char *path_config;
 
-extern t_proceso* proceso_actual;
+t_proceso* proceso_actual;
+
+int tamanioParams;
+int tamanioInterfaces;
 
 
 int main(int argc, char* argv[]) {
@@ -68,7 +71,7 @@ void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pro
 
 instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso){
         instr_t *prox_inst = malloc(sizeof(instr_t));
-       prox_inst = pedir_instruccion(proceso);
+       prox_inst = pedir_instruccion(proceso, conexion);
        return prox_inst;
 }
 
@@ -116,8 +119,33 @@ void check_interrupt(){
     }
 }
 
-instr_t* pedir_instruccion(t_proceso* proceso){
-    return pedir_inst_a_memoria(proceso->pcb->program_counter, PROXIMA_INSTRUCCION);
+instr_t* pedir_instruccion(t_proceso* proceso,int conexion){
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete -> codigo_operacion = PROXIMA_INSTRUCCION;
+    paquete->buffer = proceso_serializar(proceso);
+
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint8_t));
+
+    offset += sizeof(uint8_t);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(conexion, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0); //VER que socket poner(reemplazar unSocket)
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+
+    
+    //return pedir_inst_a_memoria(proceso->pcb->program_counter, PROXIMA_INSTRUCCION);
 }
 
 void set(uint32_t registro, uint32_t valor, t_proceso* proceso){
@@ -165,5 +193,136 @@ t_interfaz elegir_interfaz(char* interfaz,t_proceso* proceso){
     return interf;
 
 }
+
+// Crea un buffer vacío de tamaño size y offset 0
+t_buffer *buffer_create(uint32_t size){
+t_buffer* buffer = malloc(sizeof(t_buffer));
+buffer->size = size;
+buffer->offset = 0;
+return buffer;
+}
+
+// Libera la memoria asociada al buffer
+void buffer_destroy(t_buffer *buffer){
+	free(buffer->stream);
+	free(buffer);
+}
+
+// Agrega un stream al buffer en la posición actual y avanza el offset
+void buffer_add(t_buffer *buffer, void *data, uint32_t size){
+	//VER ESTA CON CODIGO ANTERIOR
+	memcpy(buffer->stream + buffer->offset, &data, size);
+	buffer->offset += size;
+}
+
+void buffer_add_uint32(t_buffer *buffer, uint32_t data){
+	buffer_add(buffer,data,sizeof(uint32_t));
+}
+
+
+// Agrega un uint8_t al buffer
+void buffer_add_uint8(t_buffer *buffer, uint8_t data){
+	buffer_add(buffer,data,sizeof(uint8_t));
+}
+
+
+// Agrega string al buffer con un uint32_t adelante indicando su longitud
+void buffer_add_string(t_buffer *buffer, uint32_t length, char *string){
+	buffer_add(buffer,length,sizeof(uint32_t));
+	buffer_add(buffer,string,length); //VER SI MULTIPLICAR LENGTH POR TAMANIO DE CHAR*
+}
+
+
+void buffer_add_pcb(t_buffer* buffer,  t_pcb* pcb){
+	buffer_add(buffer, &pcb->pid, sizeof(int));
+	buffer_add(buffer, &pcb->program_counter, sizeof(int));
+	buffer_add(buffer, &pcb->quantum, sizeof(int));
+	buffer_add(buffer, &pcb->registrosCPU, sizeof(t_registros_CPU));
+}
+
+void buffer_add_instruccion(t_buffer* buffer, instr_t* instruccion){
+	buffer_add(buffer, &instruccion->idLength, sizeof(uint8_t));
+	buffer_add(buffer, &instruccion->id ,instruccion->idLength);
+	buffer_add(buffer, &instruccion->param1Length ,sizeof(uint8_t));
+	buffer_add(buffer, &instruccion->param1 ,instruccion->param1Length);
+	buffer_add(buffer, &instruccion->param2Length ,sizeof(uint8_t));
+	buffer_add(buffer, &instruccion->param2 ,instruccion->param2Length);
+	buffer_add(buffer, &instruccion->param3Length ,sizeof(uint8_t));
+	buffer_add(buffer, &instruccion->param3 ,instruccion->param3Length);
+	buffer_add(buffer, &instruccion->param4Length ,sizeof(uint8_t));
+	buffer_add(buffer, &instruccion->param4 ,instruccion->param4Length);
+	buffer_add(buffer, &instruccion->param5Length ,sizeof(uint8_t));
+	buffer_add(buffer, &instruccion->param5 ,instruccion->param5Length);
+}
+
+void calcularTamanioInstruccion(instr_t* instruccion){
+	int tamanio = malloc(sizeof(int)); //VER DONDE HACER FREE
+	tamanio = instruccion->idLength + instruccion->param1Length + instruccion->param2Length + instruccion->param3Length + instruccion->param4Length + instruccion->param5Length;
+	tamanioParams += tamanio;
+	free(tamanio);
+}
+
+void calcularTamanioInterfaz(t_interfaz* interfaz){
+	int tamanio = malloc(sizeof(int)); //VER DONDE HACER FREE
+	tamanio = sizeof(interfaz->nombre) + sizeof(interfaz->tipo); //REVISAR
+	tamanioInterfaces += tamanio;
+	free(tamanio);
+}
+
+void buffer_add_interfaz(t_buffer* buffer, t_interfaz* interfaz){
+	buffer_add(buffer, &interfaz->nombre,((strlen(interfaz->nombre) + 1) * sizeof(char*))); 
+	buffer_add(buffer, &interfaz->tipo,((strlen(interfaz->tipo) + 1) * sizeof(char*))); //VER SI ESTA BIEN EL STRLEN
+}
+
+t_buffer *proceso_serializar(t_proceso* proceso) {
+	
+//t_buffer* buffer = malloc(sizeof(t_buffer)); //VER SI HACE FALTA
+//t_proceso* proceso = malloc(sizeof(proceso);
+
+int tamanioParams = malloc(sizeof(int));//hay que recorrer con for la lista de instrucciones y por cada una ir sumando en esta variable el tameanio de los parametros
+
+int tamanioInterfaces = malloc(sizeof(int)); //hay que recorrer con for la lista de interfaces y por cada una ir sumando en esta variable el tameanio del nombre y tipo
+
+list_iterate(proceso->instrucciones, calcularTamanioInstruccion);
+
+list_iterate(proceso->interfaces, calcularTamanioInterfaz);
+
+int tamanio_pcb = malloc(sizeof(int));
+tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
+
+int tamanioInstrucciones = malloc(sizeof(int));
+tamanioInstrucciones = ((sizeof(uint8_t) * 6 + sizeof(tipo_instruccion)) * proceso->cantidad_instrucciones )+ tamanioParams;
+
+int tamanioBuffer = malloc(sizeof(int));
+tamanioBuffer = tamanio_pcb
+             + sizeof(uint8_t) // cantidad_instrucciones
+             + tamanioInstrucciones
+			 + tamanioInterfaces;
+			 
+  t_buffer *buffer = buffer_create(tamanioBuffer);
+//REVISAR ACA (SERIALIZACION)
+    buffer_add_pcb(buffer, proceso->pcb);
+    buffer_add_uint8(buffer, proceso->cantidad_instrucciones);
+	//list_iterate(proceso->instrucciones, buffer_add_instruccion(buffer));//NO SE PUEDE HACER YA QUE LA FUNCION RECIBE UN PARAM BUFFER
+	//list_iterate(proceso->interfaces, buffer_add_interfaz(buffer));//NO SE PUEDE HACER YA QUE LA FUNCION RECIBE UN PARAM BUFFER
+	//REVISAR ACAAAAA//VER DE HACER FOR
+	
+	/////////
+	  for(int i = 0; i < proceso->cantidad_instrucciones; i++){	
+			buffer_add_instruccion(buffer, list_get(proceso->instrucciones,i));
+	  }
+	       
+	
+	///////
+   //  //RECORRER LISTA DE INSTRUCCIONES CON FOR Y HACER ESTO POR CADA UNA
+   	  for(int i = 0; i < list_size(proceso->interfaces); i++){	
+			buffer_add_interfaz(buffer, list_get(proceso->interfaces,i));
+	  }
+    //buffer_add_interfaz(buffer, persona->interfaces); //RECORRER LISTA DE INTERFACES CON FOR Y HACER ESTO POR CADA UNA
+
+    return buffer;
+}
+
+
 
 

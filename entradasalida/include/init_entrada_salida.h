@@ -44,12 +44,7 @@ static t_config_entrada_salida *cfg_entrada_salida_start()
 }
 
 
-typedef enum {
-    GENERICA,
-    STDIN,
-    STDOUT,
-    DIALFS 
-} t_tipo_interfaz_enum;
+
 
 //PARA CONVERTIR CADENAS EN t_tipo_inferfaz_enum
 t_tipo_interfaz_enum obtener_tipo_interfaz_enum(const char* tipo_interfaz_str);

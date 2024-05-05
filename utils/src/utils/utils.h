@@ -25,7 +25,8 @@ typedef enum
 	MENSAJE,
 	PAQUETE,
 	PCB = 30,
-	PROXIMA_INSTRUCCION = 40
+	NUEVO_PROCESO = 35,
+    PROXIMA_INSTRUCCION = 40
 }op_code;
 
 typedef struct {
@@ -58,10 +59,16 @@ typedef struct {
     char* param5;
 } instr_t;
 
-typedef struct
+/*typedef struct
 {
 	int size;
 	void* stream;
+} t_buffer;*/
+
+typedef struct {
+    uint32_t size; // Tamaño del payload
+    uint32_t offset; // Desplazamiento dentro del payload
+    void* stream; // Payload
 } t_buffer;
 
 typedef struct
@@ -99,8 +106,11 @@ typedef struct
 
 typedef struct {
     char* nombre;
+    //uint8_t nombre_size; creo que no hace falta
     char* tipo;//Debe ser un enum?
+    //uint8_t tipo_size;  creo que no hace falta
 }t_interfaz;
+
 
 typedef struct {
     t_pcb* pcb; 
@@ -108,6 +118,10 @@ typedef struct {
     t_list* instrucciones;
     t_list* interfaces;
 }t_proceso;
+
+
+
+
 
 
 extern t_log* logger;
