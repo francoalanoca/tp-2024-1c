@@ -25,7 +25,7 @@ void jnz(uint32_t registro, uint32_t inst, t_proceso* proceso);
 void io_gen_sleep(char* interfaz, int unidades_de_trabajo, t_proceso* proceso);
 instr_t* pedir_inst_a_memoria(int pc, int valor);
 bool verificar_interrupcion_kernel();
-void generar_interrupcion_a_kernel(t_proceso* proceso_actual);
+void generar_interrupcion_a_kernel(t_proceso* proceso_actual, int conexion);
 t_interfaz elegir_interfaz(char* interfaz,t_proceso* proceso);
 t_buffer *buffer_create(uint32_t size);
 void buffer_destroy(t_buffer *buffer);
@@ -39,6 +39,10 @@ void calcularTamanioInstruccion(instr_t* instruccion);
 void calcularTamanioInterfaz(t_interfaz* interfaz);
 void buffer_add_interfaz(t_buffer* buffer, t_interfaz* interfaz);
 t_buffer *proceso_serializar(t_proceso* proceso);
+t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso);
+t_buffer *proceso_memoria_serializar(t_proceso_memoria* proceso_memoria);
+t_proceso_interrumpido* crear_proceso_interrumpido(t_proceso* proceso, char* motivo);
+t_buffer *proceso_interrumpido_serializar(t_proceso_interrumpido* proceso_interrumpido);
 
 
 

@@ -26,7 +26,8 @@ typedef enum
 	PAQUETE,
 	PCB = 30,
 	NUEVO_PROCESO = 35,
-    PROXIMA_INSTRUCCION = 40
+    PROXIMA_INSTRUCCION = 40,
+    INTERRUPCION_CPU = 45
 }op_code;
 
 typedef struct {
@@ -124,6 +125,16 @@ typedef struct {
     t_list* instrucciones;
     t_list* interfaces;
 }t_proceso;
+
+typedef struct{
+    t_proceso* proceso;
+    char* motivo_interrupcion;
+}t_proceso_interrumpido;
+
+typedef struct{
+    uint32_t pid;
+    uint32_t program_counter;
+}t_proceso_memoria;
 
 
 

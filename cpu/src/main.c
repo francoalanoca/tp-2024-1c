@@ -71,7 +71,7 @@ void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pro
 
 instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso){
         instr_t *prox_inst = malloc(sizeof(instr_t));
-       prox_inst = pedir_instruccion(proceso, conexion);
+       prox_inst = pedir_instruccion(proceso, conexion); //TODO:VER COMO RECIBIR LA INSTRUCCION
        return prox_inst;
 }
 
@@ -114,15 +114,17 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
 }
 
 void check_interrupt(){
-    if(verificar_interrupcion_kernel()){
-        generar_interrupcion_a_kernel(proceso_actual);//TODO: en esta funcion no se usara dispatch sino interrupt
+    if(verificar_interrupcion_kernel()){//TODO: en esta funcion no se usara dispatch sino interrupt
+        //generar_interrupcion_a_kernel(proceso_actual); TODO:VER COMO MANDAR CONEXION A KERNEL
     }
 }
 
 instr_t* pedir_instruccion(t_proceso* proceso,int conexion){
     t_paquete* paquete = malloc(sizeof(t_paquete));
+    //t_proceso_memoria* proceso_memoria = malloc(sizeof(t_proceso_memoria));
+    t_proceso_memoria* proceso_memoria = crear_proceso_memoria(proceso);
     paquete -> codigo_operacion = PROXIMA_INSTRUCCION;
-    paquete->buffer = proceso_serializar(proceso);
+    paquete->buffer = proceso_memoria_serializar(proceso_memoria);
 
     void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
 
@@ -143,6 +145,7 @@ instr_t* pedir_instruccion(t_proceso* proceso,int conexion){
     free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
+    free(proceso_memoria);
 
     
     //return pedir_inst_a_memoria(proceso->pcb->program_counter, PROXIMA_INSTRUCCION);
@@ -184,8 +187,34 @@ bool verificar_interrupcion_kernel(){
     return false;
 }
 
-void generar_interrupcion_a_kernel(t_proceso* proceso_actual){
+void generar_interrupcion_a_kernel(t_proceso* proceso_actual, int conexion){
     printf("entro a generar_interrupcion_a_kernel");
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    //t_proceso_memoria* proceso_memoria = malloc(sizeof(t_proceso_memoria));
+    t_proceso_interrumpido* proceso_interrumpido = crear_proceso_interrumpido(proceso_actual, "Motivo de interrupcion");//TODO:VER DE DONDE SACAR EL MOTIVO
+    paquete -> codigo_operacion = INTERRUPCION_CPU;
+    paquete->buffer = proceso_interrumpido_serializar(proceso_interrumpido);
+
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint8_t));
+
+    offset += sizeof(uint8_t);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(conexion, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0); //VER que socket poner(reemplazar unSocket)
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+    free(proceso_interrumpido);
 }
 
 t_interfaz elegir_interfaz(char* interfaz,t_proceso* proceso){
@@ -271,7 +300,7 @@ void calcularTamanioInterfaz(t_interfaz* interfaz){
 
 void buffer_add_interfaz(t_buffer* buffer, t_interfaz* interfaz){
 	buffer_add(buffer, &interfaz->nombre,((strlen(interfaz->nombre) + 1) * sizeof(char*))); 
-	buffer_add(buffer, &interfaz->tipo,((strlen(interfaz->tipo) + 1) * sizeof(char*))); //VER SI ESTA BIEN EL STRLEN
+	buffer_add(buffer, &interfaz->tipo,((sizeof(interfaz->tipo)) * sizeof(char*))); //VER SI ESTA BIEN EL STRLEN
 }
 
 t_buffer *proceso_serializar(t_proceso* proceso) {
@@ -323,6 +352,75 @@ tamanioBuffer = tamanio_pcb
     return buffer;
 }
 
+t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso){
+    t_proceso_memoria* nuevo_proceso = malloc(sizeof(t_proceso_memoria));
+    nuevo_proceso->pid = proceso->pcb->pid;
+    nuevo_proceso->program_counter = proceso->pcb->program_counter;
+    return nuevo_proceso;
+}
+
+t_buffer *proceso_memoria_serializar(t_proceso_memoria* proceso_memoria) {
+
+uint32_t tamanioBuffer = malloc(sizeof(uint32_t));
+tamanioBuffer = sizeof(uint32_t) //pid
+             + sizeof(uint32_t); // program_counter
+             
+			 
+  t_buffer *buffer = buffer_create(tamanioBuffer);
+
+    buffer_add_uint32(buffer, proceso_memoria->pid);
+    buffer_add_uint32(buffer, proceso_memoria->program_counter);
+
+    return buffer;
+}
+
+t_proceso_interrumpido* crear_proceso_interrumpido(t_proceso* proceso, char* motivo){
+    t_proceso_interrumpido* nuevo_proceso = malloc(sizeof(t_proceso_interrumpido));
+    nuevo_proceso->proceso = proceso;
+    strcpy(nuevo_proceso->motivo_interrupcion, motivo);
+    return nuevo_proceso;
+}
+
+t_buffer *proceso_interrumpido_serializar(t_proceso_interrumpido* proceso_interrumpido) {
+	
+
+int tamanioParams = malloc(sizeof(int));//hay que recorrer con for la lista de instrucciones y por cada una ir sumando en esta variable el tameanio de los parametros
+
+int tamanioInterfaces = malloc(sizeof(int)); //hay que recorrer con for la lista de interfaces y por cada una ir sumando en esta variable el tameanio del nombre y tipo
+
+list_iterate(proceso_interrumpido->proceso->instrucciones, calcularTamanioInstruccion);
+
+list_iterate(proceso_interrumpido->proceso->interfaces, calcularTamanioInterfaz);
+
+int tamanio_pcb = malloc(sizeof(int));
+tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
+
+int tamanioInstrucciones = malloc(sizeof(int));
+tamanioInstrucciones = ((sizeof(uint8_t) * 6 + sizeof(tipo_instruccion)) * proceso_interrumpido->proceso->cantidad_instrucciones )+ tamanioParams;
+
+int tamanioBuffer = malloc(sizeof(int));
+tamanioBuffer = tamanio_pcb
+             + sizeof(uint8_t) // cantidad_instrucciones
+             + tamanioInstrucciones
+			 + tamanioInterfaces
+             + (strlen(proceso_interrumpido->motivo_interrupcion) + 1);
+			 
+  t_buffer *buffer = buffer_create(tamanioBuffer);
+
+    buffer_add_pcb(buffer, proceso_interrumpido->proceso->pcb);
+    buffer_add_uint8(buffer, proceso_interrumpido->proceso->cantidad_instrucciones);
+
+	  for(int i = 0; i < proceso_interrumpido->proceso->cantidad_instrucciones; i++){	
+			buffer_add_instruccion(buffer, list_get(proceso_interrumpido->proceso->instrucciones,i));
+	  }
+	       
+
+   	  for(int i = 0; i < list_size(proceso_interrumpido->proceso->interfaces); i++){	
+			buffer_add_interfaz(buffer, list_get(proceso_interrumpido->proceso->interfaces,i));
+	  }
+
+    return buffer;
+}
 
 
 
