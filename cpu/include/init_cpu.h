@@ -27,7 +27,7 @@ typedef struct
     char *IP_MEMORIA;
     int PUERTO_MEMORIA;
     char* PUERTO_ESCUCHA_DISPATCH;
-    int PUERTO_ESCUCHA_INTERRUPT;
+    char* PUERTO_ESCUCHA_INTERRUPT;
     int CANTIDAD_ENTRADAS_TLB;
     char *ALGORITMO_TLB;
 } t_config_cpu;

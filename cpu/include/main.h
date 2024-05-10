@@ -43,6 +43,8 @@ t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso);
 t_buffer *proceso_memoria_serializar(t_proceso_memoria* proceso_memoria);
 t_proceso_interrumpido* crear_proceso_interrumpido(t_proceso* proceso, char* motivo);
 t_buffer *proceso_interrumpido_serializar(t_proceso_interrumpido* proceso_interrumpido);
+void* crear_servidor_dispatch(char* ip_cpu);
+void* crear_servidor_interrupt(char* ip_cpu);
 
 
 

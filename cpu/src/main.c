@@ -8,6 +8,7 @@
 
 
 char *path_config;
+char *ip_cpu;
 
 t_proceso* proceso_actual;
 
@@ -19,9 +20,10 @@ int main(int argc, char* argv[]) {
     decir_hola("CPU");
 
     path_config = argv[1];
+    ip_cpu = argv[2];
 
 	int socket_memoria;
-	char* ip;
+	//char* ip;
 
 
 
@@ -34,7 +36,19 @@ int main(int argc, char* argv[]) {
     }
     
 	log_info(logger_cpu, "empieza el programa");
-    crear_servidor_dispatch();
+    //
+    pthread_t servidor_dispatch;
+    pthread_create(&servidor_dispatch, NULL,crear_servidor_dispatch,ip_cpu);
+    pthread_detach(servidor_dispatch);
+
+    pthread_t servidor_interrupt;
+    pthread_create(&servidor_interrupt, NULL,crear_servidor_interrupt,ip_cpu);
+    pthread_detach(servidor_interrupt);
+    
+    //crear_servidor_dispatch(ip_cpu);
+    //crear_servidor_interrupt(ip_cpu);
+    
+    //
     log_info(logger_cpu, "se creo el servidor");
    
      socket_memoria = crear_conexion(logger_cpu, "MEMORIA", cfg_cpu->IP_MEMORIA, cfg_cpu->PUERTO_MEMORIA);

@@ -1,9 +1,10 @@
 #include"../include/servidorCpu.h"
 char* puerto_dispatch;
+char * puerto_interrupt;
 int fd_mod2 = -1;
 //pcb *pcb_actual;
 
-void* crear_servidor_dispatch(){
+void* crear_servidor_dispatch(char* ip_cpu){
     log_info(logger_cpu, "empieza crear_servidor_dispatch");
 
     log_info(logger_cpu, "valor de PUERTO_ESCUCHA_DISPATCH: %s", cfg_cpu->PUERTO_ESCUCHA_DISPATCH);
@@ -19,7 +20,7 @@ else{
     //strcpy(puerto_dispatch, cfg_cpu->PUERTO_ESCUCHA_DISPATCH);
     log_info(logger_cpu, "crea puerto_dispatch");
     printf("El puerto_dispatch es: %s", puerto_dispatch);
-    fd_mod2 = iniciar_servidor(logger_cpu, "SERVER CPU DISPATCH", "127.0.0.1",  puerto_dispatch);
+    fd_mod2 = iniciar_servidor(logger_cpu, "SERVER CPU DISPATCH", ip_cpu,  puerto_dispatch);
     log_info(logger_cpu, "inicio servidor");
     if (fd_mod2 == 0) {
         log_error(logger_cpu, "Fallo al crear el servidor, cerrando cpu");
@@ -86,7 +87,7 @@ void procesar_conexion(void *v_args){
             {
                 t_proceso* proceso = malloc(sizeof(t_proceso)); //REVISAR
                 log_info(logger_cpu, "PROCESO RECIBIDO");
-                proceso = proceso_deserializar(paquete->buffer); //DEFINIR FUNCION PARA DESERIALIZAR
+                proceso = proceso_deserializar(paquete->buffer); 
                 proceso_actual = proceso; //Agregar a lista de procesos?
                 free(proceso);
                 break;
@@ -107,7 +108,6 @@ int hacer_handshake (int socket_cliente){
 }
 
 void buffer_read(t_buffer *buffer, void *data, uint32_t size){
-	//VER ESTA CAUNDO HAY HECHO LA PARE DE DESEREALIZACION
 	void* stream = buffer->stream;
     // Deserializamos los campos que tenemos en el buffer
     memcpy(&data, stream, size);
@@ -158,5 +158,31 @@ tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
 	  free(tamanio_pcb);
 
     return proceso;
+}
+
+void* crear_servidor_interrupt(char* ip_cpu){
+    log_info(logger_cpu, "empieza crear_servidor_interrupt");
+
+    log_info(logger_cpu, "valor de PUERTO_ESCUCHA_INTERRUPT: %s", cfg_cpu->PUERTO_ESCUCHA_INTERRUPT);
+    
+
+    puerto_interrupt = malloc((strlen(cfg_cpu->PUERTO_ESCUCHA_INTERRUPT) + 1) * sizeof(char));
+if (puerto_interrupt != NULL) {
+    strcpy(puerto_interrupt, cfg_cpu->PUERTO_ESCUCHA_INTERRUPT);
+}
+else{
+    log_info(logger_cpu,"error al asignar memoria a variable del puerto");
+}
+    //strcpy(puerto_interrupt, cfg_cpu->PUERTO_ESCUCHA_INTERRUPT);
+    log_info(logger_cpu, "crea puerto_interrupt");
+    printf("El puerto_interrupt es: %s", puerto_interrupt);
+    fd_mod2 = iniciar_servidor(logger_cpu, "SERVER CPU INTERRUPT", ip_cpu,  puerto_interrupt);
+    log_info(logger_cpu, "inicio servidor");
+    if (fd_mod2 == 0) {
+        log_error(logger_cpu, "Fallo al crear el servidor, cerrando cpu");
+        return EXIT_FAILURE;
+    }
+log_info(logger_cpu, "va a escuchar");
+    while (server_escuchar(logger_cpu, "SERVER CPU INTERRUPT", (uint32_t)fd_mod2));
 }
 
