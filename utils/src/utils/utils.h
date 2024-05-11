@@ -128,6 +128,7 @@ typedef struct {
 
 typedef struct{
     t_proceso* proceso;
+    uint8_t tamanio_motivo_interrupcion;
     char* motivo_interrupcion;
 }t_proceso_interrumpido;
 

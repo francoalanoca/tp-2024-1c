@@ -25,7 +25,7 @@ void jnz(uint32_t registro, uint32_t inst, t_proceso* proceso);
 void io_gen_sleep(char* interfaz, int unidades_de_trabajo, t_proceso* proceso);
 instr_t* pedir_inst_a_memoria(int pc, int valor);
 bool verificar_interrupcion_kernel();
-void generar_interrupcion_a_kernel(t_proceso* proceso_actual, int conexion);
+void generar_interrupcion_a_kernel(int conexion);
 t_interfaz elegir_interfaz(char* interfaz,t_proceso* proceso);
 t_buffer *buffer_create(uint32_t size);
 void buffer_destroy(t_buffer *buffer);

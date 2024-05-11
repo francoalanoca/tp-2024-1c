@@ -19,8 +19,10 @@ uint8_t buffer_read_uint8(t_buffer *buffer);
 t_pcb *buffer_read_pcb(t_buffer *buffer, uint32_t *length);
 instr_t *buffer_read_instruccion(t_buffer *buffer, uint32_t *length);
 t_interfaz *buffer_read_interfaz(t_buffer *buffer, uint32_t *length);
+char *buffer_read_string(t_buffer *buffer, uint32_t *length);
 t_proceso *proceso_deserializar(t_buffer *buffer);
 void* crear_servidor_interrupt(char* ip_cpu);
+t_proceso_interrumpido *proceso_interrumpido_deserializar(t_buffer *buffer);
 
 //void *conectarConMemoria();
 //void cortar_conexiones();

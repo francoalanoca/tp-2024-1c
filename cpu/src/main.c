@@ -11,6 +11,8 @@ char *path_config;
 char *ip_cpu;
 
 t_proceso* proceso_actual;
+t_proceso_interrumpido* proceso_interrumpido_actual;
+bool interrupcion_kernel;
 
 int tamanioParams;
 int tamanioInterfaces;
@@ -60,6 +62,8 @@ int main(int argc, char* argv[]) {
         log_info(logger_cpu, "Error en handshake con kernel");
         return EXIT_FAILURE;
     }
+
+    //TODO: HACER HANDSHAKE CON KERNEL Y ENVIAR SOCKET A CICLO_DE INSTRUCCIONES PARA USAR EN EL CHECK_INETRRUPT
 
      
    ciclo_de_instrucciones(socket_memoria,logger_cpu,cfg_cpu,proceso_actual); //TODO: Crear esta funcion, para el fetch mandar mensaje a memoria usando PROXIMA_INSTRUCCION
@@ -128,7 +132,7 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
 }
 
 void check_interrupt(){
-    if(verificar_interrupcion_kernel()){//TODO: en esta funcion no se usara dispatch sino interrupt
+    if(interrupcion_kernel){//TODO: en esta funcion no se usara dispatch sino interrupt
         //generar_interrupcion_a_kernel(proceso_actual); TODO:VER COMO MANDAR CONEXION A KERNEL
     }
 }
@@ -197,17 +201,18 @@ instr_t* pedir_inst_a_memoria(int pc, int valor){//TODO:DEFINIR
 }
 
 
-bool verificar_interrupcion_kernel(){
+/*bool verificar_interrupcion_kernel(){
     return false;
-}
+}*/
 
-void generar_interrupcion_a_kernel(t_proceso* proceso_actual, int conexion){
+void generar_interrupcion_a_kernel(int conexion){
     printf("entro a generar_interrupcion_a_kernel");
     t_paquete* paquete = malloc(sizeof(t_paquete));
     //t_proceso_memoria* proceso_memoria = malloc(sizeof(t_proceso_memoria));
-    t_proceso_interrumpido* proceso_interrumpido = crear_proceso_interrumpido(proceso_actual, "Motivo de interrupcion");//TODO:VER DE DONDE SACAR EL MOTIVO
+    //t_proceso_interrumpido* proceso_interrumpido = crear_proceso_interrumpido(proceso_actual, "Motivo de interrupcion");//ESTO ES SI EL KENERL ME MANDA PROCESO
+    
     paquete -> codigo_operacion = INTERRUPCION_CPU;
-    paquete->buffer = proceso_interrumpido_serializar(proceso_interrumpido);
+    paquete->buffer = proceso_interrumpido_serializar(proceso_interrumpido_actual);
 
     void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
 
@@ -228,7 +233,7 @@ void generar_interrupcion_a_kernel(t_proceso* proceso_actual, int conexion){
     free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
-    free(proceso_interrumpido);
+    //free(proceso_interrumpido);
 }
 
 t_interfaz elegir_interfaz(char* interfaz,t_proceso* proceso){

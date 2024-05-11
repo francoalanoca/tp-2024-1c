@@ -92,6 +92,19 @@ void procesar_conexion(void *v_args){
                 free(proceso);
                 break;
             }
+                        case INTERRUPCION_CPU:
+            {
+                t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido)); //REVISAR
+                log_info(logger_cpu, "SE RECIBE INTERRUPCION DE KERNEL");
+                proceso_interrumpido = proceso_interrumpido_deserializar(paquete->buffer); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
+                if(proceso_interrumpido->proceso->pcb->pid == proceso_actual->pcb->pid){
+                    proceso_interrumpido_actual = proceso_interrumpido;
+                    interrupcion_kernel = true;
+                }
+            
+                free(proceso_interrumpido);
+                break;
+            }
            
     }   
 free(paquete->buffer->stream);
@@ -160,6 +173,12 @@ tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
     return proceso;
 }
 
+char *buffer_read_string(t_buffer *buffer, uint32_t *length){
+	char * valor = malloc(length); //* (uint32_t) sizeof(char)); //REVISAR, agregar * y + 1?
+	buffer_read(buffer,&valor,length);//REVISAR
+	return valor;
+}
+
 void* crear_servidor_interrupt(char* ip_cpu){
     log_info(logger_cpu, "empieza crear_servidor_interrupt");
 
@@ -184,5 +203,36 @@ else{
     }
 log_info(logger_cpu, "va a escuchar");
     while (server_escuchar(logger_cpu, "SERVER CPU INTERRUPT", (uint32_t)fd_mod2));
+}
+
+t_proceso_interrumpido *proceso_interrumpido_deserializar(t_buffer *buffer) {
+    t_proceso_interrumpido *proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
+	
+	int tamanio_pcb = malloc(sizeof(int));
+tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
+//REVISAR ACA (DESERIALIZACION)
+    proceso_interrumpido->proceso->pcb = buffer_read_pcb(buffer, tamanio_pcb);
+
+    proceso_interrumpido->proceso->cantidad_instrucciones = buffer_read_uint8(buffer);
+   // proceso->instrucciones = buffer_read_instruccion(buffer);
+   	  for(int i = 0; i < proceso_interrumpido->proceso->cantidad_instrucciones; i++){	
+			buffer_read_instruccion(buffer,sizeof(list_get(proceso_interrumpido->proceso->instrucciones,i)));
+	  }
+
+   	  for(int i = 0; i < list_size(proceso_interrumpido->proceso->interfaces); i++){	
+			buffer_read_interfaz(buffer,sizeof(list_get(proceso_interrumpido->proceso->interfaces,i)));
+	  }
+	  
+	  free(tamanio_pcb);
+
+      proceso_interrumpido->tamanio_motivo_interrupcion = buffer_read_uint8(buffer);
+
+      strcpy(proceso_interrumpido->motivo_interrupcion, buffer_read_string(buffer, proceso_interrumpido->tamanio_motivo_interrupcion));
+
+         // proceso_interrumpido->proceso = proceso_deserializar(buffer->stream->proceso); //TODO:VER COMO AGREGAR
+          //proceso_interrumpido->motivo_interrupcion = buffer->stream->motivo_interrupcion;
+
+
+    return proceso_interrumpido;
 }
 
