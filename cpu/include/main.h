@@ -6,8 +6,22 @@
 #include "../include/init_cpu.h"
 #include <utils/utils.h>
 #include <signal.h>
-
-
+//#define AX 1
+typedef enum
+{
+    PC,
+	AX,
+	BX,
+	CX,
+	DX,
+    EAX,
+    EBX,
+    ECX,
+    EDX,
+    SI,
+    DI,
+    REG_NO_ENC
+}registros;
 //t_proceso* proceso_actual = NULL;
 
 //----------------BASICOS--------------------------------
@@ -18,7 +32,7 @@ tipo_instruccion decode(instr_t* instr);
 void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_proceso* proceso);
 void check_interrupt();
 instr_t* pedir_instruccion(t_proceso* proceso,int conexion);
-void set(uint32_t registro, uint32_t valor, t_proceso* proceso);
+void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger);
 void sum(uint32_t registro_destino, uint32_t registro_origen, t_proceso* proceso);
 void sub(uint32_t registro_destino, uint32_t registro_origen, t_proceso* proceso);
 void jnz(uint32_t registro, uint32_t inst, t_proceso* proceso);
@@ -45,6 +59,7 @@ t_proceso_interrumpido* crear_proceso_interrumpido(t_proceso* proceso, char* mot
 t_buffer *proceso_interrumpido_serializar(t_proceso_interrumpido* proceso_interrumpido);
 void* crear_servidor_dispatch(char* ip_cpu);
 void* crear_servidor_interrupt(char* ip_cpu);
+registros identificarRegistro(char* registro);
 
 
 

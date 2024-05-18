@@ -9,6 +9,7 @@
 extern t_proceso* proceso_actual;
 extern t_proceso_interrumpido* proceso_interrumpido_actual;
 extern bool interrupcion_kernel;
+extern int conexion_kernel;
 
 int checkProperties(char *path_config);
 

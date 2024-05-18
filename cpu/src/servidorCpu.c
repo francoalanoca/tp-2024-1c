@@ -26,6 +26,7 @@ else{
         log_error(logger_cpu, "Fallo al crear el servidor, cerrando cpu");
         return EXIT_FAILURE;
     }
+    conexion_kernel = fd_mod2;
 log_info(logger_cpu, "va a escuchar");
     while (server_escuchar(logger_cpu, "SERVER CPU", (uint32_t)fd_mod2));
 }

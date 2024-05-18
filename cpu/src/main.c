@@ -16,6 +16,7 @@ bool interrupcion_kernel;
 
 int tamanioParams;
 int tamanioInterfaces;
+int conexion_kernel;
 
 
 int main(int argc, char* argv[]) {
@@ -37,6 +38,7 @@ int main(int argc, char* argv[]) {
 
     }
     
+    
 	log_info(logger_cpu, "empieza el programa");
     //
     pthread_t servidor_dispatch;
@@ -54,12 +56,12 @@ int main(int argc, char* argv[]) {
     log_info(logger_cpu, "se creo el servidor");
    
      socket_memoria = crear_conexion(logger_cpu, "MEMORIA", cfg_cpu->IP_MEMORIA, cfg_cpu->PUERTO_MEMORIA);
-       
+      
      if ( (hacer_handshake (socket_memoria) == HANDSHAKE)){
-        log_info(logger_cpu, "Correcto en handshake con kernel");
+        log_info(logger_cpu, "Correcto en handshake con memoria");
     }
     else {
-        log_info(logger_cpu, "Error en handshake con kernel");
+        log_info(logger_cpu, "Error en handshake con memoria");
         return EXIT_FAILURE;
     }
 
@@ -104,7 +106,7 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
     switch(tipo_inst){
         case SET:
         {
-            set(inst->param1, inst->param2, proceso);
+            set(inst->param1, inst->param2, proceso, logger);
             break;
         }
         case SUM:
@@ -132,8 +134,8 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
 }
 
 void check_interrupt(){
-    if(interrupcion_kernel){//TODO: en esta funcion no se usara dispatch sino interrupt
-        //generar_interrupcion_a_kernel(proceso_actual); TODO:VER COMO MANDAR CONEXION A KERNEL
+    if(interrupcion_kernel){//en esta funcion no se usara dispatch sino interrupt
+        generar_interrupcion_a_kernel(conexion_kernel); //TODO:VER COMO MANDAR CONEXION A KERNEL
     }
 }
 
@@ -169,8 +171,70 @@ instr_t* pedir_instruccion(t_proceso* proceso,int conexion){
     //return pedir_inst_a_memoria(proceso->pcb->program_counter, PROXIMA_INSTRUCCION);
 }
 
-void set(uint32_t registro, uint32_t valor, t_proceso* proceso){
-    registro = valor;
+void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger){
+    registros registro_elegido = identificarRegistro(registro);
+    switch(registro_elegido){
+        case PC:
+        {
+           proceso->pcb->registrosCPU.PC = valor;
+            break;
+        }
+        case AX:
+        {
+           proceso->pcb->registrosCPU.AX = valor;
+            break;
+        }
+        case BX:
+        {
+           proceso->pcb->registrosCPU.BX = valor;
+            break;
+        }
+        case CX:
+        {
+           proceso->pcb->registrosCPU.CX = valor;
+            break;
+        }
+        case DX:
+        {
+           proceso->pcb->registrosCPU.DX = valor;
+            break;
+        }
+        case EAX:
+        {
+           proceso->pcb->registrosCPU.EAX = valor;
+            break;
+        }
+        case EBX:
+        {
+           proceso->pcb->registrosCPU.EBX = valor;
+            break;
+        }
+        case ECX:
+        {
+           proceso->pcb->registrosCPU.ECX = valor;
+            break;
+        }
+        case EDX:
+        {
+           proceso->pcb->registrosCPU.EDX = valor;
+            break;
+        }
+        case SI:
+        {
+           proceso->pcb->registrosCPU.SI = valor;
+            break;
+        }
+        case DI:
+        {
+           proceso->pcb->registrosCPU.DI = valor;
+            break;
+        }
+        default:
+        log_info(logger, "El registro no existe");
+    }
+
+    proceso->pcb->registrosCPU.AX;
+   // registro = valor;
 }
 
 void sum(uint32_t registro_destino, uint32_t registro_origen, t_proceso* proceso){
@@ -439,6 +503,18 @@ tamanioBuffer = tamanio_pcb
 	  }
 
     return buffer;
+}
+
+registros identificarRegistro(char* registro){
+    if(strcmp(registro,"AX") == 0){
+        return AX;
+    }
+    else if(strcmp(registro,"BX") == 0){
+        return BX;
+    }
+    else{
+        return REG_NO_ENC;
+    }
 }
 
 
