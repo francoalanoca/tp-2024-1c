@@ -48,10 +48,12 @@ int main(int argc, char* argv[]) {
 		while (flag_conexion_activa) {
 			int cod_op = recibir_operacion(cliente_fd);
 			switch (cod_op) {
-			case MENSAJE:
-				recibir_mensaje(cliente_fd);
+			case PROXIMA_INSTRUCCION://CPU me pide su sig instruccion
+				//abrir archivo de instrucciones (buscar como leer un archivo linea por linea)
+				//ubicar instruccion a partir PC que me envia cpu
+				//enviar codigo de operacion a cpu para que espere la instruccion(armar paquete con instruccion y codigo de opercion nuevo)
 				break;
-			case PAQUETE:
+			case INTERFAZ_IO://interfaz de io que me tiene que pasar
 				lista = recibir_paquete(cliente_fd);
 				log_info(logger, "Me llegaron los siguientes valores:\n");
 				list_iterate(lista, (void*) iterator);

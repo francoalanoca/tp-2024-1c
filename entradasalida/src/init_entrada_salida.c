@@ -88,7 +88,7 @@ int init(char *path_config) {
         return false;
     }
     //inicializo el archivo de configuracion
-    file_cfg_entrada_salida = iniciar_config(path_config);
+    file_cfg_entrada_salida = iniciar_config(path_config, logger_entrada_salida);
 
     return checkProperties(path_config);
 }

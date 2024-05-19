@@ -18,11 +18,11 @@ int main(int argc, char *argv[]) {
 
 
     //CONEXION//
-    socket_kernel = generar_conexion(logger_entrada_salida, "KERNEL", cfg_entrada_salida->IP_KERNEL, cfg_entrada_salida->PUERTO_KERNEL);
+    socket_kernel = crear_conexion(logger_entrada_salida, "KERNEL", cfg_entrada_salida->IP_KERNEL, cfg_entrada_salida->PUERTO_KERNEL);
 
        printf("socket de la kernel : %d",socket_kernel);
 
-    socket_memoria = generar_conexion(logger_entrada_salida, "MEMORIA", cfg_entrada_salida->IP_MEMORIA, cfg_entrada_salida->PUERTO_MEMORIA);
+    socket_memoria = crear_conexion(logger_entrada_salida, "MEMORIA", cfg_entrada_salida->IP_MEMORIA, cfg_entrada_salida->PUERTO_MEMORIA);
 
     printf("socket de la memoria : %d",socket_memoria);   
 
