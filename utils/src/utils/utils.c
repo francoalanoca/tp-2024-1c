@@ -2,6 +2,8 @@
 
 t_log* logger;
 
+
+
 /*
 typedef struct {
     t_log *log;
@@ -60,7 +62,7 @@ int iniciar_servidor(t_log* logger, const char* name, char* ip, char* puerto) {
     listen(socket_servidor, SOMAXCONN); // Escuchando (hasta SOMAXCONN conexiones simultaneas)
 
     // Aviso al logger
-    log_info(logger, "Escuchando en puerto: %s (%s)\n", ip, puerto, name);
+    log_info(logger, "Escuchando en IP %s, puerto: %s (%s)\n", ip, puerto, name);
 
     freeaddrinfo(servinfo);
 
@@ -167,7 +169,7 @@ int crear_conexion(t_log* logger, const char* server_name, char* ip, char* puert
     // Fallo en crear el socket
     if(socket_cliente == -1) {
         printf("socket() devolvio: %s \n",strerror(errno));
-        log_error(logger, "Error creando el socket para %s", ip, puerto);
+        log_error(logger, "Error creando el socket para IP %s", ip);
         log_error(logger, "y puerto %s", puerto);
         //freeaddrinfo(servinfo);
         return 0;

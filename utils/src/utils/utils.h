@@ -3,6 +3,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include <stdint.h>
 #include<sys/socket.h>
 #include<unistd.h>
 #include<netdb.h>
@@ -24,7 +25,8 @@ typedef enum
 	MENSAJE,
 	PAQUETE,
 	PCB = 30,
-	PROXIMA_INSTRUCCION = 40
+	NUEVO_PROCESO = 35,
+    PROXIMA_INSTRUCCION = 40
 }op_code;
 
 typedef struct {
@@ -33,9 +35,18 @@ typedef struct {
     char *server_name;
 } t_procesar_conexion_args;
 
+typedef enum
+{
+    SET,
+	SUM,
+	SUB,
+	JNZ,
+	IO_GEN_SLEEP
+}tipo_instruccion;
+
 typedef struct {
     uint8_t idLength;
-    char* id; // el id seria el nombre de la instruccion
+    tipo_instruccion id; // el id seria el nombre de la instruccion
     uint8_t param1Length;
     char* param1;
     uint8_t param2Length;
@@ -48,10 +59,16 @@ typedef struct {
     char* param5;
 } instr_t;
 
-typedef struct
+/*typedef struct
 {
 	int size;
 	void* stream;
+} t_buffer;*/
+
+typedef struct {
+    uint32_t size; // Tamaño del payload
+    uint32_t offset; // Desplazamiento dentro del payload
+    void* stream; // Payload
 } t_buffer;
 
 typedef struct
@@ -62,8 +79,53 @@ typedef struct
 
 
 
+typedef struct 
+{
+    uint32_t PC;
+    uint8_t AX;
+    uint8_t BX;
+    uint8_t CX;
+    uint8_t DX;
+    uint32_t EAX;
+    uint32_t EBX;
+    uint32_t ECX;
+    uint32_t EDX;
+    uint32_t SI;
+    uint32_t DI;
 
-extern t_log* logger;
+
+}t_registros_CPU;
+
+typedef struct 
+{
+   int pid;
+   int program_counter;
+   int quantum;
+   t_registros_CPU registrosCPU;
+}t_pcb;
+typedef enum {
+    GENERICA,
+    STDIN,
+    STDOUT,
+    DIALFS 
+} t_tipo_interfaz_enum;
+
+typedef struct {
+    char* nombre;
+    //uint8_t nombre_size; creo que no hace falta
+    t_tipo_interfaz_enum tipo;//Debe ser un enum?
+    //uint8_t tipo_size;  creo que no hace falta
+}t_interfaz;
+
+
+typedef struct {
+    t_pcb* pcb; 
+    uint8_t cantidad_instrucciones;
+    t_list* instrucciones;
+    t_list* interfaces;
+}t_proceso;
+
+
 
 
 
