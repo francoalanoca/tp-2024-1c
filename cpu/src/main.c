@@ -389,9 +389,9 @@ void io_gen_sleep(char* interfaz, int unidades_de_trabajo, t_proceso* proceso){
    // t_interfaz interfaz_elegida = malloc(sizeof(t_interfaz));//REVISAR
    t_interfaz* interfaz_elegida;
     interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
-    //if(interfaz_elegida != NULL){
-//enviar_interfaz_a_kernel(interfaz_elegida, unidades_de_trabajo);//VER IMPLEMENTACION
-    //}
+    if(interfaz_elegida != NULL){
+enviar_interfaz_a_kernel(interfaz_elegida, unidades_de_trabajo);//VER IMPLEMENTACION
+    }
     
     printf("Entra a io_gen_sleep");
 }
