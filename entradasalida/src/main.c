@@ -28,29 +28,13 @@ int main(char argc, char *argv[]) {
 
     
     //INICIAR INTERFACE//
-    iniciar_interface(cfg_entrada_salida->TIPO_INTERFAZ, socket_kernel, socket_memoria);
+    iniciar_interface(cfg_entrada_salida->TIPO_INTERFAZ,cfg_entrada_salida->NOMBRE_INTERFAZ, socket_kernel, socket_memoria);
 
     
     
-    //HANDSHAKE//
-
-    if ( (hacer_handshake (socket_memoria) == HANDSHAKE)){
-        log_info(logger_entrada_salida, "Correcto en handshake con memoria\n");
-    }
-    else {
-        log_info(logger_entrada_salida, "Error en handshake con memoria\n");
-        return EXIT_FAILURE;
-    }
 
 
-    if ( (hacer_handshake (socket_kernel) == HANDSHAKE)){
-        log_info(logger_entrada_salida, "Correcto en handshake con kernel\n");
-    }
-    else {
-        log_info(logger_entrada_salida, "Error en handshake con kernel\n");
-        return EXIT_FAILURE;
-    }
-   
+
     cerrar_programa();
     return 0;
 }

@@ -3,7 +3,7 @@
 t_log *logger_entrada_salida; // Definición de la variable global
 t_config_entrada_salida *cfg_entrada_salida;
 t_config *file_cfg_entrada_salida;
-
+t_interfaz* interfaz;
 int checkProperties(char *path_config) {
     // config valida
     t_config *config = config_create(path_config);
@@ -113,15 +113,51 @@ t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) 
         return DIALFS ;    
     } else {
         // Manejo de error para tipos de interfaz desconocidos
-        return -1; // O podrías lanzar una excepción o manejar el error de otra manera
+        return -1; 
     }
 }
 
+int  presentar_interfaz(int socket_kernel){
+    send(socket_kernel,INTERFAZ_ENVIAR, sizeof(uint32_t), NULL);
+    return recibir_operacion(socket_kernel);
+
+}
     //INICIAR INTERFACE CORRESPONDIENTE
-void iniciar_interface(char* tipo_interfaz_str, int socket_kernel, int socket_memoria){
-      
-      
-      switch (obtener_tipo_interfaz_enum (tipo_interfaz_str)) {
+void iniciar_interface(char* tipo_interfaz_str, char* nombre_interfaz,  int socket_kernel, int socket_memoria){
+  
+t_tipo_interfaz_enum tipo_interfaz_enum = obtener_tipo_interfaz_enum (tipo_interfaz_str); 
+
+ interfaz->nombre =nombre_interfaz;
+ interfaz->tipo =tipo_interfaz_enum;
+
+//HANDSHAKE//   
+    if ( (hacer_handshake (socket_kernel) == HANDSHAKE)){
+        log_info(logger_entrada_salida, "Correcto en handshake con kernel\n");      
+    }
+    else {
+        log_info(logger_entrada_salida, "Error en handshake con kernel\n");
+        return EXIT_FAILURE;
+    }
+
+
+    if ( (hacer_handshake (socket_memoria) == HANDSHAKE)){
+        log_info(logger_entrada_salida, "Correcto en handshake con memoria\n");
+    }
+    else {
+        log_info(logger_entrada_salida, "Error en handshake con memoria\n");
+        return EXIT_FAILURE;
+    }
+
+// PRESENTAR    
+    if ( (presentar_interfaz (socket_kernel) == INTERFAZ_RECIBIDA)){
+        log_info(logger_entrada_salida, "Interfaz presentada correctamente a kernel\n");      
+    }
+    else {
+        log_info(logger_entrada_salida, "Error al recibir interfaz desde kernel \n");
+        return EXIT_FAILURE;
+    }
+
+      switch (tipo_interfaz_enum) {
             
             case GENERICA :
                 iniciar_interfaz_generica (socket_memoria);
