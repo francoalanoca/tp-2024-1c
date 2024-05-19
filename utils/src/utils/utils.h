@@ -68,7 +68,7 @@ extern t_log* logger;
 
 
 
-extern t_log* logger;
+
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
