@@ -4,11 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <utils/utils.h>
-
+#include <../include/generica.h>
 
 int checkProperties(char *path_config);
 
-int cargar_configuracion(char *path);
+int cargar_configuracion(char *nombre_interfaz_custom, char *path);
 
 int init(char *path_config);
 
@@ -32,6 +32,7 @@ typedef struct
     int BLOCK_SIZE;
     int BLOCK_COUNT;
     int RETRASO_COMPACTACION;
+    char *NOMBRE_INTERFAZ;
 } t_config_entrada_salida;
 
 extern t_config_entrada_salida *cfg_entrada_salida;
@@ -49,5 +50,5 @@ static t_config_entrada_salida *cfg_entrada_salida_start()
 //PARA CONVERTIR CADENAS EN t_tipo_inferfaz_enum
 t_tipo_interfaz_enum obtener_tipo_interfaz_enum(const char* tipo_interfaz_str);
 
-void iniciar_interface(char* tipo_interfaz_str, int socket_kernel, int socket_memoria);
+void iniciar_interface(char* tipo_interfaz_str,char* nombre_interfaz, int socket_kernel, int socket_memoria);
 #endif //TP_2024_1C_PASARONCOSAS_INIT_ENTRADA_SALIDA_H

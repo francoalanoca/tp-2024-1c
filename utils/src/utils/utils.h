@@ -26,7 +26,10 @@ typedef enum
 	PAQUETE,
 	PCB = 30,
 	NUEVO_PROCESO = 35,
-    PROXIMA_INSTRUCCION = 40
+    PROXIMA_INSTRUCCION = 40,
+ //---------------ENTRADASALIDA-KERNEL-------------------
+    INTERFAZ_RECIBIDA
+
 }op_code;
 
 typedef struct {
@@ -130,7 +133,7 @@ typedef struct {
 
 
 
-extern t_log* logger;
+
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
@@ -139,7 +142,7 @@ int crear_conexion(t_log *logger, const char *server_name, char *ip, char *puert
 t_list* recibir_paquete(int);
 void recibir_mensaje(int);
 int recibir_operacion(int);
-t_paquete* crear_paquete(void);
+t_paquete* crear_paquete(op_code codigo_operacion);
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void liberar_conexion(int socket_cliente);
