@@ -33,20 +33,21 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
 void check_interrupt();
 instr_t* pedir_instruccion(t_proceso* proceso,int conexion);
 void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger);
-void sum(uint32_t registro_destino, uint32_t registro_origen, t_proceso* proceso);
-void sub(uint32_t registro_destino, uint32_t registro_origen, t_proceso* proceso);
-void jnz(uint32_t registro, uint32_t inst, t_proceso* proceso);
+void sum(char* registro_destino, char* registro_origen, t_proceso* proceso);
+void sub(char* registro_destino, char* registro_origen, t_proceso* proceso);
+void jnz(char* registro, uint32_t inst, t_proceso* proceso);
 void io_gen_sleep(char* interfaz, int unidades_de_trabajo, t_proceso* proceso);
 instr_t* pedir_inst_a_memoria(int pc, int valor);
 bool verificar_interrupcion_kernel();
 void generar_interrupcion_a_kernel(int conexion);
-t_interfaz elegir_interfaz(char* interfaz,t_proceso* proceso);
+//t_interfaz elegir_interfaz(char* interfaz,t_proceso* proceso);
 t_buffer *buffer_create(uint32_t size);
 void buffer_destroy(t_buffer *buffer);
 void buffer_add(t_buffer *buffer, void *data, uint32_t size);
 void buffer_add_uint32(t_buffer *buffer, uint32_t data);
 void buffer_add_uint8(t_buffer *buffer, uint8_t data);
 void buffer_add_string(t_buffer *buffer, uint32_t length, char *string);
+void buffer_add_t_tipo_interfaz_enum(t_buffer *buffer, t_tipo_interfaz_enum* data);
 void buffer_add_pcb(t_buffer* buffer,  t_pcb* pcb);
 void buffer_add_instruccion(t_buffer* buffer, instr_t* instruccion);
 void calcularTamanioInstruccion(instr_t* instruccion);
@@ -60,6 +61,10 @@ t_buffer *proceso_interrumpido_serializar(t_proceso_interrumpido* proceso_interr
 void* crear_servidor_dispatch(char* ip_cpu);
 void* crear_servidor_interrupt(char* ip_cpu);
 registros identificarRegistro(char* registro);
+uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso);
+t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso);
+void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint8_t unidades_de_trabajo);
+t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint8_t unidades_de_trabajo);
 
 
 

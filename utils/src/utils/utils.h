@@ -27,7 +27,8 @@ typedef enum
 	PCB = 30,
 	NUEVO_PROCESO = 35,
     PROXIMA_INSTRUCCION = 40,
-    INTERRUPCION_CPU = 45
+    INTERRUPCION_CPU = 45,
+    ENVIO_INTERFAZ = 50
 }op_code;
 
 typedef struct {
@@ -114,7 +115,7 @@ typedef enum {
 typedef struct {
     char* nombre;
     //uint8_t nombre_size; creo que no hace falta
-    t_tipo_interfaz_enum tipo;//Debe ser un enum?
+    t_tipo_interfaz_enum* tipo;//Debe ser un enum?
     //uint8_t tipo_size;  creo que no hace falta
 }t_interfaz;
 
@@ -123,7 +124,7 @@ typedef struct {
     t_pcb* pcb; 
     uint8_t cantidad_instrucciones;
     t_list* instrucciones;
-    t_list* interfaces;
+    t_list*  interfaces;
 }t_proceso;
 
 typedef struct{

@@ -233,29 +233,166 @@ void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger){
         log_info(logger, "El registro no existe");
     }
 
-    proceso->pcb->registrosCPU.AX;
+    //proceso->pcb->registrosCPU.AX;
    // registro = valor;
 }
 
-void sum(uint32_t registro_destino, uint32_t registro_origen, t_proceso* proceso){
-    registro_destino = registro_destino + registro_origen;
+void sum(char* registro_destino, char* registro_origen, t_proceso* proceso){
+    registros id_registro_destino = identificarRegistro(registro_destino);
+    registros id_registro_origen = identificarRegistro(registro_origen);
+
+    uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso);
+    uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso);
+
+    switch(id_registro_destino){
+        case PC:
+        {
+           proceso->pcb->registrosCPU.PC = valor_reg_destino + valor_reg_origen;
+            break;
+        }
+        case AX:
+        {
+           proceso->pcb->registrosCPU.AX = valor_reg_destino + valor_reg_origen;
+            break;
+        }
+        case BX:
+        {
+           proceso->pcb->registrosCPU.BX = valor_reg_destino + valor_reg_origen;
+            break;
+        }
+        case CX:
+        {
+           proceso->pcb->registrosCPU.CX = valor_reg_destino + valor_reg_origen;
+            break;
+        }
+        case DX:
+        {
+           proceso->pcb->registrosCPU.DX = valor_reg_destino + valor_reg_origen;
+            break;
+        }
+        case EAX:
+        {
+           proceso->pcb->registrosCPU.EAX = valor_reg_destino + valor_reg_origen;
+            break;
+        }
+        case EBX:
+        {
+           proceso->pcb->registrosCPU.EBX = valor_reg_destino + valor_reg_origen;
+            break;
+        }
+        case ECX:
+        {
+           proceso->pcb->registrosCPU.ECX = valor_reg_destino + valor_reg_origen;
+            break;
+        }
+        case EDX:
+        {
+           proceso->pcb->registrosCPU.EDX = valor_reg_destino + valor_reg_origen;
+            break;
+        }
+        case SI:
+        {
+           proceso->pcb->registrosCPU.SI = valor_reg_destino + valor_reg_origen;
+            break;
+        }
+        case DI:
+        {
+           proceso->pcb->registrosCPU.DI = valor_reg_destino + valor_reg_origen;
+            break;
+        }
+        default:
+        log_info(logger, "El registro no existe");
+    }
+
+
+    //registro_destino = registro_destino + registro_origen;
 }
 
-void sub(uint32_t registro_destino, uint32_t registro_origen, t_proceso* proceso){
-    registro_destino = registro_destino - registro_origen;
+void sub(char* registro_destino, char* registro_origen, t_proceso* proceso){
+    registros id_registro_destino = identificarRegistro(registro_destino);
+    registros id_registro_origen = identificarRegistro(registro_origen);
+
+    uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso);
+    uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso);
+
+    switch(id_registro_destino){
+        case PC:
+        {
+           proceso->pcb->registrosCPU.PC = valor_reg_destino - valor_reg_origen;
+            break;
+        }
+        case AX:
+        {
+           proceso->pcb->registrosCPU.AX = valor_reg_destino - valor_reg_origen;
+            break;
+        }
+        case BX:
+        {
+           proceso->pcb->registrosCPU.BX = valor_reg_destino - valor_reg_origen;
+            break;
+        }
+        case CX:
+        {
+           proceso->pcb->registrosCPU.CX = valor_reg_destino - valor_reg_origen;
+            break;
+        }
+        case DX:
+        {
+           proceso->pcb->registrosCPU.DX = valor_reg_destino - valor_reg_origen;
+            break;
+        }
+        case EAX:
+        {
+           proceso->pcb->registrosCPU.EAX = valor_reg_destino - valor_reg_origen;
+            break;
+        }
+        case EBX:
+        {
+           proceso->pcb->registrosCPU.EBX = valor_reg_destino - valor_reg_origen;
+            break;
+        }
+        case ECX:
+        {
+           proceso->pcb->registrosCPU.ECX = valor_reg_destino - valor_reg_origen;
+            break;
+        }
+        case EDX:
+        {
+           proceso->pcb->registrosCPU.EDX = valor_reg_destino - valor_reg_origen;
+            break;
+        }
+        case SI:
+        {
+           proceso->pcb->registrosCPU.SI = valor_reg_destino - valor_reg_origen;
+            break;
+        }
+        case DI:
+        {
+           proceso->pcb->registrosCPU.DI = valor_reg_destino - valor_reg_origen;
+            break;
+        }
+        default:
+        log_info(logger, "El registro no existe");
+    }
+    //registro_destino = registro_destino - registro_origen;
 }
 
-void jnz(uint32_t registro, uint32_t inst, t_proceso* proceso){
-    if(registro != 0){
-        proceso_actual-> pcb-> program_counter = inst;
+void jnz(char* registro, uint32_t inst, t_proceso* proceso){
+    registros id_registro = identificarRegistro(registro);
+    uint32_t valor_registro = obtenerValorActualRegistro(id_registro,proceso);
+    if(valor_registro != 0){
+        proceso->pcb->program_counter = inst;
     }
 }
 //void io_gen_sleep(Interfaz interfaz, int unidades_de_trabajo){ //TODO: VER PARAMETROS
 void io_gen_sleep(char* interfaz, int unidades_de_trabajo, t_proceso* proceso){
    // t_interfaz interfaz_elegida = malloc(sizeof(t_interfaz));//REVISAR
-   t_interfaz interfaz_elegida;
+   t_interfaz* interfaz_elegida;
     interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
-    //enviar_interfaz_a_kernel(interfaz_elegida, unidades_de_trabajo);//VER IMPLEMENTACION
+    //if(interfaz_elegida != NULL){
+//enviar_interfaz_a_kernel(interfaz_elegida, unidades_de_trabajo);//VER IMPLEMENTACION
+    //}
+    
     printf("Entra a io_gen_sleep");
 }
 
@@ -300,11 +437,6 @@ void generar_interrupcion_a_kernel(int conexion){
     //free(proceso_interrumpido);
 }
 
-t_interfaz elegir_interfaz(char* interfaz,t_proceso* proceso){
-    t_interfaz interf;
-    return interf;
-
-}
 
 // Crea un buffer vacío de tamaño size y offset 0
 t_buffer *buffer_create(uint32_t size){
@@ -342,6 +474,10 @@ void buffer_add_uint8(t_buffer *buffer, uint8_t data){
 void buffer_add_string(t_buffer *buffer, uint32_t length, char *string){
 	buffer_add(buffer,length,sizeof(uint32_t));
 	buffer_add(buffer,string,length); //VER SI MULTIPLICAR LENGTH POR TAMANIO DE CHAR*
+}
+
+void buffer_add_t_tipo_interfaz_enum(t_buffer *buffer, t_tipo_interfaz_enum *data){
+    buffer_add(buffer,data,sizeof(t_tipo_interfaz_enum));
 }
 
 
@@ -506,16 +642,159 @@ tamanioBuffer = tamanio_pcb
 }
 
 registros identificarRegistro(char* registro){
-    if(strcmp(registro,"AX") == 0){
+    if(strcmp(registro,"PC") == 0){
+        return PC;
+    }
+    else if(strcmp(registro,"AX") == 0){
         return AX;
     }
     else if(strcmp(registro,"BX") == 0){
         return BX;
+    }
+    else if(strcmp(registro,"CX") == 0){
+        return CX;
+    }
+    else if(strcmp(registro,"DX") == 0){
+        return DX;
+    }
+    else if(strcmp(registro,"EAX") == 0){
+        return EAX;
+    }
+    else if(strcmp(registro,"EBX") == 0){
+        return EBX;
+    }
+    else if(strcmp(registro,"ECX") == 0){
+        return ECX;
+    }
+    else if(strcmp(registro,"EDX") == 0){
+        return EDX;
+    }
+    else if(strcmp(registro,"SI") == 0){
+        return SI;
+    }
+    else if(strcmp(registro,"DI") == 0){
+        return DI;
     }
     else{
         return REG_NO_ENC;
     }
 }
 
+uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso){
+    switch(id_registro){
+        case PC:
+        {
+           return proceso->pcb->registrosCPU.PC;
+            break;
+        }
+        case AX:
+        {
+           return proceso->pcb->registrosCPU.AX;
+            break;
+        }
+        case BX:
+        {
+           return proceso->pcb->registrosCPU.BX;
+            break;
+        }
+        case CX:
+        {
+           return proceso->pcb->registrosCPU.CX;
+            break;
+        }
+        case DX:
+        {
+           return proceso->pcb->registrosCPU.DX;
+            break;
+        }
+        case EAX:
+        {
+           return proceso->pcb->registrosCPU.EAX;
+            break;
+        }
+        case EBX:
+        {
+           return proceso->pcb->registrosCPU.EBX;
+            break;
+        }
+        case ECX:
+        {
+           return proceso->pcb->registrosCPU.ECX;
+            break;
+        }
+        case EDX:
+        {
+           return proceso->pcb->registrosCPU.EDX;
+            break;
+        }
+        case SI:
+        {
+           return proceso->pcb->registrosCPU.SI;
+            break;
+        }
+        case DI:
+        {
+           return proceso->pcb->registrosCPU.DI;
+            break;
+        }
+        default:
+        log_info(logger, "El registro no existe");
+    }
+}
 
+t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso){
+    t_interfaz* interfaz_actual; //malloc?
+    for(int i = 0; i < proceso->interfaces->elements_count; i++){	 //REVISAR ELEMENTS_COUNT
+			interfaz_actual = list_get(proceso->interfaces,i);
+            if(strcmp(interfaz_actual->nombre, interfaz) == 0){
+                return interfaz_actual;
+            }
+	  }
+      return NULL;
+}
 
+void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint8_t unidades_de_trabajo){
+    printf("entro a enviar_interfaz_a_kernel");
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    //t_proceso_memoria* proceso_memoria = malloc(sizeof(t_proceso_memoria));
+    //t_proceso_interrumpido* proceso_interrumpido = crear_proceso_interrumpido(proceso_actual, "Motivo de interrupcion");//ESTO ES SI EL KENERL ME MANDA PROCESO
+    
+    paquete -> codigo_operacion = ENVIO_INTERFAZ;
+    paquete->buffer = envio_interfaz_serializar(interfaz_elegida, unidades_de_trabajo);
+
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint8_t));
+
+    offset += sizeof(uint8_t);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(conexion_kernel, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0); //VER que socket poner(reemplazar unSocket)
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+    //free(proceso_interrumpido);
+}
+
+t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint8_t unidades_de_trabajo){
+    uint32_t tamanioBuffer = malloc(sizeof(uint32_t));
+tamanioBuffer = ((strlen(interfaz_elegida->nombre) + 1)* sizeof(char*)) //TAMANIO DEL NOMBRE DE LA INTERFAZ
+             + sizeof(t_tipo_interfaz_enum)
+             + sizeof(uint8_t); // cantidad_instrucciones
+			 
+  t_buffer *buffer = buffer_create(tamanioBuffer);
+//REVISAR ACA (SERIALIZACION)
+    buffer_add_string(buffer,((strlen(interfaz_elegida->nombre) + 1)* sizeof(char*)) ,interfaz_elegida->nombre);
+    buffer_add_t_tipo_interfaz_enum(buffer,interfaz_elegida->tipo);
+    buffer_add_uint8(buffer,unidades_de_trabajo);
+    return buffer;
+
+}
