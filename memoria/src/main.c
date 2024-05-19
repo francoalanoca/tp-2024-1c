@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
 			case PROXIMA_INSTRUCCION://CPU me pide su sig instruccion
 				//abrir archivo de instrucciones (buscar como leer un archivo linea por linea)
 				//ubicar instruccion a partir PC que me envia cpu
-				//enviar codigo de operacion a cpu para que espere la instruccion(armar paquete con instruccion y codigo de opercion nuevo)
+				//enviar codigo de operacion (INSTRUCCION_RECIBIDA) a cpu para que espere la instruccion(armar paquete con instruccion y codigo de opercion nuevo)
 				break;
 			case INTERFAZ_IO://interfaz de io que me tiene que pasar
 				lista = recibir_paquete(cliente_fd);
