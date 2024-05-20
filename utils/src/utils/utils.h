@@ -28,9 +28,11 @@ typedef enum
 	NUEVO_PROCESO = 35,
     PROXIMA_INSTRUCCION = 40,
  //---------------ENTRADASALIDA-KERNEL-------------------
-    INTERFAZ_ENVIAR,
-    INTERFAZ_RECIBIDA,
-    OPERACION_INVALIDA
+    INTERFAZ_ENVIAR, // EntradaSalida, avisa que envía la interfaz creada
+    INTERFAZ_RECIBIDA, // Es el ok del kernel al recibir la interfaz
+    OPERACION_INVALIDA, // EntradaSalida, avisa que envía la operacion es invalida
+    IO_K_GEN_SLEEP, // Kernel solicita realizar esta operación (usar esta para otros modulos tambien)
+    IO_K_GEN_SLEEP_FIN //EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
 
 }op_code;
 
