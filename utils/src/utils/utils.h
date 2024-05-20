@@ -28,6 +28,7 @@ typedef enum
 	NUEVO_PROCESO = 35,
     PROXIMA_INSTRUCCION = 40,
  //---------------ENTRADASALIDA-KERNEL-------------------
+    INTERFAZ_ENVIAR,
     INTERFAZ_RECIBIDA
 
 }op_code;

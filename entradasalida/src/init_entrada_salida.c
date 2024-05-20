@@ -117,8 +117,14 @@ t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) 
     }
 }
 
-int  presentar_interfaz(int socket_kernel){
-    send(socket_kernel,INTERFAZ_ENVIAR, sizeof(uint32_t), NULL);
+int  presentar_interfaz(int socket_kernel,t_interfaz* interfaz ){
+    t_paquete* paquete_interfaz;
+
+    paquete_interfaz = crear_paquete(INTERFAZ_ENVIAR);
+
+    agregar_a_paquete(paquete_interfaz, interfaz->nombre,  sizeof(interfaz->nombre));
+    agregar_a_paquete(paquete_interfaz, interfaz->tipo,  sizeof(interfaz->tipo));
+    enviar_paquete(paquete_interfaz, socket_kernel);    
     return recibir_operacion(socket_kernel);
 
 }
@@ -129,6 +135,8 @@ t_tipo_interfaz_enum tipo_interfaz_enum = obtener_tipo_interfaz_enum (tipo_inter
 
  interfaz->nombre =nombre_interfaz;
  interfaz->tipo =tipo_interfaz_enum;
+
+
 
 //HANDSHAKE//   
     if ( (hacer_handshake (socket_kernel) == HANDSHAKE)){
@@ -149,7 +157,7 @@ t_tipo_interfaz_enum tipo_interfaz_enum = obtener_tipo_interfaz_enum (tipo_inter
     }
 
 // PRESENTAR    
-    if ( (presentar_interfaz (socket_kernel) == INTERFAZ_RECIBIDA)){
+    if ( (presentar_interfaz (socket_kernel, interfaz) == INTERFAZ_RECIBIDA)){
         log_info(logger_entrada_salida, "Interfaz presentada correctamente a kernel\n");      
     }
     else {
