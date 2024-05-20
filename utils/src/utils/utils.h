@@ -29,7 +29,8 @@ typedef enum
     PROXIMA_INSTRUCCION = 40,
  //---------------ENTRADASALIDA-KERNEL-------------------
     INTERFAZ_ENVIAR,
-    INTERFAZ_RECIBIDA
+    INTERFAZ_RECIBIDA,
+    OPERACION_INVALIDA
 
 }op_code;
 

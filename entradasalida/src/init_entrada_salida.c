@@ -168,7 +168,7 @@ t_tipo_interfaz_enum tipo_interfaz_enum = obtener_tipo_interfaz_enum (tipo_inter
       switch (tipo_interfaz_enum) {
             
             case GENERICA :
-                iniciar_interfaz_generica (socket_memoria);
+                iniciar_interfaz_generica (socket_kernel);
                 break;
             
             case STDIN :
