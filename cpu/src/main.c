@@ -13,6 +13,7 @@ char *ip_cpu;
 t_proceso* proceso_actual;
 t_proceso_interrumpido* proceso_interrumpido_actual;
 bool interrupcion_kernel;
+instr_t *prox_inst;
 
 int tamanioParams;
 int tamanioInterfaces;
@@ -90,8 +91,9 @@ void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pro
 }
 
 instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso){
-        instr_t *prox_inst = malloc(sizeof(instr_t));
-       prox_inst = pedir_instruccion(proceso, conexion); //TODO:VER COMO RECIBIR LA INSTRUCCION
+       // instr_t *prox_inst = malloc(sizeof(instr_t));
+       pedir_instruccion(proceso, conexion); //TODO:VER COMO RECIBIR LA INSTRUCCION
+       //SEMAFORO QUE ESPERE A RECIBIR LA PROX INSTRUCCION
        return prox_inst;
 }
 
@@ -139,7 +141,7 @@ void check_interrupt(){
     }
 }
 
-instr_t* pedir_instruccion(t_proceso* proceso,int conexion){
+void pedir_instruccion(t_proceso* proceso,int conexion){
     t_paquete* paquete = malloc(sizeof(t_paquete));
     //t_proceso_memoria* proceso_memoria = malloc(sizeof(t_proceso_memoria));
     t_proceso_memoria* proceso_memoria = crear_proceso_memoria(proceso);
@@ -427,7 +429,7 @@ void generar_interrupcion_a_kernel(int conexion){
     memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
 
 // Por último enviamos
-    send(conexion, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0); //VER que socket poner(reemplazar unSocket)
+    send(conexion, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0); 
 
 // No nos olvidamos de liberar la memoria que ya no usaremos
     free(a_enviar);
@@ -531,38 +533,38 @@ int tamanioParams = malloc(sizeof(int));//hay que recorrer con for la lista de i
 
 int tamanioInterfaces = malloc(sizeof(int)); //hay que recorrer con for la lista de interfaces y por cada una ir sumando en esta variable el tameanio del nombre y tipo
 
-list_iterate(proceso->instrucciones, calcularTamanioInstruccion);
+//list_iterate(proceso->instrucciones, calcularTamanioInstruccion);
 
 list_iterate(proceso->interfaces, calcularTamanioInterfaz);
 
 int tamanio_pcb = malloc(sizeof(int));
 tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
 
-int tamanioInstrucciones = malloc(sizeof(int));
-tamanioInstrucciones = ((sizeof(uint8_t) * 6 + sizeof(tipo_instruccion)) * proceso->cantidad_instrucciones )+ tamanioParams;
+//int tamanioInstrucciones = malloc(sizeof(int));
+//tamanioInstrucciones = ((sizeof(uint8_t) * 6 + sizeof(tipo_instruccion)) * proceso->cantidad_instrucciones )+ tamanioParams;
 
 int tamanioBuffer = malloc(sizeof(int));
 tamanioBuffer = tamanio_pcb
-             + sizeof(uint8_t) // cantidad_instrucciones
-             + tamanioInstrucciones
+          //   + sizeof(uint8_t) // cantidad_instrucciones
+           //  + tamanioInstrucciones
 			 + tamanioInterfaces;
 			 
   t_buffer *buffer = buffer_create(tamanioBuffer);
 //REVISAR ACA (SERIALIZACION)
     buffer_add_pcb(buffer, proceso->pcb);
-    buffer_add_uint8(buffer, proceso->cantidad_instrucciones);
+    //buffer_add_uint8(buffer, proceso->cantidad_instrucciones);
 	//list_iterate(proceso->instrucciones, buffer_add_instruccion(buffer));//NO SE PUEDE HACER YA QUE LA FUNCION RECIBE UN PARAM BUFFER
 	//list_iterate(proceso->interfaces, buffer_add_interfaz(buffer));//NO SE PUEDE HACER YA QUE LA FUNCION RECIBE UN PARAM BUFFER
 	//REVISAR ACAAAAA//VER DE HACER FOR
 	
 	/////////
-	  for(int i = 0; i < proceso->cantidad_instrucciones; i++){	
+	/*  for(int i = 0; i < proceso->cantidad_instrucciones; i++){	
 			buffer_add_instruccion(buffer, list_get(proceso->instrucciones,i));
-	  }
+	  }*/
 	       
 	
 	///////
-   //  //RECORRER LISTA DE INSTRUCCIONES CON FOR Y HACER ESTO POR CADA UNA
+   //  
    	  for(int i = 0; i < list_size(proceso->interfaces); i++){	
 			buffer_add_interfaz(buffer, list_get(proceso->interfaces,i));
 	  }
@@ -607,31 +609,31 @@ int tamanioParams = malloc(sizeof(int));//hay que recorrer con for la lista de i
 
 int tamanioInterfaces = malloc(sizeof(int)); //hay que recorrer con for la lista de interfaces y por cada una ir sumando en esta variable el tameanio del nombre y tipo
 
-list_iterate(proceso_interrumpido->proceso->instrucciones, calcularTamanioInstruccion);
+//list_iterate(proceso_interrumpido->proceso->instrucciones, calcularTamanioInstruccion);
 
 list_iterate(proceso_interrumpido->proceso->interfaces, calcularTamanioInterfaz);
 
 int tamanio_pcb = malloc(sizeof(int));
 tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
 
-int tamanioInstrucciones = malloc(sizeof(int));
-tamanioInstrucciones = ((sizeof(uint8_t) * 6 + sizeof(tipo_instruccion)) * proceso_interrumpido->proceso->cantidad_instrucciones )+ tamanioParams;
+//int tamanioInstrucciones = malloc(sizeof(int));
+//tamanioInstrucciones = ((sizeof(uint8_t) * 6 + sizeof(tipo_instruccion)) * proceso_interrumpido->proceso->cantidad_instrucciones )+ tamanioParams;
 
 int tamanioBuffer = malloc(sizeof(int));
 tamanioBuffer = tamanio_pcb
-             + sizeof(uint8_t) // cantidad_instrucciones
-             + tamanioInstrucciones
+  //           + sizeof(uint8_t) // cantidad_instrucciones
+  //           + tamanioInstrucciones
 			 + tamanioInterfaces
              + (strlen(proceso_interrumpido->motivo_interrupcion) + 1);
 			 
   t_buffer *buffer = buffer_create(tamanioBuffer);
 
     buffer_add_pcb(buffer, proceso_interrumpido->proceso->pcb);
-    buffer_add_uint8(buffer, proceso_interrumpido->proceso->cantidad_instrucciones);
+    //buffer_add_uint8(buffer, proceso_interrumpido->proceso->cantidad_instrucciones);
 
-	  for(int i = 0; i < proceso_interrumpido->proceso->cantidad_instrucciones; i++){	
+	  /*for(int i = 0; i < proceso_interrumpido->proceso->cantidad_instrucciones; i++){	
 			buffer_add_instruccion(buffer, list_get(proceso_interrumpido->proceso->instrucciones,i));
-	  }
+	  }*/
 	       
 
    	  for(int i = 0; i < list_size(proceso_interrumpido->proceso->interfaces); i++){	
@@ -788,7 +790,7 @@ t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint8_t unidad
     uint32_t tamanioBuffer = malloc(sizeof(uint32_t));
 tamanioBuffer = ((strlen(interfaz_elegida->nombre) + 1)* sizeof(char*)) //TAMANIO DEL NOMBRE DE LA INTERFAZ
              + sizeof(t_tipo_interfaz_enum)
-             + sizeof(uint8_t); // cantidad_instrucciones
+             + sizeof(uint8_t); // cantidad_instrucciones, esto va?
 			 
   t_buffer *buffer = buffer_create(tamanioBuffer);
 //REVISAR ACA (SERIALIZACION)

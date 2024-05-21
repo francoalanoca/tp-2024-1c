@@ -28,7 +28,8 @@ typedef enum
 	NUEVO_PROCESO = 35,
     PROXIMA_INSTRUCCION = 40,
     INTERRUPCION_CPU = 45,
-    ENVIO_INTERFAZ = 50
+    ENVIO_INTERFAZ = 50,
+    INSTRUCCION_RECIBIDA
 }op_code;
 
 typedef struct {
@@ -122,8 +123,8 @@ typedef struct {
 
 typedef struct {
     t_pcb* pcb; 
-    uint8_t cantidad_instrucciones;
-    t_list* instrucciones;
+   // uint8_t cantidad_instrucciones;
+   // t_list* instrucciones;
     t_list*  interfaces;
 }t_proceso;
 

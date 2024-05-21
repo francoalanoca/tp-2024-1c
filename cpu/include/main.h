@@ -31,7 +31,7 @@ instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso
 tipo_instruccion decode(instr_t* instr);
 void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_proceso* proceso);
 void check_interrupt();
-instr_t* pedir_instruccion(t_proceso* proceso,int conexion);
+void pedir_instruccion(t_proceso* proceso,int conexion);
 void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger);
 void sum(char* registro_destino, char* registro_origen, t_proceso* proceso);
 void sub(char* registro_destino, char* registro_origen, t_proceso* proceso);
