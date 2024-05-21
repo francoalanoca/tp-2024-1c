@@ -34,7 +34,7 @@ typedef enum
     IO_K_GEN_SLEEP, // Kernel solicita realizar esta operación (usar esta para otros modulos tambien)
     IO_K_GEN_SLEEP_FIN //EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
 
-}op_code;
+}op_code; 
 
 typedef struct {
     t_log *log;
