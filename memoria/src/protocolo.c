@@ -83,7 +83,7 @@ void escuchar_modulos(){
 
 void memoria_atender_kernel(){
     t_list* lista;
-    t_buffer* un_buffer;
+    //t_buffer* un_buffer;
 	while (1) {
         //Se queda esperando a que KErnel le envie algo y extrae el cod de operacion
 		int cod_op = recibir_operacion(fd_kernel);
@@ -114,7 +114,7 @@ void memoria_atender_kernel(){
 
 void memoria_atender_cpu(){
     t_list* lista;
-    t_buffer* un_buffer;
+    //t_paquete* paquete;
 	while (1) {
         //Se queda esperando a que Cpu le envie algo y extrae el cod de operacion
 		int cod_op = recibir_operacion(fd_cpu);
@@ -127,9 +127,10 @@ void memoria_atender_cpu(){
 			log_info(logger_memoria, "Me llegaron los siguientes valores:\n");
 			//list_iterate(lista, (void*) iterator);
 			break;
-        // case CREAR_PROCESO_KERNEL:
+        // case SOLICITAR_INSTRUCCION:
         //     un_buffer = recibir_paquete(fd_cpu);
-        //     atender_crear_proceso(un_buffer);
+        //     eliminar_paquete(paquete);
+        //     enviar_instruccion(paquete);
         //     break;
 		case -1:
 			log_error(logger_memoria, "CPU se desconecto. Terminando servidor.");
@@ -146,7 +147,7 @@ void memoria_atender_cpu(){
 
 void memoria_atender_io(){
     t_list* lista;
-    t_buffer* un_buffer;
+    //t_buffer* un_buffer;
 	while (1) {
         //Se queda esperando a que IO le envie algo y extrae el cod de operacion
 		int cod_op = recibir_operacion(fd_entradasalida);

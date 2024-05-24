@@ -72,9 +72,9 @@ int checkProperties(char *path_config) {
 
 
 //Cargo todas las configuracionde en las variables tipo config
-int cargar_configuracion(char *path) {
+int cargar_configuracion(char *path_config) {
 
-    file_cfg_memoria = config_create(path);
+    file_cfg_memoria = config_create(path_config);
 
     //Cargo en la variable tipo config las configuraciones iniciales
     cfg_memoria->PUERTO_ESCUCHA = strdup(config_get_string_value(file_cfg_memoria, "PUERTO_ESCUCHA"));
@@ -100,6 +100,23 @@ int cargar_configuracion(char *path) {
 }
 
 
+/*
+void inicializar_memoria(char* path_config){
+    
+    memoria_config = iniciar_config(config_path);
+	//iniciar_memoria_principal(memoria_config->TAM_MEMORIA, memoria_config->TAM_PAGINA);
+	memoria = malloc(memoria_config->TAM_MEMORIA);
+	tablas_de_paginas = list_create();
+	archivos_swap = list_create();
+	instrucciones_de_procesos = dictionary_create();
+	pthread_mutex_init(&mutex_swap, NULL);
+	pthread_mutex_init(&mutex_memoria, NULL);
+	cantidad_acceso_disco = 0;
+	cantidad_page_fault = 0;
+	cantidad_frames = memoria_config->TAM_MEMORIA / memoria_config->TAM_PAGINA;
+	bitmap_frames = bitarray_create_with_mode(memoria, (size_t)(cantidad_frames / 8), LSB_FIRST);
+}
+*/
 
 
 

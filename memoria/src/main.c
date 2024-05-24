@@ -3,8 +3,8 @@
 
 int main(int argc, char* argv[]) {
 
-	//char* path_config = argv[1];
-	char* path_config = "memoria.config";
+	char* path_config = argv[1];
+	//char* path_config = "memoria.config";
 
 
 	if (!init(path_config) || !cargar_configuracion(path_config)) {
@@ -16,6 +16,10 @@ int main(int argc, char* argv[]) {
 
 	log_info(logger_memoria, "Se iniciaron correctamente las configuraciones");
 
+
+	//-------------------Variables---------------------------
+	//inicializar_memoria();
+	//log_info(logger_memoria, "Se inicio correctamente la Memoria")
 
 	/*
 	bool flag_conexion_activa;
@@ -39,8 +43,8 @@ int main(int argc, char* argv[]) {
 	//int fd_memoria = iniciar_servidor(logger_memoria,"SERVER MEMORIA", "8002",puerto_escucha);
 	//log_info(logger_memoria, "Servidor listo para recibir al cliente");
 
-	//iniciar_conexiones();
-	//log_info(logger_memoria, "Se iniciaron correctamente las conexiones");
+	iniciar_conexiones();
+	log_info(logger_memoria, "Se iniciaron correctamente las conexiones");
 
 
 	//------------------Hilos------------------------------

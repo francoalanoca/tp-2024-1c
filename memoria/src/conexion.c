@@ -1,50 +1,52 @@
 #include <../include/conexion.h>
 
-// int iniciar_servidor_memoria(t_log* logger, char* puerto)
-// {
 
-// 	int socket_servidor;
+//Por alguna razon la funcion de utils no corre
+int iniciar_servidor_memoria(t_log* logger, char* puerto)
+{
 
-// 	struct addrinfo hints, *servinfo, *p;
+	int socket_servidor;
 
-// 	memset(&hints, 0, sizeof(hints));
-// 	hints.ai_family = AF_UNSPEC;
-// 	hints.ai_socktype = SOCK_STREAM;
-// 	hints.ai_flags = AI_PASSIVE;
+	struct addrinfo hints, *servinfo;
 
-// 	getaddrinfo(NULL, puerto, &hints, &servinfo);
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
 
-// 	socket_servidor = socket(servinfo -> ai_family,
-// 							 servinfo -> ai_socktype,
-// 							 servinfo -> ai_protocol);
+	getaddrinfo(NULL, puerto, &hints, &servinfo);
+
+	socket_servidor = socket(servinfo -> ai_family,
+							 servinfo -> ai_socktype,
+							 servinfo -> ai_protocol);
 							 
-// 	bind(socket_servidor,servinfo -> ai_addr, servinfo -> ai_addrlen);
-// 	log_info(logger, "Bind terminado");
-// 	listen(socket_servidor, SOMAXCONN);
-// 	log_info(logger, "Listen terminado");
+	bind(socket_servidor,servinfo -> ai_addr, servinfo -> ai_addrlen);
+	log_info(logger, "Bind terminado");
+	listen(socket_servidor, SOMAXCONN);
+	log_info(logger, "Listen terminado");
 
-// 	freeaddrinfo(servinfo);
-// 	log_trace(logger, "Listo para escuchar a mi cliente");
+	freeaddrinfo(servinfo);
+	log_trace(logger, "Listo para escuchar a mi cliente");
 
-// 	return socket_servidor;
-// }
+	return socket_servidor;
+}
 
 
 
 
 void iniciar_conexiones(){
 	//Iniciar server de Memoria
-    fd_memoria = iniciar_servidor(logger_memoria, "Memoria", "8002", cfg_memoria->PUERTO_ESCUCHA);
+    fd_memoria = iniciar_servidor_memoria(logger_memoria, cfg_memoria->PUERTO_ESCUCHA);
     log_info(logger_memoria,"Inicio de server Memoria exitosamente");
 
     //Esperar al cliente Kernel
-    log_info(logger_memoria, "Conexion con Kernel exitosa");
+    log_info(logger_memoria, "Esperando a Kernel");
     fd_kernel = esperar_cliente(logger_memoria, "Kernel", fd_memoria);
     //Esperar al cliente Cpu
-    log_info(logger_memoria, "Conexion con Cpu exitosa");
+    log_info(logger_memoria, "Esperando Cpu");
     fd_cpu = esperar_cliente(logger_memoria, "Cpu", fd_memoria);
     //Esperar al cliente EntradaSalida
-    log_info(logger_memoria, "Conexion con Entrada Salida exitosa");
+    log_info(logger_memoria, "Esperando a Entrada Salida");
     fd_entradasalida = esperar_cliente(logger_memoria, "Entrada Salida", fd_memoria);
 }
 

@@ -39,7 +39,8 @@ static t_config_memoria *cfg_memoria_start(){
 
 int init(char *path_config);
 int checkProperties(char *path_config);
-int cargar_configuracion(char *path);
+int cargar_configuracion(char *path_config);
+//void inicializar_memoria(char *path_config);
 void cerrar_programa();
 
 
