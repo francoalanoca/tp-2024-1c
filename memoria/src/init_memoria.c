@@ -101,8 +101,9 @@ int cargar_configuracion(char *path_config) {
 
 
 /*
+//Funcion que inicia las variables necesarias para el funcionamiento de memoria (tablas, paginas, usuario, etc)
 void inicializar_memoria(char* path_config){
-    
+
     memoria_config = iniciar_config(config_path);
 	//iniciar_memoria_principal(memoria_config->TAM_MEMORIA, memoria_config->TAM_PAGINA);
 	memoria = malloc(memoria_config->TAM_MEMORIA);

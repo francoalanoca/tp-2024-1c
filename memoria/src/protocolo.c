@@ -113,9 +113,15 @@ void memoria_atender_kernel(){
 
 
 void memoria_atender_cpu(){
+
+    //t_proceso_memoria contexto_ejecucion;
     t_list* lista;
     //t_paquete* paquete;
+
+
 	while (1) {
+
+        //contexto_ejecucion = malloc(sizeof(t_proceso_memoria));
         //Se queda esperando a que Cpu le envie algo y extrae el cod de operacion
 		int cod_op = recibir_operacion(fd_cpu);
 		switch (cod_op) {
@@ -127,10 +133,10 @@ void memoria_atender_cpu(){
 			log_info(logger_memoria, "Me llegaron los siguientes valores:\n");
 			//list_iterate(lista, (void*) iterator);
 			break;
-        // case SOLICITAR_INSTRUCCION:
-        //     un_buffer = recibir_paquete(fd_cpu);
-        //     eliminar_paquete(paquete);
-        //     enviar_instruccion(paquete);
+        // case PROXIMA_INSTRUCCION:
+        //     paquete = recibir_paquete(fd_cpu);
+        //     eliminar_paquete(paquete);       //libero el paquete para luego enviar la instruccion en su contenido
+        //     enviar_instruccion(contexto_ejecucion, paquete);     //serializo la insctruccion y la envio
         //     break;
 		case -1:
 			log_error(logger_memoria, "CPU se desconecto. Terminando servidor.");

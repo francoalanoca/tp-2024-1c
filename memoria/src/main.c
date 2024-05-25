@@ -3,8 +3,8 @@
 
 int main(int argc, char* argv[]) {
 
-	char* path_config = argv[1];
-	//char* path_config = "memoria.config";
+	//char* path_config = argv[1];
+	char* path_config = "memoria.config";
 
 
 	if (!init(path_config) || !cargar_configuracion(path_config)) {
