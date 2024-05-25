@@ -64,7 +64,7 @@ registros identificarRegistro(char* registro);
 uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso);
 t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso);
 void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint32_t unidades_de_trabajo);
-t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint8_t unidades_de_trabajo);
+t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint32_t unidades_de_trabajo);
 
 
 

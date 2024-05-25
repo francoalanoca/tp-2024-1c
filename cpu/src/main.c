@@ -97,8 +97,8 @@ int main(int argc, char* argv[]) {
     proceso_interrumpido_actual->tamanio_motivo_interrupcion = 6;
      proceso_interrumpido_actual->motivo_interrupcion = malloc(proceso_interrumpido_actual->tamanio_motivo_interrupcion );
     strcpy(proceso_interrumpido_actual->motivo_interrupcion, "Motivo");
-    /*list_add(proceso_interrumpido_actual->proceso->interfaces, int_prueba);*/
-    /* 
+    list_add(proceso_interrumpido_actual->proceso->interfaces, int_prueba);
+     
     //
    // interrupcion_kernel = malloc(sizeof(bool));*/
     interrupcion_kernel = true;
@@ -160,7 +160,7 @@ instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso
        //SEMAFORO QUE ESPERE A RECIBIR LA PROX INSTRUCCION
        //PARA PROBAR:
        //INSTRUCCION DE PRUEBA 1 (SET)
-       prox_inst->idLength = 4;
+       /*prox_inst->idLength = 4;
                 prox_inst->id = SET;
                 
                 prox_inst->param1Length = (strlen("AX") + 1) * sizeof(char*);
@@ -169,8 +169,9 @@ instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso
                 
                 prox_inst->param2Length = (strlen("1")+1) * sizeof(char*);
                 prox_inst->param2 = malloc(prox_inst->param2Length);
-                strcpy(prox_inst->param2, "1");
-            /*  prox_inst->idLength = 4;
+                strcpy(prox_inst->param2, "1");*/
+                //INSTRUCCION DE PRUEBA 2 (IO_GEN_SLEEP)
+              prox_inst->idLength = 4;
                 prox_inst->id = IO_GEN_SLEEP;  
                 prox_inst->param1Length = (strlen("Int1") + 1) * sizeof(char*);
                 prox_inst->param1 = malloc(prox_inst->param1Length);
@@ -178,7 +179,7 @@ instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso
                 
                 prox_inst->param2Length = (strlen("10")+1) * sizeof(char*);
                 prox_inst->param2 = malloc(prox_inst->param2Length);
-                strcpy(prox_inst->param2, "10");*/
+                strcpy(prox_inst->param2, "10");
         
        return prox_inst;
 }
@@ -572,6 +573,7 @@ printf("Entre buffer_add\n");
     // Verificar que haya suficiente espacio en el buffer
     if (buffer->offset + size > buffer->size) {
         printf("Error: no hay suficiente espacio en el buffer.\n");
+        printf("buffer->offset + size: %d , buffer->size: %d.\n",buffer->offset + size,buffer->size) ;
         return;
     }
 
@@ -591,17 +593,20 @@ void buffer_add_uint32(t_buffer *buffer, uint32_t data){
 
 // Agrega un uint8_t al buffer
 void buffer_add_uint8(t_buffer *buffer, uint8_t data){
-	buffer_add(buffer,data,sizeof(uint8_t));
+	buffer_add(buffer,&data,sizeof(uint8_t));
 }
 
 
 // Agrega string al buffer con un uint32_t adelante indicando su longitud
 void buffer_add_string(t_buffer *buffer, uint32_t length, char *string){
-	buffer_add(buffer,length,sizeof(uint32_t));
+	//buffer_add(buffer,&length,sizeof(uint32_t));
+    printf("hago buffer_add de l length\n");	
 	buffer_add(buffer,string,length); //VER SI MULTIPLICAR LENGTH POR TAMANIO DE CHAR*
+     printf("hago buffer_add de l string\n");
 }
 
 void buffer_add_t_tipo_interfaz_enum(t_buffer *buffer, t_tipo_interfaz_enum *data){
+    printf("entro a buffer_add_t_tipo_interfaz_enum, data:%d, size:%d\n", data,sizeof(t_tipo_interfaz_enum) );
     buffer_add(buffer,data,sizeof(t_tipo_interfaz_enum));
 }
 
@@ -636,11 +641,14 @@ void calcularTamanioInstruccion(instr_t* instruccion){
 }
 
 void calcularTamanioInterfaz(t_interfaz* interfaz){
-    printf("Emplieza ccalcularTamanioInterfaz");
-	uint32_t tamanio = malloc(sizeof(uint32_t)); //VER DONDE HACER FREE
+    printf("Emplieza ccalcularTamanioInterfaz\n");
+	uint32_t tamanio;// = malloc(sizeof(uint32_t)); //VER DONDE HACER FREE
 	tamanio = ((strlen(interfaz->nombre)+1) * sizeof(char*)) + sizeof(t_tipo_interfaz_enum); //REVISAR
+    printf("Va a sumar tamanio\n");
 	tamanioInterfaces += tamanio;
-	free(tamanio);
+    printf("suma tamanio\n");
+	//free(tamanio);
+    printf("Termina ccalcularTamanioInterfaz\n");
 }
 
 void buffer_add_interfaz(t_buffer* buffer, t_interfaz* interfaz){
@@ -743,7 +751,8 @@ printf("tamListaInterfaces: %d\n", list_size(proceso_interrumpido->proceso->inte
 //list_iterate(proceso_interrumpido->proceso->interfaces, calcularTamanioInterfaz);
    	  for(int i = 0; i < list_size(proceso_interrumpido->proceso->interfaces); i++){
         printf("entro for tamanioInterfaces\n");	
-            calcularTamanioInterfaz(list_get(proceso_interrumpido->proceso->interfaces,i));
+        printf("list_get name: %s\n",(t_interfaz*)list_get(proceso_interrumpido->proceso->interfaces,i) );
+            calcularTamanioInterfaz((t_interfaz*)list_get(proceso_interrumpido->proceso->interfaces,i));
 			//buffer_add_interfaz(buffer, list_get(proceso_interrumpido->proceso->interfaces,i));
 	  }
 printf("calcula tamanioInterfaces\n");
@@ -891,14 +900,15 @@ t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso){
 }
 
 void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint32_t unidades_de_trabajo){
-    printf("entro a enviar_interfaz_a_kernel");
+    printf("entro a enviar_interfaz_a_kernel\n");
+    
     t_paquete* paquete = malloc(sizeof(t_paquete));
     //t_proceso_memoria* proceso_memoria = malloc(sizeof(t_proceso_memoria));
     //t_proceso_interrumpido* proceso_interrumpido = crear_proceso_interrumpido(proceso_actual, "Motivo de interrupcion");//ESTO ES SI EL KENERL ME MANDA PROCESO
     
     paquete -> codigo_operacion = ENVIO_INTERFAZ;
     paquete->buffer = envio_interfaz_serializar(interfaz_elegida, unidades_de_trabajo);
-
+    printf("sali de envio_interfaz_serializar\n");
     void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
 
     int offset = 0;
@@ -921,17 +931,21 @@ void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint32_t unidades_de_
     //free(proceso_interrumpido);
 }
 
-t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint8_t unidades_de_trabajo){
-    uint32_t tamanioBuffer = malloc(sizeof(uint32_t));
+t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint32_t unidades_de_trabajo){
+    uint32_t tamanioBuffer; //= malloc(sizeof(uint32_t));
 tamanioBuffer = ((strlen(interfaz_elegida->nombre) + 1)* sizeof(char*)) //TAMANIO DEL NOMBRE DE LA INTERFAZ
              + sizeof(t_tipo_interfaz_enum)
-             + sizeof(uint8_t); // cantidad_instrucciones, esto va?
-			 
+             + sizeof(uint32_t); // unidades_trabajo
+printf("tamanioBuffer calculado: %d + %d + %d \n",((strlen(interfaz_elegida->nombre) + 1)* sizeof(char*)) , sizeof(t_tipo_interfaz_enum),sizeof(uint8_t));			 
   t_buffer *buffer = buffer_create(tamanioBuffer);
 //REVISAR ACA (SERIALIZACION)
+printf("empiezo con los buffer_add\n");	
     buffer_add_string(buffer,((strlen(interfaz_elegida->nombre) + 1)* sizeof(char*)) ,interfaz_elegida->nombre);
-    buffer_add_t_tipo_interfaz_enum(buffer,interfaz_elegida->tipo);
-    buffer_add_uint8(buffer,unidades_de_trabajo);
+   printf("hice buffer_add_string\n");	
+    buffer_add_uint32(buffer,interfaz_elegida->tipo);
+    printf("hice buffer_add_t_tipo_interfaz_enum\n");
+    buffer_add_uint32(buffer,unidades_de_trabajo);
+    printf("hice buffer_add_uint32\n");
     return buffer;
 
 }
