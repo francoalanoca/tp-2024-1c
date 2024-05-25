@@ -55,7 +55,7 @@ int cargar_configuracion(char *nombre_interfaz_custom, char *path) {
     cfg_entrada_salida->IP_MEMORIA = strdup(config_get_string_value(file_cfg_entrada_salida, "IP_MEMORIA"));
     log_info(logger_entrada_salida, "IP_MEMORIA cargado correctamente: %s", cfg_entrada_salida->IP_MEMORIA);
 
-    cfg_entrada_salida->PUERTO_MEMORIA = strdup(config_get_string_value(file_cfg_entrada_salida, "PUERTO_MEMORIA"));
+    cfg_entrada_salida->PUERTO_MEMORIA = config_get_int_value(file_cfg_entrada_salida, "PUERTO_MEMORIA");
     log_info(logger_entrada_salida, "PUERTO_MEMORIA cargado correctamente: %s", cfg_entrada_salida->PUERTO_MEMORIA);
 
     cfg_entrada_salida->PATH_BASE_DIALFS = strdup(config_get_string_value(file_cfg_entrada_salida, "PATH_BASE_DIALFS"));

@@ -19,7 +19,7 @@ int checkProperties(char *path_config) {
             "IP_CPU",
             "PUERTO_CPU_DISPATCH",
             "PUERTO_CPU_INTERRUPT",
-            "ALGORTIMO_PLANIFICACION",
+            "ALGORITMO_PLANIFICACION",
             "QUANTUM",
             "RECURSOS",
             "INSTANCIA_RECURSOS",
@@ -41,35 +41,35 @@ int cargar_configuracion(char *path) {
 
     file_cfg_kernel = config_create(path);
 
-    cfg_kernel->PUERTO_ESCUCHA = strdup(config_get_int_value(file_cfg_kernel, "PUERTO_ESCUCHA"));
+    cfg_kernel->PUERTO_ESCUCHA = config_get_int_value(file_cfg_kernel, "PUERTO_ESCUCHA");
     log_info(logger_kernel, "PUERTO_ESCUCHA cargado correctamente: %d", cfg_kernel->PUERTO_ESCUCHA);
 
-    cfg_kernel->IP_MEMORIA = config_get_string_value(file_cfg_kernel, "IP_MEMORIA");
+    cfg_kernel->IP_MEMORIA = strdup(config_get_string_value(file_cfg_kernel, "IP_MEMORIA"));
     log_info(logger_kernel, "IP_MEMORIA cargado correctamente: %s", cfg_kernel->IP_MEMORIA);
 
-    cfg_kernel->PUERTO_MEMORIA = strdup(config_get_int_value(file_cfg_kernel, "PUERTO_MEMORIA"));
+    cfg_kernel->PUERTO_MEMORIA = config_get_int_value(file_cfg_kernel, "PUERTO_MEMORIA");
     log_info(logger_kernel, "PUERTO_MEMORIA cargado correctamente: %d", cfg_kernel->PUERTO_MEMORIA);
 
     cfg_kernel->IP_CPU = strdup(config_get_string_value(file_cfg_kernel, "IP_CPU"));
     log_info(logger_kernel, "IP_CPU cargado correctamente: %s", cfg_kernel->IP_CPU);
 
-    cfg_kernel->PUERTO_CPU_DISPATCH = strdup(config_get_int_value(file_cfg_kernel, "PUERTO_CPU_DISPATCH"));
+    cfg_kernel->PUERTO_CPU_DISPATCH = config_get_int_value(file_cfg_kernel, "PUERTO_CPU_DISPATCH");
     log_info(logger_kernel, "PUERTO_CPU_DISPATCH cargado correctamente: %d", cfg_kernel->PUERTO_CPU_DISPATCH);
 
     cfg_kernel->PUERTO_CPU_INTERRUPT = config_get_int_value(file_cfg_kernel, "PUERTO_CPU_INTERRUPT");
     log_info(logger_kernel, "PUERTO_CPU_INTERRUPT cargado correctamente: %d", cfg_kernel->PUERTO_CPU_INTERRUPT);
     
-    cfg_kernel->ALGORTIMO_PLANIFICACION = config_get_string_value(file_cfg_kernel, "ALGORITMO_PLANIFICACION");
-    log_info(logger_kernel, "ALGORITMO_PLANIFICACION cargado correctamente: %s", cfg_kernel->ALGORTIMO_PLANIFICACION);
+    cfg_kernel->ALGORITMO_PLANIFICACION = strdup(config_get_string_value(file_cfg_kernel, "ALGORITMO_PLANIFICACION"));
+    log_info(logger_kernel, "ALGORITMO_PLANIFICACION cargado correctamente: %s", cfg_kernel->ALGORITMO_PLANIFICACION);
 
     cfg_kernel->QUANTUM = config_get_int_value(file_cfg_kernel, "QUANTUM");
     log_info(logger_kernel, "QUANTUM cargado correctamente: %d", cfg_kernel->QUANTUM);
 
-    cfg_kernel->RECURSOS = config_get_string_value(file_cfg_kernel, "RECURSOS");//?
-    log_info(logger_kernel, "RECURSOS cargado correctamente: %s", cfg_kernel->RECURSOS);
+    cfg_kernel->RECURSOS = strdup(config_get_string_value(file_cfg_kernel, "RECURSOS"));
+    log_info(logger_kernel, "RECURSOS cargado correctamente: ");// por ahora no logueamos lo cargado
 
-    cfg_kernel->INSTANCIA_RECURSOS = config_get_string_value(file_cfg_kernel, "INSTANCIA_RECURSOS");//?
-    log_info(logger_kernel, "INSTANCIA_RECURSOS cargado correctamente: %s", cfg_kernel->INSTANCIA_RECURSOS);
+    cfg_kernel->INSTANCIAS_RECURSOS = strdup(config_get_string_value(file_cfg_kernel, "INSTANCIAS_RECURSOS"));
+    log_info(logger_kernel, "INSTANCIAS_RECURSOS cargado correctamente: "); // por ahora no logueamos lo cargado
 
     cfg_kernel->GRADO_MULTIPROGRAMACION = config_get_int_value(file_cfg_kernel, "GRADO_MULTIPROGRAMACION");
     log_info(logger_kernel, "GRADO_MULTIPROGRAMACION cargado correctamente: %d", cfg_kernel->GRADO_MULTIPROGRAMACION);
@@ -91,7 +91,7 @@ int init(char *path_config) {
         return false;
     }
     //inicializo el archivo de configuracion
-    file_cfg_kernel = iniciar_config(path_config);
+    file_cfg_kernel = iniciar_config(path_config, logger_kernel);
 
     return checkProperties(path_config);
 }
@@ -101,11 +101,6 @@ int hacer_handshake (int socket_cliente){
     send(socket_cliente, &handshake, sizeof(uint32_t), NULL);
     return recibir_operacion(socket_cliente);
 }
-
-
-
-
-
 
 
 void cerrar_programa() {

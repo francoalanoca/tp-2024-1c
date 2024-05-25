@@ -8,8 +8,20 @@
 #include <utils/utils.h>
 #include <planificador.h>
 
+int checkProperties(char *path_config);
+
+int cargar_configuracion(char *path);
+
+int init(char *path_config);
+
+int hacer_handshake (int socket_cliente);
 
 
+void cerrar_programa();
+
+// Variables Globales
+extern t_log *logger_kernel;
+extern t_config* file_cfg_kernel;
 typedef struct {
     int PUERTO_ESCUCHA;
     char* IP_MEMORIA;
@@ -24,10 +36,14 @@ typedef struct {
     int GRADO_MULTIPROGRAMACION;
 } t_config_kernel;
 
-// Variables Globales
-extern t_log *logger_kernel;
-extern t_config* file_cfg_kernel;
 extern t_config_kernel* cfg_kernel; 
+
+static t_config_kernel *cfg_kernel_start()
+{
+    t_config_kernel *cfg = malloc(sizeof(t_config_kernel));
+    return cfg;
+}
+
 
 int conexion_consola;
 int conexion_cpu_dispatch;
@@ -37,9 +53,5 @@ int socket_servidor;
 int contador_pid;
 t_planificador* planificador;
 
-// Prototipos de funciones
-void iniciar_logger();
 
-//void terminar_programa1(int conexion,t_log* logger,t_config* config);
-void cerrar_programa()
 #endif /* INIT_KERNEL_H_ */
