@@ -3,7 +3,19 @@
 //#include "../include/servidorCpu.c"
 //#include "../include/servidorCpu.h"
 
-
+ 
+t_algoritmo_planificacion obtener_algoritmo_planificador (const char* algoritmo_planificacion) {
+    if (strcmp(algoritmo_planificacion, "FIFO") == 0) {
+        return FIFO ;
+    } else if (strcmp(algoritmo_planificacion, "ROUND ROBIN") == 0) {
+        return ROUND_ROBIN ;
+    } else if (strcmp(algoritmo_planificacion, "VIRTUAL ROUND ROBIN") == 0) {
+        return VIRTUAL_ROUND_ROBIN ;  
+    } else {
+        // Manejo de error para tipos de algoritmos desconocidos
+        return -1; 
+    }
+}
 
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum) {
     t_planificador* planificador = malloc(sizeof(t_planificador));
@@ -25,6 +37,8 @@ void destruir_planificador(t_planificador* planificador) {
     list_destroy_and_destroy_elements(planificador->cola_exit, free);
     free(planificador);
 }
+
+
 
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_add(planificador->cola_new, proceso);

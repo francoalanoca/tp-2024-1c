@@ -8,7 +8,8 @@
 // Enumeración para los algoritmos de planificación
 typedef enum {
     FIFO,
-    ROUND_ROBIN
+    ROUND_ROBIN,
+    VIRTUAL_ROUND_ROBIN
 } t_algoritmo_planificacion;
 
 typedef struct {
@@ -29,6 +30,9 @@ void destruir_planificador(t_planificador* planificador);
 
 // Agrega un nuevo proceso al planificador
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso);
+
+// Devuelve un t_algoritmo a partir de la config cargada
+t_algoritmo_planificacion obtener_algoritmo_planificador(const char* algoritmo_planificacion);
 
 // Obtiene el próximo proceso a ejecutar 
 t_pcb* obtener_proximo_proceso(t_planificador* planificador);

@@ -19,7 +19,11 @@ int main(char argc, char *argv[]) {
 
     int conexion_memoria;
     int conexion_cpu_dispatch;
-
+    int conexion_consola;
+    int conexion_entrada_salida;
+    int socket_servidor;
+    int contador_pid;
+    t_planificador* planificador;
 
 //CONFIGURACION
 
@@ -44,7 +48,7 @@ int main(char argc, char *argv[]) {
 
  
 
-planificador = inicializar_planificador (obtener_algoritmo_planificador(), cfg_kernel-> QUANTUM);
+planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM);
 
 
 cerrar_programa();

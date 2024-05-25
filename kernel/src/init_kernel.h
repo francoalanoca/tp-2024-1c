@@ -45,13 +45,4 @@ static t_config_kernel *cfg_kernel_start()
 }
 
 
-int conexion_consola;
-int conexion_cpu_dispatch;
-int conexion_memoria;
-int conexion_fs;
-int socket_servidor;
-int contador_pid;
-t_planificador* planificador;
-
-
 #endif /* INIT_KERNEL_H_ */
