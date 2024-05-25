@@ -1,4 +1,7 @@
 #include "planificadores.h"
+// ver si tengo que incluir la libreria donde esta el pcb
+//#include "../include/servidorCpu.c"
+//#include "../include/servidorCpu.h"
 
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum) {
     t_planificador* planificador = malloc(sizeof(t_planificador));

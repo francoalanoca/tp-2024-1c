@@ -3,8 +3,9 @@
 
 #include <stdbool.h>
 #include "kernel.h"
+// ver si falta poner alguna libreria
 
-// ver en CPU y exportar de ahi
+// ver en CPU y exportar de ahi (ver si lo exporte bien)
 typedef struct pcb {
     int pid;
     int program_counter;
