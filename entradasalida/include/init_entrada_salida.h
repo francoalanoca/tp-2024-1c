@@ -25,9 +25,9 @@ typedef struct
     char *TIPO_INTERFAZ;
     int TIEMPO_UNIDAD_TRABAJO;
     char *IP_MEMORIA;
-    char *PUERTO_MEMORIA;
+    int PUERTO_MEMORIA;
     char *IP_KERNEL;
-    char *PUERTO_KERNEL;
+    int PUERTO_KERNEL;
     char *PATH_BASE_DIALFS;
     int BLOCK_SIZE;
     int BLOCK_COUNT;

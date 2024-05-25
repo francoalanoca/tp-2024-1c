@@ -32,7 +32,7 @@ void iniciar_interfaz_generica (int socket_kernel) {
                 esperar(5);
                 response = IO_K_GEN_SLEEP_FIN;
                  if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
-                    log_error(logger_entrada_salida, " IO_GEN_SLEEP_FIN enviada a Kernel");
+                    log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
                     break;
                 }
                 break;
