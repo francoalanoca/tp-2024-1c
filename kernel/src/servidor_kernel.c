@@ -46,7 +46,7 @@ void procesar_conexion(void *void_args) {
         }
 
         switch (cop) {
-            //----------------------------------------CONSOLA-----------------------
+            
             case HANDSHAKE:
                 log_info(logger, "Handshake recibido");
                 response = HANDSHAKE;
