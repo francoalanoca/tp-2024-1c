@@ -29,7 +29,7 @@ typedef enum
     PROXIMA_INSTRUCCION = 40,
     INTERRUPCION_CPU = 45,
     ENVIO_INTERFAZ = 50,
-    INSTRUCCION_RECIBIDA
+    INSTRUCCION_RECIBIDA = 55
 }op_code;
 
 typedef struct {
@@ -101,10 +101,10 @@ typedef struct
 
 typedef struct 
 {
-   int pid;
-   int program_counter;
-   int quantum;
-   t_registros_CPU registrosCPU;
+   uint32_t pid;
+   uint32_t program_counter;
+   uint32_t quantum;
+   t_registros_CPU* registrosCPU;
 }t_pcb;
 typedef enum {
     GENERICA,

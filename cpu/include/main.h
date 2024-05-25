@@ -31,12 +31,12 @@ instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso
 tipo_instruccion decode(instr_t* instr);
 void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_proceso* proceso);
 void check_interrupt();
-void pedir_instruccion(t_proceso* proceso,int conexion);
+void pedir_instruccion(t_proceso* proceso,int conexion, t_log* logger);
 void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger);
 void sum(char* registro_destino, char* registro_origen, t_proceso* proceso);
 void sub(char* registro_destino, char* registro_origen, t_proceso* proceso);
 void jnz(char* registro, uint32_t inst, t_proceso* proceso);
-void io_gen_sleep(char* interfaz, int unidades_de_trabajo, t_proceso* proceso);
+void io_gen_sleep(char* interfaz, uint32_t unidades_de_trabajo, t_proceso* proceso);
 instr_t* pedir_inst_a_memoria(int pc, int valor);
 bool verificar_interrupcion_kernel();
 void generar_interrupcion_a_kernel(int conexion);
@@ -55,7 +55,7 @@ void calcularTamanioInterfaz(t_interfaz* interfaz);
 void buffer_add_interfaz(t_buffer* buffer, t_interfaz* interfaz);
 t_buffer *proceso_serializar(t_proceso* proceso);
 t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso);
-t_buffer *proceso_memoria_serializar(t_proceso_memoria* proceso_memoria);
+t_buffer *proceso_memoria_serializar(t_proceso_memoria* proceso_memoria, t_log* logger);
 t_proceso_interrumpido* crear_proceso_interrumpido(t_proceso* proceso, char* motivo);
 t_buffer *proceso_interrumpido_serializar(t_proceso_interrumpido* proceso_interrumpido);
 void* crear_servidor_dispatch(char* ip_cpu);
@@ -63,7 +63,7 @@ void* crear_servidor_interrupt(char* ip_cpu);
 registros identificarRegistro(char* registro);
 uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso);
 t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso);
-void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint8_t unidades_de_trabajo);
+void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint32_t unidades_de_trabajo);
 t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint8_t unidades_de_trabajo);
 
 
