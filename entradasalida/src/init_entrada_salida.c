@@ -97,7 +97,6 @@ int init(char *path_config) {
 
 int hacer_handshake (int socket_cliente){
     uint32_t handshake  = HANDSHAKE;
-
     send(socket_cliente, &handshake, sizeof(uint32_t), NULL);
     return recibir_operacion(socket_cliente);
 }
@@ -117,18 +116,25 @@ t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) 
     }
 }
 
-int  presentar_interfaz(int socket_kernel){
-    send(socket_kernel,INTERFAZ_ENVIAR, sizeof(uint32_t), NULL);
+int  presentar_interfaz(int socket_kernel, t_interfaz* interfaz ){
+    t_paquete* paquete_interfaz;
+ 
+    paquete_interfaz = crear_paquete(INTERFAZ_ENVIAR);
+ 
+    agregar_a_paquete(paquete_interfaz, interfaz->nombre,  sizeof(interfaz->nombre));
+    agregar_a_paquete(paquete_interfaz, &(interfaz->tipo),  sizeof(interfaz->tipo));
+    enviar_paquete(paquete_interfaz, socket_kernel);    
     return recibir_operacion(socket_kernel);
 
 }
     //INICIAR INTERFACE CORRESPONDIENTE
 void iniciar_interface(char* tipo_interfaz_str, char* nombre_interfaz,  int socket_kernel, int socket_memoria){
-  
+ 
 t_tipo_interfaz_enum tipo_interfaz_enum = obtener_tipo_interfaz_enum (tipo_interfaz_str); 
-
- interfaz->nombre =nombre_interfaz;
- interfaz->tipo =tipo_interfaz_enum;
+  
+ interfaz = malloc(sizeof(t_interfaz)); // no olvidar liberar memoria al finalizar
+ interfaz->nombre = nombre_interfaz;
+ interfaz->tipo = tipo_interfaz_enum;
 
 //HANDSHAKE//   
     if ( (hacer_handshake (socket_kernel) == HANDSHAKE)){
@@ -149,7 +155,7 @@ t_tipo_interfaz_enum tipo_interfaz_enum = obtener_tipo_interfaz_enum (tipo_inter
     }
 
 // PRESENTAR    
-    if ( (presentar_interfaz (socket_kernel) == INTERFAZ_RECIBIDA)){
+    if ( (presentar_interfaz (socket_kernel, interfaz) == INTERFAZ_RECIBIDA)){
         log_info(logger_entrada_salida, "Interfaz presentada correctamente a kernel\n");      
     }
     else {
@@ -160,7 +166,7 @@ t_tipo_interfaz_enum tipo_interfaz_enum = obtener_tipo_interfaz_enum (tipo_inter
       switch (tipo_interfaz_enum) {
             
             case GENERICA :
-                iniciar_interfaz_generica (socket_memoria);
+                iniciar_interfaz_generica (socket_kernel);
                 break;
             
             case STDIN :

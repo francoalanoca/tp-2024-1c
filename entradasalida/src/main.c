@@ -19,12 +19,13 @@ int main(char argc, char *argv[]) {
 
     //CONEXION//
     socket_kernel = crear_conexion(logger_entrada_salida, "KERNEL", cfg_entrada_salida->IP_KERNEL, cfg_entrada_salida->PUERTO_KERNEL);
-
-       printf("socket de la kernel : %d\n",socket_kernel);
-
+    
+    log_info(logger_entrada_salida, "Socket de KERNEL : %d\n",socket_kernel);   
+    
     socket_memoria = crear_conexion(logger_entrada_salida, "MEMORIA", cfg_entrada_salida->IP_MEMORIA, cfg_entrada_salida->PUERTO_MEMORIA);
-
-    printf("socket de la memoria : %d\n",socket_memoria);   
+    
+    log_info(logger_entrada_salida, "Socket de MEMORIA : %d\n",socket_memoria);   
+     
 
     
     //INICIAR INTERFACE//

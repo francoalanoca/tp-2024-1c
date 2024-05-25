@@ -27,10 +27,23 @@ typedef enum
 	PCB = 30,
 	NUEVO_PROCESO = 35,
     PROXIMA_INSTRUCCION = 40,
+    INTERRUPCION_CPU = 45,
+    ENVIO_INTERFAZ = 50,
+    INSTRUCCION_RECIBIDA = 55,
  //---------------ENTRADASALIDA-KERNEL-------------------
-    INTERFAZ_RECIBIDA
-
-}op_code;
+    INTERFAZ_ENVIAR, // EntradaSalida, avisa que envía la interfaz creada
+    INTERFAZ_RECIBIDA, // Es el ok del kernel al recibir la interfaz
+    OPERACION_INVALIDA, // EntradaSalida, avisa que envía la operacion es invalida
+    IO_K_GEN_SLEEP, // Kernel solicita realizar esta operación (usar esta para otros modulos tambien)
+    IO_K_GEN_SLEEP_FIN, //EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
+//----------------KERNEL-MEMORIA
+    CREAR_PROCESO_KERNEL,
+    IO_K_STDIN,
+    IO_K_STDIN_FIN,
+ //---------------ENTRADASALIDA-MEMORIA-------------------
+    IO_M_STDIN, // entradasalida envia input a memoria
+    IO_M_STDIN_FIN // Memoria guardó con éxito el input
+}op_code; 
 
 typedef struct {
     t_log *log;
@@ -116,10 +129,10 @@ typedef struct
 
 typedef struct 
 {
-   int pid;
-   int program_counter;
-   int quantum;
-   t_registros_CPU registrosCPU;
+   uint32_t pid;
+   uint32_t program_counter;
+   uint32_t quantum;
+   t_registros_CPU* registrosCPU;
 }t_pcb;
 typedef enum {
     GENERICA,
@@ -131,17 +144,28 @@ typedef enum {
 typedef struct {
     char* nombre;
     //uint8_t nombre_size; creo que no hace falta
-    t_tipo_interfaz_enum tipo;//Debe ser un enum?
+    t_tipo_interfaz_enum* tipo;//Debe ser un enum?
     //uint8_t tipo_size;  creo que no hace falta
 }t_interfaz;
 
 
 typedef struct {
     t_pcb* pcb; 
-    uint8_t cantidad_instrucciones;
-    t_list* instrucciones;
-    t_list* interfaces;
+   // uint8_t cantidad_instrucciones;
+   // t_list* instrucciones;
+    t_list*  interfaces;
 }t_proceso;
+
+typedef struct{
+    t_proceso* proceso;
+    uint8_t tamanio_motivo_interrupcion;
+    char* motivo_interrupcion;
+}t_proceso_interrumpido;
+
+typedef struct{
+    uint32_t pid;
+    uint32_t program_counter;
+}t_proceso_memoria;
 
 
 
@@ -157,6 +181,12 @@ int crear_conexion(t_log *logger, const char *server_name, char *ip, char *puert
 t_list* recibir_paquete(int);
 void recibir_mensaje(int);
 int recibir_operacion(int);
+void agregar_a_buffer(t_buffer* un_buffer, void* valor, int tamanio);
+void eliminar_buffer(t_buffer* un_buffer);
+void cargar_int_al_buffer(t_buffer* un_buffer, int tamanio_int);
+void cargar_uint32_al_buffer(t_buffer* un_buffer, uint32_t tamanio_uint32);
+void cargar_string_al_buffer(t_buffer* un_buffer, char* tamanio_string);
+char* extraer_string_del_buffer(t_buffer* un_buffer);
 t_paquete* crear_paquete(op_code codigo_operacion);
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
