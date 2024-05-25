@@ -21,7 +21,7 @@ int main(char argc, char *argv[]) {
     int conexion_cpu_dispatch;
     int conexion_consola;
     int conexion_entrada_salida;
-    int socket_servidor;
+
     int contador_pid;
     t_planificador* planificador;
 
@@ -33,7 +33,7 @@ int main(char argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-//CONEXION//
+//CONEXION
     conexion_cpu_dispatch = crear_conexion(logger_kernel, "KERNEL", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);
     
     log_info(logger_kernel, "Socket de KERNEL : %d\n",conexion_cpu_dispatch);   
@@ -42,14 +42,14 @@ int main(char argc, char *argv[]) {
     
     log_info(logger_kernel, "Socket de MEMORIA : %d\n",conexion_memoria);      
 
-// CONSOLA
+//CONSOLA
 
-// INICIAR SERVIDOR
-
+//INICIAR SERVIDOR
+    crearServidor();
  
 
-planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM);
+    planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM);
 
 
-cerrar_programa();
+    cerrar_programa();
 }
