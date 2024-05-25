@@ -203,7 +203,115 @@ t_paquete* crear_paquete(op_code codigo_operacion)
 	crear_buffer(paquete);
 	return paquete;
 }
+void agregar_a_buffer(t_buffer* un_buffer, void* valor, int tamanio)
+{
+	//si el buffer esta vacio
+	if (un_buffer->size == 0)
+	{
+		//reservamos memoria para su size y el int
+		un_buffer->stream = malloc(sizeof(int) + tamanio);
+		//copiamos en el buffer lo que ingreso
+		memcpy(un_buffer->stream, &tamanio, sizeof(int));
+		//nos desplazamos y copiamos en el buffer el tamanio de lo que ingreso
+		memcpy(un_buffer->stream + sizeof(int), valor, tamanio);
+	}
+	else{ //sino estaba vacio
+		//agreandamos el espacio en memoria a lo que necesitemos
+		un_buffer->stream = realloc(un_buffer->stream, un_buffer->size + tamanio + sizeof(int));
+		//copiamos en el buffer lo que ingreso
+		memcpy(un_buffer->stream + un_buffer->size, &tamanio, sizeof(int));
+		//nos desplazamos y copiamos en el buffer el tamanio de lo que ingreso
+		memcpy(un_buffer->stream + un_buffer->size + sizeof(int), valor, tamanio);
+	}
+	
 
+	//actualizamos el buffer
+	un_buffer->size += sizeof(int);
+	un_buffer->size += tamanio;
+	//un_buffer->size += tamanio + sizeof(int);
+}
+
+void eliminar_buffer(t_buffer* un_buffer)
+{
+	if (un_buffer != NULL)
+	{
+		free(un_buffer->stream);
+	}
+	free(un_buffer);
+}
+
+void* extraer_contenido_del_buffer(t_buffer* un_buffer)
+{
+	if (un_buffer->size == 0)
+	{
+		printf("\n[ERROR] Al intentar extrar contenido de un t_buffer vacio \n\n");
+		exit(EXIT_FAILURE);
+
+	}
+	
+	if (un_buffer->size < 0)
+	{
+		printf("\n[ERROR] Esto es raro. El t_buffer contiene un size negativo \n\n");
+		exit(EXIT_FAILURE);
+	}
+	
+	int tamanio_contenido;
+	memcpy(&tamanio_contenido, un_buffer->stream, sizeof(int));
+	void* contenido = malloc(tamanio_contenido);
+	memcpy(contenido, un_buffer->stream + sizeof(int), tamanio_contenido);
+
+	int nuevo_tamanio = un_buffer->size - sizeof(int) - tamanio_contenido;
+
+
+	if (nuevo_tamanio == 0)
+	{
+		un_buffer->size = 0;
+		free(un_buffer->stream);
+		un_buffer->stream = NULL;
+		return contenido;
+	}
+	
+	if (nuevo_tamanio < 0)
+	{
+		perror("\n[ERROR] Buffer con tamanio negativo");
+		exit(EXIT_FAILURE);
+	}
+	
+	void* nuevo_stream = malloc(nuevo_tamanio);
+	memcpy(nuevo_stream, un_buffer->stream + sizeof(int) + tamanio_contenido, nuevo_tamanio);
+	free(un_buffer->stream);
+	un_buffer->size = nuevo_tamanio;
+	un_buffer->stream = nuevo_stream;
+
+	return contenido;
+
+}
+
+
+char* extraer_string_del_buffer(t_buffer* un_buffer)
+{
+	char* valor_string = extraer_contenido_del_buffer(un_buffer);
+	return valor_string;
+}
+
+//Agrega una variable de tipo int al buffer
+void cargar_int_al_buffer(t_buffer* un_buffer, int tamanio_int)
+{
+	agregar_a_buffer(un_buffer, &tamanio_int, sizeof(int));
+}
+
+//Agrega una variable de tipo uint32 al buffer
+void cargar_uint32_al_buffer(t_buffer* un_buffer, uint32_t tamanio_uint32)
+{
+	agregar_a_buffer(un_buffer, &tamanio_uint32, sizeof(uint32_t));
+}
+
+//Agrega una variable de tipo string al buffer
+void cargar_string_al_buffer(t_buffer* un_buffer, char* tamanio_string)
+{
+	agregar_a_buffer(un_buffer, tamanio_string, strlen(tamanio_string) + 1);
+
+}
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
 {
 	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio + sizeof(int));
@@ -236,6 +344,7 @@ void liberar_conexion(int socket_cliente)
 {
 	close(socket_cliente);
 }
+
 
 
 bool config_has_all_properties(t_config *cfg, char **properties)

@@ -7,134 +7,50 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <kernel.h>
+#include <main.h>
 
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
-// Definiciones globales
-t_log *logger;
-t_config_kernel *config_kernel;
+char *path_config;
 
-void iniciar_config_kernel(){
-    config_kernel = malloc(sizeof(t_config_kernel));
-     config = config_create("/home/utnso/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config");
-    if (config == NULL) {
-        perror("No se pudo encontrar el path del config");
-        exit(EXIT_FAILURE);
-    }
-      config_kernel->PUERTO_ESCUCHA = config_get_int_value(config, "PUERTO_ESCUCHA");
-    log_info(logger,"PUERTO_ESCUCHA:%d",config_kernel->PUERTO_ESCUCHA);
-    config_kernel->IP_MEMORIA = config_get_string_value(config, "IP_MEMORIA");
-    log_info(logger,"IP_MEMORIA:%s", config_kernel->IP_MEMORIA);
-    config_kernel->PUERTO_MEMORIA = config_get_int_value(config, "PUERTO_MEMORIA");
-    log_info(logger,"PUERTO_MEMORIA:%d",config_kernel->PUERTO_MEMORIA);
-    config_kernel->IP_CPU = config_get_string_value(config, "IP_CPU");
-    log_info(logger,"IP_CPU:%s", config_kernel->IP_CPU);
-    config_kernel->PUERTO_CPU_DISPATCH = config_get_int_value(config, "PUERTO_CPU_DISPATCH");
-    log_info(logger,"PUERTO_CPU_DISPATCH:%d",config_kernel->PUERTO_CPU_DISPATCH);
-    config_kernel->PUERTO_CPU_INTERRUPT = config_get_int_value(config, "PUERTO_CPU_INTERRUPT");
-    log_info(logger,"PUERTO_CPU_ITERRUPT:%d",config_kernel->PUERTO_CPU_INTERRUPT);
-}
+int main(char argc, char *argv[]) {
+    path_config = argv[1];
 
+    int conexion_memoria;
+    int conexion_cpu_dispatch;
+    int conexion_consola;
+    int conexion_entrada_salida;
 
+    int contador_pid;
+    t_planificador* planificador;
 
-int conectar_a(char *ip, int puerto) {
-    int sockfd;
-    struct sockaddr_in serv_addr;
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        log_error(logger, "Error al crear el socket");
-        return -1;
-    }
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = inet_addr(ip);
-    serv_addr.sin_port = htons(puerto);
-   
-    if (connect(sockfd, (void*)&serv_addr, sizeof(serv_addr)) !=0) {
-        log_error(logger, "Error al conectar al servidor");
-      
-        return -1;
-    }
-    printf("socket:%d",sockfd);
-    return sockfd;
-}
+//CONFIGURACION
 
-int main() {
-    logger = log_create("kernel.log","kernel-log", 1, LOG_LEVEL_DEBUG);
-    iniciar_config_kernel();
-    
-    
-    // Conexión con Memoria (cliente)
-    int conexion_memoria = conectar_a(config_kernel->IP_MEMORIA, config_kernel->PUERTO_MEMORIA);
-    if (conexion_memoria == -1) {
-        log_error(logger, "Error al conectar con la memoria");
+   if (!init(path_config) || !cargar_configuracion(path_config)) {
+        cerrar_programa();
+        printf("No se pudo inicializar KERNEL");
         return EXIT_FAILURE;
     }
 
-    // Conexión con CPU (cliente)
-    int conexion_cpu = conectar_a(config_kernel->IP_CPU, config_kernel->PUERTO_CPU_DISPATCH);
-    if (conexion_cpu == -1) {
-        log_error(logger, "Error al conectar con la CPU");
-        return EXIT_FAILURE;
-    }
-
+//CONEXION
+    conexion_cpu_dispatch = crear_conexion(logger_kernel, "KERNEL", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);
     
-    // Configuración del socket servidor
-    struct sockaddr_in direccionServidor;
-    direccionServidor.sin_family = AF_INET;
-    direccionServidor.sin_addr.s_addr = INADDR_ANY;
-    direccionServidor.sin_port = htons(config_kernel->PUERTO_ESCUCHA);
-    int servidor = socket(AF_INET, SOCK_STREAM, 0);
-    if (bind(servidor, (void*)&direccionServidor, sizeof(direccionServidor)) != 0) {
-        perror("Fallo el bind");
-        return EXIT_FAILURE;
-    }
-    printf("Estoy escuchando\n");
-    listen(servidor, SOMAXCONN);
+    log_info(logger_kernel, "Socket de KERNEL : %d\n",conexion_cpu_dispatch);   
+    
+    conexion_memoria = crear_conexion(logger_kernel, "MEMORIA", cfg_kernel->IP_MEMORIA, cfg_kernel->PUERTO_MEMORIA);
+    
+    log_info(logger_kernel, "Socket de MEMORIA : %d\n",conexion_memoria);      
 
-     //Aceptar conexiones entrantes
-    struct sockaddr_in direccionCliente;
-    unsigned int tamañoDireccion;
+//CONSOLA
+
+//INICIAR SERVIDOR
+    crearServidor();
  
- while (1) {
-    pthread_t thread;
-        int *fd_conexion_ptr = malloc(sizeof(int));
-       *fd_conexion_ptr = accept(servidor, (void*)&direccionCliente, &tamañoDireccion);
-        pthread_create(&thread, NULL, (void*)atender_cliente, fd_conexion_ptr);
-        pthread_detach(thread);
-    }
+    iniciar_consola_interactiva();
     
-
-    return EXIT_SUCCESS;
-}
+    planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM);
 
 
-void liberar_config() {
-    free(config_kernel->IP_MEMORIA);
-    free(config_kernel);
-    config_destroy(config);
-}
-
-void terminar_programa_kernel(int conexion,t_log* logger,t_config* config){
-    liberar_config();
-    log_destroy(logger);
-    close(conexion_cpu);
-    close(conexion_memoria);
-}
-void atender_cliente(void *arg) {// nos tira este error:"message": "cast from pointer to integer of different size [-Wpointer-to-int-cast]",
-    int servidor= ((int)arg);
-  
-    char *mensaje_bienvenida = "¡Bienvenido al servidor!";
-    send(servidor, mensaje_bienvenida, strlen(mensaje_bienvenida), 0);
-    
-    char buffer[1024];
-    recv(servidor, buffer, sizeof(buffer), 0);
-    printf("Mensaje recibido del cliente: %s\n", buffer);
-    
-  
-    close(servidor);
-    free(arg);
-    
-    pthread_exit(NULL);
+    cerrar_programa();
 }

@@ -33,11 +33,13 @@ typedef enum
     OPERACION_INVALIDA, // EntradaSalida, avisa que envía la operacion es invalida
     IO_K_GEN_SLEEP, // Kernel solicita realizar esta operación (usar esta para otros modulos tambien)
     IO_K_GEN_SLEEP_FIN, //EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
+//----------------KERNEL-MEMORIA
+    CREAR_PROCESO_KERNEL,
     IO_K_STDIN,
     IO_K_STDIN_FIN,
  //---------------ENTRADASALIDA-MEMORIA-------------------
     IO_M_STDIN, // entradasalida envia input a memoria
-    IO_M_STDIN_FIN, // Memoria guardó con éxito el input
+    IO_M_STDIN_FIN // Memoria guardó con éxito el input
 }op_code; 
 
 typedef struct {
@@ -150,6 +152,12 @@ int crear_conexion(t_log *logger, const char *server_name, char *ip, char *puert
 t_list* recibir_paquete(int);
 void recibir_mensaje(int);
 int recibir_operacion(int);
+void agregar_a_buffer(t_buffer* un_buffer, void* valor, int tamanio);
+void eliminar_buffer(t_buffer* un_buffer);
+void cargar_int_al_buffer(t_buffer* un_buffer, int tamanio_int);
+void cargar_uint32_al_buffer(t_buffer* un_buffer, uint32_t tamanio_uint32);
+void cargar_string_al_buffer(t_buffer* un_buffer, char* tamanio_string);
+char* extraer_string_del_buffer(t_buffer* un_buffer);
 t_paquete* crear_paquete(op_code codigo_operacion);
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
 void enviar_paquete(t_paquete* paquete, int socket_cliente);
