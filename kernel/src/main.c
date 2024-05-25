@@ -47,7 +47,8 @@ int main(char argc, char *argv[]) {
 //INICIAR SERVIDOR
     crearServidor();
  
-
+    iniciar_consola_interactiva();
+    
     planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM);
 
 
