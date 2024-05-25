@@ -37,6 +37,7 @@ void iniciar_config_kernel(){
     log_info(logger,"PUERTO_CPU_ITERRUPT:%d",config_kernel->PUERTO_CPU_INTERRUPT);
 }
 
+planificador= inicializar_planificador (obtener_algoritmo_planificador(), config_kernel-> QUANTUM);
 
 
 int conectar_a(char *ip, int puerto) {

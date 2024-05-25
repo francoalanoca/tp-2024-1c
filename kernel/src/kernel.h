@@ -6,6 +6,7 @@
 //#define PUERTO_ESCUCHA 5000 // Puerto de escucha para conexiones entrantes
 
 #include <utils/utils.h>
+#include "planificadores.h"
 
 typedef struct {
     int PUERTO_ESCUCHA;
@@ -26,6 +27,7 @@ int conexion_memoria;
 int conexion_fs;
 int socket_servidor;
 int contador_pid;
+t_planificador* planificador;
 
 // Prototipos de funciones
 void iniciar_logger();
@@ -33,4 +35,5 @@ void iniciar_config_kernel();
 //void terminar_programa1(int conexion,t_log* logger,t_config* config);
 void atender_cliente(void *arg);
 void terminar_programa_kernel(int conexion,t_log* logger,t_config* config);
+
 #endif /* KERNEL_H_ */
