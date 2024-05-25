@@ -2,15 +2,8 @@
 #define PLANIFICADORES_H_
 
 #include <stdbool.h>
-#include "kernel.h"
+#include <utils/utils.h>
 // ver si falta poner alguna libreria
-
-// ver en CPU y exportar de ahi (ver si lo exporte bien)
-typedef struct pcb {
-    int pid;
-    int program_counter;
-    int quantum;
-} t_pcb;
 
 // Enumeración para los algoritmos de planificación
 typedef enum {

@@ -1,4 +1,4 @@
-#include "../include/init_kernel.h"
+#include <init_kernel.h>
 
 t_log *logger_kernel; // Definición de la variable global
 t_config_kernel *cfg_kernel;
@@ -85,7 +85,7 @@ int init(char *path_config) {
     //inicializo estructura de configuracion
     cfg_kernel = cfg_kernel_start();
 
-    logger_kernel = log_create("entradasalida.log", "EntradaSalida", true, LOG_LEVEL_INFO);//
+    logger_kernel = log_create("logger_kernel.log", "Kernel", true, LOG_LEVEL_INFO);//
     if (logger_kernel == NULL) {
         printf("No pude crear el logger");
         return false;
@@ -102,52 +102,7 @@ int hacer_handshake (int socket_cliente){
     return recibir_operacion(socket_cliente);
 }
 
-t_PUERTO_ESCUCHA_enum obtener_PUERTO_ESCUCHA_enum (const char* PUERTO_ESCUCHA_str) {
-    if (strcmp(PUERTO_ESCUCHA_str, "GENERICA") == 0) {
-        return GENERICA ;
-    } else if (strcmp(PUERTO_ESCUCHA_str, "STDIN") == 0) {
-        return STDIN ;
-    } else if (strcmp(PUERTO_ESCUCHA_str, "STDOUT") == 0) {
-        return STDOUT ;
-    } else if (strcmp(PUERTO_ESCUCHA_str, "DIALFS") == 0) {
-        return DIALFS ;    
-    } else {
-        // Manejo de error para tipos de interfaz desconocidos
-        return -1; // O podrías lanzar una excepción o manejar el error de otra manera
-    }
-}
 
-    //INICIAR INTERFACE CORRESPONDIENTE
-void iniciar_interface(char* PUERTO_ESCUCHA_str, int socket_kernel, int socket_memoria){
-      
-      
-      switch (obtener_PUERTO_ESCUCHA_enum (PUERTO_ESCUCHA_str)) {
-            
-            case GENERICA :
-
-                log_info(logger_kernel, "Interfaz GENERICA iniciada");
-                break;
-            
-            case STDIN :
-
-                log_info(logger_kernel, "Interfaz STDIN iniciada");
-                break;    
-
-            case STDOUT :
-
-                log_info(logger_kernel, "Interfaz STDOUT iniciada");
-                break;  
-
-            case DIALFS :
-
-                log_info(logger_kernel, "Interfaz DIALFS iniciada");
-                break;                             
-
-            default:
-                log_error(logger_kernel, "Algo anduvo mal en el inicio de ");
-                break;
-        }
-}
 
 
 
