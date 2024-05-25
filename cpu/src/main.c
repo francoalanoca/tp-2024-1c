@@ -82,21 +82,27 @@ int main(int argc, char* argv[]) {
     proceso_actual->pcb->program_counter=2;
     proceso_actual->pcb->quantum=3;
     proceso_actual->pcb->registrosCPU = registros_prueba;
+    proceso_actual->interfaces = list_create();
     t_interfaz* int_prueba = malloc(sizeof(t_interfaz));
     int_prueba->nombre="Int1";
     int_prueba->tipo = GENERICA;
     list_add(proceso_actual->interfaces, int_prueba);
     //
-   /* proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
+   proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
     proceso_interrumpido_actual->proceso = malloc(sizeof(t_proceso));
     proceso_interrumpido_actual->proceso->interfaces = malloc(sizeof(t_interfaz));
     proceso_interrumpido_actual->proceso->pcb = malloc(sizeof(t_pcb));
     proceso_interrumpido_actual->proceso->pcb->registrosCPU = malloc(sizeof(t_registros_CPU));
-    list_add(proceso_interrumpido_actual->proceso->interfaces, int_prueba);
+    proceso_interrumpido_actual->proceso->interfaces = list_create();
+    proceso_interrumpido_actual->tamanio_motivo_interrupcion = 6;
+     proceso_interrumpido_actual->motivo_interrupcion = malloc(proceso_interrumpido_actual->tamanio_motivo_interrupcion );
+    strcpy(proceso_interrumpido_actual->motivo_interrupcion, "Motivo");
+    /*list_add(proceso_interrumpido_actual->proceso->interfaces, int_prueba);*/
+    /* 
     //
-   // interrupcion_kernel = malloc(sizeof(bool));
-    interrupcion_kernel = false;
-    */
+   // interrupcion_kernel = malloc(sizeof(bool));*/
+    interrupcion_kernel = true;
+    
     prox_inst = malloc(sizeof(instr_t));
     //prox_inst->
     conexion_kernel =  socket_memoria;
@@ -516,9 +522,9 @@ printf("Salgo de proceso_interrumpido_serializar\n");
 
     int offset = 0;
 
-    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint8_t));
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
 
-    offset += sizeof(uint8_t);
+    offset += sizeof(op_code);
     memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
@@ -733,10 +739,15 @@ printf("malloc tamanioParams\n");
 int tamanioInterfaces = malloc(sizeof(int)); //hay que recorrer con for la lista de interfaces y por cada una ir sumando en esta variable el tameanio del nombre y tipo
 printf("malloc tamanioInterfaces\n");
 //list_iterate(proceso_interrumpido->proceso->instrucciones, calcularTamanioInstruccion);
-
-list_iterate(proceso_interrumpido->proceso->interfaces, calcularTamanioInterfaz);
+printf("tamListaInterfaces: %d\n", list_size(proceso_interrumpido->proceso->interfaces) );
+//list_iterate(proceso_interrumpido->proceso->interfaces, calcularTamanioInterfaz);
+   	  for(int i = 0; i < list_size(proceso_interrumpido->proceso->interfaces); i++){
+        printf("entro for tamanioInterfaces\n");	
+            calcularTamanioInterfaz(list_get(proceso_interrumpido->proceso->interfaces,i));
+			//buffer_add_interfaz(buffer, list_get(proceso_interrumpido->proceso->interfaces,i));
+	  }
 printf("calcula tamanioInterfaces\n");
-int tamanio_pcb = malloc(sizeof(int));
+uint32_t tamanio_pcb = malloc(sizeof(uint32_t));
 tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
 printf("calcula tamanio_pcb\n");
 //int tamanioInstrucciones = malloc(sizeof(int));
