@@ -22,6 +22,7 @@ typedef enum
 {
  //----------------BASICOS--------------------------------
     HANDSHAKE = 1,
+    HANDSHAKE_OK,
 	MENSAJE,
 	PAQUETE,
 	PCB = 30,
