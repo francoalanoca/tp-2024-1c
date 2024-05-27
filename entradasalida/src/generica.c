@@ -26,6 +26,13 @@ void iniciar_interfaz_generica (int socket_kernel) {
                     break;
                 }
                 break;
+
+            case HANDSHAKE_OK :
+
+                log_info(logger_entrada_salida, "Handshake recibido handshake exitosamente con Kernel");
+ 
+                
+                break;                
             
             case IO_K_GEN_SLEEP :
 

@@ -137,7 +137,7 @@ t_tipo_interfaz_enum tipo_interfaz_enum = obtener_tipo_interfaz_enum (tipo_inter
  interfaz->tipo = tipo_interfaz_enum;
 
 //HANDSHAKE//   
-    if ( (hacer_handshake (socket_kernel) == HANDSHAKE)){
+    if ( (hacer_handshake (socket_kernel) == HANDSHAKE_OK)){
         log_info(logger_entrada_salida, "Correcto en handshake con kernel\n");      
     }
     else {
@@ -146,7 +146,7 @@ t_tipo_interfaz_enum tipo_interfaz_enum = obtener_tipo_interfaz_enum (tipo_inter
     }
 
 
-    if ( (hacer_handshake (socket_memoria) == HANDSHAKE)){
+    if ( (hacer_handshake (socket_memoria) == HANDSHAKE_OK)){
         log_info(logger_entrada_salida, "Correcto en handshake con memoria\n");
     }
     else {
