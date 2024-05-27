@@ -37,10 +37,10 @@ typedef enum
     OPERACION_INVALIDA, // EntradaSalida, avisa que envía la operacion es invalida
     IO_K_GEN_SLEEP, // Kernel solicita realizar esta operación (usar esta para otros modulos tambien)
     IO_K_GEN_SLEEP_FIN, //EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
-//----------------KERNEL-MEMORIA
-    CREAR_PROCESO_KERNEL,
     IO_K_STDIN,
     IO_K_STDIN_FIN,
+//----------------KERNEL-MEMORIA
+    CREAR_PROCESO_KERNEL,
  //---------------ENTRADASALIDA-MEMORIA-------------------
     IO_M_STDIN, // entradasalida envia input a memoria
     IO_M_STDIN_FIN // Memoria guardó con éxito el input
