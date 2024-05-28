@@ -28,6 +28,8 @@ else{
     }
     conexion_kernel = fd_mod2;
 log_info(logger_cpu, "va a escuchar");
+//log_info(logger_cpu, "POST SEMAFORO");
+  //     sem_post(&sem_conexion_lista);
     while (server_escuchar(logger_cpu, "SERVER CPU", (uint32_t)fd_mod2));
 }
 
@@ -101,6 +103,7 @@ void procesar_conexion(void *v_args){
                 if(proceso_interrumpido->proceso->pcb->pid == proceso_actual->pcb->pid){
                     proceso_interrumpido_actual = proceso_interrumpido;
                     interrupcion_kernel = true;
+                   
                 }
             
                 free(proceso_interrumpido);
@@ -109,13 +112,15 @@ void procesar_conexion(void *v_args){
 
              case INSTRUCCION_RECIBIDA:
             {
-                instr_t* proxima_instruccion = malloc(sizeof(instr_t)); //REVISAR
                 log_info(logger_cpu, "SE RECIBE INSTRUCCION DE MEMORIA");
+                instr_t* proxima_instruccion = malloc(sizeof(instr_t)); //REVISAR
                 proxima_instruccion = instruccion_deserializar(paquete->buffer); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
                 if(proxima_instruccion != NULL){
                     prox_inst = proxima_instruccion;
                     //SEMAFORO QUE ACTIVA EL SEGUIMIENTO DEL FLUJO EN FETCH
                     free(proxima_instruccion);
+                    //  log_info(logger_cpu, "POST SEMAFORO");
+                    // sem_post(&sem_conexion_lista);
                 }
                 else{
                     log_info(logger_cpu, "ERROR AL  RECIBIR INSTRUCCION DE MEMORIA");

@@ -33,9 +33,9 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
 void check_interrupt();
 void pedir_instruccion(t_proceso* proceso,int conexion, t_log* logger);
 void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger);
-void sum(char* registro_destino, char* registro_origen, t_proceso* proceso);
-void sub(char* registro_destino, char* registro_origen, t_proceso* proceso);
-void jnz(char* registro, uint32_t inst, t_proceso* proceso);
+void sum(char* registro_destino, char* registro_origen, t_proceso* proceso, t_log *logger);
+void sub(char* registro_destino, char* registro_origen, t_proceso* proceso, t_log *logger);
+void jnz(char* registro, uint32_t inst, t_proceso* proceso, t_log* logger);
 void io_gen_sleep(char* interfaz, uint32_t unidades_de_trabajo, t_proceso* proceso);
 instr_t* pedir_inst_a_memoria(int pc, int valor);
 bool verificar_interrupcion_kernel();
@@ -61,7 +61,7 @@ t_buffer *proceso_interrumpido_serializar(t_proceso_interrumpido* proceso_interr
 void* crear_servidor_dispatch(char* ip_cpu);
 void* crear_servidor_interrupt(char* ip_cpu);
 registros identificarRegistro(char* registro);
-uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso);
+uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso, t_log* logger);
 t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso);
 void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint32_t unidades_de_trabajo);
 t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint32_t unidades_de_trabajo);

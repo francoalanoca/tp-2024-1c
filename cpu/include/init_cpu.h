@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <utils/utils.h>
+#include <semaphore.h>
 
 
 extern t_proceso* proceso_actual;
@@ -11,6 +12,7 @@ extern t_proceso_interrumpido* proceso_interrumpido_actual;
 extern bool interrupcion_kernel;
 extern int conexion_kernel;
 extern instr_t *prox_inst;
+extern sem_t sem_conexion_lista;
 
 int checkProperties(char *path_config);
 

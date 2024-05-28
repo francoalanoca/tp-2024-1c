@@ -19,6 +19,8 @@ int tamanioParams;
 int tamanioInterfaces;
 int conexion_kernel;
 
+sem_t sem_conexion_lista;
+
 
 int main(int argc, char* argv[]) {
     decir_hola("CPU");
@@ -29,7 +31,7 @@ int main(int argc, char* argv[]) {
 	int socket_memoria;
 	//char* ip;
 
-
+    sem_init(&sem_conexion_lista,0,0);
 
      printf("iniciando ");
     if (!init(path_config) || !cargar_configuracion(path_config)) {
@@ -52,7 +54,7 @@ int main(int argc, char* argv[]) {
     log_info(logger_cpu, "cree los hilos servidor");
     //crear_servidor_dispatch(ip_cpu);
     //crear_servidor_interrupt(ip_cpu);
-   /* socket_memoria = crear_conexion(logger_cpu, "PRUEBA", cfg_cpu->IP_MEMORIA, "8003");
+    socket_memoria = crear_conexion(logger_cpu, "PRUEBA", cfg_cpu->IP_MEMORIA, "8003");
     log_info(logger_cpu, "creo socket");
     if ( (hacer_handshake (socket_memoria) == HANDSHAKE)){
         log_info(logger_cpu, "Correcto en handshake con memoria");
@@ -98,18 +100,18 @@ int main(int argc, char* argv[]) {
     proceso_interrumpido_actual->tamanio_motivo_interrupcion = 6;
      proceso_interrumpido_actual->motivo_interrupcion = malloc(proceso_interrumpido_actual->tamanio_motivo_interrupcion );
     strcpy(proceso_interrumpido_actual->motivo_interrupcion, "Motivo");
-    list_add(proceso_interrumpido_actual->proceso->interfaces, int_prueba);*/
+    list_add(proceso_interrumpido_actual->proceso->interfaces, int_prueba);
      
     //
-   // interrupcion_kernel = malloc(sizeof(bool));*/
-    interrupcion_kernel = false;
+   // interrupcion_kernel = malloc(sizeof(bool));
+    interrupcion_kernel = true;
     
     prox_inst = malloc(sizeof(instr_t));
     //prox_inst->
-   // conexion_kernel =  socket_memoria;
+    conexion_kernel =  socket_memoria;
     //
     ////////////////////////////////////////////////////////////
-    log_info(logger_cpu, "se creo el servidor");
+    /*log_info(logger_cpu, "se creo el servidor");
    
      socket_memoria = crear_conexion(logger_cpu, "MEMORIA", cfg_cpu->IP_MEMORIA, cfg_cpu->PUERTO_MEMORIA);
       
@@ -119,7 +121,7 @@ int main(int argc, char* argv[]) {
     else {
         log_info(logger_cpu, "Error en handshake con memoria");
         return EXIT_FAILURE;
-    }
+    }*/
 ////////////////////////////////////////////////////////////
     //TODO: HACER HANDSHAKE CON KERNEL Y ENVIAR SOCKET A CICLO_DE INSTRUCCIONES PARA USAR EN EL CHECK_INETRRUPT
 
@@ -130,7 +132,7 @@ int main(int argc, char* argv[]) {
 	
 
 
-	terminar_programa(socket_memoria, logger_cpu, cfg_cpu);
+	//terminar_programa(socket_memoria, logger_cpu, cfg_cpu);
     return 0;
 }
 
@@ -171,7 +173,7 @@ instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso
                 prox_inst->param2Length = (strlen("1")+1) * sizeof(char*);
                 prox_inst->param2 = malloc(prox_inst->param2Length);
                 strcpy(prox_inst->param2, "1");
-                //INSTRUCCION DE PRUEBA 2 (IO_GEN_SLEEP)
+        //INSTRUCCION DE PRUEBA 2 (IO_GEN_SLEEP)
               prox_inst->idLength = 4;
                 prox_inst->id = IO_GEN_SLEEP;  
                 prox_inst->param1Length = (strlen("Int1") + 1) * sizeof(char*);
@@ -181,6 +183,8 @@ instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso
                 prox_inst->param2Length = (strlen("10")+1) * sizeof(char*);
                 prox_inst->param2 = malloc(prox_inst->param2Length);
                 strcpy(prox_inst->param2, "10");*/
+       // log_info(logger_cpu, "WAIT SEMAFORO");
+       // sem_wait(&sem_conexion_lista);
         
        return prox_inst;
 }
@@ -203,17 +207,17 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
         }
         case SUM:
         {
-            sum(inst->param1, inst->param2,proceso);
+            sum(inst->param1, inst->param2,proceso,logger);
             break;
         }
         case SUB:
         {
-            sub(inst->param1, inst->param2,proceso);
+            sub(inst->param1, inst->param2,proceso,logger);
             break;
         }
         case JNZ:
         {
-            jnz(inst->param1, inst->param2,proceso);
+            jnz(inst->param1, inst->param2,proceso,logger);
             break;
         }
         case IO_GEN_SLEEP:
@@ -341,12 +345,12 @@ void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger){
    // registro = valor;
 }
 
-void sum(char* registro_destino, char* registro_origen, t_proceso* proceso){
+void sum(char* registro_destino, char* registro_origen, t_proceso* proceso, t_log *logger){
     registros id_registro_destino = identificarRegistro(registro_destino);
     registros id_registro_origen = identificarRegistro(registro_origen);
 
-    uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso);
-    uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso);
+    uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso,logger);
+    uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso,logger);
 
     switch(id_registro_destino){
         case PC:
@@ -412,12 +416,12 @@ void sum(char* registro_destino, char* registro_origen, t_proceso* proceso){
     //registro_destino = registro_destino + registro_origen;
 }
 
-void sub(char* registro_destino, char* registro_origen, t_proceso* proceso){
+void sub(char* registro_destino, char* registro_origen, t_proceso* proceso, t_log *logger){
     registros id_registro_destino = identificarRegistro(registro_destino);
     registros id_registro_origen = identificarRegistro(registro_origen);
 
-    uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso);
-    uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso);
+    uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso,logger);
+    uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso,logger);
 
     switch(id_registro_destino){
         case PC:
@@ -481,9 +485,9 @@ void sub(char* registro_destino, char* registro_origen, t_proceso* proceso){
     //registro_destino = registro_destino - registro_origen;
 }
 
-void jnz(char* registro, uint32_t inst, t_proceso* proceso){
+void jnz(char* registro, uint32_t inst, t_proceso* proceso, t_log* logger){
     registros id_registro = identificarRegistro(registro);
-    uint32_t valor_registro = obtenerValorActualRegistro(id_registro,proceso);
+    uint32_t valor_registro = obtenerValorActualRegistro(id_registro,proceso, logger);
     if(valor_registro != 0){
         proceso->pcb->program_counter = inst;
     }
@@ -827,7 +831,7 @@ registros identificarRegistro(char* registro){
     }
 }
 
-uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso){
+uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso, t_log* logger){
     switch(id_registro){
         case PC:
         {
