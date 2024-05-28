@@ -1,14 +1,16 @@
-#ifndef TP_2024_1C_PASARONCOSAS_MAIN_H
-#define TP_2024_1C_PASARONCOSAS_MAIN_H
+#ifndef TP_2024_1C_PASARONCOSAS_CPU_UTILS_H
+#define TP_2024_1C_PASARONCOSAS_CPU_UTILS_H
 
 #include <stdlib.h>
 #include <stdio.h>
 #include "../include/init_cpu.h"
 #include <utils/utils.h>
 #include <signal.h>
-#include "../include/cpu_utils.h"
-//#define AX 1
-/*typedef enum
+#include <utils/hello.h>
+#include<commons/config.h>
+#include <pthread.h>
+
+typedef enum
 {
     PC,
 	AX,
@@ -22,13 +24,9 @@
     SI,
     DI,
     REG_NO_ENC
-}registros;*/
-//t_proceso* proceso_actual = NULL;
+}registros;
 
-//----------------BASICOS--------------------------------
-
-void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_proceso* proceso);
-/*instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso);
+instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso);
 tipo_instruccion decode(instr_t* instr);
 void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_proceso* proceso);
 void check_interrupt();
@@ -65,9 +63,7 @@ registros identificarRegistro(char* registro);
 uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso, t_log* logger);
 t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso);
 void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint32_t unidades_de_trabajo);
-t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint32_t unidades_de_trabajo);*/
+t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint32_t unidades_de_trabajo);
 
 
-
-
-#endif //TP_2024_1C_PASARONCOSAS_MAIN_H
+#endif //TP_2024_1C_PASARONCOSAS_CPU_UTILS_H
