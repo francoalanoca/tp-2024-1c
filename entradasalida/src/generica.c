@@ -20,7 +20,7 @@ void iniciar_interfaz_generica (int socket_kernel) {
             case HANDSHAKE :
 
                 log_info(logger_entrada_salida, "Handshake realizado con Kernel");
-                response = HANDSHAKE;
+                response = HANDSHAKE_OK;
                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
                     log_error(logger_entrada_salida, "Error al enviar respuesta de handshake a kernel");
                     break;

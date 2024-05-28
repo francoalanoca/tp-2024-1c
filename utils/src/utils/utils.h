@@ -22,6 +22,7 @@ typedef enum
 {
  //----------------BASICOS--------------------------------
     HANDSHAKE = 1,
+    HANDSHAKE_OK,
 	MENSAJE,
 	PAQUETE,
 	PCB = 30,
@@ -36,10 +37,10 @@ typedef enum
     OPERACION_INVALIDA, // EntradaSalida, avisa que envía la operacion es invalida
     IO_K_GEN_SLEEP, // Kernel solicita realizar esta operación (usar esta para otros modulos tambien)
     IO_K_GEN_SLEEP_FIN, //EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
-//----------------KERNEL-MEMORIA
-    CREAR_PROCESO_KERNEL,
     IO_K_STDIN,
     IO_K_STDIN_FIN,
+//----------------KERNEL-MEMORIA
+    CREAR_PROCESO_KERNEL,
  //---------------ENTRADASALIDA-MEMORIA-------------------
     IO_M_STDIN, // entradasalida envia input a memoria
     IO_M_STDIN_FIN // Memoria guardó con éxito el input
@@ -56,8 +57,23 @@ typedef enum
     SET,
 	SUM,
 	SUB,
-	JNZ,
-	IO_GEN_SLEEP
+    MOV_IN,
+    MOV_OUT,
+    RESIZE,
+    JNZ,
+    COPY_STRING, 
+    IO_GEN_SLEEP,
+    IO_STDIN_READ,
+    IO_STDOUT_WRITE,
+    IO_FS_CREATE,
+    IO_FS_DELETE, 
+    IO_FS_TRUNCATE,
+    IO_FS_WRITE,
+    IO_FS_READ,
+    WAIT,
+    SIGNAL,
+    EXIT
+
 }tipo_instruccion;
 
 typedef struct {
@@ -129,7 +145,7 @@ typedef enum {
 typedef struct {
     char* nombre;
     //uint8_t nombre_size; creo que no hace falta
-    t_tipo_interfaz_enum* tipo;//Debe ser un enum?
+    t_tipo_interfaz_enum tipo;//Debe ser un enum?
     //uint8_t tipo_size;  creo que no hace falta
 }t_interfaz;
 
