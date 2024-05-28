@@ -14,6 +14,7 @@
 
 char *path_config;
 
+
 int main(char argc, char *argv[]) {
     path_config = argv[1];
 
@@ -23,7 +24,6 @@ int main(char argc, char *argv[]) {
     int conexion_entrada_salida;
 
     int contador_pid;
-    t_planificador* planificador;
 
 //CONFIGURACION
 

@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <utils/utils.h>
 // ver si falta poner alguna libreria
-
+t_planificador* planificador;
 // Enumeración para los algoritmos de planificación
 typedef enum {
     FIFO,
