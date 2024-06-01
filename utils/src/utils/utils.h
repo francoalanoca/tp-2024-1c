@@ -38,11 +38,11 @@ typedef enum
     OPERACION_INVALIDA,         // EntradaSalida, avisa que envía la operacion es invalida
     IO_K_GEN_SLEEP,             // Kernel solicita realizar esta operación (usar esta para otros modulos tambien)
     IO_K_GEN_SLEEP_FIN,         // EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
+    IO_K_STDIN,
+    IO_K_STDIN_FIN,
 //----------------KERNEL-MEMORIA
     CREAR_PROCESO_KERNEL,       // Kerner le solicita a Memoria crear las estructuras necesarias
     FINALIZAR_PROCESO,          // Kernel le solicita a Memoria liberar el espacio en memoria del proceso
-    IO_K_STDIN,
-    IO_K_STDIN_FIN,
  //---------------ENTRADASALIDA-MEMORIA-------------------
     IO_M_STDIN,                 // entradasalida envia input a memoria
     IO_M_STDIN_FIN              // Memoria guardó con éxito el input
@@ -147,7 +147,7 @@ typedef enum {
 typedef struct {
     char* nombre;
     //uint8_t nombre_size; creo que no hace falta
-    t_tipo_interfaz_enum* tipo;//Debe ser un enum?
+    t_tipo_interfaz_enum tipo;//Debe ser un enum?
     //uint8_t tipo_size;  creo que no hace falta
 }t_interfaz;
 
