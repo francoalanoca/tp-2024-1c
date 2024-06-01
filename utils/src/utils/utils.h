@@ -27,23 +27,25 @@ typedef enum
 	PAQUETE,
 	PCB = 30,
 	NUEVO_PROCESO = 35,
-    PROXIMA_INSTRUCCION = 40,
+    PROXIMA_INSTRUCCION = 40,   // Cpu le solicita a Memoria la proxima instruccion a ejecutar
     INTERRUPCION_CPU = 45,
     ENVIO_INTERFAZ = 50,
-    INSTRUCCION_RECIBIDA = 55,
+ //---------------CPU-MEMORIA-------------------
+    INSTRUCCION_RECIBIDA = 55,  // Memoria envia a Cpu la instruccion solicitada
  //---------------ENTRADASALIDA-KERNEL-------------------
-    INTERFAZ_ENVIAR, // EntradaSalida, avisa que envía la interfaz creada
-    INTERFAZ_RECIBIDA, // Es el ok del kernel al recibir la interfaz
-    OPERACION_INVALIDA, // EntradaSalida, avisa que envía la operacion es invalida
-    IO_K_GEN_SLEEP, // Kernel solicita realizar esta operación (usar esta para otros modulos tambien)
-    IO_K_GEN_SLEEP_FIN, //EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
+    INTERFAZ_ENVIAR,            // EntradaSalida, avisa que envía la interfaz creada
+    INTERFAZ_RECIBIDA,          // Es el ok del kernel al recibir la interfaz
+    OPERACION_INVALIDA,         // EntradaSalida, avisa que envía la operacion es invalida
+    IO_K_GEN_SLEEP,             // Kernel solicita realizar esta operación (usar esta para otros modulos tambien)
+    IO_K_GEN_SLEEP_FIN,         // EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
 //----------------KERNEL-MEMORIA
-    CREAR_PROCESO_KERNEL,
+    CREAR_PROCESO_KERNEL,       // Kerner le solicita a Memoria crear las estructuras necesarias
+    FINALIZAR_PROCESO,          // Kernel le solicita a Memoria liberar el espacio en memoria del proceso
     IO_K_STDIN,
     IO_K_STDIN_FIN,
  //---------------ENTRADASALIDA-MEMORIA-------------------
-    IO_M_STDIN, // entradasalida envia input a memoria
-    IO_M_STDIN_FIN // Memoria guardó con éxito el input
+    IO_M_STDIN,                 // entradasalida envia input a memoria
+    IO_M_STDIN_FIN              // Memoria guardó con éxito el input
 }op_code; 
 
 typedef struct {
@@ -169,7 +171,15 @@ typedef struct{
 }t_proceso_memoria;
 
 
+typedef struct {
+	int32_t nro_pag;
+	int32_t desplazamiento;
+} t_direccion_logica;
 
+typedef struct {
+	int32_t nro_frame;
+	int32_t desplazamiento;
+} t_direccion_fisica;
 
 
 
