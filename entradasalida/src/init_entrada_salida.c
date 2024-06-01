@@ -98,6 +98,7 @@ int init(char *path_config) {
 int hacer_handshake (int socket_cliente){
     uint32_t handshake  = HANDSHAKE;
     send(socket_cliente, &handshake, sizeof(uint32_t), NULL);
+    log_info(logger_entrada_salida, "Enviando HANDSHAKEl\n");
     return recibir_operacion(socket_cliente);
 }
 
