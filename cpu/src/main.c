@@ -14,12 +14,17 @@ t_proceso* proceso_actual;
 t_proceso_interrumpido* proceso_interrumpido_actual;
 bool interrupcion_kernel;
 instr_t *prox_inst;
+t_list* tlb;
 
 //int tamanioParams;
 //int tamanioInterfaces;
 int conexion_kernel;
 
 sem_t sem_conexion_lista;
+
+uint32_t marco_recibido;
+
+sem_t sem_marco_recibido;
 
 
 int main(int argc, char* argv[]) {
@@ -32,6 +37,14 @@ int main(int argc, char* argv[]) {
 	//char* ip;
 
     sem_init(&sem_conexion_lista,0,0);
+
+    sem_init(&sem_marco_recibido,0,0);
+
+    
+
+    tlb = malloc(sizeof(t_list)); //REVISAR
+
+    tlb = list_create();
 
      printf("iniciando ");
     if (!init(path_config) || !cargar_configuracion(path_config)) {

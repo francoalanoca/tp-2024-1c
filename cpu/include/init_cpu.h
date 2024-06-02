@@ -13,6 +13,14 @@ extern bool interrupcion_kernel;
 extern int conexion_kernel;
 extern instr_t *prox_inst;
 extern sem_t sem_conexion_lista;
+extern t_list* tlb;
+extern uint32_t marco_recibido;
+extern sem_t sem_marco_recibido;
+typedef struct {
+    uint32_t pid;
+    uint32_t nro_pagina;
+    uint32_t nro_marco;
+}t_registro_tlb;
 
 int checkProperties(char *path_config);
 

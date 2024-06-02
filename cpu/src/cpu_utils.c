@@ -75,6 +75,68 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
             io_gen_sleep(inst->param1, param2_num,proceso);
             break;
         }
+
+        case MOV_IN:
+        {
+          
+            mov_in(inst->param1, inst->param2,proceso);
+            break;
+        }
+        
+        case MOV_OUT:
+        {
+          
+            mov_out(inst->param1, inst->param2,proceso);
+            break;
+        }
+
+        case RESIZE:
+        {
+             char *endptr;
+            uint32_t param1_num = (uint32_t)strtoul(inst->param1, &endptr, 10);// Convertir la cadena a uint32_t
+            
+            resize(param1_num);
+            break;
+        }
+
+        case COPY_STRING:
+        {
+             char *endptr;
+            uint32_t param1_num = (uint32_t)strtoul(inst->param1, &endptr, 10);// Convertir la cadena a uint32_t
+            
+            copy_string(param1_num);
+            break;
+        }
+
+        case WAIT:
+        {
+            wait_inst(inst->param1);
+            break;
+        }
+
+        case SIGNAL:
+        {
+            signal_inst(inst->param1);
+            break;
+        }
+
+        case IO_STDIN_READ:
+        {
+            io_stdin_read(inst->param1,inst->param2,inst->param3);
+            break;
+        }
+
+        case IO_STDOUT_WRITE:
+        {
+            io_stdin_read(inst->param1,inst->param2,inst->param3);
+            break;
+        }
+
+        case EXIT:
+        {
+            exit_inst();
+            break;
+        }
     }
 
 }
@@ -570,7 +632,6 @@ log_info(logger, "Entro proceso_memoria_serializar");
 uint32_t tamanioBuffer = malloc(sizeof(uint32_t));
 tamanioBuffer = sizeof(uint32_t) //pid
              + sizeof(uint32_t); // program_counter
-     printf("aaaaaaaaaa");
      log_info(logger, "Va a entrar a buffer_create"); 
 
 			 
@@ -799,5 +860,235 @@ printf("empiezo con los buffer_add\n");
     buffer_add_uint32(buffer,unidades_de_trabajo);
     printf("hice buffer_add_uint32\n");
     return buffer;
+
+}
+
+uint32_t mmu(t_direccion_logica* direccion_logica, uint32_t tamanio_pag, int conexion){
+//t_direccion_fisica* mmu(t_direccion_logica* direccion_logica, uint32_t tamanio_pag){
+    //t_direccion_fisica* direccion_resultado = malloc(sizeof(t_direccion_fisica));
+    uint32_t direccion_resultado = malloc(sizeof(uint32_t));
+    bool encontro_en_tlb = false;
+    uint32_t indice_encontrado = malloc(sizeof(uint32_t));
+    //char* valor_direccion_logica = malloc(sizeof(---));//ver
+    //concatenar ambos strings
+    char* valor_direccion_logica = concatenar_cadenas(uint32_to_string(direccion_logica->nro_pag),uint32_to_string(direccion_logica->nro_pag));
+    uint32_t nro_pagina = malloc(sizeof(uint32_t));
+    uint32_t desplazamiento = malloc(sizeof(uint32_t));
+ //CALCULAR NRO DE PAGINA Y DESPLAZAMIENTO
+    nro_pagina =  floor(string_a_uint32(valor_direccion_logica) / tamanio_pag);
+    desplazamiento = valor_direccion_logica - nro_pagina * tamanio_pag;
+
+
+    //CHEQUEAR EN TLB
+    //list_iterate(tlb, verificar_existencia_en_tlb(&encontro_en_tlb));
+
+   
+       	  for(uint32_t i = 0; i < tlb->elements_count; i++){	
+			//if(verificar_existencia_en_tlb(proceso_actual->pcb->pid, direccion_logica->nro_pag, i)){
+            if(verificar_existencia_en_tlb(proceso_actual->pcb->pid, nro_pagina, i)){
+                encontro_en_tlb = true;
+                indice_encontrado = i;
+            }
+	  }
+
+      if(encontro_en_tlb){
+        t_registro_tlb* registro_tlb_encontrado = malloc(sizeof(t_registro_tlb));
+        registro_tlb_encontrado = list_get(tlb,indice_encontrado);
+        //direccion_resultado->nro_frame = registro_tlb_encontrado->nro_marco;
+        //HACER CALCULO DIRECCION FISICA
+        direccion_resultado = registro_tlb_encontrado->nro_marco * tamanio_pag;
+      }
+      else{//Si no esta, pedir a memoria el marco para esa pagina y proceso
+        pedir_marco_a_memoria(proceso_actual->pcb->pid,nro_pagina,conexion);
+        //al recibir marco de memoria guardarlo en la TLB, si no hay espacio usar algoritmo
+        //WAIT SEMAFORO MARCO RECIBIDO
+        sem_wait(&sem_marco_recibido);
+    if(tlb->elements_count = cfg_cpu->CANTIDAD_ENTRADAS_TLB){
+        //usar_algoritmo_tlb(); //TODO:IMPLEMENTAR FUNCION
+        direccion_resultado = marco_recibido * tamanio_pag;
+    }
+    else{
+        agregar_a_tlb(proceso_actual->pcb->pid,nro_pagina,marco_recibido);
+        direccion_resultado = marco_recibido * tamanio_pag;
+    }
+      }
+
+    
+    
+    //ver el caso en que me piden un tamaño que no entra en la pagina
+    //Si ya tengo el marco armar la direccion fisica
+    return direccion_resultado;
+}
+
+bool verificar_existencia_en_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t indice){
+    //buscar por indice en la lista(tlb) si existe
+    t_registro_tlb* registro_tlb_actual = malloc(sizeof(t_registro_tlb));
+
+    registro_tlb_actual = list_get(tlb,indice);
+
+    if(registro_tlb_actual->pid = pid && registro_tlb_actual->nro_pagina == nro_pagina){
+        return true;
+    }
+
+  return false;
+
+}
+
+char* uint32_to_string(uint32_t number) {
+    // Un uint32_t tiene un máximo de 10 dígitos, más el terminador nulo.
+    char* str = malloc(11 * sizeof(char));
+    if (str == NULL) {
+        return NULL;
+    }
+
+    sprintf(str, "%u", number);
+
+    return str;
+}
+
+char* concatenar_cadenas(const char* str1, const char* str2) {
+    // Calcular la longitud de las dos cadenas
+    size_t len1 = strlen(str1);
+    size_t len2 = strlen(str2);
+    
+    // Asignar suficiente memoria para la cadena resultante
+    // +1 para el carácter nulo
+    char* resultado = malloc((len1 + len2 + 1) * sizeof(char));
+    if (resultado == NULL) {
+        // Manejo de error en caso de fallo en la asignación de memoria
+        return NULL;
+    }
+
+    // Copiar la primera cadena al resultado
+    strcpy(resultado, str1);
+    // Concatenar la segunda cadena al resultado
+    strcat(resultado, str2);
+
+    return resultado;
+}
+
+uint32_t string_a_uint32(const char* str) {
+    // Usamos strtoul para convertir la cadena a un número sin signo
+    char *endptr;
+    unsigned long valor = strtoul(str, &endptr, 10);
+
+    // Verificar si se produjo un error durante la conversión
+    if (*endptr != '\0' || valor > UINT32_MAX) {
+        fprintf(stderr, "Conversión inválida o fuera de rango: %s\n", str);
+        exit_inst(EXIT_FAILURE);
+    }
+
+    return (uint32_t)valor;
+}
+
+void pedir_marco_a_memoria(uint32_t pid, uint32_t nro_pagina, int conexion){
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    printf("Voy a entrar a pedir_marco_a_memoria");
+    t_busqueda_marco* busqueda_marco = malloc(sizeof(t_busqueda_marco));
+    busqueda_marco->nro_pagina = nro_pagina;
+    busqueda_marco->pid;
+
+     printf("Voy a entrar a busqueda_marco_serializar");
+    paquete -> codigo_operacion = PEDIDO_MARCO_A_MEMORIA;
+    paquete->buffer = busqueda_marco_serializar(busqueda_marco);
+     printf("codOpe: %d,  size buffer:%d, size int: %d, %d", paquete->codigo_operacion,paquete->buffer->size,sizeof(uint32_t),sizeof(op_code));
+
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+    
+
+// Por último enviamos
+    send(conexion, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0); //VER que socket poner(reemplazar unSocket)
+ printf("Envio de mensaje\n");
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+    free(busqueda_marco);
+}
+
+t_buffer* busqueda_marco_serializar(t_busqueda_marco* busqueda_marco){
+    uint32_t tamanioBuffer; //= malloc(sizeof(uint32_t));
+tamanioBuffer = sizeof(uint32_t) //PID
+             + sizeof(uint32_t); // NRO_PAGINA		 
+  t_buffer *buffer = buffer_create(tamanioBuffer);
+printf("empiezo con los buffer_add\n");	
+    buffer_add_uint32(buffer,busqueda_marco->pid);
+    printf("hice buffer_add_uint32 (PID)\n");
+    buffer_add_uint32(buffer,busqueda_marco->nro_pagina);
+    printf("hice buffer_add_uint32 (NRO_PAGINA)\n");
+    return buffer;
+
+}
+
+void agregar_a_tlb(uint32_t pid, uint32_t nro_pag, uint32_t marco){
+    t_registro_tlb* nuevo_registro = malloc(sizeof(t_registro_tlb));
+    nuevo_registro->pid = pid;
+    nuevo_registro->nro_pagina = nro_pag;
+    nuevo_registro->nro_marco = marco;
+    list_add(tlb,nuevo_registro);
+}
+
+void mov_in(char* registro_datos, char* registro_direccion, t_proceso* proceso){
+    // Lee el valor de memoria correspondiente a la Dirección Lógica que se encuentra en el 
+    //Registro Dirección y lo almacena en el Registro Datos
+
+}
+
+void mov_out(char* registro_direccion, char* registro_datos, t_proceso* proceso){
+    // Lee el valor del Registro Datos y lo escribe en la dirección física de
+    // memoria obtenida a partir de la Dirección Lógica almacenada en el Registro Dirección.
+
+}
+
+void resize(uint32_t tamanio){
+    //Solicitará a la Memoria ajustar el tamaño del proceso al tamaño pasado
+    //por parámetro. En caso de que la respuesta de la memoria sea Out of Memory, se deberá
+    //devolver el contexto de ejecución al Kernel informando de esta situación.
+}
+
+void copy_string(uint32_t tamanio){
+    //Toma del string apuntado por el registro SI y copia la cantidad de bytes indicadas
+    // en el parámetro tamaño a la posición de memoria apuntada por el registro DI
+}
+
+void wait_inst(char* recurso){
+    // Esta instrucción solicita al Kernel que se asigne una instancia del recurso
+    //indicado por parámetro.
+}
+
+void signal_inst(char* recurso){
+    //Esta instrucción solicita al Kernel que se libere una instancia del recurso
+    //indicado por parámetro
+}
+
+void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio){
+    //Esta instrucción solicita al Kernel que mediante la interfaz ingresada 
+    //se lea desde el STDIN (Teclado) un valor cuyo tamaño está delimitado 
+    //por el valor del Registro Tamaño y el mismo se guarde a partir de la
+    //Dirección Lógica almacenada en el Registro Dirección.
+}
+
+void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio){
+    //Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se lea 
+    //desde la posición de memoria indicada por la Dirección Lógica almacenada
+    // en el Registro Dirección, un tamaño indicadopor el Registro Tamaño y se imprima por pantalla.
+
+}
+
+void exit_inst(){
+    // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
+    //Contexto de Ejecución actualizado al Kernel para su finalización.
 
 }

@@ -31,6 +31,8 @@ typedef enum
     INTERRUPCION_CPU = 45,
     ENVIO_INTERFAZ = 50,
     INSTRUCCION_RECIBIDA = 55,
+    PEDIDO_MARCO_A_MEMORIA = 60,
+    MARCO_RECIBIDO = 65,
  //---------------ENTRADASALIDA-KERNEL-------------------
     INTERFAZ_ENVIAR, // EntradaSalida, avisa que envía la interfaz creada
     INTERFAZ_RECIBIDA, // Es el ok del kernel al recibir la interfaz
@@ -168,7 +170,20 @@ typedef struct{
     uint32_t program_counter;
 }t_proceso_memoria;
 
+typedef struct {
+	int32_t nro_frame;
+	int32_t desplazamiento;
+} t_direccion_fisica;
 
+typedef struct {
+	int32_t nro_pag;
+	int32_t desplazamiento;
+} t_direccion_logica;
+
+typedef struct{
+    uint32_t pid;
+    uint32_t nro_pagina;
+}t_busqueda_marco;
 
 
 

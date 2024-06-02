@@ -9,6 +9,8 @@
 #include <utils/hello.h>
 #include<commons/config.h>
 #include <pthread.h>
+#include <math.h>
+
 
 typedef enum
 {
@@ -64,6 +66,23 @@ uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso, t
 t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso);
 void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint32_t unidades_de_trabajo);
 t_buffer* envio_interfaz_serializar(t_interfaz* interfaz_elegida, uint32_t unidades_de_trabajo);
+uint32_t mmu(t_direccion_logica* direccion_logica, uint32_t tamanio_pag, int conexion);
+bool verificar_existencia_en_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t indice);
+char* uint32_to_string(uint32_t number);
+char* concatenar_cadenas(const char* str1, const char* str2);
+uint32_t string_a_uint32(const char* str);
+void pedir_marco_a_memoria(uint32_t pid, uint32_t nro_pagina, int conexion);
+t_buffer* busqueda_marco_serializar(t_busqueda_marco* busqueda_marco);
+void agregar_a_tlb(uint32_t pid, uint32_t nro_pag, uint32_t marco);
+void mov_in(char* registro_datos, char* registro_direccion, t_proceso* proceso);
+void mov_out(char* registro_direccion, char* registro_datos, t_proceso* proceso);
+void resize(uint32_t tamanio);
+void copy_string(uint32_t tamanio);
+void wait_inst(char* recurso);
+void signal_inst(char* recurso);
+void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio);
+void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio);
+void exit_inst();
 
 
 #endif //TP_2024_1C_PASARONCOSAS_CPU_UTILS_H

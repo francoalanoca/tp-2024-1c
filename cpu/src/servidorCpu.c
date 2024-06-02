@@ -128,6 +128,16 @@ void procesar_conexion(void *v_args){
                 }
                 break;
             }
+            case MARCO_RECIBIDO:
+            {
+                log_info(logger_cpu, "MARCO RECIBIDO");
+                uint32_t marco_rec;
+                
+                marco_rec = buffer_read_uint8(paquete->buffer); 
+                marco_recibido = marco_rec; 
+                sem_post(&sem_marco_recibido);
+                break;
+            }
            
     }   
 free(paquete->buffer->stream);
