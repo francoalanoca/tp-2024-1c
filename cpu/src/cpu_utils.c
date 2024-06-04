@@ -79,14 +79,14 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
         case MOV_IN:
         {
           
-            mov_in(inst->param1, inst->param2,proceso);
+            mov_in(inst->param1, inst->param2,proceso,logger);
             break;
         }
         
         case MOV_OUT:
         {
           
-            mov_out(inst->param1, inst->param2,proceso);
+            mov_out(inst->param1, inst->param2,proceso,logger);
             break;
         }
 
@@ -188,7 +188,7 @@ void pedir_instruccion(t_proceso* proceso,int conexion, t_log* logger){
 }
 
 void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger){
-    printf("El valor del set es : %d ", valor);
+    //printf("El valor del set es : %d ", valor);
     registros registro_elegido = identificarRegistro(registro);
     switch(registro_elegido){
         case PC:
@@ -863,26 +863,20 @@ printf("empiezo con los buffer_add\n");
 
 }
 
-uint32_t mmu(t_direccion_logica* direccion_logica, uint32_t tamanio_pag, int conexion){
-//t_direccion_fisica* mmu(t_direccion_logica* direccion_logica, uint32_t tamanio_pag){
-    //t_direccion_fisica* direccion_resultado = malloc(sizeof(t_direccion_fisica));
+uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion){
     uint32_t direccion_resultado = malloc(sizeof(uint32_t));
     bool encontro_en_tlb = false;
     uint32_t indice_encontrado = malloc(sizeof(uint32_t));
-    //char* valor_direccion_logica = malloc(sizeof(---));//ver
-    //concatenar ambos strings
-    char* valor_direccion_logica = concatenar_cadenas(uint32_to_string(direccion_logica->nro_pag),uint32_to_string(direccion_logica->nro_pag));
+   // char* valor_direccion_logica = concatenar_cadenas(uint32_to_string(direccion_logica->nro_pag),uint32_to_string(direccion_logica->nro_pag));
     uint32_t nro_pagina = malloc(sizeof(uint32_t));
     uint32_t desplazamiento = malloc(sizeof(uint32_t));
  //CALCULAR NRO DE PAGINA Y DESPLAZAMIENTO
-    nro_pagina =  floor(string_a_uint32(valor_direccion_logica) / tamanio_pag);
-    desplazamiento = valor_direccion_logica - nro_pagina * tamanio_pag;
-
+    nro_pagina =  floor(direccion_logica / tamanio_pag);
+    desplazamiento = direccion_logica - nro_pagina * tamanio_pag;
 
     //CHEQUEAR EN TLB
     //list_iterate(tlb, verificar_existencia_en_tlb(&encontro_en_tlb));
 
-   
        	  for(uint32_t i = 0; i < tlb->elements_count; i++){	
 			//if(verificar_existencia_en_tlb(proceso_actual->pcb->pid, direccion_logica->nro_pag, i)){
             if(verificar_existencia_en_tlb(proceso_actual->pcb->pid, nro_pagina, i)){
@@ -913,10 +907,7 @@ uint32_t mmu(t_direccion_logica* direccion_logica, uint32_t tamanio_pag, int con
     }
       }
 
-    
-    
     //ver el caso en que me piden un tamaño que no entra en la pagina
-    //Si ya tengo el marco armar la direccion fisica
     return direccion_resultado;
 }
 
@@ -934,7 +925,7 @@ bool verificar_existencia_en_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t ind
 
 }
 
-char* uint32_to_string(uint32_t number) {
+/*char* uint32_to_string(uint32_t number) {
     // Un uint32_t tiene un máximo de 10 dígitos, más el terminador nulo.
     char* str = malloc(11 * sizeof(char));
     if (str == NULL) {
@@ -944,9 +935,9 @@ char* uint32_to_string(uint32_t number) {
     sprintf(str, "%u", number);
 
     return str;
-}
+}*/
 
-char* concatenar_cadenas(const char* str1, const char* str2) {
+/*char* concatenar_cadenas(const char* str1, const char* str2) {
     // Calcular la longitud de las dos cadenas
     size_t len1 = strlen(str1);
     size_t len2 = strlen(str2);
@@ -965,9 +956,9 @@ char* concatenar_cadenas(const char* str1, const char* str2) {
     strcat(resultado, str2);
 
     return resultado;
-}
+}*/
 
-uint32_t string_a_uint32(const char* str) {
+/*uint32_t string_a_uint32(const char* str) {
     // Usamos strtoul para convertir la cadena a un número sin signo
     char *endptr;
     unsigned long valor = strtoul(str, &endptr, 10);
@@ -979,7 +970,7 @@ uint32_t string_a_uint32(const char* str) {
     }
 
     return (uint32_t)valor;
-}
+}*/
 
 void pedir_marco_a_memoria(uint32_t pid, uint32_t nro_pagina, int conexion){
     
@@ -1040,15 +1031,37 @@ void agregar_a_tlb(uint32_t pid, uint32_t nro_pag, uint32_t marco){
     list_add(tlb,nuevo_registro);
 }
 
-void mov_in(char* registro_datos, char* registro_direccion, t_proceso* proceso){
+void mov_in(char* registro_datos, char* registro_direccion, t_proceso* proceso, t_log* logger){
     // Lee el valor de memoria correspondiente a la Dirección Lógica que se encuentra en el 
     //Registro Dirección y lo almacena en el Registro Datos
+    registros id_registro_direccion = identificarRegistro(registro_direccion);
+    
+    //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
+    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
+
+    uint32_t dir_fisica_result = malloc(sizeof(uint32_t));
+    dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria);
+
+    pedir_valor_a_memoria(dir_fisica_result);
+    wait(&sem_valor_registro_recibido);
+    
+    set(registro_datos,valor_registro_obtenido,proceso,logger);
 
 }
 
-void mov_out(char* registro_direccion, char* registro_datos, t_proceso* proceso){
+void mov_out(char* registro_direccion, char* registro_datos, t_proceso* proceso, t_log* logger){
     // Lee el valor del Registro Datos y lo escribe en la dirección física de
     // memoria obtenida a partir de la Dirección Lógica almacenada en el Registro Dirección.
+    registros id_registro_datos = identificarRegistro(registro_datos);
+    uint32_t valor_registro_datos = obtenerValorActualRegistro(id_registro_datos,proceso, logger);
+    
+    registros id_registro_direccion = identificarRegistro(registro_direccion);
+    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
+
+    uint32_t dir_fisica_result = malloc(sizeof(uint32_t));
+    dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria);
+
+    guardar_en_direccion_fisica(dir_fisica_result,valor_registro_datos);//TODO
 
 }
 
@@ -1090,5 +1103,85 @@ void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_ta
 void exit_inst(){
     // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
     //Contexto de Ejecución actualizado al Kernel para su finalización.
+
+}
+
+void pedir_valor_a_memoria(uint32_t dir_fisica){
+        printf("entro a pedir_valor_a_memoria\n");
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete -> codigo_operacion = PETICION_VALOR_MEMORIA;
+    paquete->buffer = direccion_fisica_serializar(dir_fisica);
+    printf("sali de direccion_fisica_serializar\n");
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(socket_memoria, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0);
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+t_buffer* direccion_fisica_serializar(uint32_t dir_fisica){
+    uint32_t tamanioBuffer; //= malloc(sizeof(uint32_t));
+tamanioBuffer =  sizeof(uint32_t); // dir_fisica	 
+  t_buffer *buffer = buffer_create(tamanioBuffer);
+    buffer_add_uint32(buffer,dir_fisica);
+    printf("hice buffer_add_uint32\n");
+    return buffer;
+
+}
+
+void guardar_en_direccion_fisica(uint32_t dir_fisica_result, uint32_t valor_registro_datos){
+        printf("entro a guardar_en_direccion_fisica\n");
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete -> codigo_operacion = GUARDAR_EN_DIRECCION_FISICA;
+    paquete->buffer = direccion_fisica_valor_serializar(dir_fisica_result,valor_registro_datos);
+    printf("sali de direccion_fisica_serializar\n");
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(socket_memoria, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0);
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+t_buffer* direccion_fisica_valor_serializar(uint32_t dir_fisica, uint32_t valor){
+    uint32_t tamanioBuffer; //= malloc(sizeof(uint32_t));
+tamanioBuffer =  sizeof(uint32_t) + sizeof(uint32_t); // dir_fisica	 + valor
+  t_buffer *buffer = buffer_create(tamanioBuffer);
+    buffer_add_uint32(buffer,dir_fisica);
+    printf("hice buffer_add_uint32\n");
+    buffer_add_uint32(buffer,valor);
+    printf("hice buffer_add_uint32\n");
+    return buffer;
 
 }

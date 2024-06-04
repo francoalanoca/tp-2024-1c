@@ -133,11 +133,22 @@ void procesar_conexion(void *v_args){
                 log_info(logger_cpu, "MARCO RECIBIDO");
                 uint32_t marco_rec;
                 
-                marco_rec = buffer_read_uint8(paquete->buffer); 
+                marco_rec = buffer_read_uint32(paquete->buffer); 
                 marco_recibido = marco_rec; 
                 sem_post(&sem_marco_recibido);
                 break;
             }
+            case PETICION_VALOR_MEMORIA_RTA:
+            {
+                log_info(logger_cpu, "PETICION_VALOR_MEMORIA_RTA");
+                uint32_t valor_rec;
+                
+                valor_rec = buffer_read_uint32(paquete->buffer); 
+                valor_registro_obtenido = valor_rec; 
+                sem_post(&sem_valor_registro_recibido);
+                break;
+            }
+            
            
     }   
 free(paquete->buffer->stream);
@@ -163,6 +174,12 @@ void buffer_read(t_buffer *buffer, void *data, uint32_t size){
 uint8_t buffer_read_uint8(t_buffer *buffer){
 	uint8_t valor = malloc(sizeof(uint8_t));
 	buffer_read(buffer,&valor,sizeof(uint8_t));
+	return valor;
+}
+
+uint32_t buffer_read_uint32(t_buffer *buffer){
+	uint32_t valor = malloc(sizeof(uint32_t));
+	buffer_read(buffer,&valor,sizeof(uint32_t));
 	return valor;
 }
 

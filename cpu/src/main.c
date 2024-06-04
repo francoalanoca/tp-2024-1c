@@ -26,6 +26,14 @@ uint32_t marco_recibido;
 
 sem_t sem_marco_recibido;
 
+sem_t sem_valor_registro_recibido;
+
+uint32_t tamanio_pagina;
+
+int socket_memoria;
+
+char* valor_registro_obtenido;
+
 
 int main(int argc, char* argv[]) {
     decir_hola("CPU");
@@ -39,6 +47,9 @@ int main(int argc, char* argv[]) {
     sem_init(&sem_conexion_lista,0,0);
 
     sem_init(&sem_marco_recibido,0,0);
+    
+    sem_init(&sem_valor_registro_recibido,0,0);
+    
 
     
 

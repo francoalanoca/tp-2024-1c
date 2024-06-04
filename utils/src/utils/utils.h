@@ -33,6 +33,9 @@ typedef enum
     INSTRUCCION_RECIBIDA = 55,
     PEDIDO_MARCO_A_MEMORIA = 60,
     MARCO_RECIBIDO = 65,
+    PETICION_VALOR_MEMORIA = 70, //CPU pide a memoria que le de el valor asociado a una direccion fisica
+    PETICION_VALOR_MEMORIA_RTA = 75, //Memoria envia a CPU el valor asociado a la direccion fisica 
+    GUARDAR_EN_DIRECCION_FISICA = 80, //CPU le manda a memoria dir fisica y valor y memoria debe guardar dicho valor en la dir fisica indicada
  //---------------ENTRADASALIDA-KERNEL-------------------
     INTERFAZ_ENVIAR, // EntradaSalida, avisa que envía la interfaz creada
     INTERFAZ_RECIBIDA, // Es el ok del kernel al recibir la interfaz

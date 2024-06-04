@@ -16,6 +16,10 @@ extern sem_t sem_conexion_lista;
 extern t_list* tlb;
 extern uint32_t marco_recibido;
 extern sem_t sem_marco_recibido;
+extern uint32_t tamanio_pagina;
+extern int socket_memoria;
+extern char* valor_registro_obtenido;
+extern sem_t sem_valor_registro_recibido;
 typedef struct {
     uint32_t pid;
     uint32_t nro_pagina;
