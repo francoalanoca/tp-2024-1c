@@ -1,8 +1,8 @@
 #include <init_kernel.h>
 
-t_log *logger_kernel; // Definición de la variable global
-t_config_kernel *cfg_kernel;
-t_config *file_cfg_kernel;
+extern t_log *logger_kernel; // Definición de la variable global
+extern t_config_kernel *cfg_kernel;
+extern t_config *file_cfg_kernel;
 
 int checkProperties(char *path_config) {
     // config valida
@@ -95,6 +95,25 @@ int init(char *path_config) {
 
     return checkProperties(path_config);
 }
+ void Empezar_conexiones(){
+
+    //conexion con cpu-dispatch
+    conexion_cpu_dispatch = crear_conexion(logger_kernel, "KERNEL", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);
+    
+    log_info(logger_kernel, "Socket de KERNEL : %d\n",conexion_cpu_dispatch);  
+
+    //conexion con cpu-interrupt
+    conexion_cpu_interrupt = crear_conexion(logger_kernel, "KERNEL", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_INTERRUPT);
+    
+    log_info(logger_kernel, "Socket de KERNEL : %d\n",conexion_cpu_interrupt);
+
+    //conexion con memoria
+    conexion_memoria = crear_conexion(logger_kernel, "MEMORIA", cfg_kernel->IP_MEMORIA, cfg_kernel->PUERTO_MEMORIA);
+    
+    log_info(logger_kernel, "Socket de MEMORIA : %d\n",conexion_memoria); 
+
+}
+
 int hacer_handshake (int socket_cliente){
     uint32_t handshake  = HANDSHAKE;
 
@@ -104,7 +123,6 @@ int hacer_handshake (int socket_cliente){
 
 
 void cerrar_programa() {
-
 
     //cortar_conexiones();
     //cerrar_servers();  

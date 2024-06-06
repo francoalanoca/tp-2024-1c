@@ -16,12 +16,17 @@ int init(char *path_config);
 
 int hacer_handshake (int socket_cliente);
 
+void Empezar_conexiones();
+
 
 void cerrar_programa();
 
 // Variables Globales
 extern t_log *logger_kernel;
 extern t_config* file_cfg_kernel;
+extern conexion_cpu_dispatch;
+extern conexion_cpu_interrupt;
+extern conexion_memoria;
 typedef struct {
     int PUERTO_ESCUCHA;
     char* IP_MEMORIA;

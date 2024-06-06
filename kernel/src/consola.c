@@ -1,6 +1,5 @@
 #include "consola.h"
 
- int conexion_memoria;
  int identificador_pid;
  pthread_mutex_t mutex_pid;
 
@@ -92,15 +91,38 @@ void atender_instruccion_validada(char* leido){
         f_iniciar_proceso(un_buffer);
 
     }else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0){    //FINALIZAR_PROCESO [PID]
-        
+       
+       /* pid_t pid = atoi(comando_consola[1]);
+        if (kill(pid, SIGTERM) == 0) {
+            printf("Proceso con PID %d finalizado exitosamente.\n", pid);
+        } else {
+            if (errno == ESRCH) {
+                printf("No se encontró un proceso con PID %d.\n", pid);
+            } else if (errno == EPERM) {
+                printf("No tienes permiso para finalizar el proceso con PID %d.\n", pid);
+            } else {
+                printf("Ocurrió un error al finalizar el proceso con PID %d: %s\n", pid, strerror(errno));
+            }
+        }
+       */
     }else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0){    //DETENER_PLANIFICACION
         
+        //detener_planificacion();
+
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
         
+        //iniciar_planificacion();
+
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         
+      /*int valor = atoi(comando_consola[1]);
+        ajustar_multiprogramacion(valor);
+      */
     }else if (strcmp(comando_consola[0], "PROCESO_ESTADO") == 0){   //PROCESO_ESTADO
         
+      /*pid_t pid = atoi(comando_consola[1]);
+        mostrar_estado_proceso(pid);
+      */
     }else{
         log_error(logger_kernel, "Comando no reconocido que logro pasar el filtro!!!");
         exit(EXIT_FAILURE);
