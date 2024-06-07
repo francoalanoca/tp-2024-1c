@@ -45,7 +45,6 @@ bool validacion_de_instruccion_de_consola(char* leido){
     //Paso lo leido por consola a un vector para saber luego si es un comando de consola
     char** comando_consola = string_split(leido, "");
 
-    //Falta hacer mas controles de validacion en el caso de los parametros, que no llegue vacio, sea la cantidad indicada y no mas por ejemplo
     //Comparo si lo leido coincide con alguno de los comandos
     if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0){
         resultado_validacion = true;
@@ -132,39 +131,101 @@ void atender_instruccion_validada(char* leido){
     
 }
 
-//Falta logica para el funcionamiento
 //Funcion que carga las instrucciones de path para iniciar un proceso en New
-void f_iniciar_proceso(t_buffer* un_buffer){
-
-    //extraemos del buffer
-    char* path = extraer_string_del_buffer(un_buffer);
-    //char* size = extraer_string_del_buffer(un_buffer);    //si el protocolo tuviera parametro size
-    //char* prioridad = extraer_string_del_buffer(un_buffer);   //sie l protocolo tuviera parametro prioridad
-    log_trace(logger_kernel, "BUFFER (%d): [PATH: &s]", path);
+void f_iniciar_proceso(t_buffer* un_buffer) {
+    char* path = extraer_string_del_buffer(un_buffer);  // Extraemos del buffer
+    if (path == NULL) {
+        fprintf(stderr, "Error: no se pudo extraer el path del buffer.\n");
+        return;
+    }
+    log_trace(logger_kernel, "BUFFER (%d): [PATH: %s]", path);
     eliminar_buffer(un_buffer);
 
-    int pid = asignar_pid();
-    //int size_num = atoi(size);
+    t_pcb* pcb = crear_pcb(path);
+    if (pcb == NULL) {
+        fprintf(stderr, "Error: no se pudo crear el PCB.\n");
+        free(path);
+        return;
+    }
 
-    t_paquete* un_paquete = crear_paquete(CREAR_PROCESO_KERNEL);
-
-
-
-    enviar_paquete(un_paquete, conexion_memoria);
-    eliminar_paquete(un_paquete);
-
+    imprimir_pcb(pcb);
+    enviar_pcb_a_cpu_por_dispatch(pcb);
+    destruir_pcb(pcb);
+    free(path);
 }
 
+t_pcb* crear_pcb(char* path) {
+    t_pcb* nuevo_pcb = malloc(sizeof(t_pcb));
+    if (nuevo_pcb == NULL) {
+        log_error(logger_kernel, "No se pudo asignar memoria para el nuevo pcb\n");
+        return NULL;
+    }
 
-//Funcion que asigna un pid
-int asignar_pid(){
-    
-    int valor_pid;
-    //Se crea un mutex en el caso de que ingrese mas de un proceso
-    pthread_mutex_lock(&mutex_pid);
-    valor_pid = identificador_pid;
-    identificador_pid++;
-    pthread_mutex_unlock(&mutex_pid);
+    pthread_mutex_lock(&mutex_process_id);
+    process_id++;
+    nuevo_pcb->pid = process_id;
+    pthread_mutex_unlock(&mutex_process_id);
 
-    return valor_pid;
+    nuevo_pcb->program_counter = 0;
+    nuevo_pcb->path = strdup(path);
+    nuevo_pcb->lista_recursos_pcb = list_create();
+
+    if (pthread_mutex_init(&nuevo_pcb->mutex_lista_recursos, NULL) != 0) {
+        log_error(logger_kernel, "No se pudo inicializar el mutex para el pcb\n");
+        free(nuevo_pcb->path);
+        list_destroy(nuevo_pcb->lista_recursos_pcb);
+        free(nuevo_pcb);
+        return NULL;
+    }
+
+    // Inicializar registros CPU
+    nuevo_pcb->registros_cpu.AX = 0;
+    nuevo_pcb->registros_cpu.BX = 0;
+    nuevo_pcb->registros_cpu.CX = 0;
+    nuevo_pcb->registros_cpu.DX = 0;
+    nuevo_pcb->registros_cpu.EAX = 0;
+    nuevo_pcb->registros_cpu.EBX = 0;
+    nuevo_pcb->registros_cpu.ECX = 0;
+    nuevo_pcb->registros_cpu.EDX = 0;
+    nuevo_pcb->registros_cpu.SI = 0;
+    nuevo_pcb->registros_cpu.DI = 0;
+    nuevo_pcb->registros_cpu.PC = nuevo_pcb->program_counter;
+
+    printf("PCB creado exitosamente\n");
+    return nuevo_pcb;
+}
+
+void imprimir_pcb(t_pcb* un_pcb) {
+    log_info(logger_kernel, "<PCB_%d> [%s]", un_pcb->pid, un_pcb->path);
+}
+
+void enviar_pcb_a_cpu_por_dispatch(t_pcb* una_pcb) {
+    t_paquete* un_paquete = crear_super_paquete(conexion_cpu_dispatch);
+    cargar_int_al_super_paquete(un_paquete, una_pcb->pid);
+    cargar_int_al_super_paquete(un_paquete, una_pcb->program_counter);
+
+    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.PC), sizeof(uint32_t));
+    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.AX), sizeof(uint8_t));
+    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.BX), sizeof(uint8_t));
+    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.CX), sizeof(uint8_t));
+    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.DX), sizeof(uint8_t));
+    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.EAX), sizeof(uint32_t));
+    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.EBX), sizeof(uint32_t));
+    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.ECX), sizeof(uint32_t));
+    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.SI), sizeof(uint32_t));
+    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.DI), sizeof(uint32_t));
+
+    enviar_paquete(un_paquete, conexion_cpu_dispatch);
+    eliminar_paquete(un_paquete);
+}
+
+void destruir_pcb(t_pcb* un_pcb) {
+    if (un_pcb->path) free(un_pcb->path);
+    list_destroy(un_pcb->lista_recursos_pcb);
+    pthread_mutex_destroy(&un_pcb->mutex_lista_recursos);
+    free(un_pcb);
+}
+
+void cambiar_estado(t_pcb* un_pcb, estado_pcb prox_estado) {
+    un_pcb->estado = prox_estado;
 }
