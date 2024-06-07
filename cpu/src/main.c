@@ -28,11 +28,15 @@ sem_t sem_marco_recibido;
 
 sem_t sem_valor_registro_recibido;
 
+sem_t sem_valor_resize_recibido;
+
 uint32_t tamanio_pagina;
 
 int socket_memoria;
 
 char* valor_registro_obtenido;
+
+char* rta_resize;
 
 
 int main(int argc, char* argv[]) {
@@ -49,6 +53,8 @@ int main(int argc, char* argv[]) {
     sem_init(&sem_marco_recibido,0,0);
     
     sem_init(&sem_valor_registro_recibido,0,0);
+    
+    sem_init(&sem_valor_resize_recibido,0,0);
     
 
     

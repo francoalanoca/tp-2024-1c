@@ -570,7 +570,7 @@ void buffer_add_interfaz(t_buffer* buffer, t_interfaz* interfaz){
 	buffer_add(buffer, &interfaz->tipo,((sizeof(interfaz->tipo)) * sizeof(char*))); //VER SI ESTA BIEN EL STRLEN
 }
 
-t_buffer *proceso_serializar(t_proceso* proceso) {
+/*t_buffer *proceso_serializar(t_proceso* proceso) {
 	
 //t_buffer* buffer = malloc(sizeof(t_buffer)); //VER SI HACE FALTA
 //t_proceso* proceso = malloc(sizeof(proceso);
@@ -611,13 +611,13 @@ tamanioBuffer = tamanio_pcb
 	
 	///////
    //  
-   	  for(int i = 0; i < list_size(proceso->interfaces); i++){	
+  /* 	  for(int i = 0; i < list_size(proceso->interfaces); i++){	
 			buffer_add_interfaz(buffer, list_get(proceso->interfaces,i));
 	  }
     //buffer_add_interfaz(buffer, persona->interfaces); //RECORRER LISTA DE INTERFACES CON FOR Y HACER ESTO POR CADA UNA
 
     return buffer;
-}
+}*/
 
 t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso){
     t_proceso_memoria* nuevo_proceso = malloc(sizeof(t_proceso_memoria));
@@ -1069,6 +1069,14 @@ void resize(uint32_t tamanio){
     //Solicitará a la Memoria ajustar el tamaño del proceso al tamaño pasado
     //por parámetro. En caso de que la respuesta de la memoria sea Out of Memory, se deberá
     //devolver el contexto de ejecución al Kernel informando de esta situación.
+
+    solicitar_resize_a_memoria(proceso_actual,tamanio);
+    //WAIT SEMAFORO
+    sem_wait(&sem_valor_resize_recibido);
+    if(strcmp(rta_resize, "Out of memory") == 0){
+
+        envia_error_de_memoria_a_kernel(proceso_actual);
+    }
 }
 
 void copy_string(uint32_t tamanio){
@@ -1184,4 +1192,153 @@ tamanioBuffer =  sizeof(uint32_t) + sizeof(uint32_t); // dir_fisica	 + valor
     printf("hice buffer_add_uint32\n");
     return buffer;
 
+}
+
+void solicitar_resize_a_memoria(t_proceso* proceso, uint32_t tamanio){
+       printf("entro a solicitar_resize_a_memoria\n");
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete -> codigo_operacion = SOLICITUD_RESIZE;
+    paquete->buffer = proceso_resize_serializar(proceso,tamanio);
+    printf("sali de proceso_resize_serializar\n");
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(socket_memoria, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0);
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+t_buffer* proceso_resize_serializar(t_proceso* proceso, uint32_t tamanio){
+    int tamanioParams = malloc(sizeof(int));
+printf("malloc tamanioParams\n");
+int tamanioInterfaces = malloc(sizeof(int));
+printf("malloc tamanioInterfaces\n");
+printf("tamListaInterfaces: %d\n", list_size(proceso->interfaces) );
+
+   	  for(int i = 0; i < list_size(proceso->interfaces); i++){
+        printf("entro for tamanioInterfaces\n");	
+        printf("list_get name: %s\n",(t_interfaz*)list_get(proceso->interfaces,i) );
+            calcularTamanioInterfaz((t_interfaz*)list_get(proceso->interfaces,i));
+	  }
+
+printf("calcula tamanioInterfaces\n");
+uint32_t tamanio_pcb = malloc(sizeof(uint32_t));
+tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
+printf("calcula tamanio_pcb\n");
+//int tamanioInstrucciones = malloc(sizeof(int));
+//tamanioInstrucciones = ((sizeof(uint8_t) * 6 + sizeof(tipo_instruccion)) * proceso_interrumpido->proceso->cantidad_instrucciones )+ tamanioParams;
+
+int tamanioBuffer = malloc(sizeof(int));
+tamanioBuffer = tamanio_pcb
+  //           + sizeof(uint8_t) // cantidad_instrucciones
+  //           + tamanioInstrucciones
+			 + tamanioInterfaces
+             + sizeof(uint32_t); //tamanio
+	printf("calcula tamanioBuffer\n");		 
+  t_buffer *buffer = buffer_create(tamanioBuffer);
+
+    buffer_add_pcb(buffer, proceso->pcb);
+    //buffer_add_uint8(buffer, proceso_interrumpido->proceso->cantidad_instrucciones);
+printf("agrego pcb\n");	
+	  /*for(int i = 0; i < proceso_interrumpido->proceso->cantidad_instrucciones; i++){	
+			buffer_add_instruccion(buffer, list_get(proceso_interrumpido->proceso->instrucciones,i));
+	  }*/
+	       
+
+   	  for(int i = 0; i < list_size(proceso->interfaces); i++){	
+			buffer_add_interfaz(buffer, list_get(proceso->interfaces,i));
+	  }
+      printf("agrego interfaces\n");	
+
+      buffer_add_uint32(buffer,tamanio);
+      printf("agrego tamanio\n");
+    return buffer;
+}
+
+void envia_error_de_memoria_a_kernel(t_proceso* proceso){
+            printf("entro a envia_error_de_memoria_a_kernel\n");
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete -> codigo_operacion = ENVIAR_ERROR_MEMORIA_A_KERNEL;
+    paquete->buffer = proceso_serializar(proceso);
+    printf("sali de direccion_fisica_serializar\n");
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(socket_memoria, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0);
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+t_buffer* proceso_serializar(t_proceso* proceso){
+    int tamanioParams = malloc(sizeof(int));
+printf("malloc tamanioParams\n");
+int tamanioInterfaces = malloc(sizeof(int));
+printf("malloc tamanioInterfaces\n");
+printf("tamListaInterfaces: %d\n", list_size(proceso->interfaces) );
+
+   	  for(int i = 0; i < list_size(proceso->interfaces); i++){
+        printf("entro for tamanioInterfaces\n");	
+        printf("list_get name: %s\n",(t_interfaz*)list_get(proceso->interfaces,i) );
+            calcularTamanioInterfaz((t_interfaz*)list_get(proceso->interfaces,i));
+	  }
+
+printf("calcula tamanioInterfaces\n");
+uint32_t tamanio_pcb = malloc(sizeof(uint32_t));
+tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
+printf("calcula tamanio_pcb\n");
+//int tamanioInstrucciones = malloc(sizeof(int));
+//tamanioInstrucciones = ((sizeof(uint8_t) * 6 + sizeof(tipo_instruccion)) * proceso_interrumpido->proceso->cantidad_instrucciones )+ tamanioParams;
+
+int tamanioBuffer = malloc(sizeof(int));
+tamanioBuffer = tamanio_pcb
+  //           + sizeof(uint8_t) // cantidad_instrucciones
+  //           + tamanioInstrucciones
+			 + tamanioInterfaces;
+	printf("calcula tamanioBuffer\n");		 
+  t_buffer *buffer = buffer_create(tamanioBuffer);
+
+    buffer_add_pcb(buffer, proceso->pcb);
+    //buffer_add_uint8(buffer, proceso_interrumpido->proceso->cantidad_instrucciones);
+printf("agrego pcb\n");	
+	  /*for(int i = 0; i < proceso_interrumpido->proceso->cantidad_instrucciones; i++){	
+			buffer_add_instruccion(buffer, list_get(proceso_interrumpido->proceso->instrucciones,i));
+	  }*/
+	       
+
+   	  for(int i = 0; i < list_size(proceso->interfaces); i++){	
+			buffer_add_interfaz(buffer, list_get(proceso->interfaces,i));
+	  }
+      printf("agrego interfaces\n");	
+
+    return buffer;
 }

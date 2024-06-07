@@ -87,6 +87,11 @@ void pedir_valor_a_memoria(uint32_t dir_fisica);
 t_buffer* direccion_fisica_serializar(uint32_t dir_fisica);
 void guardar_en_direccion_fisica(uint32_t dir_fisica_result, uint32_t valor_registro_datos);
 t_buffer* direccion_fisica_valor_serializar(uint32_t dir_fisica, uint32_t valor);
+void solicitar_resize_a_memoria(t_proceso* proceso, uint32_t tamanio);
+t_buffer* proceso_resize_serializar(t_proceso* proceso, uint32_t tamanio);
+void envia_error_de_memoria_a_kernel(t_proceso* proceso);
+
+
 
 
 #endif //TP_2024_1C_PASARONCOSAS_CPU_UTILS_H

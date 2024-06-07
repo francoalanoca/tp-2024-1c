@@ -148,6 +148,16 @@ void procesar_conexion(void *v_args){
                 sem_post(&sem_valor_registro_recibido);
                 break;
             }
+            case SOLICITUD_RESIZE_RTA:
+            {
+                log_info(logger_cpu, "SOLICITUD_RESIZE_RTA");
+                char* valor_rec;
+                
+                valor_rec = buffer_read_uint32(paquete->buffer); 
+                strcpy(rta_resize, valor_rec); 
+                sem_post(&sem_valor_resize_recibido);
+                break;
+            }
             
            
     }   
