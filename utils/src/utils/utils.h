@@ -145,10 +145,9 @@ typedef enum {
 } t_tipo_interfaz_enum;
 
 typedef struct {
-    char* nombre;
-    //uint8_t nombre_size; creo que no hace falta
-    t_tipo_interfaz_enum tipo;//Debe ser un enum?
-    //uint8_t tipo_size;  creo que no hace falta
+    uint8_t nombre_length; 
+    char* nombre;   
+    t_tipo_interfaz_enum tipo;//es un enum por lo que pesa 4 bytes : uint32_t
 }t_interfaz;
 
 
@@ -181,6 +180,10 @@ typedef struct {
 	int32_t desplazamiento;
 } t_direccion_fisica;
 
+typedef struct {
+	int32_t pid;
+	int32_t tiempo_espera;
+} t_io_espera;
 
 
 

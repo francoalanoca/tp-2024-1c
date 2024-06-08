@@ -80,7 +80,7 @@ int esperar_cliente(t_log* logger, const char* name, int socket_servidor) {
     return socket_cliente;
 }
 
-int recibir_operacion(int socket_cliente)
+int recibir_operacion(int socket_cliente) // modificar 
 {
 	int cod_op;
 	if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) > 0)
@@ -92,7 +92,7 @@ int recibir_operacion(int socket_cliente)
 	}
 }
 
-void* recibir_buffer(int* size, int socket_cliente)
+void* recibir_buffer(int* size, int socket_cliente)  
 {
 	void * buffer;
 
@@ -103,7 +103,7 @@ void* recibir_buffer(int* size, int socket_cliente)
 	return buffer;
 }
 
-void recibir_mensaje(int socket_cliente)
+void recibir_mensaje(int socket_cliente)  // esta no sirve
 {
 	int size;
 	char* buffer = recibir_buffer(&size, socket_cliente);
@@ -111,7 +111,7 @@ void recibir_mensaje(int socket_cliente)
 	free(buffer);
 }
 
-t_list* recibir_paquete(int socket_cliente)
+t_list* recibir_paquete(int socket_cliente) 
 {
 	int size;
 	int desplazamiento = 0;
