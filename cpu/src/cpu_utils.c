@@ -122,13 +122,13 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
 
         case IO_STDIN_READ:
         {
-            io_stdin_read(inst->param1,inst->param2,inst->param3);
+            io_stdin_read(inst->param1,inst->param2,inst->param3,proceso,logger);
             break;
         }
 
         case IO_STDOUT_WRITE:
         {
-            io_stdin_read(inst->param1,inst->param2,inst->param3);
+            io_stdout_write(inst->param1,inst->param2,inst->param3,proceso,logger);
             break;
         }
 
@@ -1082,35 +1082,66 @@ void resize(uint32_t tamanio){
 void copy_string(uint32_t tamanio){
     //Toma del string apuntado por el registro SI y copia la cantidad de bytes indicadas
     // en el parámetro tamaño a la posición de memoria apuntada por el registro DI
+
+    //obtener valor de SI, obtener string recortado, mandar mensaje a memoria con direccion y string cortado(nuev struct?)
+    
+    char* valor_a_enviar = malloc(tamanio);
+    valor_a_enviar = string_substring(proceso_actual->pcb->registrosCPU->SI,0,tamanio); //VER BIEN QUE HACE LA FUNCION
+
+    guardar_string_en_memoria(valor_a_enviar,tamanio,proceso_actual->pcb->registrosCPU->DI);
 }
 
 void wait_inst(char* recurso){
     // Esta instrucción solicita al Kernel que se asigne una instancia del recurso
     //indicado por parámetro.
+
+    solicitar_wait_kernel(proceso_actual ,recurso); 
 }
 
 void signal_inst(char* recurso){
     //Esta instrucción solicita al Kernel que se libere una instancia del recurso
     //indicado por parámetro
+    solicitar_signal_kernel(proceso_actual ,recurso);
 }
 
-void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio){
+void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio, t_proceso* proceso, t_log* logger){
     //Esta instrucción solicita al Kernel que mediante la interfaz ingresada 
     //se lea desde el STDIN (Teclado) un valor cuyo tamaño está delimitado 
     //por el valor del Registro Tamaño y el mismo se guarde a partir de la
     //Dirección Lógica almacenada en el Registro Dirección.
+
+    //obtener valores de los parametros, luego guardalos en una struct nueva, serializar y mandar
+    registros id_registro_direccion = identificarRegistro(registro_direccion);
+    //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
+    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
+    //TRADUCIR DIR LOGICA A FISICA?
+        registros id_registro_tamanio = identificarRegistro(registro_tamanio);
+    //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
+    uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
+    solicitar_io_stdin_read_a_kernel(interfaz,valor_registro_direccion,valor_registro_tamanio);
 }
 
-void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio){
+void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio, t_proceso* proceso, t_log* logger){
     //Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se lea 
     //desde la posición de memoria indicada por la Dirección Lógica almacenada
     // en el Registro Dirección, un tamaño indicadopor el Registro Tamaño y se imprima por pantalla.
 
+    //obtener valores de los parametros, luego guardalos en una struct nueva, serializar y mandar
+    registros id_registro_direccion = identificarRegistro(registro_direccion);
+    //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
+    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
+    //TRADUCIR DIR LOGICA A FISICA?
+        registros id_registro_tamanio = identificarRegistro(registro_tamanio);
+    //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
+    uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
+    solicitar_io_stdout_write_a_kernel(interfaz,valor_registro_direccion,valor_registro_tamanio);
 }
 
 void exit_inst(){
     // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
     //Contexto de Ejecución actualizado al Kernel para su finalización.
+
+    solicitar_exit_a_kernel(proceso_actual);
 
 }
 
@@ -1300,31 +1331,10 @@ void envia_error_de_memoria_a_kernel(t_proceso* proceso){
 }
 
 t_buffer* proceso_serializar(t_proceso* proceso){
-    int tamanioParams = malloc(sizeof(int));
-printf("malloc tamanioParams\n");
-int tamanioInterfaces = malloc(sizeof(int));
-printf("malloc tamanioInterfaces\n");
-printf("tamListaInterfaces: %d\n", list_size(proceso->interfaces) );
+	
 
-   	  for(int i = 0; i < list_size(proceso->interfaces); i++){
-        printf("entro for tamanioInterfaces\n");	
-        printf("list_get name: %s\n",(t_interfaz*)list_get(proceso->interfaces,i) );
-            calcularTamanioInterfaz((t_interfaz*)list_get(proceso->interfaces,i));
-	  }
-
-printf("calcula tamanioInterfaces\n");
-uint32_t tamanio_pcb = malloc(sizeof(uint32_t));
-tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
-printf("calcula tamanio_pcb\n");
-//int tamanioInstrucciones = malloc(sizeof(int));
-//tamanioInstrucciones = ((sizeof(uint8_t) * 6 + sizeof(tipo_instruccion)) * proceso_interrumpido->proceso->cantidad_instrucciones )+ tamanioParams;
-
-int tamanioBuffer = malloc(sizeof(int));
-tamanioBuffer = tamanio_pcb
-  //           + sizeof(uint8_t) // cantidad_instrucciones
-  //           + tamanioInstrucciones
-			 + tamanioInterfaces;
-	printf("calcula tamanioBuffer\n");		 
+    uint32_t tamanioBuffer =
+    calcular_tamanio_proceso(proceso);	 
   t_buffer *buffer = buffer_create(tamanioBuffer);
 
     buffer_add_pcb(buffer, proceso->pcb);
@@ -1341,4 +1351,247 @@ printf("agrego pcb\n");
       printf("agrego interfaces\n");	
 
     return buffer;
+}
+
+void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint32_t direccion){
+     printf("entro a guardar_string_en_memoria\n");
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete -> codigo_operacion = ENVIO_COPY_STRING_A_MEMORIA; 
+    paquete->buffer = copy_string_serializar(valor_a_enviar,tamanio_valor,direccion);
+    printf("sali de direccion_fisica_serializar\n");
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(socket_memoria, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0);
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+t_buffer* copy_string_serializar(char* valor_a_enviar,uint32_t tamanio_valor,uint32_t direccion){
+    uint32_t tamanioBuffer; //= malloc(sizeof(uint32_t));
+    tamanioBuffer =  tamanio_valor + sizeof(uint32_t); 
+  t_buffer *buffer = buffer_create(tamanioBuffer);
+    buffer_add_string(buffer,tamanio_valor,valor_a_enviar);
+    printf("hice buffer_add_string\n");
+    buffer_add_uint32(buffer,direccion);
+    printf("hice buffer_add_uint32\n");
+    return buffer;
+}
+
+void solicitar_wait_kernel(t_proceso* proceso, char* recurso){
+         printf("entro a solicitar_wait_kernel\n");
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete -> codigo_operacion = ENVIO_WAIT_A_KERNEL; 
+    paquete->buffer = proceso_recurso_serializar(proceso,recurso); 
+    printf("sali de proceso_recurso_serializar\n");
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(socket_memoria, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0);
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+t_buffer* proceso_recurso_serializar(t_proceso* proceso, char* registro){
+    uint32_t tamanioBuffer; //= malloc(sizeof(uint32_t));
+    
+    tamanioBuffer =  calcular_tamanio_proceso(proceso) + (sizeof(char*) * strlen(registro)); 
+  t_buffer *buffer = buffer_create(tamanioBuffer);
+    buffer = proceso_serializar(proceso);
+    buffer_add_string(buffer,sizeof(char*) * strlen(registro),registro);
+    printf("hice buffer_add_uint32\n");
+    return buffer;
+}
+
+uint32_t calcular_tamanio_proceso(t_proceso* proceso){
+        uint32_t tamanioParams = malloc(sizeof(uint32_t));
+printf("malloc tamanioParams\n");
+uint32_t tamanioInterfaces = malloc(sizeof(uint32_t));
+printf("malloc tamanioInterfaces\n");
+printf("tamListaInterfaces: %d\n", list_size(proceso->interfaces) );
+
+   	  for(int i = 0; i < list_size(proceso->interfaces); i++){
+        printf("entro for tamanioInterfaces\n");	
+        printf("list_get name: %s\n",(t_interfaz*)list_get(proceso->interfaces,i) );
+            calcularTamanioInterfaz((t_interfaz*)list_get(proceso->interfaces,i));
+	  }
+
+printf("calcula tamanioInterfaces\n");
+uint32_t tamanio_pcb = malloc(sizeof(uint32_t));
+tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
+printf("calcula tamanio_pcb\n");
+//int tamanioInstrucciones = malloc(sizeof(int));
+//tamanioInstrucciones = ((sizeof(uint8_t) * 6 + sizeof(tipo_instruccion)) * proceso_interrumpido->proceso->cantidad_instrucciones )+ tamanioParams;
+
+uint32_t tamanioBuffer = malloc(sizeof(uint32_t));
+tamanioBuffer = tamanio_pcb
+  //           + sizeof(uint8_t) // cantidad_instrucciones
+  //           + tamanioInstrucciones
+			 + tamanioInterfaces;
+	printf("calcula tamanioBuffer\n");
+    return tamanioBuffer;
+}
+
+void solicitar_signal_kernel(t_proceso* proceso, char* recurso){
+         printf("entro a solicitar_wait_kernel\n");
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete -> codigo_operacion = ENVIO_SIGNAL_A_KERNEL; 
+    paquete->buffer = proceso_recurso_serializar(proceso,recurso); 
+    printf("sali de proceso_recurso_serializar\n");
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(socket_memoria, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0);
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+void solicitar_io_stdin_read_a_kernel(char* interfaz, uint32_t direccion, uint32_t tamanio){
+      printf("entro a solicitar_io_stdin_read_a_kernel\n");
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete -> codigo_operacion = SOLICITUD_IO_STDIN_READ; //CREAR
+    paquete->buffer = direccion_tamanio_interfaz_serializar(interfaz,direccion,tamanio); //CREAR
+    printf("sali de proceso_recurso_serializar\n");
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(socket_memoria, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0);
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+t_buffer* direccion_tamanio_interfaz_serializar(char* interfaz, uint32_t direccion, uint32_t tamanio){
+        uint32_t tamanioBuffer; //= malloc(sizeof(uint32_t));
+    
+    tamanioBuffer =  (sizeof(char*) * strlen(interfaz)) + sizeof(uint32_t) + sizeof(uint32_t); 
+
+    t_buffer *buffer = buffer_create(tamanioBuffer);
+    buffer_add_string(buffer,sizeof(char*) * strlen(interfaz),interfaz);
+    printf("hice buffer_add_string\n");
+
+    buffer_add_uint32(buffer,direccion);
+    printf("hice buffer_add_uint32\n");
+
+    buffer_add_uint32(buffer,tamanio);
+    printf("hice buffer_add_uint32\n");
+    
+    return buffer;
+}
+
+void solicitar_io_stdout_write_a_kernel(char* interfaz, uint32_t direccion, uint32_t tamanio){
+          printf("entro a solicitar_io_stdout_write_a_kernel\n");
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete -> codigo_operacion = SOLICITUD_IO_STDOUT_WRITE; //CREAR
+    paquete->buffer = direccion_tamanio_interfaz_serializar(interfaz,direccion,tamanio); //CREAR
+    printf("sali de proceso_recurso_serializar\n");
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(socket_memoria, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0);
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+void solicitar_exit_a_kernel(t_proceso* proceso){
+              printf("entro a solicitar_io_stdout_write_a_kernel\n");
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete -> codigo_operacion = SOLICITUD_EXIT_KERNEL; //CREAR
+    paquete->buffer = proceso_serializar(proceso); //CREAR
+    printf("sali de proceso_serializar\n");
+    void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+
+// Por último enviamos
+    send(socket_memoria, a_enviar, paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t), 0);
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
 }

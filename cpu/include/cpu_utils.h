@@ -80,8 +80,8 @@ void resize(uint32_t tamanio);
 void copy_string(uint32_t tamanio);
 void wait_inst(char* recurso);
 void signal_inst(char* recurso);
-void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio);
-void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio);
+void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio, t_proceso* proceso, t_log* logger);
+void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio, t_proceso* proceso, t_log* logger);
 void exit_inst();
 void pedir_valor_a_memoria(uint32_t dir_fisica);
 t_buffer* direccion_fisica_serializar(uint32_t dir_fisica);
@@ -90,7 +90,16 @@ t_buffer* direccion_fisica_valor_serializar(uint32_t dir_fisica, uint32_t valor)
 void solicitar_resize_a_memoria(t_proceso* proceso, uint32_t tamanio);
 t_buffer* proceso_resize_serializar(t_proceso* proceso, uint32_t tamanio);
 void envia_error_de_memoria_a_kernel(t_proceso* proceso);
-
+void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint32_t direccion);
+t_buffer* copy_string_serializar(char* valor_a_enviar,uint32_t tamanio_valor,uint32_t direccion);
+void solicitar_wait_kernel(t_proceso* proceso, char* recurso);
+t_buffer* proceso_recurso_serializar(t_proceso* proceso, char* registro);
+uint32_t calcular_tamanio_proceso(t_proceso* proceso);
+void solicitar_signal_kernel(t_proceso* proceso, char* recurso);
+void solicitar_io_stdin_read_a_kernel(char* interfaz, uint32_t direccion, uint32_t tamanio);
+t_buffer* direccion_tamanio_interfaz_serializar(char* interfaz, uint32_t direccion, uint32_t tamanio);
+void solicitar_io_stdout_write_a_kernel(char* interfaz, uint32_t direccion, uint32_t tamanio);
+void solicitar_exit_a_kernel(t_proceso* proceso);
 
 
 

@@ -39,6 +39,12 @@ typedef enum
     SOLICITUD_RESIZE = 85, // CPU pide a memora que haga un resize del proceso
     SOLICITUD_RESIZE_RTA = 90, // Memoria responde el resultado de la operacion de resize
     ENVIAR_ERROR_MEMORIA_A_KERNEL = 95, //CPU le manda a kernel el proceso loego de que memoria tire error de out of memory
+    ENVIO_COPY_STRING_A_MEMORIA = 100, //CPU solicita a memoria que guarde el valor en la direccion pasada por parametro
+    ENVIO_WAIT_A_KERNEL =105, //CPU solicita a kernel que se asigne una instancia del recurso al proceso
+    ENVIO_SIGNAL_A_KERNEL =110, //CPU solicita a kernel que se libere una instancia del recurso al proceso
+    SOLICITUD_IO_STDIN_READ = 115, // CPU solicita a kernel hacer la operacion IO_STDIN_READ a partir de la interfaz, direccion y tamanio pasado
+    SOLICITUD_IO_STDOUT_WRITE = 120, // CPU solicita a kernel hacer la operacion IO_STDOUT_WRITE a partir de la interfaz, direccion y tamanio pasado
+    SOLICITUD_EXIT_KERNEL = 125, //CPU solicita a kernel la finalización del proceso
  //---------------ENTRADASALIDA-KERNEL-------------------
     INTERFAZ_ENVIAR, // EntradaSalida, avisa que envía la interfaz creada
     INTERFAZ_RECIBIDA, // Es el ok del kernel al recibir la interfaz
@@ -190,6 +196,12 @@ typedef struct{
     uint32_t pid;
     uint32_t nro_pagina;
 }t_busqueda_marco;
+
+typedef struct{
+    char* interfaz;
+    uint32_t direccion;
+    uint32_t tamanio;
+}t_direccion_tamanio;
 
 
 
