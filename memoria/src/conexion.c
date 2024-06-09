@@ -33,7 +33,7 @@ int iniciar_servidor_memoria(t_log* logger, char* puerto)
 
 
 
-
+//Funcion que inicia y crea el socket del servido memoria y liego espera a sus clientes dandoles sus socket
 void iniciar_conexiones(){
 	//Iniciar server de Memoria
     fd_memoria = iniciar_servidor_memoria(logger_memoria, cfg_memoria->PUERTO_ESCUCHA);

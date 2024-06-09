@@ -1,57 +1,9 @@
 #include <../include/protocolo.h>
 
-/*
-	while (1) {
-		int cliente_fd = esperar_cliente(logger_memoria, nombre, fd_memoria);
-        //inicio handshake
-        size_t bytes;
-
-        int32_t handshake;
-        int32_t resultOk = 0;
-        int32_t resultError = -1;
-
-        bytes = recv(cliente_fd, &handshake, sizeof(int32_t), MSG_WAITALL);
-        if (handshake == HANDSHAKE) {
-            bytes = send(cliente_fd, &resultOk, sizeof(int32_t), 0);
-			flag_conexion_activa = true;
-			log_info(logger_memoria, "Handshake salió bien, un gusto");
-        } else {
-            bytes = send(cliente_fd, &resultError, sizeof(int32_t), 0);
-			flag_conexion_activa = false;
-			log_warning(logger_memoria, "Handshake salió mal, no te conozco");
-        }
-        //fin handshake
-
-        t_list* lista;
-
-		while (flag_conexion_activa) {
-			int cod_op = recibir_operacion(cliente_fd);
-			switch (cod_op) {
-			//case PROXIMA_INSTRUCCION://CPU me pide su sig instruccion
-				//abrir archivo de instrucciones (buscar como leer un archivo linea por linea)
-				//ubicar instruccion a partir PC que me envia cpu
-				//enviar codigo de operacion (INSTRUCCION_RECIBIDA) a cpu para que espere la instruccion(armar paquete con instruccion y codigo de opercion nuevo)
-				break;
-			// case INTERFAZ_IO://interfaz de io que me tiene que pasar
-			// 	lista = recibir_paquete(cliente_fd);
-			// 	log_info(logger, "Me llegaron los siguientes valores:\n");
-			// 	list_iterate(lista, (void*) iterator);
-			// 	break;
-			case -1:
-				log_error(logger_memoria, "Fallo en el envío de paquete");
-				close(cliente_fd); // Cerrar el descriptor del cliente desconectado
-				flag_conexion_activa = false;
-			default:
-				log_warning(logger_memoria,"Operacion desconocida. No quieras meter la pata");
-				break;
-			}
-		}
-
-	}
-	*/
 
 
 
+//Funcion que crea hilos para cada modulo y los va atendiendo
 void escuchar_modulos(){
     //Atender a Kernel
     pthread_t hilo_kernel;
@@ -80,7 +32,7 @@ void escuchar_modulos(){
 
 
 
-
+//Funcion que atiende la peticion de Kernel segun el cod
 void memoria_atender_kernel(){
     t_list* lista;
     //t_buffer* un_buffer;
@@ -96,10 +48,16 @@ void memoria_atender_kernel(){
 			log_info(logger_memoria, "Me llegaron los siguientes valores:\n");
 			//list_iterate(lista, (void*) iterator);
 			break;
+		// case HANDSHAKE:
+		// 	enviar_paquete(paquete, fd_kernel);
+		// 	break;
         // case CREAR_PROCESO_KERNEL:
-        //     un_buffer = recibir_paquete(fd_kernel);
+        //     paquete = recibir_paquete(fd_kernel);
         //     atender_crear_proceso(un_buffer);
         //     break;
+		// case FINALIZAR_PROCESO:
+		// 	paquete = recibir_paquete(fd_kernel);
+		// 	atender_finalizar_preceso(paquete);
 		case -1:
 			log_error(logger_memoria, "Kernel se desconecto. Terminando servidor.");
 			//return EXIT_FAILURE;
@@ -112,6 +70,7 @@ void memoria_atender_kernel(){
 }
 
 
+//Funcion que atiende la peticion de Cpu segun el cod
 void memoria_atender_cpu(){
 
     //t_proceso_memoria contexto_ejecucion;
@@ -133,11 +92,31 @@ void memoria_atender_cpu(){
 			log_info(logger_memoria, "Me llegaron los siguientes valores:\n");
 			//list_iterate(lista, (void*) iterator);
 			break;
+		// case HANDSHAKE:
+		// 	enviar_paquete(paquete, fd_cpu);
+		// 	break;
         // case PROXIMA_INSTRUCCION:
         //     paquete = recibir_paquete(fd_cpu);
         //     eliminar_paquete(paquete);       //libero el paquete para luego enviar la instruccion en su contenido
+		//	   unsleep(cfg_memoria->RETARDO_RESPUESTA);
         //     enviar_instruccion(contexto_ejecucion, paquete);     //serializo la insctruccion y la envio
         //     break;
+
+
+		//case PROXIMA_INSTRUCCION://CPU me pide su sig instruccion
+				//abrir archivo de instrucciones (buscar como leer un archivo linea por linea)
+				//ubicar instruccion a partir PC que me envia cpu
+				//enviar codigo de operacion (INSTRUCCION_RECIBIDA) a cpu para que espere la instruccion(armar paquete con instruccion y codigo de opercion nuevo)
+
+
+		// case AMPLIAR_PROCESO:
+		// 	paquete = recibir_paquete(fd_cpu);
+		// 	ampliar_proceso();
+		// 	break;
+		// case REDUCIR_PROCESO:
+		// 	paquete = recibir_paquete(fd_cpu);
+		// 	reducir_proceso();
+		// 	break;
 		case -1:
 			log_error(logger_memoria, "CPU se desconecto. Terminando servidor.");
 			//return EXIT_FAILURE;
@@ -151,9 +130,10 @@ void memoria_atender_cpu(){
 
 
 
+//Funcion que atiende la peticion de i/O segun el cod
 void memoria_atender_io(){
     t_list* lista;
-    //t_buffer* un_buffer;
+    //t_paquete* paquete;
 	while (1) {
         //Se queda esperando a que IO le envie algo y extrae el cod de operacion
 		int cod_op = recibir_operacion(fd_entradasalida);
@@ -166,10 +146,19 @@ void memoria_atender_io(){
 			log_info(logger_memoria, "Me llegaron los siguientes valores:\n");
 			//list_iterate(lista, (void*) iterator);
 			break;
-        // case CREAR_PROCESO_KERNEL:
-        //     un_buffer = recibir_paquete(fd_entradasalida);
-        //     atender_crear_proceso(un_buffer);
+		// case HANDSHAKE:
+		// 	enviar_paquete(paquete, fd_entradasalida);
+		// 	break;
+        // case IO_M_STDIN_READ:
+        //     paquete = recibir_paquete(fd_entradasalida);
+        //     guardar_datos(paquete);
+		//	   enviar_paquete(paquete, fd_entradasalida);
         //     break;
+		// case IO_M_STDOUT_WRITE:
+		// 	paquete = recibir_paquete(fd_entradasalida);
+		// 	buscar_datos(paquete);
+		// 	enviar_paquete(paquete, fd_entradasalida);
+		// 	break;
 		case -1:
 			log_error(logger_memoria, "Entrada/salida se desconecto. Terminando servidor.");
 			//return EXIT_FAILURE;
