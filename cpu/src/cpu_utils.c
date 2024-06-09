@@ -898,7 +898,7 @@ uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion){
         //WAIT SEMAFORO MARCO RECIBIDO
         sem_wait(&sem_marco_recibido);
     if(tlb->elements_count = cfg_cpu->CANTIDAD_ENTRADAS_TLB){
-        //usar_algoritmo_tlb(); //TODO:IMPLEMENTAR FUNCION
+        usar_algoritmo_tlb(proceso_actual->pcb->pid,nro_pagina,marco_recibido); //TODO:IMPLEMENTAR FUNCION
         direccion_resultado = marco_recibido * tamanio_pag;
     }
     else{
@@ -1572,8 +1572,8 @@ void solicitar_exit_a_kernel(t_proceso* proceso){
     
     t_paquete* paquete = malloc(sizeof(t_paquete));
 
-    paquete -> codigo_operacion = SOLICITUD_EXIT_KERNEL; //CREAR
-    paquete->buffer = proceso_serializar(proceso); //CREAR
+    paquete -> codigo_operacion = SOLICITUD_EXIT_KERNEL; 
+    paquete->buffer = proceso_serializar(proceso); 
     printf("sali de proceso_serializar\n");
     void* a_enviar = malloc(paquete->buffer->size + sizeof(op_code) + sizeof(uint32_t)); //VER el uint_32
 
@@ -1595,3 +1595,50 @@ void solicitar_exit_a_kernel(t_proceso* proceso){
     free(paquete->buffer);
     free(paquete);
 }
+
+void usar_algoritmo_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t nro_marco){
+    t_registro_tlb* nuevo_registro = malloc(sizeof(t_registro_tlb));
+    nuevo_registro->pid = pid;
+    nuevo_registro->nro_pagina = nro_pagina;
+    nuevo_registro->nro_marco = nro_marco;
+
+    if(strcmp(cfg_cpu->ALGORITMO_TLB, "FIFO") == 0){
+        list_add_in_index(tlb,0,nuevo_registro);
+    } 
+    else if(strcmp(cfg_cpu->ALGORITMO_TLB, "LRU") == 0){
+        if(valor_repetido_tlb(nuevo_registro->pid,nuevo_registro->nro_pagina) != -1){
+            //Si pid y pagina se repiten, lo pongo al final de la TLB
+            list_remove_and_destroy_element(tlb,valor_repetido_tlb(nuevo_registro->pid,nuevo_registro->nro_pagina),free);
+            list_add(tlb,nuevo_registro);
+        }
+        else{
+            //Si no esta repetido, se reemplaza el primero de la lista
+            list_add_in_index(tlb,0,nuevo_registro);
+        }
+        
+        
+    }
+    else{
+        printf("ALGORITMO DESOCNOCIDO");
+    }
+}
+
+uint32_t valor_repetido_tlb(uint32_t pid, uint32_t nro_pag){
+    uint32_t indice_encontrado = malloc(sizeof(uint32_t));
+    indice_encontrado = -1;
+    t_registro_tlb* registro_actual = malloc(sizeof(t_registro_tlb));
+    for (uint32_t i = 0; i < tlb->elements_count; i++)
+    {
+        registro_actual = list_get(tlb,i);
+        if(registro_actual->pid == pid && registro_actual->nro_pagina == nro_pag){
+            indice_encontrado = i;
+        }
+    }
+    
+    return indice_encontrado;
+
+}
+
+/*void liberar_memoria_tlb(t_registro_tlb* valor){
+    free(valor);
+}*/

@@ -100,6 +100,8 @@ void solicitar_io_stdin_read_a_kernel(char* interfaz, uint32_t direccion, uint32
 t_buffer* direccion_tamanio_interfaz_serializar(char* interfaz, uint32_t direccion, uint32_t tamanio);
 void solicitar_io_stdout_write_a_kernel(char* interfaz, uint32_t direccion, uint32_t tamanio);
 void solicitar_exit_a_kernel(t_proceso* proceso);
+void usar_algoritmo_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t nro_marco);
+uint32_t valor_repetido_tlb(uint32_t pid, uint32_t nro_pag);
 
 
 
