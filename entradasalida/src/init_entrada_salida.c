@@ -122,12 +122,10 @@ int  presentar_interfaz(int socket_kernel, t_interfaz* interfaz ){
     
     paquete_interfaz = crear_paquete(INTERFAZ_ENVIAR);
  
-    agregar_a_paquete(paquete_interfaz, &interfaz->nombre_length, sizeof(interfaz->nombre_length));
-  
-    agregar_a_paquete(paquete_interfaz, &interfaz->nombre, interfaz->nombre_length);
-
+    agregar_a_paquete(paquete_interfaz, &interfaz->nombre_length, sizeof(interfaz->nombre_length));  
+    agregar_a_paquete(paquete_interfaz, interfaz->nombre, interfaz->nombre_length);
    // agregar_a_paquete(paquete_interfaz, &(interfaz->tipo), sizeof(interfaz->tipo));
-
+       
     enviar_paquete(paquete_interfaz, socket_kernel);  
   
     return recibir_operacion(socket_kernel);
@@ -136,13 +134,14 @@ int  presentar_interfaz(int socket_kernel, t_interfaz* interfaz ){
     //INICIAR INTERFACE CORRESPONDIENTE
 void iniciar_interface(char* tipo_interfaz_str, char* nombre_interfaz,  int socket_kernel, int socket_memoria){
  
-t_tipo_interfaz_enum tipo_interfaz_enum = obtener_tipo_interfaz_enum (tipo_interfaz_str); 
-  
+t_tipo_interfaz_enum tipo_interfaz_enum = obtener_tipo_interfaz_enum (tipo_interfaz_str);   
  interfaz = malloc(sizeof(t_interfaz)); // no olvidar liberar memoria al finalizar
  interfaz->nombre_length = string_length(nombre_interfaz) + 1;
  interfaz->nombre = nombre_interfaz;
  interfaz->tipo = tipo_interfaz_enum;
+
 log_info(logger_entrada_salida, "dentro iniciar interface\n");
+
 //HANDSHAKE//   
     if ( (hacer_handshake (socket_kernel) == HANDSHAKE_OK)){
         log_info(logger_entrada_salida, "Correcto en handshake con kernel\n");      
@@ -198,7 +197,16 @@ log_info(logger_entrada_salida, "dentro iniciar interface\n");
 }
 
 
-
+void imprimir_stream(void* stream, int size) {
+    unsigned char* bytes = (unsigned char*)stream;
+    for (int i = 0; i < size; i++) {
+        printf("%02x ", bytes[i]);
+        if ((i + 1) % 16 == 0) {
+            printf("\n");
+        }
+    }
+    printf("\n");
+}
 
 
 void cerrar_programa() {
