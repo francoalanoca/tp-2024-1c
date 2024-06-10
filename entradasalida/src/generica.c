@@ -9,12 +9,12 @@ void iniciar_interfaz_generica (int socket_kernel) {
     paquete->buffer = malloc(sizeof(t_buffer));
     t_list* lista_paquete =  malloc(sizeof(t_list));
     t_io_espera* io_espera = malloc(sizeof(t_io_espera));
-    
+
     log_info(logger_entrada_salida, "Interfaz %s de tipo GENERICA iniciada",cfg_entrada_salida->NOMBRE_INTERFAZ);  
     
     while (socket_kernel != -1) {
 
-        if (recv(socket_kernel, &cop, sizeof(int32_t), 0) != sizeof(int32_t)) {
+        if (recv(socket_kernel, &cop, sizeof(int32_t), MSG_WAITALL) != sizeof(int32_t)) {
             log_info(logger_entrada_salida, "DISCONNECT!");
 
             break;
@@ -25,7 +25,7 @@ void iniciar_interfaz_generica (int socket_kernel) {
 
                 log_info(logger_entrada_salida, "Handshake realizado con Kernel");
                 response = HANDSHAKE_OK;
-                if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                if (send(socket_kernel, &response, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
                     log_error(logger_entrada_salida, "Error al enviar respuesta de handshake a kernel");
                     free(paquete);
                     break;
@@ -39,7 +39,8 @@ void iniciar_interfaz_generica (int socket_kernel) {
                 break;                
             
             case IO_K_GEN_SLEEP :
-                //recv(socket_kernel, &(paquete->buffer->size), sizeof(uint32_t), 0);
+                
+                log_info(logger_entrada_salida, "IO_K_GEN_SLEEP recibida desde Kernel");
                     
                 lista_paquete = recibir_paquete(socket_kernel);
                 io_espera = deserializar_espera (lista_paquete);

@@ -119,22 +119,17 @@ t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) 
 
 int  presentar_interfaz(int socket_kernel, t_interfaz* interfaz ){
     t_paquete* paquete_interfaz = malloc(sizeof(t_paquete));;
-
-    log_info(logger_entrada_salida, "dentro de presentar \n");
+    
     paquete_interfaz = crear_paquete(INTERFAZ_ENVIAR);
+ 
+    agregar_a_paquete(paquete_interfaz, &interfaz->nombre_length, sizeof(interfaz->nombre_length));
+  
+    agregar_a_paquete(paquete_interfaz, &interfaz->nombre, interfaz->nombre_length);
 
-    log_info(logger_entrada_salida, "paquete creado \n");  
-    log_info(logger_entrada_salida, "codigo de operacion: %d   \n", paquete_interfaz->codigo_operacion ); 
-    log_info(logger_entrada_salida, " nombre interfaz %s  \n", interfaz->nombre) ;
-    log_info(logger_entrada_salida, "tamaño nombre:%d \n", interfaz->nombre_length ); 
-    agregar_a_paquete(paquete_interfaz, interfaz->nombre_length, sizeof(interfaz->nombre_length));
-    log_info(logger_entrada_salida, "nombre_length agregado \n");  
-    agregar_a_paquete(paquete_interfaz, interfaz->nombre, interfaz->nombre_length);
-    log_info(logger_entrada_salida, "nombre  agregado \n");
-    agregar_a_paquete(paquete_interfaz, &(interfaz->tipo), sizeof(interfaz->tipo));
-    log_info(logger_entrada_salida, "antes de enviar paquete presentar interfaz \n");  
+   // agregar_a_paquete(paquete_interfaz, &(interfaz->tipo), sizeof(interfaz->tipo));
+
     enviar_paquete(paquete_interfaz, socket_kernel);  
-    log_info(logger_entrada_salida, "antes de recibir respuesta de presentar interfaz \n");  
+  
     return recibir_operacion(socket_kernel);
 
 }

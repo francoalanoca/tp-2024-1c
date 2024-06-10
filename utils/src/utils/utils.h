@@ -145,7 +145,7 @@ typedef enum {
 } t_tipo_interfaz_enum;
 
 typedef struct {
-    uint8_t nombre_length; 
+    uint32_t nombre_length; 
     char* nombre;   
     t_tipo_interfaz_enum tipo;//es un enum por lo que pesa 4 bytes : uint32_t
 }t_interfaz;
