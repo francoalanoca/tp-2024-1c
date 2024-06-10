@@ -102,20 +102,6 @@ int hacer_handshake (int socket_cliente){
     return recibir_operacion(socket_cliente);
 }
 
-t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) {
-    if (strcmp(tipo_interfaz_str, "GENERICA") == 0) {
-        return GENERICA ;
-    } else if (strcmp(tipo_interfaz_str, "STDIN") == 0) {
-        return STDIN ;
-    } else if (strcmp(tipo_interfaz_str, "STDOUT") == 0) {
-        return STDOUT ;
-    } else if (strcmp(tipo_interfaz_str, "DIALFS") == 0) {
-        return DIALFS ;    
-    } else {
-        // Manejo de error para tipos de interfaz desconocidos
-        return -1; 
-    }
-}
 
 int  presentar_interfaz(int socket_kernel, t_interfaz* interfaz ){
     t_paquete* paquete_interfaz = malloc(sizeof(t_paquete));;
@@ -124,7 +110,7 @@ int  presentar_interfaz(int socket_kernel, t_interfaz* interfaz ){
  
     agregar_a_paquete(paquete_interfaz, &interfaz->nombre_length, sizeof(interfaz->nombre_length));  
     agregar_a_paquete(paquete_interfaz, interfaz->nombre, interfaz->nombre_length);
-   // agregar_a_paquete(paquete_interfaz, &(interfaz->tipo), sizeof(interfaz->tipo));
+    agregar_a_paquete(paquete_interfaz, &(interfaz->tipo), sizeof(interfaz->tipo));
        
     enviar_paquete(paquete_interfaz, socket_kernel);  
   

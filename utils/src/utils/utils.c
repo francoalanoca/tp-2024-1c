@@ -372,6 +372,21 @@ void imprimir_stream(void* stream, int size) {
     printf("\n");
 }
 
+t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) {
+    if (strcmp(tipo_interfaz_str, "GENERICA") == 0) {
+        return GENERICA ;
+    } else if (strcmp(tipo_interfaz_str, "STDIN") == 0) {
+        return STDIN ;
+    } else if (strcmp(tipo_interfaz_str, "STDOUT") == 0) {
+        return STDOUT ;
+    } else if (strcmp(tipo_interfaz_str, "DIALFS") == 0) {
+        return DIALFS ;    
+    } else {
+        // Manejo de error para tipos de interfaz desconocidos
+        return -1; 
+    }
+}
+
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)
 {

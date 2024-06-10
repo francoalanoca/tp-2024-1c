@@ -45,7 +45,8 @@ void iniciar_interfaz_generica (int socket_kernel) {
                 lista_paquete = recibir_paquete(socket_kernel);
                 io_espera = deserializar_espera (lista_paquete);
                 esperar(io_espera->pid, io_espera->tiempo_espera);
-
+                list_destroy(lista_paquete);
+                free(io_espera);
                 response = IO_K_GEN_SLEEP_FIN;
 
                  if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
@@ -69,8 +70,8 @@ void iniciar_interfaz_generica (int socket_kernel) {
  t_io_espera* deserializar_espera (t_list*  lista_paquete ){
 
        t_io_espera* io_espera = malloc(sizeof(t_io_espera));
-       io_espera->pid = list_get(lista_paquete, 0);
-       io_espera->tiempo_espera = list_get(lista_paquete, 1);
+       io_espera->pid = *(uint32_t*)list_get(lista_paquete, 0);
+       io_espera->tiempo_espera = *(uint32_t*)list_get(lista_paquete, 1);
 
     return io_espera;
 
