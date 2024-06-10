@@ -213,7 +213,7 @@ int recibir_informacion(int conexion, t_log* logger);
 void crear_servidor(t_log* logger);
 void handshake_cliente(t_config* config, t_log* logger, int conexion);
 bool config_has_all_properties(t_config *cfg, char **properties);
-
+void imprimir_stream(void* stream, int size);
 
 
 

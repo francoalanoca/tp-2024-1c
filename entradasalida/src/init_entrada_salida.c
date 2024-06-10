@@ -197,18 +197,6 @@ log_info(logger_entrada_salida, "dentro iniciar interface\n");
 }
 
 
-void imprimir_stream(void* stream, int size) {
-    unsigned char* bytes = (unsigned char*)stream;
-    for (int i = 0; i < size; i++) {
-        printf("%02x ", bytes[i]);
-        if ((i + 1) % 16 == 0) {
-            printf("\n");
-        }
-    }
-    printf("\n");
-}
-
-
 void cerrar_programa() {
 
 

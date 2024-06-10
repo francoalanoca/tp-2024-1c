@@ -319,8 +319,7 @@ void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 	void* a_enviar = serializar_paquete(paquete, bytes);
-
-	imprimir_stream(a_enviar,bytes);
+	
 	send(socket_cliente, a_enviar, bytes, 0);
 
 	free(a_enviar);
@@ -361,6 +360,18 @@ t_config* iniciar_config(char* path_config, t_log* logger) {
     return nuevo_config;
 
 }
+
+void imprimir_stream(void* stream, int size) {
+    unsigned char* bytes = (unsigned char*)stream;
+    for (int i = 0; i < size; i++) {
+        printf("%02x ", bytes[i]);
+        if ((i + 1) % 16 == 0) {
+            printf("\n");
+        }
+    }
+    printf("\n");
+}
+
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
