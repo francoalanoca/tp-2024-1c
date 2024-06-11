@@ -9,7 +9,7 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
     
     op_code response;
     op_code cop;
-
+     t_list* lista_paquete =  malloc(sizeof(t_list));
 
     log_info(logger_entrada_salida, "Interfaz %s de tipo STDIN iniciada",cfg_entrada_salida->NOMBRE_INTERFAZ);  
     
@@ -40,9 +40,17 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
                 break;     
             case IO_K_STDIN:
                 t_io_input* io_input = malloc(sizeof(t_io_input));
+                t_io_stdin* io_stdin = malloc(sizeof(t_io_stdin));
+                
                 log_info(logger_entrada_salida, "Recibido IO_K_STDIN desde kernel");
+                
+                lista_paquete = recibir_paquete(socket_kernel);
+                io_stdin = deserializar_stdin(lista_paquete );
+                
                 esperar_ingreso_teclado();
-                io_input->pid = 1;
+                
+                io_input->pid =io_stdin->pid;
+                io_input->direccion_fisica =io_stdin->direccion_fisica;
                 io_input->input_length = string_length(input) + 1;
                 io_input->input = input;
                 
@@ -112,7 +120,8 @@ op_code  enviar_input(t_io_input* io_input ,int socket_memoria) {
  
     paquete_input = crear_paquete(IO_M_STDIN);
  
-    agregar_a_paquete(paquete_input,  &io_input->pid,  sizeof(uint32_t));    
+    agregar_a_paquete(paquete_input,  &io_input->pid,  sizeof(uint32_t));   
+    agregar_a_paquete(paquete_input, &io_input->direccion_fisica, sizeof(uint32_t));   
     agregar_a_paquete(paquete_input, &io_input->input_length, sizeof(uint32_t));  
     agregar_a_paquete(paquete_input, io_input->input, io_input->input_length);  
     enviar_paquete(paquete_input, socket_memoria);    
@@ -128,5 +137,17 @@ op_code  enviar_input(t_io_input* io_input ,int socket_memoria) {
         log_error(logger_entrada_salida, "Error al intentar guardar input en  memoria.\n");
         return -1; 
     }          
+
+}
+
+ t_io_stdin* deserializar_stdin(t_list*  lista_paquete ){
+
+    t_io_stdin* io_stdin = malloc(sizeof(t_io_stdin));
+    io_stdin->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n",io_stdin->pid);
+    io_stdin->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Direccion fisica: %d \n",io_stdin->direccion_fisica);
+   
+    return io_stdin;
 
 }

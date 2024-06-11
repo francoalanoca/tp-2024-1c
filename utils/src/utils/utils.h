@@ -185,9 +185,19 @@ typedef struct {
 	uint32_t tiempo_espera;
 } t_io_espera;
 
+//Kernel le manda a IO
 
 typedef struct {
 	uint32_t pid;
+    uint32_t direccion_fisica; 
+} t_io_stdin;
+
+
+
+//IO Le manda a memoria
+typedef struct {
+	uint32_t pid;
+    uint32_t direccion_fisica;
     uint32_t input_length; 
     char* input;   
 } t_io_input;
