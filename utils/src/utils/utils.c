@@ -386,7 +386,7 @@ t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) 
         return -1; 
     }
 }
-
+// Kernel recibe una interfaz con op_cod = INTERFAZ_ENVIAR
  t_interfaz* deserializar_interfaz(t_list*  lista_paquete ){
 
     t_interfaz* interfaz = malloc(sizeof(t_interfaz));
@@ -398,6 +398,7 @@ t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) 
 	return interfaz;
 }
 
+// kernel envia el tiempo a esperar a IO
 void enviar_espera(t_io_espera* io_espera, int socket){
 
     t_paquete* paquete_espera = malloc(sizeof(t_paquete)); 
@@ -409,8 +410,34 @@ void enviar_espera(t_io_espera* io_espera, int socket){
     enviar_paquete(paquete_espera, socket);  
 
 }
+// usar en memoria cuando recibe IO_M_STDIN
+ t_io_input* deserializar_input(t_list*  lista_paquete ){
+
+    t_io_input* io_unput = malloc(sizeof(t_io_input));
+
+    io_unput->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    io_unput->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
+    io_unput->input_length = *(uint32_t*)list_get(lista_paquete, 2);
+    io_unput->input = list_get(lista_paquete, 3);    
+
+    return io_unput;
+
+}
+
+// Kernel envía a io un stdin usando op_cod= IO_K_STDIN
+void enviar_stdin(t_io_stdin* io_stdin, int socket){
+
+    t_paquete* paquete_espera = malloc(sizeof(t_paquete));    
+   
+    paquete_espera = crear_paquete(IO_K_STDIN); 
+    
+    agregar_a_paquete(paquete_espera, &io_stdin->pid, sizeof(io_stdin->pid));  
+    agregar_a_paquete(paquete_espera, &io_stdin->direccion_fisica, sizeof(io_stdin->direccion_fisica));      
+       
+    enviar_paquete(paquete_espera, socket);  
 
 
+}
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
