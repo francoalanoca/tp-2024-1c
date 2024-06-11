@@ -8,4 +8,5 @@
 
 void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria); 
 op_code  enviar_input(t_io_input* io_input ,int socket_memoria);
+t_io_stdin* deserializar_stdin(t_list*  lista_paquete );
 #endif //TP_2024_1C_PASARONCOSAS_STDIN_H

@@ -48,7 +48,7 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
                 io_stdin = deserializar_stdin(lista_paquete );
                 
                 esperar_ingreso_teclado();
-                
+                log_info(logger_entrada_salida, "Ya se cargó el ingreso por teclado");
                 io_input->pid =io_stdin->pid;
                 io_input->direccion_fisica =io_stdin->direccion_fisica;
                 io_input->input_length = string_length(input) + 1;
@@ -75,9 +75,7 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
 
 }
 
- int esperar_ingreso_teclado(){
-  
-
+ int esperar_ingreso_teclado() {
     size_t size = TAMANIO_INICIAL_BUFFER;
     size_t len = 0;
     int ch;
@@ -87,11 +85,13 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
         log_error(logger_entrada_salida, "Error al asignar memoria a input");
         return 1;
     }
-    
 
     printf("Por favor, ingresá una cadena de texto: ");
+    fflush(stdout); // Asegúrate de que la salida se vacíe
+
     // levanta caracter a caracter hasta que encuentra un "enter" de la variable stdin
     while ((ch = getchar()) != '\n' && ch != EOF) {
+        printf("Caracter leído: %c (Código ASCII: %d)\n", ch, ch); // Depuración
         input[len++] = ch;
 
         // Si se alcanza el tamaño del buffer, redimensionarlo al doble
@@ -99,20 +99,25 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
             size *= 2;
             char *new_input = (char *)realloc(input, size * sizeof(char));
             if (new_input == NULL) {
-                log_error(logger_entrada_salida, "Error al redimensionar memoria.\n");                
+                log_error(logger_entrada_salida, "Error al redimensionar memoria.\n");
                 free(input);
                 return 1;
             }
             input = new_input;
         }
     }
-    input[len] = '\0'; // Agrega el terminador nulo al final de la cadena
-    log_info(logger_entrada_salida, "Se ingreso la cadena: %s\n", input);
 
-    //free(input); // Libera la memoria asignada
+    if (ch == '\n') {
+        printf("Caracter de nueva línea leído, saliendo del bucle.\n"); // Depuración
+    } else if (ch == EOF) {
+        printf("EOF leído, saliendo del bucle.\n"); // Depuración
+    }
+
+    input[len] = '\0'; // Agrega el terminador nulo al final de la cadena
+    log_info(logger_entrada_salida, "Se ingresó la cadena: %s\n", input);
+
+    // free(input); // Libera la memoria asignada si es necesario en otro lugar
     return 0;
-      
-  
 }
 
 op_code  enviar_input(t_io_input* io_input ,int socket_memoria) {

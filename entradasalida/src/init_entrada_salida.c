@@ -163,7 +163,7 @@ log_info(logger_entrada_salida, "dentro iniciar interface\n");
             
             case STDIN :
 
-                log_info(logger_entrada_salida, "Interfaz STDIN iniciada");
+                iniciar_interfaz_stdin (socket_kernel, socket_memoria);
                 break;    
 
             case STDOUT :
