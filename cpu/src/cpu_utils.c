@@ -1085,10 +1085,23 @@ void copy_string(uint32_t tamanio){
 
     //obtener valor de SI, obtener string recortado, mandar mensaje a memoria con direccion y string cortado(nuev struct?)
     
-    char* valor_a_enviar = malloc(tamanio);
-    valor_a_enviar = string_substring(proceso_actual->pcb->registrosCPU->SI,0,tamanio); //VER BIEN QUE HACE LA FUNCION
+    //registros id_registro_SI = identificarRegistro("SI");
+    //uint32_t valor_registro_SI = obtenerValorActualRegistro(id_registro_SI,proceso, logger);
 
-    guardar_string_en_memoria(valor_a_enviar,tamanio,proceso_actual->pcb->registrosCPU->DI);
+    uint32_t dir_fisica_SI = malloc(sizeof(uint32_t));
+    dir_fisica_SI = mmu(proceso_actual->pcb->registrosCPU->SI,tamanio_pagina,socket_memoria);
+
+    pedir_valor_a_memoria(dir_fisica_SI);
+    wait(&sem_valor_registro_recibido);
+
+
+    char* valor_a_enviar = malloc(tamanio);
+    valor_a_enviar = string_substring_until(valor_registro_obtenido,tamanio); //VER BIEN QUE HACE LA FUNCION
+
+    uint32_t dir_fisica_DI = malloc(sizeof(uint32_t));
+    dir_fisica_DI = mmu(proceso_actual->pcb->registrosCPU->DI,tamanio_pagina,socket_memoria);
+
+    guardar_string_en_memoria(valor_a_enviar,tamanio,dir_fisica_DI);
 }
 
 void wait_inst(char* recurso){
@@ -1115,10 +1128,13 @@ void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tama
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
     uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
     //TRADUCIR DIR LOGICA A FISICA?
-        registros id_registro_tamanio = identificarRegistro(registro_tamanio);
+    uint32_t dir_fisica = malloc(sizeof(uint32_t));
+    dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria);
+
+    registros id_registro_tamanio = identificarRegistro(registro_tamanio);
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
     uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
-    solicitar_io_stdin_read_a_kernel(interfaz,valor_registro_direccion,valor_registro_tamanio);
+    solicitar_io_stdin_read_a_kernel(interfaz,dir_fisica,valor_registro_tamanio);
 }
 
 void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio, t_proceso* proceso, t_log* logger){
@@ -1131,10 +1147,13 @@ void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_ta
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
     uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
     //TRADUCIR DIR LOGICA A FISICA?
-        registros id_registro_tamanio = identificarRegistro(registro_tamanio);
+    uint32_t dir_fisica = malloc(sizeof(uint32_t));
+    dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria);
+
+    registros id_registro_tamanio = identificarRegistro(registro_tamanio);
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
     uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
-    solicitar_io_stdout_write_a_kernel(interfaz,valor_registro_direccion,valor_registro_tamanio);
+    solicitar_io_stdout_write_a_kernel(interfaz,dir_fisica,valor_registro_tamanio);
 }
 
 void exit_inst(){
