@@ -425,17 +425,25 @@ void enviar_espera(t_io_espera* io_espera, int socket){
 }
 
 // Kernel envía a io un stdin usando op_cod= IO_K_STDIN
-void enviar_stdin(t_io_stdin* io_stdin, int socket){
+void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion){
 
     t_paquete* paquete_espera = malloc(sizeof(t_paquete));    
    
-    paquete_espera = crear_paquete(IO_K_STDIN); 
+    paquete_espera = crear_paquete(codigo_operacion); 
     
-    agregar_a_paquete(paquete_espera, &io_stdin->pid, sizeof(io_stdin->pid));  
-    agregar_a_paquete(paquete_espera, &io_stdin->direccion_fisica, sizeof(io_stdin->direccion_fisica));      
+    agregar_a_paquete(paquete_espera, &io_df->pid, sizeof(io_df->pid)); 
+    
+    uint32_t list_tamanio = list_size(io_df->direcciones_fisicas);
+    
+    agregar_a_paquete(paquete_espera, &list_tamanio, sizeof(uint32_t));
+
+    for (int i = 0; i < list_tamanio; i++) {
+        uint32_t* direccion_fisica = (uint32_t*) list_get(io_df->direcciones_fisicas, i);
+        agregar_a_paquete(paquete_espera, direccion_fisica, sizeof(uint32_t));
+    }   
        
     enviar_paquete(paquete_espera, socket);  
-
+  printf("Kernel server sent IO_K_STDIN to client\n");
 
 }
 

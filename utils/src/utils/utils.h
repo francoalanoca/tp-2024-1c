@@ -189,8 +189,8 @@ typedef struct {
 
 typedef struct {
 	uint32_t pid;
-    uint32_t direccion_fisica; 
-} t_io_stdin;
+    t_list*  direcciones_fisicas; 
+} t_io_direcciones_fisicas;
 
 
 
@@ -233,7 +233,7 @@ void imprimir_stream(void* stream, int size);
 t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str);
 void enviar_espera(t_io_espera* io_espera, int socket);
 t_interfaz* deserializar_interfaz(t_list*  lista_paquete );
-
+void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion);
 
 #endif /* UTILS_H_ */
 
