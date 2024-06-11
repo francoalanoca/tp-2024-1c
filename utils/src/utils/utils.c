@@ -387,6 +387,30 @@ t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) 
     }
 }
 
+ t_interfaz* deserializar_interfaz(t_list*  lista_paquete ){
+
+    t_interfaz* interfaz = malloc(sizeof(t_interfaz));
+
+    interfaz->nombre_length = *(uint32_t*)list_get(lista_paquete, 0);
+    interfaz->nombre = list_get(lista_paquete, 1);
+    interfaz->tipo = *(uint32_t*)list_get(lista_paquete, 2);
+    
+	return interfaz;
+}
+
+void enviar_espera(t_io_espera* io_espera, int socket){
+
+    t_paquete* paquete_espera = malloc(sizeof(t_paquete)); 
+
+    paquete_espera = crear_paquete(IO_K_GEN_SLEEP); 
+    agregar_a_paquete(paquete_espera, &io_espera->pid, sizeof(io_espera->pid));  
+    agregar_a_paquete(paquete_espera, &io_espera->tiempo_espera, sizeof(io_espera->tiempo_espera));      
+       
+    enviar_paquete(paquete_espera, socket);  
+
+}
+
+
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
