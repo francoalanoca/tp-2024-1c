@@ -215,8 +215,8 @@ void handshake_cliente(t_config* config, t_log* logger, int conexion);
 bool config_has_all_properties(t_config *cfg, char **properties);
 void imprimir_stream(void* stream, int size);
 t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str);
-
-
+void enviar_espera(t_io_espera* io_espera, int socket);
+ t_interfaz* deserializar_interfaz(t_list*  lista_paquete );
 
 
 #endif /* UTILS_H_ */
