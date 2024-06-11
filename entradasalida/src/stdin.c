@@ -103,6 +103,7 @@ op_code  enviar_input(int socket_memoria) {
  
     agregar_a_paquete(paquete_input, input,  sizeof(input));    
     enviar_paquete(paquete_input, socket_memoria);    
+    
     if ( recibir_operacion(socket_memoria) == IO_M_STDIN_FIN ){
         log_info(logger_entrada_salida, "Se guardo inpunt correctamente en memoria: \n");
 

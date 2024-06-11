@@ -181,10 +181,16 @@ typedef struct {
 } t_direccion_fisica;
 
 typedef struct {
-	int32_t pid;
-	int32_t tiempo_espera;
+	uint32_t pid;
+	uint32_t tiempo_espera;
 } t_io_espera;
 
+
+typedef struct {
+	uint32_t pid;
+    uint32_t nombre_length; 
+    char* imput;   
+} t_io_imput;
 
 
 
