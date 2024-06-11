@@ -188,7 +188,7 @@ typedef struct {
 
 typedef struct {
 	uint32_t pid;
-    uint32_t nombre_length; 
+    uint32_t imput_length; 
     char* imput;   
 } t_io_imput;
 
