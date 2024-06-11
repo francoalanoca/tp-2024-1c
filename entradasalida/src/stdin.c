@@ -3,11 +3,11 @@
 #define TAMANIO_INICIAL_BUFFER 10
 
 char *input;
- 
+
 
 void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
     
-    uint32_t response;
+    op_code response;
     op_code cop;
 
 
@@ -25,23 +25,34 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
             case HANDSHAKE :
 
                 log_info(logger_entrada_salida, "Handshake realizado con Kernel");
-                response = HANDSHAKE;
-                if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                response = HANDSHAKE_OK;
+                if (send(socket_kernel, &response, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
                     log_error(logger_entrada_salida, "Error al enviar respuesta de handshake a kernel");
+                   
                     break;
                 }
                 break;
-            
-            case IO_K_STDIN:
 
-                esperar_ingreso_teclado();
+            case HANDSHAKE_OK :
+
+                log_info(logger_entrada_salida, "Handshake recibido handshake exitosamente con Kernel");
                 
-                response = enviar_input(socket_memoria);
+                break;     
+            case IO_K_STDIN:
+                t_io_input* io_input = malloc(sizeof(t_io_input));
+                log_info(logger_entrada_salida, "Recibido IO_K_STDIN desde kernel");
+                esperar_ingreso_teclado();
+                io_input->pid = 1;
+                io_input->input_length = string_length(input) + 1;
+                io_input->input = input;
+                
+                response = enviar_input(io_input, socket_memoria);
 
                  if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
                     log_error(logger_entrada_salida, " Error al enviar respuesta de STDIN a Kernel");
                     break;
                 }
+                free(io_input);
                 break;
 
             default:
@@ -96,14 +107,16 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
   
 }
 
-op_code  enviar_input(int socket_memoria) {
+op_code  enviar_input(t_io_input* io_input ,int socket_memoria) {
     t_paquete* paquete_input;
  
     paquete_input = crear_paquete(IO_M_STDIN);
  
-    agregar_a_paquete(paquete_input, input,  sizeof(input));    
+    agregar_a_paquete(paquete_input,  &io_input->pid,  sizeof(uint32_t));    
+    agregar_a_paquete(paquete_input, &io_input->input_length, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_input, io_input->input, io_input->input_length);  
     enviar_paquete(paquete_input, socket_memoria);    
-    
+    free(paquete_input);
     if ( recibir_operacion(socket_memoria) == IO_M_STDIN_FIN ){
         log_info(logger_entrada_salida, "Se guardo inpunt correctamente en memoria: \n");
 
