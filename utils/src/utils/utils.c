@@ -454,12 +454,14 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
     agregar_a_paquete(paquete_espera, &io_df->pid, sizeof(io_df->pid)); 
     
     uint32_t list_tamanio = list_size(io_df->direcciones_fisicas);
-    
+   
     agregar_a_paquete(paquete_espera, &list_tamanio, sizeof(uint32_t));
 
     for (int i = 0; i < list_tamanio; i++) {
         uint32_t* direccion_fisica = (uint32_t*) list_get(io_df->direcciones_fisicas, i);
-        agregar_a_paquete(paquete_espera, direccion_fisica, sizeof(uint32_t));
+        
+        agregar_a_paquete(paquete_espera,  &direccion_fisica, sizeof(uint32_t));
+        
     }   
        
     enviar_paquete(paquete_espera, socket);  
@@ -492,7 +494,7 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
 enviar_output(t_io_output* io_output ,int socket_io) {
     t_paquete* paquete_output;
  
-    paquete_output = crear_paquete(IO_M_STDIN);
+    paquete_output = crear_paquete(IO_M_STDOUT_FIN);
  
     agregar_a_paquete(paquete_output,  &io_output->pid,  sizeof(uint32_t));         
     agregar_a_paquete(paquete_output, &io_output->output_length, sizeof(uint32_t));  

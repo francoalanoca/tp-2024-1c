@@ -38,14 +38,14 @@ void iniciar_interfaz_stdout (int socket_kernel, int socket_memoria) {
 
                 t_io_direcciones_fisicas* io_stdout = malloc(sizeof(t_io_direcciones_fisicas));
                 
-                log_info(logger_entrada_salida, "Recibido IO_K_STDIN desde kernel");
+                log_info(logger_entrada_salida, "Recibido IO_K_STDOUT desde kernel");
                 
                 lista_paquete = recibir_paquete(socket_kernel);
                 io_stdout = deserializar_io_df(lista_paquete);
-                list_clean(lista_paquete);
+                
                 //reenvio la solicitud a memoria
                 enviar_io_df(io_stdout, socket_memoria, IO_M_STDOUT);
-
+                list_clean(lista_paquete);
                 //Espero respuesta de memoria
                 if (recv(socket_memoria, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
                   log_info(logger_entrada_salida, "DISCONNECT!");
@@ -54,11 +54,13 @@ void iniciar_interfaz_stdout (int socket_kernel, int socket_memoria) {
                  if (cop == IO_M_STDOUT_FIN) {
 
                     log_info(logger_entrada_salida, "Recibido IO_M_STDOUT_FIN desde Memoria");
-                    lista_paquete = recibir_paquete(socket_kernel);
+                   t_list* lista_paquete_nueva = list_create();
+                    lista_paquete_nueva = recibir_paquete(socket_memoria);
+                    printf("Paquete recibido");
                     t_io_output* io_output_recibido = malloc(sizeof(t_io_output));
-                    io_output_recibido = deserializar_output(lista_paquete);
+                    io_output_recibido = deserializar_output(lista_paquete_nueva);
                     
-                    printf("%s",io_output_recibido->output);
+                    printf("output Recibido: %s",io_output_recibido->output);
                     
                     free(io_output_recibido);
                     response = IO_K_STDOUT_FIN;
