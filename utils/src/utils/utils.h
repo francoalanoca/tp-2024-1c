@@ -197,7 +197,7 @@ typedef struct {
 //IO Le manda a memoria
 typedef struct {
 	uint32_t pid;
-    uint32_t direccion_fisica;
+    t_list*  direcciones_fisicas;
     uint32_t input_length; 
     char* input;   
 } t_io_input;

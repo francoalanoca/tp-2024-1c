@@ -413,14 +413,32 @@ void enviar_espera(t_io_espera* io_espera, int socket){
 // usar en memoria cuando recibe IO_M_STDIN
  t_io_input* deserializar_input(t_list*  lista_paquete ){
 
-    t_io_input* io_unput = malloc(sizeof(t_io_input));
+    t_io_input* io_input = malloc(sizeof(t_io_input));
+    
+    io_input->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n",io_input->pid);
+    
+    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("tamanio lista: %d \n",tamanio_lista);
 
-    io_unput->pid = *(uint32_t*)list_get(lista_paquete, 0);
-    io_unput->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
-    io_unput->input_length = *(uint32_t*)list_get(lista_paquete, 2);
-    io_unput->input = list_get(lista_paquete, 3);    
+     // Deserializar cada elemento de la lista
+    io_input->direcciones_fisicas = list_create();
+    for (int i = 0; i < tamanio_lista; i++) {
+        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
+        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
+        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ;
+        list_add(io_input->direcciones_fisicas, direccion_fisica);
+         printf("Valor agregado %d \n",direccion_fisica);
+    }
 
-    return io_unput;
+
+    io_input->input_length = *(uint32_t*)list_get(lista_paquete,2+tamanio_lista);
+    printf("Cantidad caracteres input: %d \n",io_input->input_length);
+    io_input->input = list_get(lista_paquete, 2+tamanio_lista+1);
+    printf("Input: %s \n",io_input->input);
+    
+
+    return io_input;
 
 }
 
@@ -443,7 +461,7 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
     }   
        
     enviar_paquete(paquete_espera, socket);  
-  printf("Kernel server sent IO_K_STDIN to client\n");
+  printf("Se envio io df\n");
 
 }
 

@@ -48,9 +48,11 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
                 io_stdin = deserializar_io_df(lista_paquete);
                 
                 esperar_ingreso_teclado();
-                log_info(logger_entrada_salida, "Ya se cargó el ingreso por teclado");
+
+                //armo la estructura input para enviar                
                 io_input->pid =io_stdin->pid;
-                io_input->direccion_fisica =list_get(io_stdin->direcciones_fisicas,0);
+                io_input->direcciones_fisicas =list_create();
+                list_add_all(io_input->direcciones_fisicas,io_stdin->direcciones_fisicas);
                 io_input->input_length = string_length(input) + 1;
                 io_input->input = input;
                 
@@ -125,8 +127,20 @@ op_code  enviar_input(t_io_input* io_input ,int socket_memoria) {
  
     paquete_input = crear_paquete(IO_M_STDIN);
  
-    agregar_a_paquete(paquete_input,  &io_input->pid,  sizeof(uint32_t));   
-    agregar_a_paquete(paquete_input, &io_input->direccion_fisica, sizeof(uint32_t));   
+    agregar_a_paquete(paquete_input,  &io_input->pid,  sizeof(uint32_t));     
+    
+    uint32_t list_tamanio = list_size(io_input->direcciones_fisicas);
+    
+    agregar_a_paquete(paquete_input, &list_tamanio, sizeof(uint32_t));
+  
+    //agrego cada elemento de la lista de direcciones fisicas
+    for (int i = 0; i < list_tamanio; i++) {
+        uint32_t direccion_fisica = (uint32_t*) list_get(io_input->direcciones_fisicas, i);
+        
+        agregar_a_paquete(paquete_input,  &direccion_fisica, sizeof(uint32_t));
+        
+    }   
+
     agregar_a_paquete(paquete_input, &io_input->input_length, sizeof(uint32_t));  
     agregar_a_paquete(paquete_input, io_input->input, io_input->input_length);  
     enviar_paquete(paquete_input, socket_memoria);    
@@ -147,21 +161,21 @@ op_code  enviar_input(t_io_input* io_input ,int socket_memoria) {
 
  t_io_direcciones_fisicas* deserializar_io_df(t_list*  lista_paquete ){
 
-    t_io_direcciones_fisicas* io_stdin = malloc(sizeof(t_io_direcciones_fisicas));
-    io_stdin->pid = *(uint32_t*)list_get(lista_paquete, 0);
-    printf("Pid recibido: %d \n",io_stdin->pid);
+    t_io_direcciones_fisicas* io_df = malloc(sizeof(t_io_direcciones_fisicas));
+    io_df->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n",io_df->pid);
     uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
     printf("Tamanio lista: %d \n",tamanio_lista);
    
   // Deserializar cada elemento de la lista
-    io_stdin->direcciones_fisicas = list_create();
+    io_df->direcciones_fisicas = list_create();
     for (int i = 0; i < tamanio_lista; i++) {
         uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
         direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
-        printf("Posicion %d, valor %d",2 + i, direccion_fisica) ;
-        list_add(io_stdin->direcciones_fisicas, direccion_fisica);
+        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ;
+        list_add(io_df->direcciones_fisicas, direccion_fisica);
     }
 
-    return io_stdin;
+    return io_df;
 
 }
