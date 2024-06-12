@@ -245,7 +245,7 @@ void enviar_espera(t_io_espera* io_espera, int socket);
 t_interfaz* deserializar_interfaz(t_list*  lista_paquete );
 void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion);
 t_io_direcciones_fisicas* deserializar_io_df(t_list*  lista_paquete );
-enviar_output(t_io_output* io_output ,int socket_io);
+void enviar_output(t_io_output* io_output ,int socket_io);
 t_io_output* deserializar_output(t_list*  lista_paquete );
 #endif /* UTILS_H_ */
 

@@ -120,11 +120,11 @@ t_list* recibir_paquete(int socket_cliente)
 		memcpy(valor, buffer+desplazamiento, tamanio);
 		desplazamiento+=tamanio;
         
-		list_add(valores, valor);
-        printf("valor recibido %d \n",tamanio); // luego borrar
+		list_add(valores, valor);        
 	}
 	free(buffer);
-	return valores;
+
+	return valores;    
 }
 //
 
@@ -475,16 +475,13 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
 
     t_io_direcciones_fisicas* io_df = malloc(sizeof(t_io_direcciones_fisicas));
     io_df->pid = *(uint32_t*)list_get(lista_paquete, 0);
-    printf("Pid recibido: %d \n",io_df->pid);
     uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
-    printf("Tamanio lista: %d \n",tamanio_lista);
    
   // Deserializar cada elemento de la lista
     io_df->direcciones_fisicas = list_create();
     for (int i = 0; i < tamanio_lista; i++) {
         uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
         direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
-        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ;
         list_add(io_df->direcciones_fisicas, direccion_fisica);
     }
 
@@ -493,7 +490,7 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
 }
 
 //Memoria envia a entradasalida
-enviar_output(t_io_output* io_output ,int socket_io) {
+void enviar_output(t_io_output* io_output ,int socket_io) {
     t_paquete* paquete_output;
  
     paquete_output = crear_paquete(IO_M_STDOUT_FIN);
