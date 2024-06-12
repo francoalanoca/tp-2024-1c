@@ -145,10 +145,9 @@ typedef enum {
 } t_tipo_interfaz_enum;
 
 typedef struct {
-    char* nombre;
-    //uint8_t nombre_size; creo que no hace falta
-    t_tipo_interfaz_enum tipo;//Debe ser un enum?
-    //uint8_t tipo_size;  creo que no hace falta
+    uint32_t nombre_length; 
+    char* nombre;   
+    t_tipo_interfaz_enum tipo;//es un enum por lo que pesa 4 bytes : uint32_t
 }t_interfaz;
 
 
@@ -181,7 +180,27 @@ typedef struct {
 	int32_t desplazamiento;
 } t_direccion_fisica;
 
+typedef struct {
+	uint32_t pid;
+	uint32_t tiempo_espera;
+} t_io_espera;
 
+//Kernel le manda a IO
+
+typedef struct {
+	uint32_t pid;
+    t_list*  direcciones_fisicas; 
+} t_io_direcciones_fisicas;
+
+
+
+//IO Le manda a memoria
+typedef struct {
+	uint32_t pid;
+    t_list*  direcciones_fisicas;
+    uint32_t input_length; 
+    char* input;   
+} t_io_input;
 
 
 
@@ -210,11 +229,11 @@ int recibir_informacion(int conexion, t_log* logger);
 void crear_servidor(t_log* logger);
 void handshake_cliente(t_config* config, t_log* logger, int conexion);
 bool config_has_all_properties(t_config *cfg, char **properties);
-
-
-
-
-
+void imprimir_stream(void* stream, int size);
+t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str);
+void enviar_espera(t_io_espera* io_espera, int socket);
+t_interfaz* deserializar_interfaz(t_list*  lista_paquete );
+void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion);
 
 #endif /* UTILS_H_ */
 
