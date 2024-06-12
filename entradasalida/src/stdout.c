@@ -45,7 +45,7 @@ void iniciar_interfaz_stdout (int socket_kernel, int socket_memoria) {
                 
                 //reenvio la solicitud a memoria
                 enviar_io_df(io_stdout, socket_memoria, IO_M_STDOUT);
-                list_clean(lista_paquete);
+               
                 //Espero respuesta de memoria
                 if (recv(socket_memoria, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
                   log_info(logger_entrada_salida, "DISCONNECT!");
@@ -54,11 +54,12 @@ void iniciar_interfaz_stdout (int socket_kernel, int socket_memoria) {
                  if (cop == IO_M_STDOUT_FIN) {
 
                     log_info(logger_entrada_salida, "Recibido IO_M_STDOUT_FIN desde Memoria");
-                   t_list* lista_paquete_nueva = list_create();
-                    lista_paquete_nueva = recibir_paquete(socket_memoria);
+                   t_list* lista_paquete = malloc(sizeof(t_list));
+                   log_info(logger_entrada_salida, "Nueva lista creada");
+                    lista_paquete = recibir_paquete(socket_memoria);
                     printf("Paquete recibido");
                     t_io_output* io_output_recibido = malloc(sizeof(t_io_output));
-                    io_output_recibido = deserializar_output(lista_paquete_nueva);
+                    io_output_recibido = deserializar_output(lista_paquete);
                     
                     printf("output Recibido: %s",io_output_recibido->output);
                     
