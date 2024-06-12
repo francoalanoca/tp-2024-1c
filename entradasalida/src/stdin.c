@@ -159,23 +159,3 @@ op_code  enviar_input(t_io_input* io_input ,int socket_memoria) {
 
 }
 
- t_io_direcciones_fisicas* deserializar_io_df(t_list*  lista_paquete ){
-
-    t_io_direcciones_fisicas* io_df = malloc(sizeof(t_io_direcciones_fisicas));
-    io_df->pid = *(uint32_t*)list_get(lista_paquete, 0);
-    printf("Pid recibido: %d \n",io_df->pid);
-    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
-    printf("Tamanio lista: %d \n",tamanio_lista);
-   
-  // Deserializar cada elemento de la lista
-    io_df->direcciones_fisicas = list_create();
-    for (int i = 0; i < tamanio_lista; i++) {
-        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
-        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
-        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ;
-        list_add(io_df->direcciones_fisicas, direccion_fisica);
-    }
-
-    return io_df;
-
-}

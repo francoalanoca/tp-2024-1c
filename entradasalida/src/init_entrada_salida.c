@@ -168,7 +168,7 @@ log_info(logger_entrada_salida, "dentro iniciar interface\n");
 
             case STDOUT :
 
-                log_info(logger_entrada_salida, "Interfaz STDOUT iniciada");
+                iniciar_interfaz_stdout (socket_kernel, socket_memoria);
                 break;  
 
             case DIALFS :

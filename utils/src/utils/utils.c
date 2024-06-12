@@ -386,6 +386,7 @@ t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) 
         return -1; 
     }
 }
+
 // Kernel recibe una interfaz con op_cod = INTERFAZ_ENVIAR
  t_interfaz* deserializar_interfaz(t_list*  lista_paquete ){
 
@@ -410,8 +411,9 @@ void enviar_espera(t_io_espera* io_espera, int socket){
     enviar_paquete(paquete_espera, socket);  
 
 }
+
 // usar en memoria cuando recibe IO_M_STDIN
- t_io_input* deserializar_input(t_list*  lista_paquete ){
+t_io_input* deserializar_input(t_list*  lista_paquete ){
 
     t_io_input* io_input = malloc(sizeof(t_io_input));
     
@@ -463,6 +465,55 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
     enviar_paquete(paquete_espera, socket);  
   printf("Se envio io df\n");
 
+}
+
+ t_io_direcciones_fisicas* deserializar_io_df(t_list*  lista_paquete ){
+
+    t_io_direcciones_fisicas* io_df = malloc(sizeof(t_io_direcciones_fisicas));
+    io_df->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n",io_df->pid);
+    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Tamanio lista: %d \n",tamanio_lista);
+   
+  // Deserializar cada elemento de la lista
+    io_df->direcciones_fisicas = list_create();
+    for (int i = 0; i < tamanio_lista; i++) {
+        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
+        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
+        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ;
+        list_add(io_df->direcciones_fisicas, direccion_fisica);
+    }
+
+    return io_df;
+
+}
+
+//Memoria envia a entradasalida
+enviar_output(t_io_output* io_output ,int socket_io) {
+    t_paquete* paquete_output;
+ 
+    paquete_output = crear_paquete(IO_M_STDIN);
+ 
+    agregar_a_paquete(paquete_output,  &io_output->pid,  sizeof(uint32_t));         
+    agregar_a_paquete(paquete_output, &io_output->output_length, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_output, io_output->output, io_output->output_length);  
+    
+    enviar_paquete(paquete_output, socket_io);   
+    printf("Output enviado: %s\n",io_output->output) ; 
+    free(paquete_output);
+    
+}
+
+// Entradasalida  recibe de memoria
+ t_io_output* deserializar_output(t_list*  lista_paquete ){
+
+    t_io_output* io_output = malloc(sizeof(t_io_output));
+    io_output->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    io_output->output_length = *(uint32_t*)list_get(lista_paquete, 1);
+    io_output->output = list_get(lista_paquete, 2);
+   
+    
+	return io_output;
 }
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)
