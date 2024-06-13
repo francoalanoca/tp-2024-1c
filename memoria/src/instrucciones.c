@@ -1,5 +1,9 @@
 #include "../include/instrucciones.h"
 
+//Instrucciones no esta corriendo nada
+
+//me dice que t_list es tipo int yo lo mato aaaa
+//t_list* lista_miniPCBs = list_create();		//nombre provisorio
 
 //Vector de operaciones para comparar
 char *op_strings[] = {"SET", "SUM", "SUB", "MOV_IN", "MOV_OUT", "RESIZE", "JNZ", "COPY_STRING", 
@@ -12,7 +16,7 @@ char *op_strings[] = {"SET", "SUM", "SUB", "MOV_IN", "MOV_OUT", "RESIZE", "JNZ",
 t_list *leer_instrucciones(char* nombre_archivo) {
 
     //creamos una variable que guarda el archivo
-    FILE* archivo = leer_archivo(nombre_archivo);
+    FILE* archivo = leer_archivo(nombre_archivo);		//tengo problemas con ese fopen
     log_info(logger_memoria, "%s", nombre_archivo);
 
 	char *linea, *tokens;
@@ -104,4 +108,28 @@ tipo_instruccion string_a_op_code(char* str) {
 	}
 	return -1;
 }
+
+
+
+//Funcion que busca una instruccion en base a un pid y pc de un proceso
+char *buscar_instruccion(int proceso_pid, int program_counter){
+
+	//Mientras se menor al tamaño de la lista hace el bucle
+    for (int i = 0; i < list_size(lista_miniPCBs); i++){
+
+		//Creamos una variable a la que le asignamos elementos de la lista
+        t_miniPCB *miniPCB = list_get(lista_miniPCBs, i);
+
+		//Si la varialbe es igual al proceso buscado
+        if (miniPCB->pid == proceso_pid){
+
+			//GUarmamos valor y lo retornamos
+            char *valor = list_get(miniPCB->lista_de_instrucciones, program_counter);
+            return valor;
+        }
+    }
+
+    return NULL;
+}
+
 */

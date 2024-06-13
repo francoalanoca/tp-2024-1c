@@ -213,12 +213,43 @@ typedef struct {
     char* output;   
 } t_io_output;
 
+
+
+typedef struct
+{
+    t_pcb *pcb;
+    char *archivo_pseudocodigo;
+    int tamanio;
+} t_m_crear_proceso;
+
 typedef struct{
     uint32_t pid;
     t_list* direcciones_fisicas;
     uint32_t input_lenght;
     char* input;
-}t_m_ouput;
+}t_m_input;
+
+
+typedef struct{
+    int id;
+    t_list *lista_de_paginas;
+}t_tabla_de_paginas;
+
+
+typedef struct{
+    int marco;
+    int posicion;
+    bool presencia;
+    bool modificado;
+}t_pagina;
+
+
+typedef struct{
+    int pid;
+    t_list *lista_de_instrucciones;
+} t_miniPCB;
+
+
 
 
 void* recibir_buffer(int*, int);

@@ -8,4 +8,6 @@
 #include "../include/init_memoria.h"
 
 
+char *buscar_instruccion(int proceso_pid, int program_counter);
+
 #endif

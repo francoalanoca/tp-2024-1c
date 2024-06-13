@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <pthread.h>
 #include <utils/utils.h>
 
 #include <commons/bitarray.h>

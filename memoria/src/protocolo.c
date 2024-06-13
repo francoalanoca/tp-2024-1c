@@ -34,9 +34,10 @@ void escuchar_modulos(){
 
 //Funcion que atiende la peticion de Kernel segun el cod
 void memoria_atender_kernel(){
-    t_list* lista;
-    //t_buffer* un_buffer;
+    
+    
 	op_code response;
+    t_list* valores =  malloc(sizeof(t_list));
 
 
 	while (1) {
@@ -53,13 +54,18 @@ void memoria_atender_kernel(){
                 break;
             }
             break;
+
         // case CREAR_PROCESO_KERNEL:
-        //     paquete = recibir_paquete(fd_kernel);
-        //     atender_crear_proceso(un_buffer);
+        //     valores = recibir_paquete(fd_kernel);
+        //     t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);   //falta hacer la deserializacion
+        //     leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  //No corre ver
+        //     crear_proceso(iniciar_proceso->pcb->pid, iniciar_proceso->tamanio);
         //     break;
+
 		// case FINALIZAR_PROCESO:
 		// 	paquete = recibir_paquete(fd_kernel);
 		// 	atender_finalizar_preceso(paquete);
+
 		case -1:
 			log_error(logger_memoria, "Kernel se desconecto. Terminando servidor.");
 			//return EXIT_FAILURE;
@@ -76,9 +82,10 @@ void memoria_atender_kernel(){
 void memoria_atender_cpu(){
 
     //t_proceso_memoria contexto_ejecucion;
-    t_list* lista;
+    
     //t_paquete* paquete;
 	op_code response;
+    t_list* valores =  malloc(sizeof(t_list));
 
 
 	while (1) {
@@ -99,27 +106,16 @@ void memoria_atender_cpu(){
             break;
 
         // case PROXIMA_INSTRUCCION:
-        //     paquete = recibir_paquete(fd_cpu);
-        //     eliminar_paquete(paquete);       //libero el paquete para luego enviar la instruccion en su contenido
-		//	   unsleep(cfg_memoria->RETARDO_RESPUESTA);
-        //     enviar_instruccion(contexto_ejecucion, paquete);     //serializo la insctruccion y la envio
+        //     valores = recibir_paquete(fd_cpu);
+        //     t_pcb* pcb = deserializar_proxima_instruccion(valores);         //falta realizar la deserializacion
+        //     char* instruccion = buscar_instruccion(pcb->pid, pcb->program_counter);
+        //     log_trace(logger_memoria, "Se Encontro la Instruccion: %s", instruccion);
+        
+		//     usleep(cfg_memoria->RETARDO_RESPUESTA);
+        //     enviar_respuesta_instruccion(contexto_ejecucion, fd_cpu);     //falta realizar el envio
         //     break;
 
 
-		//case PROXIMA_INSTRUCCION://CPU me pide su sig instruccion
-				//abrir archivo de instrucciones (buscar como leer un archivo linea por linea)
-				//ubicar instruccion a partir PC que me envia cpu
-				//enviar codigo de operacion (INSTRUCCION_RECIBIDA) a cpu para que espere la instruccion(armar paquete con instruccion y codigo de opercion nuevo)
-
-
-		// case AMPLIAR_PROCESO:
-		// 	paquete = recibir_paquete(fd_cpu);
-		// 	ampliar_proceso();
-		// 	break;
-		// case REDUCIR_PROCESO:
-		// 	paquete = recibir_paquete(fd_cpu);
-		// 	reducir_proceso();
-		// 	break;
 		case -1:
 			log_error(logger_memoria, "CPU se desconecto. Terminando servidor.");
 			//return EXIT_FAILURE;
@@ -135,7 +131,7 @@ void memoria_atender_cpu(){
 
 //Funcion que atiende la peticion de i/O segun el cod
 void memoria_atender_io(){
-    t_list* lista;
+    
 	t_list* valores =  malloc(sizeof(t_list));
     //t_paquete* paquete;
 	op_code response;
@@ -161,14 +157,14 @@ void memoria_atender_io(){
 
             printf("Solicitud IO_M_STDIN recibida\n");
 
-            // Llenar la lista con los datos recibidos de recibir_paquete
+            // Llenamos la lista con los datos recibidos de recibir_paquete 
             valores = recibir_paquete(fd_entradasalida);
 
-			// Deserializo los datos (ingresantes) de la lista
+            // Deserializamos los valores de la lista 
             deserializar_input(valores);
         
             if (valores == NULL || list_size(valores) == 0) {
-                printf("Fallo al recibir los datos o la lista esta vacia\n");
+                printf("Failed to receive data or empty list\n");
                 break;
             }
             printf("despues de recbir paquete\n");
@@ -180,14 +176,39 @@ void memoria_atender_io(){
                 break;
             }
 
-            printf("Memoria envio IO_M_STDIN_FIN al cliente IO\n");
+            printf("Memoria envio IO_M_STDIN_FIN a IO \n");
             break;
 
-		// case IO_M_STDOUT_WRITE:
-		// 	paquete = recibir_paquete(fd_entradasalida);
-		// 	buscar_datos(paquete);
-		// 	enviar_paquete(paquete, fd_entradasalida);
-		// 	break;
+
+		case IO_M_STDOUT:
+
+            printf("Solicitud IO_M_STDOUT recibida\n");
+
+            t_io_output* io_output = malloc(sizeof(t_io_input));
+            t_io_direcciones_fisicas* io_stdout = malloc(sizeof(t_io_direcciones_fisicas));
+                
+                                
+            valores = recibir_paquete(fd_entradasalida);
+            io_stdout = deserializar_io_df(valores);
+        
+            if (valores == NULL || list_size(valores) == 0) {
+                printf("Failed to receive data or empty list\n");
+                break;
+            }
+
+            printf("despues de recbir paquete\n");
+            char* output = "LA PUERCA ESTA EN LA POCILGA";
+            uint32_t tamanio_output = string_length(output)+1;
+            io_output->pid = io_stdout->pid;
+            io_output->output_length = tamanio_output;
+            io_output->output = output;
+
+            printf("Tamanio output %d\n",io_output->output_length);
+            enviar_output(io_output ,fd_entradasalida);
+
+            printf("Memoria envio IO_M_STDOUT_FIN a IO\n");
+            break;
+
 		case -1:
 			log_error(logger_memoria, "Entrada/salida se desconecto. Terminando servidor.");
 			//return EXIT_FAILURE;

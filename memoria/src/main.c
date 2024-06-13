@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 
 	//-------------------Variables---------------------------
 	inicializar_memoria();
-	log_info(logger_memoria, "Se inicio correctamente la Memoria")
+	log_info(logger_memoria, "Se inicio correctamente la Memoria");
 
 
 	//------------------Conexiones------------------------

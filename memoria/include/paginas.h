@@ -7,4 +7,9 @@
 
 #include "../include/init_memoria.h"
 
+
+
+t_tabla_de_paginas *crear_tabla_pagina(int pid, int tamanio_proceso);
+int calcular_marcos(int tamanio_proceso);
+
 #endif
