@@ -40,12 +40,16 @@ typedef enum
     IO_K_GEN_SLEEP_FIN,         // EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
     IO_K_STDIN,
     IO_K_STDIN_FIN,
+    IO_K_STDOUT,
+    IO_K_STDOUT_FIN,
 //----------------KERNEL-MEMORIA
     CREAR_PROCESO_KERNEL,       // Kerner le solicita a Memoria crear las estructuras necesarias
     FINALIZAR_PROCESO,          // Kernel le solicita a Memoria liberar el espacio en memoria del proceso
  //---------------ENTRADASALIDA-MEMORIA-------------------
     IO_M_STDIN,                 // entradasalida envia input a memoria
-    IO_M_STDIN_FIN              // Memoria guardó con éxito el input
+    IO_M_STDIN_FIN,              // Memoria guardó con éxito el input
+    IO_M_STDOUT,
+    IO_M_STDOUT_FIN
 }op_code; 
 
 typedef struct {
@@ -202,6 +206,12 @@ typedef struct {
     char* input;   
 } t_io_input;
 
+//Memoria le manda a IO
+typedef struct {
+	uint32_t pid;
+    uint32_t output_length; 
+    char* output;   
+} t_io_output;
 
 typedef struct{
     uint32_t pid;
@@ -241,6 +251,8 @@ t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str);
 void enviar_espera(t_io_espera* io_espera, int socket);
 t_interfaz* deserializar_interfaz(t_list*  lista_paquete );
 void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion);
-
+t_io_direcciones_fisicas* deserializar_io_df(t_list*  lista_paquete );
+void enviar_output(t_io_output* io_output ,int socket_io);
+t_io_output* deserializar_output(t_list*  lista_paquete );
 #endif /* UTILS_H_ */
 
