@@ -36,21 +36,23 @@ void escuchar_modulos(){
 void memoria_atender_kernel(){
     t_list* lista;
     //t_buffer* un_buffer;
+	op_code response;
+
+
 	while (1) {
         //Se queda esperando a que KErnel le envie algo y extrae el cod de operacion
 		int cod_op = recibir_operacion(fd_kernel);
 		switch (cod_op) {
-		case MENSAJE:
-			recibir_mensaje(fd_kernel); 
-			break;
-		case PAQUETE:
-			lista = recibir_paquete(fd_kernel);
-			log_info(logger_memoria, "Me llegaron los siguientes valores:\n");
-			//list_iterate(lista, (void*) iterator);
-			break;
-		// case HANDSHAKE:
-		// 	enviar_paquete(paquete, fd_kernel);
-		// 	break;
+		
+		case HANDSHAKE:
+			log_info(logger_memoria, "Handshake realizado con Kernel");
+            response = HANDSHAKE_OK;
+            if (send(fd_entradasalida, &response, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+                log_error(logger_memoria, "Error al enviar respuesta de handshake a kernel");
+                   
+                break;
+            }
+            break;
         // case CREAR_PROCESO_KERNEL:
         //     paquete = recibir_paquete(fd_kernel);
         //     atender_crear_proceso(un_buffer);
@@ -76,6 +78,7 @@ void memoria_atender_cpu(){
     //t_proceso_memoria contexto_ejecucion;
     t_list* lista;
     //t_paquete* paquete;
+	op_code response;
 
 
 	while (1) {
@@ -84,17 +87,17 @@ void memoria_atender_cpu(){
         //Se queda esperando a que Cpu le envie algo y extrae el cod de operacion
 		int cod_op = recibir_operacion(fd_cpu);
 		switch (cod_op) {
-		case MENSAJE:
-			recibir_mensaje(fd_cpu);
-			break;
-		case PAQUETE:
-			lista = recibir_paquete(fd_cpu);
-			log_info(logger_memoria, "Me llegaron los siguientes valores:\n");
-			//list_iterate(lista, (void*) iterator);
-			break;
-		// case HANDSHAKE:
-		// 	enviar_paquete(paquete, fd_cpu);
-		// 	break;
+		
+		case HANDSHAKE:
+			log_info(logger_memoria, "Handshake realizado con Kernel");
+            response = HANDSHAKE_OK;
+            if (send(fd_entradasalida, &response, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+                log_error(logger_memoria, "Error al enviar respuesta de handshake a kernel");
+                   
+                break;
+            }
+            break;
+
         // case PROXIMA_INSTRUCCION:
         //     paquete = recibir_paquete(fd_cpu);
         //     eliminar_paquete(paquete);       //libero el paquete para luego enviar la instruccion en su contenido
@@ -133,27 +136,53 @@ void memoria_atender_cpu(){
 //Funcion que atiende la peticion de i/O segun el cod
 void memoria_atender_io(){
     t_list* lista;
+	t_list* valores =  malloc(sizeof(t_list));
     //t_paquete* paquete;
+	op_code response;
+	uint32_t request_type;
+
+
 	while (1) {
         //Se queda esperando a que IO le envie algo y extrae el cod de operacion
 		int cod_op = recibir_operacion(fd_entradasalida);
 		switch (cod_op) {
-		case MENSAJE:
-			recibir_mensaje(fd_entradasalida);
-			break;
-		case PAQUETE:
-			lista = recibir_paquete(fd_entradasalida);
-			log_info(logger_memoria, "Me llegaron los siguientes valores:\n");
-			//list_iterate(lista, (void*) iterator);
-			break;
-		// case HANDSHAKE:
-		// 	enviar_paquete(paquete, fd_entradasalida);
-		// 	break;
-        // case IO_M_STDIN_READ:
-        //     paquete = recibir_paquete(fd_entradasalida);
-        //     guardar_datos(paquete);
-		//	   enviar_paquete(paquete, fd_entradasalida);
-        //     break;
+		
+		case HANDSHAKE:
+			log_info(logger_memoria, "Handshake realizado con Kernel");
+            response = HANDSHAKE_OK;
+            if (send(fd_entradasalida, &response, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+                log_error(logger_memoria, "Error al enviar respuesta de handshake a kernel");
+                   
+                break;
+            }
+            break;
+
+        case IO_M_STDIN:
+
+            printf("Solicitud IO_M_STDIN recibida\n");
+
+            // Llenar la lista con los datos recibidos de recibir_paquete
+            valores = recibir_paquete(fd_entradasalida);
+
+			// Deserializo los datos (ingresantes) de la lista
+            deserializar_input(valores);
+        
+            if (valores == NULL || list_size(valores) == 0) {
+                printf("Fallo al recibir los datos o la lista esta vacia\n");
+                break;
+            }
+            printf("despues de recbir paquete\n");
+            request_type = (uint32_t)(uintptr_t)list_get(valores, 1);
+
+            uint32_t response_interfaz = IO_M_STDIN_FIN;
+            if (send(fd_entradasalida, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                perror("send INTERFAZ_RECIBIDA response");
+                break;
+            }
+
+            printf("Memoria envio IO_M_STDIN_FIN al cliente IO\n");
+            break;
+
 		// case IO_M_STDOUT_WRITE:
 		// 	paquete = recibir_paquete(fd_entradasalida);
 		// 	buscar_datos(paquete);

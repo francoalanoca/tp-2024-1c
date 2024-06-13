@@ -203,6 +203,13 @@ typedef struct {
 } t_io_input;
 
 
+typedef struct{
+    uint32_t pid;
+    t_list* direcciones_fisicas;
+    uint32_t input_lenght;
+    char* input;
+}t_m_ouput;
+
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
