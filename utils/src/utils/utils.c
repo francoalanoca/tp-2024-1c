@@ -416,77 +416,81 @@ void enviar_espera(t_io_espera* io_espera, int socket){
 
 
 
-/*
+
 t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete ){
 
     //Modificar todo
-
-    t_io_input* io_input = malloc(sizeof(t_io_input));
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_m_crear_proceso* crear_proceso = malloc(sizeof(t_m_crear_proceso));
     
-    io_input->pid = *(uint32_t*)list_get(lista_paquete, 0);
-    printf("Pid recibido: %d \n",io_input->pid);
+    crear_proceso->pcb->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", crear_proceso->pcb->pid);
     
-    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
-    printf("tamanio lista: %d \n",tamanio_lista);
+    crear_proceso->tamanio = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Tamanio proceso: %d \n", crear_proceso->tamanio);
 
-     // Deserializar cada elemento de la lista
-    io_input->direcciones_fisicas = list_create();
-    for (int i = 0; i < tamanio_lista; i++) {
-        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
-        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
-        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ;
-        list_add(io_input->direcciones_fisicas, direccion_fisica);
-         printf("Valor agregado %d \n",direccion_fisica);
-    }
+    crear_proceso->archivo_pseudocodigo = list_get(lista_paquete, 2);
+    printf("Nombre del proceso: %d \n", crear_proceso->archivo_pseudocodigo);
 
-
-    io_input->input_length = *(uint32_t*)list_get(lista_paquete,2+tamanio_lista);
-    printf("Cantidad caracteres input: %d \n",io_input->input_length);
-    io_input->input = list_get(lista_paquete, 2+tamanio_lista+1);
-    printf("Input: %s \n",io_input->input);
-    
-
-    return io_input;
+    return crear_proceso;
 
 }
 
 
+void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket_kernel) {
+    t_paquete* paquete_crear_proceso;
+ 
+    paquete_crear_proceso = crear_paquete(CREAR_PROCESO_KERNEL_FIN);
+ 
+    agregar_a_paquete(paquete_crear_proceso, &crear_proceso->pcb->pid,  sizeof(uint32_t));         
+    agregar_a_paquete(paquete_crear_proceso, &crear_proceso->tamanio, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_crear_proceso, crear_proceso->archivo_pseudocodigo, strlen(crear_proceso->archivo_pseudocodigo) + 1);  
+    
+    enviar_paquete(paquete_crear_proceso, socket_kernel);   
+    printf("Proceso enviado: %s\n", crear_proceso->archivo_pseudocodigo); 
+    free(paquete_crear_proceso);
+    
+}
 
-t_m_crear_proceso* deserializar_proxima instruccion(t_list*  lista_paquete ){
+
+
+
+
+t_pcb* deserializar_proxima instruccion(t_list*  lista_paquete ){
 
     //Modificar todo
 
-    t_io_input* io_input = malloc(sizeof(t_io_input));
+    t_pcb* proxima_instruccion = malloc(sizeof(t_pcb));
     
-    io_input->pid = *(uint32_t*)list_get(lista_paquete, 0);
-    printf("Pid recibido: %d \n",io_input->pid);
+    proxima_instruccion->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", proxima_instruccion->pid);
     
-    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
-    printf("tamanio lista: %d \n",tamanio_lista);
+    proxima_instruccion->program_counter = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Program counter: %d \n", proxima_instruccion->program_counter);
 
-     // Deserializar cada elemento de la lista
-    io_input->direcciones_fisicas = list_create();
-    for (int i = 0; i < tamanio_lista; i++) {
-        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
-        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
-        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ;
-        list_add(io_input->direcciones_fisicas, direccion_fisica);
-         printf("Valor agregado %d \n",direccion_fisica);
-    }
-
-
-    io_input->input_length = *(uint32_t*)list_get(lista_paquete,2+tamanio_lista);
-    printf("Cantidad caracteres input: %d \n",io_input->input_length);
-    io_input->input = list_get(lista_paquete, 2+tamanio_lista+1);
-    printf("Input: %s \n",io_input->input);
     
-
-    return io_input;
+    return proxima_instruccion;
 
 }
 
 
-*/
+
+void enviar_respuesta_instruccion(pcb* crear_proceso ,int socket_cpu) {
+    t_paquete* paquete_instruccion;
+ 
+    paquete_instruccion = crear_paquete(INSTRUCCION_RECIBIDA);
+ 
+    agregar_a_paquete(paquete_instruccion, &proxima_instruccion->pid,  sizeof(uint32_t));         
+    agregar_a_paquete(paquete_instruccion, &proxima_instruccion->program_counter, sizeof(uint32_t));  
+    
+    enviar_paquete(paquete_instruccion, socket_cpu);   
+    printf("Instruccion enviada"); 
+    free(paquete_instruccion);
+    
+}
+
+
+
 
 
 

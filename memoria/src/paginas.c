@@ -1,11 +1,11 @@
 #include "../include/paginas.h"
 
-t_list* lista_tablas_de_paginas = list_create();
+
 
 
 //Funcion que crea un proceso a partir de un pid y el tamanio de un proceso
-void crear_proceso(int proceso_pid, int tamanio_proceso)
-{
+void crear_proceso(int proceso_pid, int tamanio_proceso){
+    
     printf("Creacion del proceso PID %i - Tamanio %i", proceso_pid, tamanio_proceso);
     printf("Iniciando estructuras");
 

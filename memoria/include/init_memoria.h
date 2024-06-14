@@ -29,6 +29,21 @@ typedef struct
 extern t_config_memoria *cfg_memoria;
 
 
+
+extern void* memoria;
+extern t_list* lista_tablas_de_paginas;     
+extern t_list* lista_miniPCBs;
+extern pthread_mutex_t mutex_memoria;
+extern uint32_t cantidad_frames;
+extern uint32_t cantidad_page_fault;  
+extern t_bitarray *bitmap_frames;
+extern t_dictionary* instrucciones_de_procesos;
+
+
+
+
+
+
 static t_config_memoria *cfg_memoria_start();
 
 static t_config_memoria *cfg_memoria_start(){

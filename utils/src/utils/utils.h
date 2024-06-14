@@ -44,6 +44,7 @@ typedef enum
     IO_K_STDOUT_FIN,
 //----------------KERNEL-MEMORIA
     CREAR_PROCESO_KERNEL,       // Kerner le solicita a Memoria crear las estructuras necesarias
+    CREAR_PROCESO_KERNEL_FIN,
     FINALIZAR_PROCESO,          // Kernel le solicita a Memoria liberar el espacio en memoria del proceso
  //---------------ENTRADASALIDA-MEMORIA-------------------
     IO_M_STDIN,                 // entradasalida envia input a memoria
@@ -214,28 +215,22 @@ typedef struct {
 } t_io_output;
 
 
-
-typedef struct
-{
-    t_pcb *pcb;
-    char *archivo_pseudocodigo;
-    int tamanio;
+//Kernel-Memoria (struct para cop crear proceso)
+typedef struct{
+    t_pcb *pcb;                     //pcb del proceso
+    uint32_t tamanio;               //tamaño del proceso
+    char *archivo_pseudocodigo;     //nombre del proceso
 } t_m_crear_proceso;
 
-typedef struct{
-    uint32_t pid;
-    t_list* direcciones_fisicas;
-    uint32_t input_lenght;
-    char* input;
-}t_m_input;
 
 
+//Memoria
 typedef struct{
     int id;
     t_list *lista_de_paginas;
 }t_tabla_de_paginas;
 
-
+//Memoria
 typedef struct{
     int marco;
     int posicion;
@@ -243,7 +238,7 @@ typedef struct{
     bool modificado;
 }t_pagina;
 
-
+//Memoria
 typedef struct{
     int pid;
     t_list *lista_de_instrucciones;

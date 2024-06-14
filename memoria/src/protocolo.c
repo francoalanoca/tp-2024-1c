@@ -55,12 +55,14 @@ void memoria_atender_kernel(){
             }
             break;
 
-        // case CREAR_PROCESO_KERNEL:
-        //     valores = recibir_paquete(fd_kernel);
-        //     t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);   //falta hacer la deserializacion
-        //     leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  //No corre ver
-        //     crear_proceso(iniciar_proceso->pcb->pid, iniciar_proceso->tamanio);
-        //     break;
+        case CREAR_PROCESO_KERNEL:
+            valores = recibir_paquete(fd_kernel);
+            t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);   
+            leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  //No corre ver
+            crear_proceso(iniciar_proceso->pcb->pid, iniciar_proceso->tamanio);
+
+            enviar_respuesta_crear_proceso(iniciar_proceso, fd_kernel);
+            break;
 
 		// case FINALIZAR_PROCESO:
 		// 	paquete = recibir_paquete(fd_kernel);
@@ -105,15 +107,15 @@ void memoria_atender_cpu(){
             }
             break;
 
-        // case PROXIMA_INSTRUCCION:
-        //     valores = recibir_paquete(fd_cpu);
-        //     t_pcb* pcb = deserializar_proxima_instruccion(valores);         //falta realizar la deserializacion
-        //     char* instruccion = buscar_instruccion(pcb->pid, pcb->program_counter);
-        //     log_trace(logger_memoria, "Se Encontro la Instruccion: %s", instruccion);
+        case PROXIMA_INSTRUCCION:
+            valores = recibir_paquete(fd_cpu);
+            t_pcb* pcb = deserializar_proxima_instruccion(valores);         
+            char* instruccion = buscar_instruccion(pcb->pid, pcb->program_counter);
+            log_trace(logger_memoria, "Se Encontro la Instruccion: %s", instruccion);
         
 		//     usleep(cfg_memoria->RETARDO_RESPUESTA);
-        //     enviar_respuesta_instruccion(contexto_ejecucion, fd_cpu);     //falta realizar el envio
-        //     break;
+            enviar_respuesta_instruccion(pcb, fd_cpu);     
+            break;
 
 
 		case -1:

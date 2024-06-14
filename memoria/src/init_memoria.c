@@ -13,11 +13,11 @@ int fd_kernel;
 int fd_entradasalida;
 
 void* memoria;
-t_list* tablas_de_paginas;
+t_list* lista_tablas_de_paginas;
+t_list* lista_miniPCBs;
 pthread_mutex_t mutex_memoria;
-uint32_t cantidad_frames;
-uint32_t cantidad_acceso_disco;
-uint32_t cantidad_page_fault;       //seria tam_memoria / tam_pagina
+uint32_t cantidad_frames;       //seria tam_memoria / tam_pagina
+uint32_t cantidad_page_fault;       
 t_bitarray *bitmap_frames;
 
 t_dictionary* instrucciones_de_procesos;
@@ -115,10 +115,10 @@ void inicializar_memoria(){
 
 
 	memoria = malloc(cfg_memoria->TAM_MEMORIA);             //posiblemente represente el espacio del usuario, ver
-	tablas_de_paginas = list_create();                      //lista en en donde se almacenara la tabla de paginas de un proceso 
-	instrucciones_de_procesos = dictionary_create();        //memoria de instrucciones
+	lista_tablas_de_paginas = list_create();                //lista en en donde se almacenara la tabla de paginas de un proceso 
+	lista_miniPCBs = list_create();
+    instrucciones_de_procesos = dictionary_create();        //memoria de instrucciones
 	pthread_mutex_init(&mutex_memoria, NULL);
-	cantidad_acceso_disco = 0;
 	cantidad_page_fault = 0;
 	cantidad_frames = cfg_memoria->TAM_MEMORIA / cfg_memoria->TAM_PAGINA;
 	bitmap_frames = bitarray_create_with_mode(memoria, (size_t)(cantidad_frames / 8), LSB_FIRST);   //dice no se inicializa la funcion bitarray pero tengo la biliote, ver

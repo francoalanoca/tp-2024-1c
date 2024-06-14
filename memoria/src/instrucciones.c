@@ -2,8 +2,8 @@
 
 //Instrucciones no esta corriendo nada
 
-//me dice que t_list es tipo int yo lo mato aaaa
-//t_list* lista_miniPCBs = list_create();		//nombre provisorio
+
+
 
 //Vector de operaciones para comparar
 char *op_strings[] = {"SET", "SUM", "SUB", "MOV_IN", "MOV_OUT", "RESIZE", "JNZ", "COPY_STRING", 
@@ -108,7 +108,7 @@ tipo_instruccion string_a_op_code(char* str) {
 	}
 	return -1;
 }
-
+*/
 
 
 //Funcion que busca una instruccion en base a un pid y pc de un proceso
@@ -132,4 +132,3 @@ char *buscar_instruccion(int proceso_pid, int program_counter){
     return NULL;
 }
 
-*/
