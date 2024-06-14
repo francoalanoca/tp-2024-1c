@@ -45,6 +45,8 @@ typedef enum
     SOLICITUD_IO_STDIN_READ = 115, // CPU solicita a kernel hacer la operacion IO_STDIN_READ a partir de la interfaz, direccion y tamanio pasado
     SOLICITUD_IO_STDOUT_WRITE = 120, // CPU solicita a kernel hacer la operacion IO_STDOUT_WRITE a partir de la interfaz, direccion y tamanio pasado
     SOLICITUD_EXIT_KERNEL = 125, //CPU solicita a kernel la finalización del proceso
+    SOLICITUD_TAMANIO_PAGINA =130,//CPU solicita a memoria el tamanio de pagina
+    SOLICITUD_TAMANIO_PAGINA_RTA =135,//Memoria envia a CPU el tamanio de pagina
  //---------------ENTRADASALIDA-KERNEL-------------------
     INTERFAZ_ENVIAR, // EntradaSalida, avisa que envía la interfaz creada
     INTERFAZ_RECIBIDA, // Es el ok del kernel al recibir la interfaz

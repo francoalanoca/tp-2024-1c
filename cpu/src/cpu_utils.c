@@ -1661,3 +1661,25 @@ uint32_t valor_repetido_tlb(uint32_t pid, uint32_t nro_pag){
 /*void liberar_memoria_tlb(t_registro_tlb* valor){
     free(valor);
 }*/
+
+void obtenerTamanioPagina(int conexion){
+    printf("entro a obtenerTamanioPagina\n");
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    paquete -> codigo_operacion = SOLICITUD_TAMANIO_PAGINA; 
+    void* a_enviar = malloc(sizeof(op_code)); 
+
+    int offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(op_code));
+
+    offset += sizeof(op_code);
+
+// Por último enviamos
+    send(conexion, a_enviar, sizeof(op_code), 0);
+
+// No nos olvidamos de liberar la memoria que ya no usaremos
+    free(a_enviar);
+    free(paquete);
+}

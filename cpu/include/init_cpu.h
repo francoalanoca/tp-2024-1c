@@ -23,6 +23,7 @@ extern char* valor_registro_obtenido;
 extern sem_t sem_valor_registro_recibido;
 extern char* rta_resize;
 extern sem_t sem_valor_resize_recibido;
+extern sem_t sem_valor_tamanio_pagina;
 typedef struct {
     uint32_t pid;
     uint32_t nro_pagina;

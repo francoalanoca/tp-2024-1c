@@ -158,6 +158,15 @@ void procesar_conexion(void *v_args){
                 sem_post(&sem_valor_resize_recibido);
                 break;
             }
+            case SOLICITUD_TAMANIO_PAGINA_RTA:
+            {
+                log_info(logger_cpu, "SOLICITUD_TAMANIO_PAGINA_RTA");
+                uint32_t valor_rec;
+                
+                valor_rec = buffer_read_uint32(paquete->buffer); 
+                tamanio_pagina = valor_rec; 
+                sem_post(&sem_valor_tamanio_pagina);
+            }
             
            
     }   

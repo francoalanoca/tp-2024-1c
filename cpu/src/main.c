@@ -30,6 +30,8 @@ sem_t sem_valor_registro_recibido;
 
 sem_t sem_valor_resize_recibido;
 
+sem_t sem_valor_tamanio_pagina;
+
 uint32_t tamanio_pagina;
 
 int socket_memoria;
@@ -56,6 +58,7 @@ int main(int argc, char* argv[]) {
     
     sem_init(&sem_valor_resize_recibido,0,0);
     
+    sem_init(&sem_valor_tamanio_pagina,0,0);
 
     
 
@@ -93,6 +96,11 @@ int main(int argc, char* argv[]) {
         log_info(logger_cpu, "Error en handshake con memoria");
         return EXIT_FAILURE;
     }
+
+    //COMIENZO OBTENER TAMANIO_PAGINA
+    obtenerTamanioPagina(socket_memoria);
+    sem_wait(&sem_valor_tamanio_pagina);
+    //FIN OBTENER TAMANIO PAGINA
     
     proceso_actual = malloc(sizeof(t_proceso));
     proceso_actual->interfaces = malloc(sizeof(t_interfaz));
@@ -185,3 +193,5 @@ void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pro
     log_info(logger, "Termino ciclo de instrucciones");
 
 }
+
+

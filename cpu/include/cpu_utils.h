@@ -102,6 +102,7 @@ void solicitar_io_stdout_write_a_kernel(char* interfaz, uint32_t direccion, uint
 void solicitar_exit_a_kernel(t_proceso* proceso);
 void usar_algoritmo_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t nro_marco);
 uint32_t valor_repetido_tlb(uint32_t pid, uint32_t nro_pag);
+void obtenerTamanioPagina(int conexion);
 
 
 
