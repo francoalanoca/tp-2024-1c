@@ -24,9 +24,9 @@ void cerrar_programa();
 // Variables Globales
 extern t_log *logger_kernel;
 extern t_config* file_cfg_kernel;
-extern conexion_cpu_dispatch;
-extern conexion_cpu_interrupt;
-extern conexion_memoria;
+extern int conexion_cpu_dispatch;
+extern int conexion_cpu_interrupt;
+extern int conexion_memoria;
 typedef struct {
     int PUERTO_ESCUCHA;
     char* IP_MEMORIA;

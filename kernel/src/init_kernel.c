@@ -1,12 +1,15 @@
 #include <init_kernel.h>
 
-extern t_log *logger_kernel; // Definición de la variable global
-extern t_config_kernel *cfg_kernel;
-extern t_config *file_cfg_kernel;
+t_log *logger_kernel; // Definición de la variable global
+t_config_kernel *cfg_kernel;
+t_config *file_cfg_kernel;
+int conexion_cpu_dispatch;
+int conexion_cpu_interrupt;
+int conexion_memoria;
 
 int checkProperties(char *path_config) {
     // config valida
-    t_config *config = config_create(path_config);
+    t_config *config = config_create(path_config); //"/Documents/tp_operativos/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config"
     if (config == NULL) {
         log_error(logger_kernel, "Ocurrió un error al intentar abrir el archivo config");
         return false;
@@ -39,7 +42,7 @@ int checkProperties(char *path_config) {
 
 int cargar_configuracion(char *path) {
 
-    file_cfg_kernel = config_create(path);
+    file_cfg_kernel = config_create(path); //"/Documents/tp_operativos/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config"
 
     cfg_kernel->PUERTO_ESCUCHA = config_get_int_value(file_cfg_kernel, "PUERTO_ESCUCHA");
     log_info(logger_kernel, "PUERTO_ESCUCHA cargado correctamente: %d", cfg_kernel->PUERTO_ESCUCHA);
@@ -91,7 +94,7 @@ int init(char *path_config) {
         return false;
     }
     //inicializo el archivo de configuracion
-    file_cfg_kernel = iniciar_config(path_config, logger_kernel);
+    file_cfg_kernel = iniciar_config(path_config,logger_kernel); //"/Documents/tp_operativos/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config"
 
     return checkProperties(path_config);
 }

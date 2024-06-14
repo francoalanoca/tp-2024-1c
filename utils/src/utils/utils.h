@@ -14,6 +14,7 @@
 #include<assert.h>
 #include<signal.h>
 #include <errno.h>
+#include<pthread.h>
 
 
 #define PUERTO "4444"
@@ -129,11 +130,22 @@ typedef struct
 
 typedef struct 
 {
-   uint32_t pid;
-   uint32_t program_counter;
-   uint32_t quantum;
-   t_registros_CPU* registrosCPU;
+    uint32_t pid;
+    uint32_t program_counter;
+    char* path;
+    t_list* lista_recursos_pcb;
+    pthread_mutex_t mutex_lista_recursos;
+    t_registros_CPU registros_cpu;
+    int estado;
 }t_pcb;
+
+typedef enum {
+    ESTADO_NEW,
+    ESTADO_READY,
+    ESTADO_RUNNING,
+    ESTADO_BLOCKED,
+    ESTADO_EXIT
+} estado_pcb;
 typedef enum {
     GENERICA,
     STDIN,

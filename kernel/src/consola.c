@@ -91,7 +91,7 @@ void atender_instruccion_validada(char* leido){
 
     }else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0){    //FINALIZAR_PROCESO [PID]
        
-       /* pid_t pid = atoi(comando_consola[1]);
+        pid_t pid = atoi(comando_consola[1]);
         if (kill(pid, SIGTERM) == 0) {
             printf("Proceso con PID %d finalizado exitosamente.\n", pid);
         } else {
@@ -103,7 +103,7 @@ void atender_instruccion_validada(char* leido){
                 printf("Ocurrió un error al finalizar el proceso con PID %d: %s\n", pid, strerror(errno));
             }
         }
-       */
+       
     }else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0){    //DETENER_PLANIFICACION
         
         //detener_planificacion();
@@ -200,20 +200,20 @@ void imprimir_pcb(t_pcb* un_pcb) {
 }
 
 void enviar_pcb_a_cpu_por_dispatch(t_pcb* una_pcb) {
-    t_paquete* un_paquete = crear_super_paquete(conexion_cpu_dispatch);
-    cargar_int_al_super_paquete(un_paquete, una_pcb->pid);
-    cargar_int_al_super_paquete(un_paquete, una_pcb->program_counter);
+    t_paquete* un_paquete = crear_paquete(conexion_cpu_dispatch);
+    agregar_a_paquete(un_paquete, una_pcb->pid, sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, una_pcb->program_counter, sizeof(uint32_t)); // cambiar a agregar_a_paquete y agregar sizeof.
 
-    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.PC), sizeof(uint32_t));
-    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.AX), sizeof(uint8_t));
-    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.BX), sizeof(uint8_t));
-    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.CX), sizeof(uint8_t));
-    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.DX), sizeof(uint8_t));
-    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.EAX), sizeof(uint32_t));
-    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.EBX), sizeof(uint32_t));
-    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.ECX), sizeof(uint32_t));
-    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.SI), sizeof(uint32_t));
-    cargar_milanesa_al_super_paquete(un_paquete, &(una_pcb->registros_cpu.DI), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.PC), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.AX), sizeof(uint8_t));
+    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.BX), sizeof(uint8_t));
+    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.CX), sizeof(uint8_t));
+    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.DX), sizeof(uint8_t));
+    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.EAX), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.EBX), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.ECX), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.SI), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.DI), sizeof(uint32_t));
 
     enviar_paquete(un_paquete, conexion_cpu_dispatch);
     eliminar_paquete(un_paquete);
