@@ -20,6 +20,7 @@ int main(char argc, char *argv[]) {
     int conexion_consola;
     int conexion_entrada_salida;
 
+
     int contador_pid;
     t_planificador* planificador;
 
@@ -33,6 +34,8 @@ int main(char argc, char *argv[]) {
 
 //CONEXION
     Empezar_conexiones();     
+
+    AtenderMsjDeConexiones();
 
 //INICIAR SERVIDOR y CONSOLA
     crearServidor();

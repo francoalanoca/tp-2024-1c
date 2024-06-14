@@ -6,6 +6,7 @@
         "init_kernel.h": "c",
         "consola.h": "c",
         "log.h": "c",
-        "main.h": "c"
+        "main.h": "c",
+        "kernel.h": "c"
     }
 }

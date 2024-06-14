@@ -7,7 +7,6 @@ int conexion_cpu_dispatch;
 int conexion_cpu_interrupt;
 int conexion_memoria;
 
-
 int checkProperties(char *path_config) {
     // config valida
     t_config *config = config_create(path_config); //"/Documents/tp_operativos/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config"
@@ -125,6 +124,24 @@ int hacer_handshake (int socket_cliente){
     return recibir_operacion(socket_cliente);
 }
 
+void AtenderMsjDeConexiones(){
+
+//Atender los msj de memoria
+   pthread_t hilo_kernel_memoria;
+   pthread_create(&hilo_kernel_memoria, NULL, (void*)Kernel_atender_memoria, NULL);
+   pthread_detach(hilo_kernel_memoria);
+
+//Atender los msj de cpu - dispatch
+   pthread_t hilo_cpu_dispatch;
+   pthread_create(&hilo_cpu_dispatch, NULL, (void*)Kernel_atender_cpu_dispatch, NULL);
+   pthread_detach(hilo_cpu_dispatch);
+
+//Atender los msj de cpu - interrupt
+   pthread_t hilo_cpu_interrupt;
+   pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_atender_cpu_interrupt, NULL);
+   pthread_join(hilo_cpu_interrupt, NULL);
+
+}
 
 void cerrar_programa() {
 
@@ -135,3 +152,87 @@ void cerrar_programa() {
     log_info(logger_kernel, "TERMINANDO_EL_LOG");
     log_destroy(logger_kernel);
 }
+
+
+
+
+
+void Kernel_atender_cpu_dispatch(){
+
+bool control_key = 1;
+while (control_key)
+{
+   int cod_op = recibir_operacion(conexion_cpu_dispatch);
+   switch (cod_op)
+   {
+   case MENSAJE:
+      //
+      break;
+   case PAQUETE:
+      //
+      break;
+   case -1:
+      log_error(logger_kernel, "Desconexion de cpu - Dispatch");
+      control_key = 0;
+      break;
+   default:
+      log_warning(logger_kernel, "Operacion desconocida de cpu - Dispatch");
+      break;
+   }
+}
+
+}
+
+void Kernel_atender_cpu_interrupt(){
+
+bool control_key = 1;
+while (control_key)
+{
+   int cod_op = recibir_operacion(conexion_cpu_interrupt);
+   switch (cod_op)
+   {
+   case MENSAJE:
+      //
+      break;
+   case PAQUETE:
+      //
+      break;
+   case -1:
+      log_error(logger_kernel, "Desconexion de cpu - interrupt");
+      control_key = 0;
+      break;
+   default:
+      log_warning(logger_kernel, "Operacion desconocida de cpu - interrupt");
+      break;
+   }
+}
+
+}
+
+void Kernel_atender_memoria(){
+
+bool control_key = 1;
+while (control_key)
+{
+   int cod_op = recibir_operacion(conexion_memoria);
+   switch (cod_op)
+   {
+   case MENSAJE:
+      //
+      break;
+   case PAQUETE:
+      //
+      break;
+   case -1:
+      log_error(logger_kernel, "Desconexion de memoria");
+      control_key = 0;
+      break;
+   default:
+      log_warning(logger_kernel, "Operacion desconocida de memoria");
+      break;
+   }
+}
+
+}
+
+

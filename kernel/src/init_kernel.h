@@ -18,8 +18,16 @@ int hacer_handshake (int socket_cliente);
 
 void Empezar_conexiones();
 
+void AtenderMsjDeConexiones();
+
+void Kernel_atender_cpu_dispatch();
+
+void Kernel_atender_cpu_interrupt();
+
+void Kernel_atender_memoria();
 
 void cerrar_programa();
+
 
 // Variables Globales
 extern t_log *logger_kernel;
