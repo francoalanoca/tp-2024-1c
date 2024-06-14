@@ -57,7 +57,7 @@ void memoria_atender_kernel(){
 
         case CREAR_PROCESO_KERNEL:
             valores = recibir_paquete(fd_kernel);
-            t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);   
+            t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);
             leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  //No corre ver
             crear_proceso(iniciar_proceso->pcb->pid, iniciar_proceso->tamanio);
 
