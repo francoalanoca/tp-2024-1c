@@ -419,7 +419,6 @@ void enviar_espera(t_io_espera* io_espera, int socket){
 
 t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete ){
 
-    //Modificar todo
     //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
     t_m_crear_proceso* crear_proceso = malloc(sizeof(t_m_crear_proceso));
     
@@ -475,7 +474,7 @@ t_pcb* deserializar_proxima instruccion(t_list*  lista_paquete ){
 
 
 
-void enviar_respuesta_instruccion(pcb* crear_proceso ,int socket_cpu) {
+void enviar_respuesta_instruccion(t_pcb* pcb ,int socket_cpu) {
     t_paquete* paquete_instruccion;
  
     paquete_instruccion = crear_paquete(INSTRUCCION_RECIBIDA);
