@@ -55,18 +55,22 @@ void memoria_atender_kernel(){
             }
             break;
 
-        case CREAR_PROCESO_KERNEL:
-            valores = recibir_paquete(fd_kernel);
-            t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);
-            leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  //No corre ver
-            crear_proceso(iniciar_proceso->pcb->pid, iniciar_proceso->tamanio);
+        // case CREAR_PROCESO_KERNEL:
+        //     valores = recibir_paquete(fd_kernel);
+        //     t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);
+        //     leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  //No corre ver
+        //     crear_proceso(iniciar_proceso->pcb->pid, iniciar_proceso->tamanio);
 
-            enviar_respuesta_crear_proceso(iniciar_proceso, fd_kernel);
-            break;
+        //     enviar_respuesta_crear_proceso(iniciar_proceso, fd_kernel);
+        //     break;
 
 		// case FINALIZAR_PROCESO:
-		// 	paquete = recibir_paquete(fd_kernel);
-		// 	atender_finalizar_preceso(paquete);
+		// 	valores = recibir_paquete(fd_kernel);
+        //     t_pcb* finalizar_proceso = deserializar_finalizar_proceso(valores);
+
+		// 	atender_finalizar_preceso(finalizar_proceso->pid);
+        //     enviar_respuesta_finalizar_proceso(finalizar_proceso, fd_kernel);
+        //     break;
 
 		case -1:
 			log_error(logger_memoria, "Kernel se desconecto. Terminando servidor.");
@@ -109,14 +113,34 @@ void memoria_atender_cpu(){
 
         case PROXIMA_INSTRUCCION:
             valores = recibir_paquete(fd_cpu);
-            t_pcb* pcb = deserializar_proxima_instruccion(valores);         
-            char* instruccion = buscar_instruccion(pcb->pid, pcb->program_counter);
+            t_pcb* proxima_instruccion = deserializar_proxima_instruccion(valores);         
+            char* instruccion = buscar_instruccion(proxima_instruccion->pid, proxima_instruccion->program_counter);
             log_trace(logger_memoria, "Se Encontro la Instruccion: %s", instruccion);
         
 		//     usleep(cfg_memoria->RETARDO_RESPUESTA);
-            enviar_respuesta_instruccion(pcb, fd_cpu);     
+            enviar_respuesta_instruccion(proxima_instruccion, fd_cpu);     
             break;
 
+
+        // case PETICION_VALOR_MEMORIA:
+        //     valores = recibir_paquete(fd_cpu);
+        //     uint32_t direccion_fisica = deserializar_peticion_valor(valores);
+        //     t_pcb* valor = buscar_valor_asociado(direccion_fisica);
+        //     enviar_peticion_valor(valor, fd_cpu);
+        //     break;
+
+        // case GUARDAR_EN_DIRECCION_FISICA:
+        //     valores = recibir_paquete(fd_cpu);
+        //     t_list* valores_peticion = deserializar_peticion_guardar(valores);
+        //     guardar_por_direccion_fisica(valores_peticion);
+        //     break;
+
+        // case SOLICITUD_RESIZE:
+        //     valores = recibir_paquete(fd_cpu);
+        //     t_list* solicitud_resize = deserializar_solicitud_resize(valores);
+        //     administrar_resize(solicitud_resize);
+        //     enviar_respuesta_resize(solicitud_resize, fd_cpu);
+        //     break;
 
 		case -1:
 			log_error(logger_memoria, "CPU se desconecto. Terminando servidor.");

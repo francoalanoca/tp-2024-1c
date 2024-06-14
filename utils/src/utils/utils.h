@@ -280,5 +280,10 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
 t_io_direcciones_fisicas* deserializar_io_df(t_list*  lista_paquete );
 void enviar_output(t_io_output* io_output ,int socket_io);
 t_io_output* deserializar_output(t_list*  lista_paquete );
+t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete );
+void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket_kernel);
+t_pcb* deserializar_proxima_instruccion(t_list*  lista_paquete );
+void enviar_respuesta_instruccion(t_pcb* proxima_instruccion ,int socket_cpu);
+t_io_input* deserializar_input(t_list*  lista_paquete );
 #endif /* UTILS_H_ */
 

@@ -429,7 +429,7 @@ t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete ){
     printf("Tamanio proceso: %d \n", crear_proceso->tamanio);
 
     crear_proceso->archivo_pseudocodigo = list_get(lista_paquete, 2);
-    printf("Nombre del proceso: %d \n", crear_proceso->archivo_pseudocodigo);
+    printf("Nombre del proceso: %s \n", crear_proceso->archivo_pseudocodigo);
 
     return crear_proceso;
 
@@ -455,7 +455,7 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
 
 
 
-t_pcb* deserializar_proxima instruccion(t_list*  lista_paquete ){
+t_pcb* deserializar_proxima_instruccion(t_list*  lista_paquete ){
 
     //Modificar todo
 
@@ -474,7 +474,7 @@ t_pcb* deserializar_proxima instruccion(t_list*  lista_paquete ){
 
 
 
-void enviar_respuesta_instruccion(t_pcb* pcb ,int socket_cpu) {
+void enviar_respuesta_instruccion(t_pcb* proxima_instruccion ,int socket_cpu) {
     t_paquete* paquete_instruccion;
  
     paquete_instruccion = crear_paquete(INSTRUCCION_RECIBIDA);
