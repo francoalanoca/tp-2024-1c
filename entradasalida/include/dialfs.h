@@ -6,6 +6,7 @@
 #include <utils/utils.h>
 #include <commons/config.h>
 #include <commons/bitarray.h>
+#include <commons/string.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -20,22 +21,6 @@
 /////////////////////////////////////////////////INICIAR FS////////////////////////////////////
 ///////////////////////////////////////////////PETICIONES//////////////////////////////////////
 //////////////////////////////////////////////ESTRUCTURAS//////////////////////////////////////
-
-extern t_config *file_superbloque;
-
-typedef struct
-{
-    int BLOCK_SIZE;
-    int BLOCK_COUNT;
-} t_cfg_superbloque;
-
-extern t_cfg_superbloque *cfg_superbloque;
-
-static t_cfg_superbloque *cfg_superbloque_start()
-{
-    t_cfg_superbloque *cfg = malloc(sizeof(t_cfg_superbloque));
-    return cfg;
-}
 
 
 //BITMAP
@@ -91,6 +76,8 @@ t_FCB* buscar_cargar_fcb(char* nombre);
 //compactar
 
 void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria); 
-
-
+int crear_bitmap (char * path_archivo_bitmap);
+int crear_archivo_bloques (char * path_archivo_bloques, int block_size, int block_count) ;
+void cerrar_bitmap();
+void cargar_directorio_fcbs(char* path_fcb );
 #endif //TP_2024_1C_PASARONCOSAS_DIALFS_H

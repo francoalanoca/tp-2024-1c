@@ -17,7 +17,7 @@ int cargar_configuracion(char *nombre_interfaz_custom, char *path) {
     cfg_entrada_salida->TIPO_INTERFAZ = strdup(config_get_string_value(file_cfg_entrada_salida, "TIPO_INTERFAZ"));
     log_info(logger_entrada_salida, "TIPO_INTERFAZ cargado correctamente: %s", cfg_entrada_salida->TIPO_INTERFAZ);
     
-    if (cfg_entrada_salida->TIPO_INTERFAZ == "DIALFS" || cfg_entrada_salida->TIPO_INTERFAZ == "GENERICA" ) {
+    if (strcmp(cfg_entrada_salida->TIPO_INTERFAZ, "DIALFS") == 0 || strcmp(cfg_entrada_salida->TIPO_INTERFAZ, "GENERICA") == 0  ) {
         
         cfg_entrada_salida->TIEMPO_UNIDAD_TRABAJO = config_get_int_value(file_cfg_entrada_salida, "TIEMPO_UNIDAD_TRABAJO");
         log_info(logger_entrada_salida, "TIEMPO_UNIDAD_TRABAJO cargado correctamente: %d", cfg_entrada_salida->TIEMPO_UNIDAD_TRABAJO);
@@ -29,7 +29,7 @@ int cargar_configuracion(char *nombre_interfaz_custom, char *path) {
     cfg_entrada_salida->PUERTO_KERNEL = strdup(config_get_string_value(file_cfg_entrada_salida, "PUERTO_KERNEL"));
     log_info(logger_entrada_salida, "PUERTO_KERNEL cargado correctamente: %s", cfg_entrada_salida->PUERTO_KERNEL);
    
-    if (cfg_entrada_salida->TIPO_INTERFAZ != "GENERICA") {        
+    if (strcmp(cfg_entrada_salida->TIPO_INTERFAZ, "GENERICA") != 0) {        
         
         cfg_entrada_salida->IP_MEMORIA = strdup(config_get_string_value(file_cfg_entrada_salida, "IP_MEMORIA"));
         log_info(logger_entrada_salida, "IP_MEMORIA cargado correctamente: %s", cfg_entrada_salida->IP_MEMORIA);
@@ -38,7 +38,7 @@ int cargar_configuracion(char *nombre_interfaz_custom, char *path) {
         log_info(logger_entrada_salida, "PUERTO_MEMORIA cargado correctamente: %s", cfg_entrada_salida->PUERTO_MEMORIA);
     }    
 
-    if (cfg_entrada_salida->TIPO_INTERFAZ == "DIALFS") {
+    if (strcmp(cfg_entrada_salida->TIPO_INTERFAZ, "DIALFS") == 0 ) {
 
     
         cfg_entrada_salida->PATH_BASE_DIALFS = strdup(config_get_string_value(file_cfg_entrada_salida, "PATH_BASE_DIALFS"));

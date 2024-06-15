@@ -8,7 +8,7 @@ int main(char argc, char *argv[]) {
     int socket_memoria;
     int socket_kernel;
 
-    printf("iniciando\n");
+    printf("iniciando...\n");
       printf("nombre de interfaz custom: %s \n",nombre_interfaz_custom);
     if (!init(path_config) || !cargar_configuracion(nombre_interfaz_custom, path_config)) {
         cerrar_programa();

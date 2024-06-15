@@ -1,12 +1,38 @@
 #include "../include/dialfs.h"
 
-/////////////////////////////////////////////////INICIAR FS////////////////////////////////////
+int block_count;
+int bitmap_size_in_bytes ;
+int fd_bitmap;
+FILE* archivo_bitmap;
+void* bitmap;
+t_bitarray* bitarray;
+char * path_archivo_bitmap ;
+char * path_archivo_bloques;
 
-char * path_archivo_bloques = cfg_entrada_salida->PATH_BASE_DIALFS +"bloques.dat";
-char* path_archivo_bitmap = cfg_entrada_salida->PATH_BASE_DIALFS+"bitmap.dat";
-char* path_fcb = cfg_entrada_salida->PATH_BASE_DIALFS;
-    //BITMAP//
-    if(crear_bitmap ()>=0 ) {
+void iniciar_interfaz_dialfs (int socket_kernel,int socket_memoria) {
+    
+    uint32_t response;
+    op_code cop;
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->buffer = malloc(sizeof(t_buffer));
+    t_list* lista_paquete =  malloc(sizeof(t_list));
+    t_io_espera* io_espera = malloc(sizeof(t_io_espera));
+
+
+    
+    path_archivo_bitmap  = string_new();
+    path_archivo_bloques = string_new();
+
+
+    string_append(path_archivo_bitmap,cfg_entrada_salida->PATH_BASE_DIALFS); 
+    string_append(path_archivo_bitmap,"bitmap.dat");
+
+    string_append(path_archivo_bloques,cfg_entrada_salida->PATH_BASE_DIALFS); 
+    string_append(path_archivo_bloques,"bloques.dat");
+
+
+        //BITMAP//
+    if(crear_bitmap (path_archivo_bitmap)>=0 ) {
         log_info(logger_entrada_salida, "Bitmap creado correctamente");
     }
     else {
@@ -15,7 +41,7 @@ char* path_fcb = cfg_entrada_salida->PATH_BASE_DIALFS;
     }
 
     // ARCHIVO DE BLOQUES//
-    if(crear_archivo_bloques (cfg_entrada_salida->BLOCK_SIZE, cfg_entrada_salida->BLOCK_COUNT)>=0 ) {
+    if(crear_archivo_bloques (path_archivo_bloques,cfg_entrada_salida->BLOCK_SIZE, cfg_entrada_salida->BLOCK_COUNT)>=0 ) {
         log_info(logger_entrada_salida, "Archivo de bloques creado correctamente");
     }
     else {
@@ -23,9 +49,72 @@ char* path_fcb = cfg_entrada_salida->PATH_BASE_DIALFS;
         return EXIT_FAILURE;
     }
 
-    cargar_directorio_fcbs();
+    cargar_directorio_fcbs(cfg_entrada_salida->PATH_BASE_DIALFS);
 
-int crear_bitmap () {
+
+
+    log_info(logger_entrada_salida, "Interfaz %s de tipo DIALFS iniciada",cfg_entrada_salida->NOMBRE_INTERFAZ);  
+    
+    while (socket_kernel != -1) {
+
+        if (recv(socket_kernel, &cop, sizeof(int32_t), MSG_WAITALL) != sizeof(int32_t)) {
+            log_info(logger_entrada_salida, "DISCONNECT!");
+
+            break;
+        }
+    switch (cop) {
+            
+            case HANDSHAKE :
+
+                log_info(logger_entrada_salida, "Handshake realizado con Kernel");
+                response = HANDSHAKE_OK;
+                if (send(socket_kernel, &response, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+                    log_error(logger_entrada_salida, "Error al enviar respuesta de handshake a kernel");
+                    free(paquete);
+                    break;
+                }
+                break;
+
+            case HANDSHAKE_OK :
+
+                log_info(logger_entrada_salida, "Handshake recibido handshake exitosamente con Kernel");
+                
+                break;                
+            
+            case IO_K_GEN_SLEEP :
+                
+                log_info(logger_entrada_salida, "IO_K_GEN_SLEEP recibida desde Kernel");
+                    
+                lista_paquete = recibir_paquete(socket_kernel);
+                io_espera = deserializar_espera (lista_paquete);
+                esperar(io_espera->pid, io_espera->tiempo_espera);
+                list_destroy(lista_paquete);
+                free(io_espera);
+                response = IO_K_GEN_SLEEP_FIN;
+
+                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                    log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
+                    break;
+                }
+                break;
+
+            default:
+                response = OPERACION_INVALIDA;
+                if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                    log_error(logger_entrada_salida, "Operacion invalida enviada desde kernel");
+                    break;
+                }
+                break;
+        }
+    }
+}
+
+/////////////////////////////////////////////////INICIAR FS////////////////////////////////////
+
+
+
+
+int crear_bitmap (char * path_archivo_bitmap) {
     block_count = cfg_entrada_salida->BLOCK_COUNT;
     bitmap_size_in_bytes = (block_count + 7) / 8; // 1 bit por bloque
 
@@ -110,7 +199,7 @@ void cerrar_bitmap() {
 FILE *archivo_bloques;
 int fd_archivo_bloques;
 
-int crear_archivo_bloques ( int block_size, int block_count) {
+int crear_archivo_bloques (char * path_archivo_bloques, int block_size, int block_count) {
 
     archivo_bloques = fopen(path_archivo_bloques, "r+");  // Abre archivo para escritura/lectura
     if (archivo_bloques == NULL) {
@@ -172,7 +261,7 @@ t_FCB* cargar_fcb(t_config *file_fcb) {
 }
 
 
-void persistir_fcb(t_FCB *fcb) {
+void persistir_fcb(t_FCB *fcb,char* path_fcb) {
 
     char path_directory_fcb [100] ;
     strcpy(path_directory_fcb, path_fcb);
@@ -229,7 +318,7 @@ void agregar_fcb_to_dict(t_FCB* fcb) {
 }
 
 
-void cargar_directorio_fcbs(){
+void cargar_directorio_fcbs(char* path_fcb ){
     DIR *directorio_fcb = opendir(path_fcb);
     struct dirent *fcb;
 
@@ -243,7 +332,7 @@ void cargar_directorio_fcbs(){
     while ((fcb = readdir(directorio_fcb)) != NULL) {
         // Verificar que el directorio no sea "." ni ".." (directorios especiales)
         if (strcmp(fcb->d_name, ".") != 0 && strcmp(fcb->d_name, "..") != 0) {
-            // Aquí puedes crear un nuevo t_fcb para cada archivo y asociarlo al nombre del archivo en el diccionario
+            // aca se puede crear un nuevo t_fcb para cada archivo y asociarlo al nombre del archivo en el diccionario
             t_FCB* nuevo_fcb = buscar_cargar_fcb(fcb->d_name);
            // Agregar el nuevo_fcb al diccionario con el nombre del archivo como clave
             dictionary_put(fcb_dict, fcb->d_name, nuevo_fcb);
@@ -253,4 +342,29 @@ void cargar_directorio_fcbs(){
     closedir(directorio_fcb);
 }
 
+t_FCB* buscar_cargar_fcb(char* nombre) {
+
+    t_FCB* fcb = malloc(sizeof (t_FCB));
+    if (fcb == NULL)  {
+        log_info(logger_entrada_salida, "NO SE PUDO ASIGNAR MEMORIA AL FCB");
+    };
+
+
+    char path_fcb [100] ;
+    strcpy(path_fcb, cfg_entrada_salida->PATH_BASE_DIALFS); // Directorio donde se encuentran los fcbs
+    char file_path[100]; // Tamaño suficiente para almacenar la ruta completa del archivo
+    snprintf(file_path, sizeof(file_path), "%s/%s",path_fcb,nombre);
+    t_config* file_fcb;
+
+
+    //cargar el fcb del archivo
+    if((file_fcb = config_create(file_path)) == NULL){ //config_create: Devuelve un puntero hacia la estructura creada o NULL en caso de no encontrar el archivo en el path especificado
+        log_info(logger_entrada_salida, "ARCHIVO NO ENCONTRADO : %s",file_path);
+    }else {
+        log_info(logger_entrada_salida, "ARCHIVO ENCONTRADO : %s",file_path);
+    }
+
+    fcb = cargar_fcb(file_fcb);
+    return  fcb;
+}
 //////////////////////////////////////////////FUNCIONALIDADES//////////////////////////////////
