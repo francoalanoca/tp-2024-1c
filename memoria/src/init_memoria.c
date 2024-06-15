@@ -12,7 +12,15 @@ int fd_cpu;
 int fd_kernel;
 int fd_entradasalida;
 
+void* memoria;
+t_list* lista_tablas_de_paginas;
+t_list* lista_miniPCBs;
+pthread_mutex_t mutex_memoria;
+uint32_t cantidad_frames;       //seria tam_memoria / tam_pagina
+uint32_t cantidad_page_fault;       
+t_bitarray *bitmap_frames;
 
+t_dictionary* instrucciones_de_procesos;
 
 
 //Funcion que hace la inicializacion de las config y logger
@@ -100,25 +108,53 @@ int cargar_configuracion(char *path_config) {
 }
 
 
-/*
+
+
 //Funcion que inicia las variables necesarias para el funcionamiento de memoria (tablas, paginas, usuario, etc)
-void inicializar_memoria(char* path_config){
+void inicializar_memoria(){
 
-    memoria_config = iniciar_config(config_path);
-	//iniciar_memoria_principal(memoria_config->TAM_MEMORIA, memoria_config->TAM_PAGINA);
-	memoria = malloc(memoria_config->TAM_MEMORIA);
-	tablas_de_paginas = list_create();
-	archivos_swap = list_create();
-	instrucciones_de_procesos = dictionary_create();
-	pthread_mutex_init(&mutex_swap, NULL);
+
+	memoria = malloc(cfg_memoria->TAM_MEMORIA);             //posiblemente represente el espacio del usuario, ver
+	lista_tablas_de_paginas = list_create();                //lista en en donde se almacenara la tabla de paginas de un proceso 
+	lista_miniPCBs = list_create();
+    instrucciones_de_procesos = dictionary_create();        //memoria de instrucciones
 	pthread_mutex_init(&mutex_memoria, NULL);
-	cantidad_acceso_disco = 0;
 	cantidad_page_fault = 0;
-	cantidad_frames = memoria_config->TAM_MEMORIA / memoria_config->TAM_PAGINA;
-	bitmap_frames = bitarray_create_with_mode(memoria, (size_t)(cantidad_frames / 8), LSB_FIRST);
+	cantidad_frames = cfg_memoria->TAM_MEMORIA / cfg_memoria->TAM_PAGINA;
+	//bitmap_frames = crear_bitmap(cantidad_frames);   
 }
-*/
 
+/*
+//La bibliote bitarray no me la reconoce
+
+//Funcion que redondea el valor al multiplo cercano de base y retorna
+int redondear_a_multiplo_mas_cercano_de(int base, int valor){
+    int v = valor == 0 ? 1 : valor;
+    return (int) ceil((float) v / (float) base) * base;
+}
+
+//Funcion que en base a la cantidad de frames crea bitmap
+t_bitarray *crear_bitmap(int entradas){
+
+    int ent = entradas;
+    // si la cantidad de entradas es menor que lo que puede ocupar un Byte * N, entonces redondeamos
+    // al multiplo mas cercano mayor que el valor. Entonces si son 4 entradas -> 8, 15 -> 16, etc.
+    if (ent % 8 != 0){
+        ent = redondear_a_multiplo_mas_cercano_de(8, ent); 
+        log_trace(logger, "tamanio inusual de memoria/pagina causo conflicto, redondeando al multiplo de 8 mas cercano: %i", ent);
+    }
+
+    void *puntero = malloc(ent / 8);
+    t_bitarray *bitmap = bitarray_create_with_mode(puntero, ent / 8, LSB_FIRST);
+
+    for (int i = 0; i < bitarray_get_max_bit(bitmap); i++){
+        bitarray_clean_bit(bitmap, i);
+    }
+
+    return bitmap;
+}
+
+*/
 
 
 void cerrar_programa() {

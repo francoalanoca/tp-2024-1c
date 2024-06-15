@@ -414,6 +414,85 @@ void enviar_espera(t_io_espera* io_espera, int socket){
 
 }
 
+
+
+
+t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete ){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_m_crear_proceso* crear_proceso = malloc(sizeof(t_m_crear_proceso));
+    
+    crear_proceso->pcb->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", crear_proceso->pcb->pid);
+    
+    crear_proceso->tamanio = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Tamanio proceso: %d \n", crear_proceso->tamanio);
+
+    crear_proceso->archivo_pseudocodigo = list_get(lista_paquete, 2);
+    printf("Nombre del proceso: %s \n", crear_proceso->archivo_pseudocodigo);
+
+    return crear_proceso;
+
+}
+
+
+void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket_kernel) {
+    t_paquete* paquete_crear_proceso;
+ 
+    paquete_crear_proceso = crear_paquete(CREAR_PROCESO_KERNEL_FIN);
+ 
+    agregar_a_paquete(paquete_crear_proceso, &crear_proceso->pcb->pid,  sizeof(uint32_t));         
+    agregar_a_paquete(paquete_crear_proceso, &crear_proceso->tamanio, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_crear_proceso, crear_proceso->archivo_pseudocodigo, strlen(crear_proceso->archivo_pseudocodigo) + 1);  
+    
+    enviar_paquete(paquete_crear_proceso, socket_kernel);   
+    printf("Proceso enviado: %s\n", crear_proceso->archivo_pseudocodigo); 
+    free(paquete_crear_proceso);
+    
+}
+
+
+
+
+
+t_pcb* deserializar_proxima_instruccion(t_list*  lista_paquete ){
+
+    //Modificar todo
+
+    t_pcb* proxima_instruccion = malloc(sizeof(t_pcb));
+    
+    proxima_instruccion->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", proxima_instruccion->pid);
+    
+    proxima_instruccion->program_counter = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Program counter: %d \n", proxima_instruccion->program_counter);
+
+    
+    return proxima_instruccion;
+
+}
+
+
+
+void enviar_respuesta_instruccion(t_pcb* proxima_instruccion ,int socket_cpu) {
+    t_paquete* paquete_instruccion;
+ 
+    paquete_instruccion = crear_paquete(INSTRUCCION_RECIBIDA);
+ 
+    agregar_a_paquete(paquete_instruccion, &proxima_instruccion->pid,  sizeof(uint32_t));         
+    agregar_a_paquete(paquete_instruccion, &proxima_instruccion->program_counter, sizeof(uint32_t));  
+    
+    enviar_paquete(paquete_instruccion, socket_cpu);   
+    printf("Instruccion enviada"); 
+    free(paquete_instruccion);
+    
+}
+
+
+
+
+
+
 // usar en memoria cuando recibe IO_M_STDIN
 t_io_input* deserializar_input(t_list*  lista_paquete ){
 

@@ -8,4 +8,7 @@
 #include "../include/init_memoria.h"
 
 
+void leer_instrucciones(char* nombre_archivo);
+char *buscar_instruccion(int proceso_pid, int program_counter);
+
 #endif
