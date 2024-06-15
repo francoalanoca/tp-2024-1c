@@ -14,6 +14,7 @@
 #include<assert.h>
 #include<signal.h>
 #include <errno.h>
+#include<pthread.h>
 
 
 #define PUERTO "4444"
@@ -22,24 +23,34 @@ typedef enum
 {
  //----------------BASICOS--------------------------------
     HANDSHAKE = 1,
+    HANDSHAKE_OK,
 	MENSAJE,
 	PAQUETE,
 	PCB = 30,
 	NUEVO_PROCESO = 35,
-    PROXIMA_INSTRUCCION = 40,
+    PROXIMA_INSTRUCCION = 40,   // Cpu le solicita a Memoria la proxima instruccion a ejecutar
+    INTERRUPCION_CPU = 45,
+    ENVIO_INTERFAZ = 50,
+ //---------------CPU-MEMORIA-------------------
+    INSTRUCCION_RECIBIDA = 55,  // Memoria envia a Cpu la instruccion solicitada
  //---------------ENTRADASALIDA-KERNEL-------------------
-    INTERFAZ_ENVIAR, // EntradaSalida, avisa que envía la interfaz creada
-    INTERFAZ_RECIBIDA, // Es el ok del kernel al recibir la interfaz
-    OPERACION_INVALIDA, // EntradaSalida, avisa que envía la operacion es invalida
-    IO_K_GEN_SLEEP, // Kernel solicita realizar esta operación (usar esta para otros modulos tambien)
-    IO_K_GEN_SLEEP_FIN, //EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
-//----------------KERNEL-MEMORIA
-    CREAR_PROCESO_KERNEL,
+    INTERFAZ_ENVIAR,            // EntradaSalida, avisa que envía la interfaz creada
+    INTERFAZ_RECIBIDA,          // Es el ok del kernel al recibir la interfaz
+    OPERACION_INVALIDA,         // EntradaSalida, avisa que envía la operacion es invalida
+    IO_K_GEN_SLEEP,             // Kernel solicita realizar esta operación (usar esta para otros modulos tambien)
+    IO_K_GEN_SLEEP_FIN,         // EntradaSalida, avisa que envía que finalizo la operacion IO_GEN_SLEEP
     IO_K_STDIN,
     IO_K_STDIN_FIN,
+    IO_K_STDOUT,
+    IO_K_STDOUT_FIN,
+//----------------KERNEL-MEMORIA
+    CREAR_PROCESO_KERNEL,       // Kerner le solicita a Memoria crear las estructuras necesarias
+    FINALIZAR_PROCESO,          // Kernel le solicita a Memoria liberar el espacio en memoria del proceso
  //---------------ENTRADASALIDA-MEMORIA-------------------
-    IO_M_STDIN, // entradasalida envia input a memoria
-    IO_M_STDIN_FIN // Memoria guardó con éxito el input
+    IO_M_STDIN,                 // entradasalida envia input a memoria
+    IO_M_STDIN_FIN,              // Memoria guardó con éxito el input
+    IO_M_STDOUT,
+    IO_M_STDOUT_FIN
 }op_code; 
 
 typedef struct {
@@ -53,8 +64,23 @@ typedef enum
     SET,
 	SUM,
 	SUB,
-	JNZ,
-	IO_GEN_SLEEP
+    MOV_IN,
+    MOV_OUT,
+    RESIZE,
+    JNZ,
+    COPY_STRING, 
+    IO_GEN_SLEEP,
+    IO_STDIN_READ,
+    IO_STDOUT_WRITE,
+    IO_FS_CREATE,
+    IO_FS_DELETE, 
+    IO_FS_TRUNCATE,
+    IO_FS_WRITE,
+    IO_FS_READ,
+    WAIT,
+    SIGNAL,
+    EXIT
+
 }tipo_instruccion;
 
 typedef struct {
@@ -111,11 +137,22 @@ typedef struct
 
 typedef struct 
 {
-   int pid;
-   int program_counter;
-   int quantum;
-   t_registros_CPU registrosCPU;
+    uint32_t pid;
+    uint32_t program_counter;
+    char* path;
+    t_list* lista_recursos_pcb;
+    pthread_mutex_t mutex_lista_recursos;
+    t_registros_CPU registros_cpu;
+    int estado;
 }t_pcb;
+
+typedef enum {
+    ESTADO_NEW,
+    ESTADO_READY,
+    ESTADO_RUNNING,
+    ESTADO_BLOCKED,
+    ESTADO_EXIT
+} estado_pcb;
 typedef enum {
     GENERICA,
     STDIN,
@@ -124,25 +161,69 @@ typedef enum {
 } t_tipo_interfaz_enum;
 
 typedef struct {
-    char* nombre;
-    //uint8_t nombre_size; creo que no hace falta
-    t_tipo_interfaz_enum tipo;//Debe ser un enum?
-    //uint8_t tipo_size;  creo que no hace falta
+    uint32_t nombre_length; 
+    char* nombre;   
+    t_tipo_interfaz_enum tipo;//es un enum por lo que pesa 4 bytes : uint32_t
 }t_interfaz;
 
 
 typedef struct {
     t_pcb* pcb; 
-    uint8_t cantidad_instrucciones;
-    t_list* instrucciones;
-    t_list* interfaces;
+   // uint8_t cantidad_instrucciones;
+   // t_list* instrucciones;
+    t_list*  interfaces;
 }t_proceso;
 
+typedef struct{
+    t_proceso* proceso;
+    uint8_t tamanio_motivo_interrupcion;
+    char* motivo_interrupcion;
+}t_proceso_interrumpido;
+
+typedef struct{
+    uint32_t pid;
+    uint32_t program_counter;
+}t_proceso_memoria;
+
+
+typedef struct {
+	int32_t nro_pag;
+	int32_t desplazamiento;
+} t_direccion_logica;
+
+typedef struct {
+	int32_t nro_frame;
+	int32_t desplazamiento;
+} t_direccion_fisica;
+
+typedef struct {
+	uint32_t pid;
+	uint32_t tiempo_espera;
+} t_io_espera;
+
+//Kernel le manda a IO
+
+typedef struct {
+	uint32_t pid;
+    t_list*  direcciones_fisicas; 
+} t_io_direcciones_fisicas;
 
 
 
+//IO Le manda a memoria
+typedef struct {
+	uint32_t pid;
+    t_list*  direcciones_fisicas;
+    uint32_t input_length; 
+    char* input;   
+} t_io_input;
 
-
+//Memoria le manda a IO
+typedef struct {
+	uint32_t pid;
+    uint32_t output_length; 
+    char* output;   
+} t_io_output;
 
 
 void* recibir_buffer(int*, int);
@@ -170,11 +251,13 @@ int recibir_informacion(int conexion, t_log* logger);
 void crear_servidor(t_log* logger);
 void handshake_cliente(t_config* config, t_log* logger, int conexion);
 bool config_has_all_properties(t_config *cfg, char **properties);
-
-
-
-
-
-
+void imprimir_stream(void* stream, int size);
+t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str);
+void enviar_espera(t_io_espera* io_espera, int socket);
+t_interfaz* deserializar_interfaz(t_list*  lista_paquete );
+void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion);
+t_io_direcciones_fisicas* deserializar_io_df(t_list*  lista_paquete );
+void enviar_output(t_io_output* io_output ,int socket_io);
+t_io_output* deserializar_output(t_list*  lista_paquete );
 #endif /* UTILS_H_ */
 

@@ -47,8 +47,8 @@ int cargar_configuracion(char *path) {
     cfg_cpu->PUERTO_ESCUCHA_DISPATCH = strdup(config_get_string_value(file_cfg_cpu, "PUERTO_ESCUCHA_DISPATCH"));
     log_info(logger_cpu, "PUERTO_ESCUCHA_DISPATCH cargado correctamente: %s", cfg_cpu->PUERTO_ESCUCHA_DISPATCH);
 
-    cfg_cpu->PUERTO_ESCUCHA_INTERRUPT = config_get_int_value(file_cfg_cpu, "PUERTO_ESCUCHA_INTERRUPT");
-    log_info(logger_cpu, "PUERTO_ESCUCHA_INTERRUPT cargado correctamente: %d", cfg_cpu->PUERTO_ESCUCHA_INTERRUPT);
+    cfg_cpu->PUERTO_ESCUCHA_INTERRUPT = strdup(config_get_string_value(file_cfg_cpu, "PUERTO_ESCUCHA_INTERRUPT"));
+    log_info(logger_cpu, "PUERTO_ESCUCHA_INTERRUPT cargado correctamente: %s", cfg_cpu->PUERTO_ESCUCHA_INTERRUPT);
 
     cfg_cpu-> CANTIDAD_ENTRADAS_TLB = config_get_int_value(file_cfg_cpu, "CANTIDAD_ENTRADAS_TLB");
     log_info(logger_cpu, "CANTIDAD_ENTRADAS_TLB cargado correctamente: %d", cfg_cpu->CANTIDAD_ENTRADAS_TLB);

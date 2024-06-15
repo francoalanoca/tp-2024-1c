@@ -54,9 +54,13 @@ void procesar_conexion(void *void_args) {
                     log_error(logger, "Error al enviar respuesta de handshake a cliente");
                     break;
                 }
-                break;
             
-           
+            case HANDSHAKE_OK:
+
+                log_info(logger_kernel, "handshake recibido exitosamente con I/O");
+                break;
+
+            break;
             default:
                 log_error(logger, "Algo anduvo mal en el server de %s", server_name);
                 log_info(logger, "Cop: %d", cop);

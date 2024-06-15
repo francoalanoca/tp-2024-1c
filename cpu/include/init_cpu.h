@@ -7,6 +7,10 @@
 
 
 extern t_proceso* proceso_actual;
+extern t_proceso_interrumpido* proceso_interrumpido_actual;
+extern bool interrupcion_kernel;
+extern int conexion_kernel;
+extern instr_t *prox_inst;
 
 int checkProperties(char *path_config);
 
@@ -27,7 +31,7 @@ typedef struct
     char *IP_MEMORIA;
     int PUERTO_MEMORIA;
     char* PUERTO_ESCUCHA_DISPATCH;
-    int PUERTO_ESCUCHA_INTERRUPT;
+    char* PUERTO_ESCUCHA_INTERRUPT;
     int CANTIDAD_ENTRADAS_TLB;
     char *ALGORITMO_TLB;
 } t_config_cpu;

@@ -2,6 +2,11 @@
     "files.associations": {
         "generica.h": "c",
         "utils.h": "c",
-        "init_entrada_salida.h": "c"
+        "init_entrada_salida.h": "c",
+        "init_kernel.h": "c",
+        "consola.h": "c",
+        "log.h": "c",
+        "main.h": "c",
+        "kernel.h": "c"
     }
 }

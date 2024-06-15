@@ -18,10 +18,9 @@ char *path_config;
 int main(char argc, char *argv[]) {
     path_config = argv[1];
 
-    int conexion_memoria;
-    int conexion_cpu_dispatch;
     int conexion_consola;
     int conexion_entrada_salida;
+
 
     int contador_pid;
 
@@ -34,23 +33,16 @@ int main(char argc, char *argv[]) {
     }
 
 //CONEXION
-    conexion_cpu_dispatch = crear_conexion(logger_kernel, "KERNEL", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);
-    
-    log_info(logger_kernel, "Socket de KERNEL : %d\n",conexion_cpu_dispatch);   
-    
-    conexion_memoria = crear_conexion(logger_kernel, "MEMORIA", cfg_kernel->IP_MEMORIA, cfg_kernel->PUERTO_MEMORIA);
-    
-    log_info(logger_kernel, "Socket de MEMORIA : %d\n",conexion_memoria);      
+    Empezar_conexiones();     
 
-//CONSOLA
+    AtenderMsjDeConexiones();
 
-//INICIAR SERVIDOR
+//INICIAR SERVIDOR y CONSOLA
     crearServidor();
  
     iniciar_consola_interactiva();
     
     planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM);
-
 
     cerrar_programa();
 }

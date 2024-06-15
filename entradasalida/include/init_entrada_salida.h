@@ -25,9 +25,9 @@ typedef struct
     char *TIPO_INTERFAZ;
     int TIEMPO_UNIDAD_TRABAJO;
     char *IP_MEMORIA;
-    int PUERTO_MEMORIA;
+    char *PUERTO_MEMORIA;
     char *IP_KERNEL;
-    int PUERTO_KERNEL;
+    char *PUERTO_KERNEL;
     char *PATH_BASE_DIALFS;
     int BLOCK_SIZE;
     int BLOCK_COUNT;
@@ -50,5 +50,5 @@ static t_config_entrada_salida *cfg_entrada_salida_start()
 //PARA CONVERTIR CADENAS EN t_tipo_inferfaz_enum
 t_tipo_interfaz_enum obtener_tipo_interfaz_enum(const char* tipo_interfaz_str);
 
-void iniciar_interface(char* tipo_interfaz_str,char* nombre_interfaz, int socket_kernel, int socket_memoria);
+void iniciar_interface(char* tipo_interfaz_str, char* nombre_interfaz,  int socket_kernel, int socket_memoria);
 #endif //TP_2024_1C_PASARONCOSAS_INIT_ENTRADA_SALIDA_H
