@@ -87,6 +87,8 @@ int main(int argc, char* argv[]) {
     log_info(logger_cpu, "cree los hilos servidor");
     //crear_servidor_dispatch(ip_cpu);
     //crear_servidor_interrupt(ip_cpu);
+
+    /*COMIENZO CONEXION PRUEBA
     socket_memoria = crear_conexion(logger_cpu, "PRUEBA", cfg_cpu->IP_MEMORIA, "8003");
     log_info(logger_cpu, "creo socket");
     if ( (hacer_handshake (socket_memoria) == HANDSHAKE)){
@@ -95,13 +97,14 @@ int main(int argc, char* argv[]) {
     else {
         log_info(logger_cpu, "Error en handshake con memoria");
         return EXIT_FAILURE;
-    }
+    }*///FIN CONEXION PRUEBA
 
     //COMIENZO OBTENER TAMANIO_PAGINA
     obtenerTamanioPagina(socket_memoria);
     sem_wait(&sem_valor_tamanio_pagina);
     //FIN OBTENER TAMANIO PAGINA
     
+    /*COMIENZO DATOS PRUEBA
     proceso_actual = malloc(sizeof(t_proceso));
     proceso_actual->interfaces = malloc(sizeof(t_interfaz));
     proceso_actual->pcb = malloc(sizeof(t_pcb));
@@ -139,17 +142,18 @@ int main(int argc, char* argv[]) {
      proceso_interrumpido_actual->motivo_interrupcion = malloc(proceso_interrumpido_actual->tamanio_motivo_interrupcion );
     strcpy(proceso_interrumpido_actual->motivo_interrupcion, "Motivo");
     list_add(proceso_interrumpido_actual->proceso->interfaces, int_prueba);
+    *///FIN DATOS PRUEBA
      
     //
    // interrupcion_kernel = malloc(sizeof(bool));
-    interrupcion_kernel = true;
+   // interrupcion_kernel = true;
     
     prox_inst = malloc(sizeof(instr_t));
     //prox_inst->
-    conexion_kernel =  socket_memoria;
+    //conexion_kernel =  socket_memoria;
     //
     ////////////////////////////////////////////////////////////
-    /*log_info(logger_cpu, "se creo el servidor");
+    log_info(logger_cpu, "se creo el servidor");
    
      socket_memoria = crear_conexion(logger_cpu, "MEMORIA", cfg_cpu->IP_MEMORIA, cfg_cpu->PUERTO_MEMORIA);
       
@@ -159,7 +163,7 @@ int main(int argc, char* argv[]) {
     else {
         log_info(logger_cpu, "Error en handshake con memoria");
         return EXIT_FAILURE;
-    }*/
+    }
 ////////////////////////////////////////////////////////////
     //TODO: HACER HANDSHAKE CON KERNEL Y ENVIAR SOCKET A CICLO_DE INSTRUCCIONES PARA USAR EN EL CHECK_INETRRUPT
 
