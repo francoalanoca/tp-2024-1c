@@ -121,10 +121,40 @@ void inicializar_memoria(){
 	pthread_mutex_init(&mutex_memoria, NULL);
 	cantidad_page_fault = 0;
 	cantidad_frames = cfg_memoria->TAM_MEMORIA / cfg_memoria->TAM_PAGINA;
-	bitmap_frames = bitarray_create_with_mode(memoria, (size_t)(cantidad_frames / 8), LSB_FIRST);   //dice no se inicializa la funcion bitarray pero tengo la biliote, ver
+	//bitmap_frames = crear_bitmap(cantidad_frames);   
 }
 
+/*
+//La bibliote bitarray no me la reconoce
 
+//Funcion que redondea el valor al multiplo cercano de base y retorna
+int redondear_a_multiplo_mas_cercano_de(int base, int valor){
+    int v = valor == 0 ? 1 : valor;
+    return (int) ceil((float) v / (float) base) * base;
+}
+
+//Funcion que en base a la cantidad de frames crea bitmap
+t_bitarray *crear_bitmap(int entradas){
+
+    int ent = entradas;
+    // si la cantidad de entradas es menor que lo que puede ocupar un Byte * N, entonces redondeamos
+    // al multiplo mas cercano mayor que el valor. Entonces si son 4 entradas -> 8, 15 -> 16, etc.
+    if (ent % 8 != 0){
+        ent = redondear_a_multiplo_mas_cercano_de(8, ent); 
+        log_trace(logger, "tamanio inusual de memoria/pagina causo conflicto, redondeando al multiplo de 8 mas cercano: %i", ent);
+    }
+
+    void *puntero = malloc(ent / 8);
+    t_bitarray *bitmap = bitarray_create_with_mode(puntero, ent / 8, LSB_FIRST);
+
+    for (int i = 0; i < bitarray_get_max_bit(bitmap); i++){
+        bitarray_clean_bit(bitmap, i);
+    }
+
+    return bitmap;
+}
+
+*/
 
 
 void cerrar_programa() {

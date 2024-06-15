@@ -5,7 +5,7 @@
 
 //Funcion que crea un proceso a partir de un pid y el tamanio de un proceso
 void crear_proceso(int proceso_pid, int tamanio_proceso){
-    
+
     printf("Creacion del proceso PID %i - Tamanio %i", proceso_pid, tamanio_proceso);
     printf("Iniciando estructuras");
 
@@ -62,8 +62,52 @@ int calcular_marcos(int tamanio_proceso){
 
 
 
-/*
-//Falta implentar funciones de busqueda para que funcione
+
+
+//Funcion que dado un id de proceso buscamos la tabla de pagina y la retorna
+t_tabla_de_paginas *busco_tabla_de_paginas_por_PID(int proceso_pid){
+
+    log_trace(logger_memoria, "Buscando la Tabla de Paginas por PID");
+
+    t_tabla_de_paginas *tabla_de_paginas;
+
+    //Recorremos la lista que contiene tabla de paginas
+    for (int i = 0; i < list_size(lista_tablas_de_paginas); i++){
+
+        //Sacamos una tabla de paginas de la lista
+        tabla_de_paginas = list_get(lista_tablas_de_paginas, i);
+        //Si el id de la tabla es el mismo que la tabla, la retorna
+        if (proceso_pid == tabla_de_paginas->id)
+            return tabla_de_paginas;
+    }
+
+    log_error(logger_memoria, "PID - %d No se encontro la Tabla de Paginas", proceso_pid);
+    abort();
+}
+
+
+//Funcion que dado un marco, busco en la lista de paginas y lo retorna
+t_pagina *busco_pagina_por_marco(t_list *lista_de_paginas, int marco){
+
+    log_trace(logger_memoria, "Buscando Pagina por Marco: %i", marco);
+
+    t_pagina *pagina;
+
+    //Recorremos la lista de paginas perteneciente a la tabla
+    for (int i = 0; i < list_size(lista_de_paginas); i++){
+
+        //Sacamos una pagina de la lista
+        pagina = list_get(lista_de_paginas, i);
+        //Si el marco de la pagina es le mismo que buscaba lo retorna
+        if (marco == pagina->marco) {
+            log_trace(logger_memoria, "Encontre pagina: %i", i);
+            return pagina;
+        }
+    }
+    log_trace(logger_memoria, "No se encontro pagina");
+    return NULL;
+}
+
 
 
 void escribir_memoria(int proceso_pid, int direccion_fisica, void* valor, int tamanio){
@@ -75,9 +119,8 @@ void escribir_memoria(int proceso_pid, int direccion_fisica, void* valor, int ta
 
     memcpy(memoria + direccion_fisica, valor, tamanio);
 
+    //Actualizamos que fue modificado
     pagina->modificado = true;
-    // actualizamos ultima referencia
-    gettimeofday(&pagina->tiempo_ultima_referencia, NULL);
 }
 
 
@@ -88,4 +131,32 @@ void* leer_memoria(int direccion_fisica, int tamanio){
     return leido;
 }
 
+
+
+
+
+/*
+//Puede que falte detallar mas de cerrar del todo el proceso
+//Funcion que en base al id de un proceso finalizamos sus estructuras
+void finalizar_proceso(int proceso_pid){
+
+    log_trace(logger_memoria, "Liberacion del proceso PID %i", proceso_pid);
+    t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
+
+    //Recorremos la lista de paginas
+    for (int j = 0; j < list_size(tabla_de_paginas->lista_de_paginas); j++){
+
+        //Sacamos la pagina de la lista
+        t_pagina *pagina = list_get(tabla_de_paginas->lista_de_paginas, j);
+
+        //Si la pagina se encuentra presente la limpiamos
+        if (pagina->presencia){
+
+            pagina->presencia = false;
+            bitarray_clean_bit(bitmap_frames, pagina->marco);
+        }
+    }
+    
+    log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, list_size(tabla_de_paginas->lista_de_paginas));
+}
 */

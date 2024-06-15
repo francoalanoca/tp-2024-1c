@@ -68,7 +68,7 @@ void memoria_atender_kernel(){
 		// 	valores = recibir_paquete(fd_kernel);
         //     t_pcb* finalizar_proceso = deserializar_finalizar_proceso(valores);
 
-		// 	atender_finalizar_preceso(finalizar_proceso->pid);
+		// 	finalizar_preceso(finalizar_proceso->pid);
         //     enviar_respuesta_finalizar_proceso(finalizar_proceso, fd_kernel);
         //     break;
 
@@ -113,7 +113,7 @@ void memoria_atender_cpu(){
 
         case PROXIMA_INSTRUCCION:
             valores = recibir_paquete(fd_cpu);
-            t_pcb* proxima_instruccion = deserializar_proxima_instruccion(valores);         
+            t_proceso_memoria* proxima_instruccion = deserializar_proxima_instruccion(valores);         
             char* instruccion = buscar_instruccion(proxima_instruccion->pid, proxima_instruccion->program_counter);
             log_trace(logger_memoria, "Se Encontro la Instruccion: %s", instruccion);
         
@@ -124,15 +124,18 @@ void memoria_atender_cpu(){
 
         // case PETICION_VALOR_MEMORIA:
         //     valores = recibir_paquete(fd_cpu);
-        //     uint32_t direccion_fisica = deserializar_peticion_valor(valores);
-        //     t_pcb* valor = buscar_valor_asociado(direccion_fisica);
-        //     enviar_peticion_valor(valor, fd_cpu);
+        //     int direccion_fisica = deserializar_peticion_valor(valores);     //ver
+        //     void* valor = leer_memoria(direccion_fisica);
+        //     log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d", leer_de_memoria->pcb->pid, leer_de_memoria->direccion_fisica);
+        //     enviar_peticion_valor(valor, fd_cpu);                            //ver
         //     break;
 
         // case GUARDAR_EN_DIRECCION_FISICA:
         //     valores = recibir_paquete(fd_cpu);
-        //     t_list* valores_peticion = deserializar_peticion_guardar(valores);
-        //     guardar_por_direccion_fisica(valores_peticion);
+        //     t_list* peticion_guardar = deserializar_peticion_guardar(valores);   //ver
+        //     escribir_memoria(peticion_guardar->pid, peticion_guardar->direccion_fisica, peticion_guardar->valor, peticion_guardar->tamanio);
+        //     log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Direccion fisica: %d", peticion_guardar->pcb->pid, peticion_guardar->direccion_fisica);
+        //     free(peticion_guardar);
         //     break;
 
         // case SOLICITUD_RESIZE:
@@ -140,6 +143,12 @@ void memoria_atender_cpu(){
         //     t_list* solicitud_resize = deserializar_solicitud_resize(valores);
         //     administrar_resize(solicitud_resize);
         //     enviar_respuesta_resize(solicitud_resize, fd_cpu);
+        //     break;
+
+        // case ENVIO_COPY_STRING_A_MEMORIA:
+        //     valores = recibir_paquete(fd_cpu);
+        //     t_list* copiar_valor = deserializar_copiar_valor(valores);
+        //     copiar_solicitud(copiar_valor);
         //     break;
 
 		case -1:

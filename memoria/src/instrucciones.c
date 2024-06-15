@@ -15,9 +15,21 @@ char *op_strings[] = {"SET", "SUM", "SUB", "MOV_IN", "MOV_OUT", "RESIZE", "JNZ",
 //Funcion que crea la lista de instrucciones dado un puntero al archivo de un proceso
 t_list *leer_instrucciones(char* nombre_archivo) {
 
+	//Creamos una variable que gurada el path entero: path_instrucciones/nombre
+	char* path_total = string_new();
+	string_append(&path_total, cfg_memoria->PATH_INSTRUCCIONES);
+	string_append(&path_total, "/");
+	string_append(&path_total, nombre_archivo);
+
     //creamos una variable que guarda el archivo
-    FILE* archivo = leer_archivo(nombre_archivo);		//tengo problemas con ese fopen
+    FILE* archivo = fopen(path_total, "r");		//tengo problemas con ese fopen
     log_info(logger_memoria, "%s", nombre_archivo);
+
+	//Si no se puede abrir el archivo marca error
+	if (!archivo){
+        log_error(logger_memoria, "Error al abrir el archivo %s.", path_total);
+        exit(EXIT_FAILURE);
+    }
 
 	char *linea, *tokens;
 	instr_t *inst;
@@ -47,7 +59,7 @@ t_list *leer_instrucciones(char* nombre_archivo) {
 			break;
 		case 3:
 			inst = crear_instruccion(string_a_op_code(tokens[0]), tokens[1], tokens[2]);
-/*
+
             break;
 		case 4:
 			inst = crear_instruccion(string_a_op_code(tokens[0]), tokens[1], tokens[2], tokens[3], "\0");
@@ -66,13 +78,6 @@ t_list *leer_instrucciones(char* nombre_archivo) {
 	return instrucciones;
 }
 
-
-//Funcion que abre y devuelve el archivo en modo lectura
-FILE* leer_archivo(char* nombre){
-    FILE *archivo = fopen(nombre, "r");
-
-    return archivo;
-}
 
 
 
