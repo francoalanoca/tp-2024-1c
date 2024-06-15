@@ -31,8 +31,26 @@ typedef enum
     PROXIMA_INSTRUCCION = 40,   // Cpu le solicita a Memoria la proxima instruccion a ejecutar
     INTERRUPCION_CPU = 45,
     ENVIO_INTERFAZ = 50,
+
  //---------------CPU-MEMORIA-------------------
     INSTRUCCION_RECIBIDA = 55,  // Memoria envia a Cpu la instruccion solicitada
+    PEDIDO_MARCO_A_MEMORIA = 60,
+    MARCO_RECIBIDO = 65,
+    PETICION_VALOR_MEMORIA = 70, //CPU pide a memoria que le de el valor asociado a una direccion fisica
+    PETICION_VALOR_MEMORIA_RTA = 75, //Memoria envia a CPU el valor asociado a la direccion fisica 
+    GUARDAR_EN_DIRECCION_FISICA = 80, //CPU le manda a memoria dir fisica y valor y memoria debe guardar dicho valor en la dir fisica indicada
+    SOLICITUD_RESIZE = 85, // CPU pide a memora que haga un resize del proceso
+    SOLICITUD_RESIZE_RTA = 90, // Memoria responde el resultado de la operacion de resize
+    ENVIAR_ERROR_MEMORIA_A_KERNEL = 95, //CPU le manda a kernel el proceso loego de que memoria tire error de out of memory
+    ENVIO_COPY_STRING_A_MEMORIA = 100, //CPU solicita a memoria que guarde el valor en la direccion pasada por parametro
+    ENVIO_WAIT_A_KERNEL =105, //CPU solicita a kernel que se asigne una instancia del recurso al proceso
+    ENVIO_SIGNAL_A_KERNEL =110, //CPU solicita a kernel que se libere una instancia del recurso al proceso
+    SOLICITUD_IO_STDIN_READ = 115, // CPU solicita a kernel hacer la operacion IO_STDIN_READ a partir de la interfaz, direccion y tamanio pasado
+    SOLICITUD_IO_STDOUT_WRITE = 120, // CPU solicita a kernel hacer la operacion IO_STDOUT_WRITE a partir de la interfaz, direccion y tamanio pasado
+    SOLICITUD_EXIT_KERNEL = 125, //CPU solicita a kernel la finalización del proceso
+    SOLICITUD_TAMANIO_PAGINA =130,//CPU solicita a memoria el tamanio de pagina
+    SOLICITUD_TAMANIO_PAGINA_RTA =135,//Memoria envia a CPU el tamanio de pagina
+
  //---------------ENTRADASALIDA-KERNEL-------------------
     INTERFAZ_ENVIAR,            // EntradaSalida, avisa que envía la interfaz creada
     INTERFAZ_RECIBIDA,          // Es el ok del kernel al recibir la interfaz
@@ -187,10 +205,23 @@ typedef struct{
 }t_proceso_memoria;
 
 
+
 typedef struct {
 	int32_t nro_pag;
 	int32_t desplazamiento;
 } t_direccion_logica;
+
+
+typedef struct{
+    uint32_t pid;
+    uint32_t nro_pagina;
+}t_busqueda_marco;
+
+typedef struct{
+    char* interfaz;
+    uint32_t direccion;
+    uint32_t tamanio;
+}t_direccion_tamanio;
 
 typedef struct {
 	int32_t nro_frame;
@@ -208,6 +239,7 @@ typedef struct {
 	uint32_t pid;
     t_list*  direcciones_fisicas; 
 } t_io_direcciones_fisicas;
+
 
 
 
