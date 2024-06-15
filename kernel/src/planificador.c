@@ -4,17 +4,23 @@
 //#include "../include/servidorCpu.h"
 
  
-t_algoritmo_planificacion obtener_algoritmo_planificador (const char* algoritmo_planificacion) {
-    if (strcmp(algoritmo_planificacion, "FIFO") == 0) {
-        return FIFO ;
-    } else if (strcmp(algoritmo_planificacion, "ROUND ROBIN") == 0) {
-        return ROUND_ROBIN ;
-    } else if (strcmp(algoritmo_planificacion, "VIRTUAL ROUND ROBIN") == 0) {
-        return VIRTUAL_ROUND_ROBIN ;  
-    } else {
-        // Manejo de error para tipos de algoritmos desconocidos
-        return -1; 
+t_pcb* obtener_proximo_proceso(t_planificador* planificador) {
+    t_pcb* proceso;
+    if (planificador->algoritmo == FIFO) {
+        proceso = list_remove(planificador->cola_ready, 0);
+    } else if (planificador->algoritmo == ROUND_ROBIN) {
+        proceso = list_get(planificador->cola_ready, 0);
+        list_remove(planificador->cola_ready, 0);
+        list_add(planificador->cola_ready, proceso);
+    } else { // Virtual Round Robin
+        proceso = list_remove(planificador->cola_ready, 0);
+        if (proceso->tiempo_ejecucion >= planificador->quantum) {
+            proceso->tiempo_ejecucion -= planificador->quantum;
+            list_add(planificador->cola_ready, proceso);
+        }
     }
+    list_add(planificador->cola_exec, proceso);
+    return proceso;
 }
 
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum) {
