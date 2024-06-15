@@ -21,28 +21,8 @@ int main(int argc, char* argv[]) {
 	//inicializar_memoria();
 	//log_info(logger_memoria, "Se inicio correctamente la Memoria")
 
-	/*
-	bool flag_conexion_activa;
-	char* nombre = "cliente";
-
-	// Hacer los if correspondientes en caso de fallar
-    logger_memoria = log_create("memoria.log", "Memoria LOG", 1, LOG_LEVEL_DEBUG);
-	config = iniciar_config(pathconf, logger_memoria);
-	log_info(logger_memoria, "Se iniciaron correctamente las configuraciones iniciales");
-
-
-	if (config_save(config) == -1) {
-        printf("Error al guardar el archivo de configuración.\n");
-    }
-
-	puerto_escucha = config_get_string_value(config,"PUERTO_ESCUCHA");
-	*/
 
 	//------------------Conexiones------------------------
-	//int server_fd = iniciar_servidor_memoria(logger_memoria,puerto);
-	//int fd_memoria = iniciar_servidor(logger_memoria,"SERVER MEMORIA", "8002",puerto_escucha);
-	//log_info(logger_memoria, "Servidor listo para recibir al cliente");
-
 	iniciar_conexiones();
 	log_info(logger_memoria, "Se iniciaron correctamente las conexiones");
 
@@ -50,7 +30,7 @@ int main(int argc, char* argv[]) {
 	//------------------Hilos------------------------------
 	//escuchar_modulos();
 
-	//terminar_programa();
+	//terminar_programa(fd_memoria, logger_memoria, file_cfg_memoria);
 	return 0;
 }
 
