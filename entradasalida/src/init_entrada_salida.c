@@ -158,7 +158,7 @@ log_info(logger_entrada_salida, "dentro iniciar interface\n");
 
             case DIALFS :
 
-                log_info(logger_entrada_salida, "Interfaz DIALFS iniciada");
+                iniciar_interfaz_dialfs (socket_kernel, socket_memoria);
                 break;                             
 
             default:

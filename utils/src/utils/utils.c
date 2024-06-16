@@ -517,6 +517,21 @@ void enviar_output(t_io_output* io_output ,int socket_io) {
 	return io_output;
 }
 
+void  enviar_creacion_archivo(t_io_crear_archivo* nuevo_archivo, int socket ){
+    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));;
+    
+    paquete_archivo_nuevo = crear_paquete(IO_FS_CREATE);
+    
+    agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->pid), sizeof(nuevo_archivo->pid));
+    agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->nombre_archivo_length, sizeof(nuevo_archivo->nombre_archivo_length));  
+    agregar_a_paquete(paquete_archivo_nuevo, nuevo_archivo->nombre_archivo, nuevo_archivo->nombre_archivo_length);
+       
+    enviar_paquete(paquete_archivo_nuevo, socket);  
+  
+  
+}
+
+
 void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
 	  log_destroy(logger);

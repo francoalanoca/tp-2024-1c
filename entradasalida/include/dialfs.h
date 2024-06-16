@@ -67,6 +67,7 @@ int escribir_archivo(char* nombre, t_list* direcciones_memoria, int tamanio_escr
 void achicar_archivo(uint32_t tamanio,t_FCB* fcb);
 void agrandar_archivo(uint32_t tamanio,t_FCB* fcb);
 uint32_t encontrar_bit_libre(t_bitarray* bitarray);
+//busca el archivo fcb.txt en el directiorio de fcb a partir del nombre de archivo
 t_FCB* buscar_cargar_fcb(char* nombre);
 
 //leer bloque contiguo
@@ -80,4 +81,13 @@ int crear_bitmap (char * path_archivo_bitmap);
 int crear_archivo_bloques (char * path_archivo_bloques, int block_size, int block_count) ;
 void cerrar_bitmap();
 void cargar_directorio_fcbs(char* path_fcb );
+//para verificar la terminación del archivo y determinar si es un fcb
+bool termina_en_txt(const char *nombre) ;
+//guarda la estructura fcb en un archivo fisico terminado en txt
+void persistir_fcb(t_FCB *fcb); 
+//devuelve la posicion de un bit libre en un bit array
+uint32_t encontrar_bit_libre(t_bitarray* bitarray_in); 
+
+//desearliza un paquete de creacion de archivo
+t_io_crear_archivo* deserializar_fs_creacion (t_list* lista_paquete);
 #endif //TP_2024_1C_PASARONCOSAS_DIALFS_H

@@ -9,26 +9,26 @@ t_bitarray* bitarray;
 char * path_archivo_bitmap ;
 char * path_archivo_bloques;
 
-void iniciar_interfaz_dialfs (int socket_kernel,int socket_memoria) {
+void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
     
     uint32_t response;
     op_code cop;
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->buffer = malloc(sizeof(t_buffer));
     t_list* lista_paquete =  malloc(sizeof(t_list));
-    t_io_espera* io_espera = malloc(sizeof(t_io_espera));
+
 
 
     
     path_archivo_bitmap  = string_new();
     path_archivo_bloques = string_new();
+    
 
-
-    string_append(path_archivo_bitmap,cfg_entrada_salida->PATH_BASE_DIALFS); 
-    string_append(path_archivo_bitmap,"bitmap.dat");
-
-    string_append(path_archivo_bloques,cfg_entrada_salida->PATH_BASE_DIALFS); 
-    string_append(path_archivo_bloques,"bloques.dat");
+    string_append(&path_archivo_bitmap,cfg_entrada_salida->PATH_BASE_DIALFS); 
+    string_append(&path_archivo_bitmap,"/bitmap.dat");
+    log_info(logger_entrada_salida, "variables cargadas  %s",path_archivo_bitmap);
+    string_append(&path_archivo_bloques,cfg_entrada_salida->PATH_BASE_DIALFS); 
+    string_append(&path_archivo_bloques,"/bloques.dat");
 
 
         //BITMAP//
@@ -42,10 +42,10 @@ void iniciar_interfaz_dialfs (int socket_kernel,int socket_memoria) {
 
     // ARCHIVO DE BLOQUES//
     if(crear_archivo_bloques (path_archivo_bloques,cfg_entrada_salida->BLOCK_SIZE, cfg_entrada_salida->BLOCK_COUNT)>=0 ) {
-        log_info(logger_entrada_salida, "Archivo de bloques creado correctamente");
+        log_info(logger_entrada_salida, "Archivo de bloques iniciado correctamente");
     }
     else {
-        log_info(logger_entrada_salida, "Error en creacion de Archivo de bloques");
+        log_info(logger_entrada_salida, "Error en inicio de Archivo de bloques");
         return EXIT_FAILURE;
     }
 
@@ -81,15 +81,16 @@ void iniciar_interfaz_dialfs (int socket_kernel,int socket_memoria) {
                 
                 break;                
             
-            case IO_K_GEN_SLEEP :
+            case IO_FS_CREATE :
                 
-                log_info(logger_entrada_salida, "IO_K_GEN_SLEEP recibida desde Kernel");
+                log_info(logger_entrada_salida, "IO_FS_CREATE recibida desde Kernel");
                     
                 lista_paquete = recibir_paquete(socket_kernel);
-                io_espera = deserializar_espera (lista_paquete);
-                esperar(io_espera->pid, io_espera->tiempo_espera);
+                t_io_crear_archivo* archivo_nuevo = malloc(sizeof(t_io_crear_archivo));
+                archivo_nuevo = deserializar_fs_creacion (lista_paquete);
+                crear_archivo(archivo_nuevo->nombre_archivo);
                 list_destroy(lista_paquete);
-                free(io_espera);
+                free(archivo_nuevo);
                 response = IO_K_GEN_SLEEP_FIN;
 
                  if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
@@ -261,10 +262,10 @@ t_FCB* cargar_fcb(t_config *file_fcb) {
 }
 
 
-void persistir_fcb(t_FCB *fcb,char* path_fcb) {
+void persistir_fcb(t_FCB *fcb) {
 
     char path_directory_fcb [100] ;
-    strcpy(path_directory_fcb, path_fcb);
+    strcpy(path_directory_fcb, cfg_entrada_salida->PATH_BASE_DIALFS);
     char file_path[100]; // Tamaño suficiente para almacenar la ruta completa del archivo
 
 
@@ -317,6 +318,10 @@ void agregar_fcb_to_dict(t_FCB* fcb) {
     dictionary_put(fcb_dict, fcb->nombre_archivo, fcb);
 }
 
+bool termina_en_txt(const char *nombre) {
+    const char *ext = strrchr(nombre, '.');
+    return ext != NULL && strcmp(ext, ".txt") == 0;
+}
 
 void cargar_directorio_fcbs(char* path_fcb ){
     DIR *directorio_fcb = opendir(path_fcb);
@@ -329,9 +334,10 @@ void cargar_directorio_fcbs(char* path_fcb ){
 
     fcb_dict = dictionary_create();
 
+    log_info(logger_entrada_salida, "Cargando directorio fcb en diccionario");
     while ((fcb = readdir(directorio_fcb)) != NULL) {
         // Verificar que el directorio no sea "." ni ".." (directorios especiales)
-        if (strcmp(fcb->d_name, ".") != 0 && strcmp(fcb->d_name, "..") != 0) {
+        if (strcmp(fcb->d_name, ".") != 0 && strcmp(fcb->d_name, "..") != 0  && termina_en_txt(fcb->d_name)) {
             // aca se puede crear un nuevo t_fcb para cada archivo y asociarlo al nombre del archivo en el diccionario
             t_FCB* nuevo_fcb = buscar_cargar_fcb(fcb->d_name);
            // Agregar el nuevo_fcb al diccionario con el nombre del archivo como clave
@@ -367,4 +373,73 @@ t_FCB* buscar_cargar_fcb(char* nombre) {
     fcb = cargar_fcb(file_fcb);
     return  fcb;
 }
+
 //////////////////////////////////////////////FUNCIONALIDADES//////////////////////////////////
+
+uint32_t  crear_archivo(char* nombre){
+    t_FCB* fcb;
+    char path_fcb [100] ;
+    strcpy(path_fcb, cfg_entrada_salida->PATH_BASE_DIALFS);
+    char file_path[100]; // Tamaño suficiente para almacenar la ruta completa del archivo
+    //snprintf(file_path, sizeof(file_path), "%s/%s%s",path_fcb,nombre,".config" );
+    snprintf(file_path, sizeof(file_path), "%s/%s",path_fcb,nombre);
+
+    log_info(logger_entrada_salida, "Crear Archivo: %s  ",nombre);// LOG OBLIGATORIO
+
+    FILE* file_fcb_vacio = fopen(file_path,"w");
+
+    if (file_fcb_vacio == NULL)  {
+        perror("Error al crear el archivo de fcb vacio para ");
+    }
+    uint32_t posicion_bit_libre = encontrar_bit_libre(bitarray);
+    if (posicion_bit_libre >0) {
+        
+        fcb = inicializar_fcb(nombre,0, posicion_bit_libre);
+        persistir_fcb(fcb);
+        dictionary_put(fcb_dict, fcb->nombre_archivo, fcb);
+       
+         // actualizo el bitmap en memoria
+        bitarray_set_bit(bitarray, posicion_bit_libre);
+        memcpy(bitmap, bitarray->bitarray, bitmap_size_in_bytes);
+        int resultado_sync = msync(bitmap, bitmap_size_in_bytes, MS_SYNC);
+        if (resultado_sync == -1) {
+            perror("Error al sincronizar con msync el bitmap");
+            // Manejar el error según sea necesario
+        } else {
+            log_info(logger_entrada_salida, "SINCRONIZACION DE BITMAP EXITOSA");
+        }
+        
+        log_info(logger_entrada_salida, "ARCHIVO  CREADO EN: %s",file_path);
+        return 1;
+    }else {
+        log_info(logger_entrada_salida, "No hay espacio para crear el archivi solicitado"); 
+    }    
+}
+
+uint32_t encontrar_bit_libre(t_bitarray* bitarray_in) {
+
+    log_info(logger_entrada_salida, "tamaño del bitarray %d %d", bitarray_in->size, bitarray_test_bit(&bitarray_in, 0));
+
+    uint32_t i;
+    for (i = 0; i < bitarray_in->size; i++) {
+
+        if (!bitarray_test_bit(bitarray_in, i)) {
+            log_info(logger_entrada_salida, "Acceso a Bitmap - Bloque: %d - Estado: libre", i); //LOG OBLIGATORIO
+            return i;
+        }else {
+            log_info(logger_entrada_salida, "Acceso a Bitmap - Bloque: %d - Estado: ocupado", i); //LOG OBLIGATORIO
+        }
+    }
+    return -1; // Retorna -1 si no se encuentra ningún bit en 0
+}
+
+////////////////////////////////////////////// UTILIDAD/////////////////////////////////////////////////
+t_io_crear_archivo* deserializar_fs_creacion (t_list* lista_paquete){
+    
+    t_io_crear_archivo* nuevo_archivo = malloc(sizeof(t_interfaz));
+    nuevo_archivo->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    nuevo_archivo->nombre_archivo_length = *(uint32_t*)list_get(lista_paquete, 1);
+    nuevo_archivo->nombre_archivo = list_get(lista_paquete, 2);    
+	return nuevo_archivo;
+
+}
