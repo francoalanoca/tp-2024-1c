@@ -50,6 +50,11 @@ typedef enum
     SOLICITUD_EXIT_KERNEL = 125, //CPU solicita a kernel la finalización del proceso
     SOLICITUD_TAMANIO_PAGINA =130,//CPU solicita a memoria el tamanio de pagina
     SOLICITUD_TAMANIO_PAGINA_RTA =135,//Memoria envia a CPU el tamanio de pagina
+    SOLICITUD_IO_FS_CREATE_A_KERNEL =140, //CPU envia a kernel la solicitud de IO_FS_CREATE
+    SOLICITUD_IO_FS_DELETE_A_KERNEL =145, //CPU envia a kernel la solicitud de IO_FS_DELETE
+    SOLICITUD_IO_FS_TRUNCATE_A_KERNEL =150, //CPU envia a kernel la solicitud de IO_FS_TRUNCATE
+    SOLICITUD_IO_FS_WRITE_A_KERNEL =155, //CPU envia a kernel la solicitud de IO_FS_WRITE
+    SOLICITUD_IO_FS_READ_A_KERNEL =160, //CPU envia a kernel la solicitud de IO_FS_READ
 
  //---------------ENTRADASALIDA-KERNEL-------------------
     INTERFAZ_ENVIAR,            // EntradaSalida, avisa que envía la interfaz creada
@@ -161,7 +166,8 @@ typedef struct
     char* path;
     t_list* lista_recursos_pcb;
     pthread_mutex_t mutex_lista_recursos;
-    t_registros_CPU registros_cpu;
+    t_registros_CPU* registros_cpu;
+    uint32_t quantum;
     int estado;
 }t_pcb;
 
