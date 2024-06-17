@@ -27,6 +27,8 @@ t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, in
     planificador->cola_exit = list_create();
     planificador->algoritmo = algoritmo;
     planificador->quantum = quantum;
+    planificador->grado_multiprogramacion = grado_multiprogramacion;
+    planificador->grado_multiprogramacion_actual = 0;
     return planificador;
 }
 
@@ -43,6 +45,11 @@ void destruir_planificador(t_planificador* planificador) {
 // Agrega un nuevo proceso al planificador
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_add(planificador->cola_new, proceso);
+    if (planificador->grado_multiprogramacion_actual < planificador->grado_multiprogramacion) {
+        t_pcb* proceso_nuevo = list_remove(planificador->cola_new, 0);
+        list_add(planificador->cola_ready, proceso_nuevo);
+        planificador->grado_multiprogramacion_actual++;
+    }
     return true;
 }
 
@@ -89,4 +96,27 @@ void finalizar_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_remove(planificador->cola_exec, proceso);
     list_add(planificador->cola_exit, proceso);
     free(proceso);
+     planificador->grado_multiprogramacion_actual--;
+    if (!list_is_empty(planificador->cola_new)) {
+        t_pcb* proceso_nuevo = list_remove(planificador->cola_new, 0);
+        list_add(planificador->cola_ready, proceso_nuevo);
+        planificador->grado_multiprogramacion_actual++;
+    }
+}
+
+// Crea un nuevo proceso
+void crear_proceso(t_planificador* planificador, char* path_pseudocodigo) {
+    t_pcb* nuevo_proceso = crear_pcb(path_pseudocodigo);
+    agregar_proceso(planificador, nuevo_proceso);
+    // Notificar a la memoria para crear el proceso
+}
+
+// elimina un proceso
+void eliminar_proceso(t_planificador* planificador, t_pcb* proceso) {
+    if (list_contains(planificador->cola_exec, proceso)) {
+        // Enviar señal de interrupción a la CPU
+        // Esperar a que la CPU retorne el Contexto de Ejecución
+    }
+    // Notificar a la memoria para liberar las estructuras del proceso
+    finalizar_proceso(planificador, proceso);
 }
