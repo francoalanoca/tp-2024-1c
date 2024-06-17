@@ -239,3 +239,44 @@ void cambiar_estado(t_pcb* un_pcb, estado_pcb prox_estado) {
     un_pcb->estado = prox_estado;
 }
 
+
+void mostrar_estado_proceso(pid_t pid) {
+    pthread_mutex_lock(&mutex_lista_procesos);
+
+    bool _encontrar_por_pid(void* elemento){
+        t_pcb* pcb = (t_pcb*)elemento;
+        return pcb->pid == pid;
+    }
+
+    t_pcb* pcb = list_find(lista_procesos, _encontrar_por_pid);
+    
+    if (pcb == NULL) {
+        log_error(logger_kernel, "No se encontró el proceso con PID %d.\n", pid);
+    } else {
+        const char* estado_str;
+        switch (pcb->estado) {
+            case ESTADO_NEW:
+                estado_str = "NUEVO";
+                break;
+            case ESTADO_READY:
+                estado_str = "LISTO";
+                break;
+            case ESTADO_RUNNING:
+                estado_str = "EJECUTANDO";
+                break;
+            case ESTADO_BLOCKED:
+                estado_str = "BLOQUEADO";
+                break;
+            case ESTADO_EXIT:
+                estado_str = "TERMINADO";
+                break;
+            default:
+                estado_str = "DESCONOCIDO";
+                break;
+        }
+
+        log_info(logger_kernel, "Estado del proceso con PID %d: %s\n", pid, estado_str);
+    }
+
+    pthread_mutex_unlock(&mutex_lista_procesos);
+}
