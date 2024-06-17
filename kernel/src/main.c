@@ -14,6 +14,8 @@
 
 char *path_config;
 
+t_planificador* planificador;
+
 
 int main(char argc, char *argv[]) {
     path_config = argv[1];

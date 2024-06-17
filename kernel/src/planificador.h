@@ -3,8 +3,7 @@
 
 #include <stdbool.h>
 #include <utils/utils.h>
-// ver si falta poner alguna libreria
-t_planificador* planificador;
+
 // Enumeración para los algoritmos de planificación
 typedef enum {
     FIFO,
@@ -19,8 +18,11 @@ typedef struct {
     t_list* cola_blocked;  
     t_list* cola_exit;     
     t_algoritmo_planificacion algoritmo; 
-    int quantum;           
+    int quantum;          
 } t_planificador;
+
+// ver si falta poner alguna libreria
+extern t_planificador* planificador;
 
 // Inicializa un nuevo planificador
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum);

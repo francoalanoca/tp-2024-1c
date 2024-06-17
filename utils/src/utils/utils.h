@@ -162,7 +162,8 @@ typedef struct
     t_list* lista_recursos_pcb;
     pthread_mutex_t mutex_lista_recursos;
     t_registros_CPU registros_cpu;
-    int estado;
+    uint32_t estado;
+    uint32_t tiempo_ejecucion; 
 }t_pcb;
 
 typedef enum {
