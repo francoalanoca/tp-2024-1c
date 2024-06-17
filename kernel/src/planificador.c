@@ -3,7 +3,7 @@
 //#include "../include/servidorCpu.c"
 //#include "../include/servidorCpu.h"
 
-
+// Devuelve un t_algoritmo a partir de la config cargada
 t_algoritmo_planificacion obtener_algoritmo_planificador(const char* algoritmo_planificacion) {
     if (strcmp(algoritmo_planificacion, "FIFO") == 0) {
         return FIFO;
@@ -17,6 +17,7 @@ t_algoritmo_planificacion obtener_algoritmo_planificador(const char* algoritmo_p
     }
 }
 
+//Inicializa un nuevo planificador
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum) {
     t_planificador* planificador = malloc(sizeof(t_planificador));
     planificador->cola_new = list_create();
@@ -29,6 +30,7 @@ t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, in
     return planificador;
 }
 
+// Destruye el planificador y libera la memoria
 void destruir_planificador(t_planificador* planificador) {
     list_destroy_and_destroy_elements(planificador->cola_new, free);
     list_destroy_and_destroy_elements(planificador->cola_ready, free);
@@ -38,13 +40,13 @@ void destruir_planificador(t_planificador* planificador) {
     free(planificador);
 }
 
-
-
+// Agrega un nuevo proceso al planificador
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_add(planificador->cola_new, proceso);
     return true;
 }
 
+// Obtiene el próximo proceso a ejecutar
 t_pcb* obtener_proximo_proceso(t_planificador* planificador) {
     t_pcb* proceso;
     if (planificador->algoritmo == FIFO) {
@@ -64,21 +66,25 @@ t_pcb* obtener_proximo_proceso(t_planificador* planificador) {
     return proceso;
 }
 
+// Desaloja un proceso de la cola de ejecución y lo pone en la cola de listos
 void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_remove(planificador->cola_exec, proceso);
     list_add(planificador->cola_ready, proceso);
 }
 
+//Bloquea un proceso y lo mueve a la cola de bloqueados
 void bloquear_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_remove(planificador->cola_exec, proceso);
     list_add(planificador->cola_blocked, proceso);
 }
 
+//  Desbloquea un proceso y lo mueve a la cola de listos
 void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_remove(planificador->cola_blocked, proceso);
     list_add(planificador->cola_ready, proceso);
 }
 
+// Finaliza un proceso y libera su memoria
 void finalizar_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_remove(planificador->cola_exec, proceso);
     list_add(planificador->cola_exit, proceso);
