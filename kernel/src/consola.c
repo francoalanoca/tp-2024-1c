@@ -110,18 +110,18 @@ void atender_instruccion_validada(char* leido){
 
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
         
-        //iniciar_planificacion();
+        inicializar_planificador(algoritmo, quantum);
 
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         
-      /*int valor = atoi(comando_consola[1]);
+        int valor = atoi(comando_consola[1]);
         ajustar_multiprogramacion(valor);
-      */
+      
     }else if (strcmp(comando_consola[0], "PROCESO_ESTADO") == 0){   //PROCESO_ESTADO
         
-      /*pid_t pid = atoi(comando_consola[1]);
+        pid_t pid = atoi(comando_consola[1]);
         mostrar_estado_proceso(pid);
-      */
+      
     }else{
         log_error(logger_kernel, "Comando no reconocido que logro pasar el filtro!!!");
         exit(EXIT_FAILURE);
@@ -148,6 +148,9 @@ void f_iniciar_proceso(t_buffer* un_buffer) {
         return;
     }
 
+    // Cambiar el estado del PCB a ESTADO_LISTO
+    cambiar_estado(pcb, ESTADO_READY);
+
     imprimir_pcb(pcb);
     enviar_pcb_a_cpu_por_dispatch(pcb);
     destruir_pcb(pcb);
@@ -169,6 +172,7 @@ t_pcb* crear_pcb(char* path) {
     nuevo_pcb->program_counter = 0;
     nuevo_pcb->path = strdup(path);
     nuevo_pcb->lista_recursos_pcb = list_create();
+    nuevo_pcb->estado = ESTADO_NEW;
 
     if (pthread_mutex_init(&nuevo_pcb->mutex_lista_recursos, NULL) != 0) {
         log_error(logger_kernel, "No se pudo inicializar el mutex para el pcb\n");
@@ -196,10 +200,15 @@ t_pcb* crear_pcb(char* path) {
 }
 
 void imprimir_pcb(t_pcb* un_pcb) {
-    log_info(logger_kernel, "<PCB_%d> [%s]", un_pcb->pid, un_pcb->path);
+    log_info(logger_kernel, "<PCB_%d> [%s] [Estado: %d]", un_pcb->pid, un_pcb->path, un_pcb->estado);
 }
 
 void enviar_pcb_a_cpu_por_dispatch(t_pcb* una_pcb) {
+
+    // Cambiar el estado del PCB a ESTADO_EJECUTANDO antes de enviarlo a la CPU
+    //cambiar_estado(una_pcb, ESTADO_RUNNING);
+
+
     t_paquete* un_paquete = crear_paquete(conexion_cpu_dispatch);
     agregar_a_paquete(un_paquete, una_pcb->pid, sizeof(uint32_t));
     agregar_a_paquete(un_paquete, una_pcb->program_counter, sizeof(uint32_t)); // cambiar a agregar_a_paquete y agregar sizeof.
@@ -229,3 +238,4 @@ void destruir_pcb(t_pcb* un_pcb) {
 void cambiar_estado(t_pcb* un_pcb, estado_pcb prox_estado) {
     un_pcb->estado = prox_estado;
 }
+
