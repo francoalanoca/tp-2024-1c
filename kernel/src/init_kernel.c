@@ -6,6 +6,7 @@ t_config *file_cfg_kernel;
 int conexion_cpu_dispatch;
 int conexion_cpu_interrupt;
 int conexion_memoria;
+int socket_servidor;
 
 int checkProperties(char *path_config) {
     // config valida
@@ -160,16 +161,82 @@ void cerrar_programa() {
 void Kernel_atender_cpu_dispatch(){
 
 bool control_key = 1;
+t_list* lista_paquete =  malloc(sizeof(t_list));
 while (control_key)
 {
    int cod_op = recibir_operacion(conexion_cpu_dispatch);
    switch (cod_op)
    {
-   case MENSAJE:
-      //
+   case INTERRUPCION_CPU:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
       break;
-   case PAQUETE:
-      //
+   case ENVIO_INTERFAZ:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      break;
+   case ENVIAR_ERROR_MEMORIA_A_KERNEL:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      break;
+   case ENVIO_WAIT_A_KERNEL:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      break;
+   case ENVIO_SIGNAL_A_KERNEL:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      break;
+   case SOLICITUD_IO_STDIN_READ:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      break;
+   case SOLICITUD_IO_STDOUT_WRITE:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      break;
+   case SOLICITUD_EXIT_KERNEL:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      break;
+   case SOLICITUD_IO_FS_CREATE_A_KERNEL:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_CREATE_A_KERNEL desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_io_crear_archivo* io_crear_archivo = malloc(sizeof(t_io_crear_archivo));
+      io_crear_archivo = deserializar_io_crear_archivo(lista_paquete);
+
+      //AHORA DEBO ENVIAR A IO LO NECESARIO
+      enviar_creacion_archivo(io_crear_archivo,socket_servidor);
+
+      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+      t_pcb* pcb_a_bloquear = malloc(sizeof(t_pcb));
+      pcb_a_bloquear = buscar_pcb_en_lista(planificador->cola_exec,io_crear_archivo->pid);
+      if(pcb_a_bloquear != NULL){
+         bloquear_proceso(planificador,pcb_a_bloquear);
+      }
+      else{
+         log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+      }
+      
+      break;
+   case SOLICITUD_IO_FS_DELETE_A_KERNEL:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      break;
+   case SOLICITUD_IO_FS_TRUNCATE_A_KERNEL:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      break;
+   case SOLICITUD_IO_FS_WRITE_A_KERNEL:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      break;
+   case SOLICITUD_IO_FS_READ_A_KERNEL:
+      //TODO
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
       break;
    case -1:
       log_error(logger_kernel, "Desconexion de cpu - Dispatch");
@@ -233,6 +300,19 @@ while (control_key)
    }
 }
 
+}
+
+t_pcb* buscar_pcb_en_lista(t_list* lista_de_pcb, uint32_t pid){
+   t_pcb* pcb_de_lista = malloc(sizeof(t_pcb));
+   for (uint32_t i = 0; i < lista_de_pcb->elements_count; i++)
+   {
+      pcb_de_lista = list_get(lista_de_pcb,i);
+      if(pcb_de_lista->pid == pid){
+         return pcb_de_lista;
+      }
+   }
+   
+   return NULL;
 }
 
 

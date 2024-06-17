@@ -28,6 +28,8 @@ void Kernel_atender_memoria();
 
 void cerrar_programa();
 
+t_pcb* buscar_pcb_en_lista(t_list* lista_de_pcb, uint32_t pid);
+
 
 // Variables Globales
 extern t_log *logger_kernel;
@@ -35,6 +37,7 @@ extern t_config* file_cfg_kernel;
 extern int conexion_cpu_dispatch;
 extern int conexion_cpu_interrupt;
 extern int conexion_memoria;
+extern int socket_servidor;
 typedef struct {
     int PUERTO_ESCUCHA;
     char* IP_MEMORIA;

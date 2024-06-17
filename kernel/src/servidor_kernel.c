@@ -1,6 +1,6 @@
 #include <servidor_kernel.h>
 
-int socket_servidor;
+
 
 void* crearServidor(){
  
