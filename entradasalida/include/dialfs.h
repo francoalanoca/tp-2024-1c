@@ -60,26 +60,40 @@ extern t_dictionary* fcb_dict;
 
 ///////////////////////////////////////////////FUNCIONALIDADES//////////////////////////////////////
 uint32_t  abrir_archivo(char* nombre);
+//crea un archivo a partir de su nombre: Crea un fcb, lo persiste y lo agrega al diccionario de fbc.
 uint32_t  crear_archivo(char* nombre);
 uint32_t  truncar_archivo(char* nombre, uint32_t tamanio);
 int leer_archivo(char* nombre, t_list* direcciones_memoria, int tamanio_lectura);
 int escribir_archivo(char* nombre, t_list* direcciones_memoria, int tamanio_escritura);
 void achicar_archivo(uint32_t tamanio,t_FCB* fcb);
 void agrandar_archivo(uint32_t tamanio,t_FCB* fcb);
+
+//Borra un archivo a partir de su nombre:Libera bloques en el bitmap, elimina el fcb fisico, y lo saca del diccionario de fcb.
+uint32_t  borrar_archivo(char* nombre);
+//Devuelve la posicion del primer bit libre que encuentra.
 uint32_t encontrar_bit_libre(t_bitarray* bitarray);
-//busca el archivo fcb.txt en el directiorio de fcb a partir del nombre de archivo
+//Busca el archivo fcb.txt en el directiorio de fcb a partir del nombre de archivo
 t_FCB* buscar_cargar_fcb(char* nombre);
 
 //leer bloque contiguo
 //escribir bloque contiguo
-// lista de bloques vacios
-// hay espacio necesario -- es decir los bloques contiguos suman el espacio necesario
-//compactar
 
+
+// devuelve la posicion desde la cual hay espacio disponible si no, está contiguo compacta, si no hay espacio devuelve -1
+int hay_espacio_disponible(int espacio_necesario); 
+// devuelve si hay espacio disponible no importa si está contiguo
+bool hay_espacio_total_disponible(int espacio_necesario);
+//devulve la posicion desde la cual el espacio esta disponible y contiguo
+int hay_espacio_contiguo_disponible(int espacio_necesario);
+//inicia la interfaz 
 void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria); 
 int crear_bitmap (char * path_archivo_bitmap);
+// sincroniza el bitarray en memoria y con el archivo fisico.
+void sincronizar_bitmap ();
+//crea el archivo de bloques fisico en la ruta especificada.
 int crear_archivo_bloques (char * path_archivo_bloques, int block_size, int block_count) ;
 void cerrar_bitmap();
+// carga en un diccionario todos los archivos fcb persistidos en una ruta de carpeta
 void cargar_directorio_fcbs(char* path_fcb );
 //para verificar la terminación del archivo y determinar si es un fcb
 bool termina_en_txt(const char *nombre) ;
@@ -89,5 +103,6 @@ void persistir_fcb(t_FCB *fcb);
 uint32_t encontrar_bit_libre(t_bitarray* bitarray_in); 
 
 //desearliza un paquete de creacion de archivo
-t_io_crear_archivo* deserializar_fs_creacion (t_list* lista_paquete);
+t_io_crear_archivo* deserializar_fs_gestion (t_list* lista_paquete);
+
 #endif //TP_2024_1C_PASARONCOSAS_DIALFS_H

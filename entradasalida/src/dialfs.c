@@ -87,9 +87,9 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                     
                 lista_paquete = recibir_paquete(socket_kernel);
                 t_io_crear_archivo* archivo_nuevo = malloc(sizeof(t_io_crear_archivo));
-                archivo_nuevo = deserializar_fs_creacion (lista_paquete);
+                archivo_nuevo = deserializar_fs_gestion (lista_paquete);
                 crear_archivo(archivo_nuevo->nombre_archivo);
-                list_destroy(lista_paquete);
+                list_clean(lista_paquete);
                 free(archivo_nuevo);
                 response = IO_K_GEN_SLEEP_FIN;
 
@@ -98,6 +98,23 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                     break;
                 }
                 break;
+            case IO_FS_DELETE :
+                
+                log_info(logger_entrada_salida, "IO_FS_DELETE recibida desde Kernel");
+                    
+                lista_paquete = recibir_paquete(socket_kernel);
+                t_io_crear_archivo* archivo_borrar = malloc(sizeof(t_io_crear_archivo));
+                archivo_borrar = deserializar_fs_gestion (lista_paquete);
+                borrar_archivo(archivo_borrar->nombre_archivo);
+                list_destroy(lista_paquete);
+                free(archivo_borrar);
+                response = IO_K_GEN_SLEEP_FIN;
+
+                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                    log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
+                    break;
+                }
+                break;                
 
             default:
                 response = OPERACION_INVALIDA;
@@ -383,37 +400,35 @@ uint32_t  crear_archivo(char* nombre){
     char file_path[100]; // Tamaño suficiente para almacenar la ruta completa del archivo
     //snprintf(file_path, sizeof(file_path), "%s/%s%s",path_fcb,nombre,".config" );
     snprintf(file_path, sizeof(file_path), "%s/%s",path_fcb,nombre);
-
-    log_info(logger_entrada_salida, "Crear Archivo: %s  ",nombre);// LOG OBLIGATORIO
-
-    FILE* file_fcb_vacio = fopen(file_path,"w");
-
-    if (file_fcb_vacio == NULL)  {
-        perror("Error al crear el archivo de fcb vacio para ");
-    }
-    uint32_t posicion_bit_libre = encontrar_bit_libre(bitarray);
-    if (posicion_bit_libre >0) {
-        
-        fcb = inicializar_fcb(nombre,0, posicion_bit_libre);
-        persistir_fcb(fcb);
-        dictionary_put(fcb_dict, fcb->nombre_archivo, fcb);
-       
-         // actualizo el bitmap en memoria
-        bitarray_set_bit(bitarray, posicion_bit_libre);
-        memcpy(bitmap, bitarray->bitarray, bitmap_size_in_bytes);
-        int resultado_sync = msync(bitmap, bitmap_size_in_bytes, MS_SYNC);
-        if (resultado_sync == -1) {
-            perror("Error al sincronizar con msync el bitmap");
-            // Manejar el error según sea necesario
-        } else {
-            log_info(logger_entrada_salida, "SINCRONIZACION DE BITMAP EXITOSA");
-        }
-        
-        log_info(logger_entrada_salida, "ARCHIVO  CREADO EN: %s",file_path);
+    if(  dictionary_has_key(fcb_dict,nombre) ) {
+        log_info(logger_entrada_salida, "Ya existe el archivo: %s  ",nombre);// LOG OBLIGATORIO
         return 1;
-    }else {
-        log_info(logger_entrada_salida, "No hay espacio para crear el archivi solicitado"); 
-    }    
+     }else 
+     {   
+        log_info(logger_entrada_salida, "Crear Archivo: %s  ",nombre);// LOG OBLIGATORIO
+
+        FILE* file_fcb_vacio = fopen(file_path,"w");
+
+        if (file_fcb_vacio == NULL)  {
+            perror("Error al crear el archivo de fcb vacio para ");
+        }
+        uint32_t posicion_bit_libre = encontrar_bit_libre(bitarray);
+        if (posicion_bit_libre >0) {
+            
+            fcb = inicializar_fcb(nombre,0, posicion_bit_libre);
+            persistir_fcb(fcb);
+            dictionary_put(fcb_dict, fcb->nombre_archivo, fcb);
+        
+            // actualizo el bitmap en memoria
+            bitarray_set_bit(bitarray, posicion_bit_libre);
+            sincronizar_bitmap ();
+            
+            log_info(logger_entrada_salida, "ARCHIVO  CREADO EN: %s",file_path);
+            return 1;
+        }else {
+            log_info(logger_entrada_salida, "No hay espacio para crear el archivi solicitado"); 
+        }    
+    } // fin else de existencia de archivo    
 }
 
 uint32_t encontrar_bit_libre(t_bitarray* bitarray_in) {
@@ -433,8 +448,45 @@ uint32_t encontrar_bit_libre(t_bitarray* bitarray_in) {
     return -1; // Retorna -1 si no se encuentra ningún bit en 0
 }
 
+uint32_t  borrar_archivo(char* nombre) {
+    t_FCB* fcb_eliminar = malloc(sizeof(t_FCB));
+    fcb_eliminar = dictionary_get(fcb_dict,nombre);    
+    uint32_t i;
+    char * path_archivo_borrar = string_new();
+    
+
+    string_append(&path_archivo_borrar,cfg_entrada_salida->PATH_BASE_DIALFS); 
+    string_append(&path_archivo_borrar,"/");
+    string_append(&path_archivo_borrar,nombre);
+
+// liberar bloques en bitmap
+    if (fcb_eliminar->tamanio_archivo > 0) {
+        for (i = fcb_eliminar->primer_bloque; i < fcb_eliminar->tamanio_archivo; i++) {
+            bitarray_clean_bit(bitarray, i);
+            sincronizar_bitmap ();
+        }  
+    } else {
+            bitarray_clean_bit(bitarray, fcb_eliminar->primer_bloque); // archivos recien creados sin truncar
+            sincronizar_bitmap ();
+    }  
+// borrar archivo fcb fisico 
+ if (remove(path_archivo_borrar) == 0) {
+        log_info(logger_entrada_salida, "Archivo eliminado exitosamente: %s", path_archivo_borrar);
+    } else {
+        log_error(logger_entrada_salida, "Error al eliminar el archivo: %s", path_archivo_borrar);
+        perror("Error al eliminar el archivo");
+    } 
+// borrar fcb del diccionario
+//dictionary_remove_and_destroy veo si lo uso
+    dictionary_remove(fcb_dict,nombre);
+// mostrar como queda el diccionario
+
+    log_info(logger_entrada_salida, "Tamanio diccionario: %d", dictionary_size(fcb_dict));
+         
+return 1 ;
+}
 ////////////////////////////////////////////// UTILIDAD/////////////////////////////////////////////////
-t_io_crear_archivo* deserializar_fs_creacion (t_list* lista_paquete){
+t_io_crear_archivo* deserializar_fs_gestion (t_list* lista_paquete){
     
     t_io_crear_archivo* nuevo_archivo = malloc(sizeof(t_interfaz));
     nuevo_archivo->pid = *(uint32_t*)list_get(lista_paquete, 0);
@@ -443,3 +495,71 @@ t_io_crear_archivo* deserializar_fs_creacion (t_list* lista_paquete){
 	return nuevo_archivo;
 
 }
+
+void sincronizar_bitmap (){
+    memcpy(bitmap, bitarray->bitarray, bitmap_size_in_bytes);
+    int resultado_sync = msync(bitmap, bitmap_size_in_bytes, MS_SYNC);
+    int resultado_fync= fsync(fd_bitmap);
+    if (resultado_sync == -1 || resultado_fync == -1) {
+        perror("Error al sincronizar el bitmap");
+        // Manejar el error según sea necesario
+    } else {
+        log_info(logger_entrada_salida, "SINCRONIZACION DE BITMAP EXITOSA");
+    }
+}
+
+bool hay_espacio_total_disponible(int espacio_necesario){
+    int espacio_disponible;
+    int i;
+    for (i = 0; i < bitarray_get_max_bit(bitarray); i++) {
+
+        if (!bitarray_test_bit(bitarray, i)) {
+            espacio_disponible++;
+        }
+    }
+return espacio_disponible*cfg_entrada_salida->BLOCK_SIZE > espacio_necesario;
+}   
+
+int hay_espacio_contiguo_disponible(int espacio_necesario) {
+    int bloques_necesarios = (espacio_necesario + cfg_entrada_salida->BLOCK_SIZE - 1) / cfg_entrada_salida->BLOCK_SIZE; // Redondeo hacia arriba
+    int bloques_libres_consecutivos = 0;
+    int posicion_inicial = -1; // Inicio con valor invalido para no confundir
+
+    for (int i = 0; i < bitarray_get_max_bit(bitarray); i++) {
+        if (!bitarray_test_bit(bitarray, i)) {
+            if (bloques_libres_consecutivos == 0) {
+                posicion_inicial = i; 
+            }
+            bloques_libres_consecutivos++;
+            if (bloques_libres_consecutivos == bloques_necesarios) {
+                return posicion_inicial; 
+            }
+        } else {
+            // reinicio la cuenta y la posicion inicial
+            bloques_libres_consecutivos = 0;
+            posicion_inicial = -1;
+        }
+    }
+    return -1; // No hay espacio contiguo suficiente
+}
+
+int hay_espacio_disponible(int espacio_necesario) {
+    int espacio_disponible;
+    int posicion_inicial;
+
+    if (hay_espacio_total_disponible(espacio_necesario)) {
+        posicion_inicial =  hay_espacio_contiguo_disponible(espacio_necesario);
+        if (posicion_inicial >= 0 ) {
+            return posicion_inicial;
+        }else {
+           posicion_inicial = compactar(espacio_necesario);
+            return posicion_inicial;
+        }     
+    } else {
+        return -1;  
+   }  
+}
+int compactar(int espacio_necesario){
+}    
+
+  
