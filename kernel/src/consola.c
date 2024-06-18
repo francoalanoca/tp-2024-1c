@@ -83,9 +83,7 @@ void atender_instruccion_validada(char* leido){
 
     }else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0){  //INICIAR_PROCESO [PATH]
         cargar_string_al_buffer(un_buffer, comando_consola[1]);     //[PATH]
-        //cargar_string_al_buffer(un_buffer, comando_consola[2]);   //Si el protocolo tuviera un 2do parametro [SIZE] se descomenta esto
-        //cargar_string_al_buffer(un_buffer, comando_consola[3]);   //Si el protocolo tuviera un 3er parametro [PRIORIDAD] se descomenta esto
-
+       
         //Procedo a iniciar el proceso
         f_iniciar_proceso(un_buffer);
 
@@ -279,4 +277,18 @@ void mostrar_estado_proceso(pid_t pid) {
     }
 
     pthread_mutex_unlock(&mutex_lista_procesos);
+}
+
+
+
+void ajustar_multiprogramacion(int nuevo_valor) {
+    pthread_mutex_lock(&mutex_lista_procesos_listos);
+
+    grado_multiprogramacion = nuevo_valor;
+    log_info(logger_kernel, "Grado de multiprogramación ajustado a %d\n", nuevo_valor);
+
+    // Aca se podría agregar lógica adicional para mover procesos entre estados
+    // dependiendo del nuevo grado de multiprogramación.
+
+    pthread_mutex_unlock(&mutex_lista_procesos_listos);
 }
