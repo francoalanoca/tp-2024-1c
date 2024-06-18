@@ -30,6 +30,28 @@ extern t_config_memoria *cfg_memoria;
 
 
 
+
+
+typedef struct{
+    uint32_t id;
+    t_list *lista_de_paginas;
+}t_tabla_de_paginas;
+
+
+typedef struct{
+    uint32_t marco;
+    uint32_t posicion;
+    bool presencia;
+    bool modificado;
+}t_pagina;
+
+
+typedef struct{
+    uint32_t pid;
+    t_list *lista_de_instrucciones;
+} t_miniPCB;
+
+
 extern void* memoria;
 extern t_list* lista_tablas_de_paginas;     
 extern t_list* lista_miniPCBs;

@@ -206,11 +206,6 @@ typedef struct{
 
 
 
-typedef struct {
-	int32_t nro_pag;
-	int32_t desplazamiento;
-} t_direccion_logica;
-
 
 typedef struct{
     uint32_t pid;
@@ -223,10 +218,7 @@ typedef struct{
     uint32_t tamanio;
 }t_direccion_tamanio;
 
-typedef struct {
-	int32_t nro_frame;
-	int32_t desplazamiento;
-} t_direccion_fisica;
+
 
 typedef struct {
 	uint32_t pid;
@@ -261,32 +253,12 @@ typedef struct {
 
 //Kernel-Memoria (struct para cop crear proceso)
 typedef struct{
-    t_pcb *pcb;                     //pcb del proceso
+    uint32_t pid;                     //pcb del proceso
     uint32_t tamanio;               //tamaño del proceso
     char *archivo_pseudocodigo;     //nombre del proceso
 } t_m_crear_proceso;
 
 
-
-//Memoria
-typedef struct{
-    int id;
-    t_list *lista_de_paginas;
-}t_tabla_de_paginas;
-
-//Memoria
-typedef struct{
-    int marco;
-    int posicion;
-    bool presencia;
-    bool modificado;
-}t_pagina;
-
-//Memoria
-typedef struct{
-    int pid;
-    t_list *lista_de_instrucciones;
-} t_miniPCB;
 
 
 
@@ -326,8 +298,13 @@ void enviar_output(t_io_output* io_output ,int socket_io);
 t_io_output* deserializar_output(t_list*  lista_paquete );
 t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete );
 void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket_kernel);
-t_pcb* deserializar_proxima_instruccion(t_list*  lista_paquete );
-void enviar_respuesta_instruccion(t_pcb* proxima_instruccion ,int socket_cpu);
+t_proceso_memoria* deserializar_proxima_instruccion(t_list*  lista_paquete );
+t_busqueda_marco* deserializar_solicitud_marco(t_list*  lista_paquete );
+t_io_direcciones_fisicas* deserializar_peticion_valor(t_list*  lista_paquete );
+void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu);
+void enviar_solicitud_marco(int marco ,int socket_cpu);
+void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu);
+void enviar_peticion_valor(void* valor ,int socket_cpu);
 t_io_input* deserializar_input(t_list*  lista_paquete );
 #endif /* UTILS_H_ */
 

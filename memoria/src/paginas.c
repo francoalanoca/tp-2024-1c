@@ -135,6 +135,24 @@ void* leer_memoria(int direccion_fisica, int tamanio){
 
 
 
+int buscar_marco_pagina(int proceso_pid, int numero_de_pagina){
+
+    t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
+
+    t_pagina *pagina = list_get(tabla_de_paginas->lista_de_paginas, numero_de_pagina);
+
+    log_debug(logger_memoria, "ACCESO TABLA PAGINAS");
+    log_info(logger_memoria, "PID: %d - Página: %d - Marco: %d", proceso_pid, numero_de_pagina, pagina->marco);
+
+    if (pagina->presencia){
+        return pagina->marco;
+    }
+
+    return -1;
+}
+
+
+
 /*
 //Puede que falte detallar mas de cerrar del todo el proceso
 //Funcion que en base al id de un proceso finalizamos sus estructuras
