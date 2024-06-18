@@ -235,4 +235,20 @@ while (control_key)
 
 }
 
+////////////////TENGO QUE ACOMODAR ESTA FUNCION////////////////////////
 
+//Kernel le envia a memoria lo que pide para crear el pcb
+void enviar_pcb_a_memoria(t_m_crear_proceso* pcb, int socket_memoria) {
+    t_paquete* paquete_enviar_pcb = crear_paquete(CREAR_PROCESO_KERNEL);
+
+    agregar_a_paquete(paquete_enviar_pcb, &pcb->pid, sizeof(uint32_t));
+    agregar_a_paquete(paquete_enviar_pcb, &pcb->tamanio, sizeof(uint32_t));
+    int nombre_len = strlen(pcb->archivo_pseudocodigo) + 1;
+    agregar_a_paquete(paquete_enviar_pcb, &nombre_len, sizeof(nombre_len));
+    agregar_a_paquete(paquete_enviar_pcb, pcb->archivo_pseudocodigo, nombre_len);
+
+    enviar_paquete(paquete_enviar_pcb, socket_memoria);
+
+    printf("Se envió PCB\n");
+    free(paquete_enviar_pcb);
+}

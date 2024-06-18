@@ -9,24 +9,16 @@
 #include <planificador.h>
 
 int checkProperties(char *path_config);
-
 int cargar_configuracion(char *path);
-
 int init(char *path_config);
-
 int hacer_handshake (int socket_cliente);
-
 void Empezar_conexiones();
-
 void AtenderMsjDeConexiones();
-
 void Kernel_atender_cpu_dispatch();
-
 void Kernel_atender_cpu_interrupt();
-
 void Kernel_atender_memoria();
-
 void cerrar_programa();
+void enviar_pcb_a_memoria(t_m_crear_proceso* pcb, int socket_memoria);
 
 
 // Variables Globales
