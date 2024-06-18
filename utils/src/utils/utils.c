@@ -422,8 +422,8 @@ t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete ){
     //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
     t_m_crear_proceso* crear_proceso = malloc(sizeof(t_m_crear_proceso));
     
-    crear_proceso->pcb->pid = *(uint32_t*)list_get(lista_paquete, 0);
-    printf("Pid recibido: %d \n", crear_proceso->pcb->pid);
+    crear_proceso->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", crear_proceso->pid);
     
     crear_proceso->tamanio = *(uint32_t*)list_get(lista_paquete, 1);
     printf("Tamanio proceso: %d \n", crear_proceso->tamanio);
@@ -441,7 +441,7 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
  
     paquete_crear_proceso = crear_paquete(CREAR_PROCESO_KERNEL_FIN);
  
-    agregar_a_paquete(paquete_crear_proceso, &crear_proceso->pcb->pid,  sizeof(uint32_t));         
+    agregar_a_paquete(paquete_crear_proceso, &crear_proceso->pid,  sizeof(uint32_t));         
     agregar_a_paquete(paquete_crear_proceso, &crear_proceso->tamanio, sizeof(uint32_t));  
     agregar_a_paquete(paquete_crear_proceso, crear_proceso->archivo_pseudocodigo, strlen(crear_proceso->archivo_pseudocodigo) + 1);  
     
@@ -506,9 +506,9 @@ t_io_direcciones_fisicas* deserializar_peticion_valor(t_list*  lista_paquete ){
 
         uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
         direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
-        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ;
+        printf("Posicion %d, valor %ls \n",2 + i, direccion_fisica) ;
         list_add(peticion_valor->direcciones_fisicas, direccion_fisica);
-        printf("Valor agregado %d \n",direccion_fisica);
+        printf("Valor agregado %ls \n",direccion_fisica);
     }
 
     

@@ -59,7 +59,7 @@ void memoria_atender_kernel(){
             valores = recibir_paquete(fd_kernel);
             t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);
             leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  //No corre ver
-            crear_proceso(iniciar_proceso->pcb->pid, iniciar_proceso->tamanio);
+            crear_proceso(iniciar_proceso->pid, iniciar_proceso->tamanio);
 
             enviar_respuesta_crear_proceso(iniciar_proceso, fd_kernel);
             break;
@@ -138,8 +138,8 @@ void memoria_atender_cpu(){
         case PETICION_VALOR_MEMORIA:
             valores = recibir_paquete(fd_cpu);
             peticion_valor = deserializar_peticion_valor(valores);     
-            void* valor = leer_memoria(peticion_valor->direcciones_fisicas, peticion_valor->input_length);
-            log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d", peticion_valor->pid, peticion_valor->direcciones_fisicas);
+            void* valor = leer_memoria(peticion_valor->direcciones_fisicas, peticion_valor->input_length);          //ver
+            log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d", peticion_valor->pid, peticion_valor->direcciones_fisicas);    //ver
             enviar_peticion_valor(valor, fd_cpu);                            
             break;
 
@@ -216,7 +216,7 @@ void memoria_atender_io(){
             }
             printf("despues de recbir paquete\n");
 
-            escribir_memoria(input->pid, input->direcciones_fisicas, input->input, input->input_length);
+            escribir_memoria(input->pid, input->direcciones_fisicas, input->input, input->input_length);    //ver
             uint32_t response_interfaz = IO_M_STDIN_FIN;
             if (send(fd_entradasalida, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
                 perror("send INTERFAZ_RECIBIDA response");
@@ -241,7 +241,7 @@ void memoria_atender_io(){
             }
 
             printf("despues de recbir paquete\n");
-            void* output = leer_memoria(io_stdout->direcciones_fisicas, io_output->output_length);
+            void* output = leer_memoria(io_stdout->direcciones_fisicas, io_output->output_length);      //ver
             uint32_t tamanio_output = string_length(output)+1;
             io_output->pid = io_stdout->pid;
             io_output->output_length = tamanio_output;
