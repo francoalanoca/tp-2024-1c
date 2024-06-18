@@ -108,7 +108,7 @@ void atender_instruccion_validada(char* leido){
 
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
         
-        inicializar_planificador(algoritmo, quantum);
+        inicializar_planificador(); //algoritmno, quantum?? ---> quiero preguntar.
 
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         
