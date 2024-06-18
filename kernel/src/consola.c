@@ -104,11 +104,11 @@ void atender_instruccion_validada(char* leido){
        
     }else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0){    //DETENER_PLANIFICACION
         
-        //detener_planificacion(planificador);
+        detener_planificacion(planificador);
 
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
         
-        //inicializar_planificador(algoritmo, quantum);
+        inicializar_planificador(algoritmo, quantum);
 
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         
