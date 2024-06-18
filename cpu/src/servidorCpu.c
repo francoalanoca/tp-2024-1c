@@ -28,6 +28,8 @@ else{
     }
     conexion_kernel = fd_mod2;
 log_info(logger_cpu, "va a escuchar");
+//log_info(logger_cpu, "POST SEMAFORO");
+  //     sem_post(&sem_conexion_lista);
     while (server_escuchar(logger_cpu, "SERVER CPU", (uint32_t)fd_mod2));
 }
 
@@ -101,6 +103,7 @@ void procesar_conexion(void *v_args){
                 if(proceso_interrumpido->proceso->pcb->pid == proceso_actual->pcb->pid){
                     proceso_interrumpido_actual = proceso_interrumpido;
                     interrupcion_kernel = true;
+                   
                 }
             
                 free(proceso_interrumpido);
@@ -109,13 +112,15 @@ void procesar_conexion(void *v_args){
 
              case INSTRUCCION_RECIBIDA:
             {
-                instr_t* proxima_instruccion = malloc(sizeof(instr_t)); //REVISAR
                 log_info(logger_cpu, "SE RECIBE INSTRUCCION DE MEMORIA");
+                instr_t* proxima_instruccion = malloc(sizeof(instr_t)); //REVISAR
                 proxima_instruccion = instruccion_deserializar(paquete->buffer); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
                 if(proxima_instruccion != NULL){
                     prox_inst = proxima_instruccion;
                     //SEMAFORO QUE ACTIVA EL SEGUIMIENTO DEL FLUJO EN FETCH
                     free(proxima_instruccion);
+                    //  log_info(logger_cpu, "POST SEMAFORO");
+                    // sem_post(&sem_conexion_lista);
                 }
                 else{
                     log_info(logger_cpu, "ERROR AL  RECIBIR INSTRUCCION DE MEMORIA");
@@ -123,6 +128,46 @@ void procesar_conexion(void *v_args){
                 }
                 break;
             }
+            case MARCO_RECIBIDO:
+            {
+                log_info(logger_cpu, "MARCO RECIBIDO");
+                uint32_t marco_rec;
+                
+                marco_rec = buffer_read_uint32(paquete->buffer); 
+                marco_recibido = marco_rec; 
+                sem_post(&sem_marco_recibido);
+                break;
+            }
+            case PETICION_VALOR_MEMORIA_RTA:
+            {
+                log_info(logger_cpu, "PETICION_VALOR_MEMORIA_RTA");
+                uint32_t valor_rec;
+                
+                valor_rec = buffer_read_uint32(paquete->buffer); 
+                valor_registro_obtenido = valor_rec; 
+                sem_post(&sem_valor_registro_recibido);
+                break;
+            }
+            case SOLICITUD_RESIZE_RTA:
+            {
+                log_info(logger_cpu, "SOLICITUD_RESIZE_RTA");
+                char* valor_rec;
+                
+                valor_rec = buffer_read_uint32(paquete->buffer); 
+                strcpy(rta_resize, valor_rec); 
+                sem_post(&sem_valor_resize_recibido);
+                break;
+            }
+            case SOLICITUD_TAMANIO_PAGINA_RTA:
+            {
+                log_info(logger_cpu, "SOLICITUD_TAMANIO_PAGINA_RTA");
+                uint32_t valor_rec;
+                
+                valor_rec = buffer_read_uint32(paquete->buffer); 
+                tamanio_pagina = valor_rec; 
+                sem_post(&sem_valor_tamanio_pagina);
+            }
+            
            
     }   
 free(paquete->buffer->stream);
@@ -148,6 +193,12 @@ void buffer_read(t_buffer *buffer, void *data, uint32_t size){
 uint8_t buffer_read_uint8(t_buffer *buffer){
 	uint8_t valor = malloc(sizeof(uint8_t));
 	buffer_read(buffer,&valor,sizeof(uint8_t));
+	return valor;
+}
+
+uint32_t buffer_read_uint32(t_buffer *buffer){
+	uint32_t valor = malloc(sizeof(uint32_t));
+	buffer_read(buffer,&valor,sizeof(uint32_t));
 	return valor;
 }
 
