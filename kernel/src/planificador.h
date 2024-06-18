@@ -23,6 +23,7 @@ typedef struct {
     int quantum;
     int grado_multiprogramacion;
     int grado_multiprogramacion_actual;
+    bool planificacion_detenida;
 } t_planificador;
 
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum, int grado_multiprogramacion);
@@ -36,5 +37,6 @@ void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso);
 void finalizar_proceso(t_planificador* planificador, t_pcb* proceso);
 void crear_proceso(t_planificador* planificador, char* path_pseudocodigo);
 void eliminar_proceso(t_planificador* planificador, t_pcb* proceso);
+void detener_planificacion(t_planificador* planificador);
 
 #endif /* PLANIFICADORES_H_ */
