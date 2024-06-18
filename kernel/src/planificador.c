@@ -17,6 +17,11 @@ t_algoritmo_planificacion obtener_algoritmo_planificador(const char* algoritmo_p
     }
 }
 
+// detiene tanto el planificador de corto plazo como el de largo plazo
+void detener_planificacion(t_planificador* planificador) {
+    planificador->planificacion_detenida = true;
+}
+
 //Inicializa un nuevo planificador
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum) {
     t_planificador* planificador = malloc(sizeof(t_planificador));
@@ -29,6 +34,7 @@ t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, in
     planificador->quantum = quantum;
     planificador->grado_multiprogramacion = grado_multiprogramacion;
     planificador->grado_multiprogramacion_actual = 0;
+    planificador->planificacion_detenida = false; // Inicializar planificación como no detenida
     return planificador;
 }
 
@@ -88,7 +94,9 @@ void bloquear_proceso(t_planificador* planificador, t_pcb* proceso) {
 //  Desbloquea un proceso y lo mueve a la cola de listos
 void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_remove(planificador->cola_blocked, proceso);
-    list_add(planificador->cola_ready, proceso);
+    if (!planificador->planificacion_detenida) {
+        list_add(planificador->cola_ready, proceso);
+    }
 }
 
 // Finaliza un proceso y libera su memoria
@@ -97,7 +105,7 @@ void finalizar_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_add(planificador->cola_exit, proceso);
     free(proceso);
      planificador->grado_multiprogramacion_actual--;
-    if (!list_is_empty(planificador->cola_new)) {
+    if (!list_is_empty(planificador->cola_new) && !planificador->planificacion_detenida) {
         t_pcb* proceso_nuevo = list_remove(planificador->cola_new, 0);
         list_add(planificador->cola_ready, proceso_nuevo);
         planificador->grado_multiprogramacion_actual++;
