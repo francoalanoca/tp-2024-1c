@@ -632,4 +632,47 @@ void  enviar_creacion_archivo(t_io_crear_archivo* nuevo_archivo, int socket ){
     
 }
 
+void  enviar_delete_archivo(t_io_crear_archivo* nuevo_archivo, int socket ){
+    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
+    
+    paquete_archivo_nuevo = crear_paquete(IO_FS_DELETE);
+    
+    agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->pid), sizeof(nuevo_archivo->pid));
+    agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->nombre_archivo_length, sizeof(nuevo_archivo->nombre_archivo_length));  
+    agregar_a_paquete(paquete_archivo_nuevo, nuevo_archivo->nombre_archivo, nuevo_archivo->nombre_archivo_length);
+    agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->interfaz->nombre_length, sizeof(nuevo_archivo->interfaz->nombre_length)); //AGREGADO
+    agregar_a_paquete(paquete_archivo_nuevo, nuevo_archivo->interfaz->nombre, nuevo_archivo->interfaz->nombre_length); //AGREGADO
+    agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->interfaz->tipo, sizeof(nuevo_archivo->interfaz->tipo)); //AGREGADO
+    enviar_paquete(paquete_archivo_nuevo, socket);  
+    
+}
 
+ t_io_fs_truncate* deserializar_io_truncate_archivo(t_list*  lista_paquete ){
+
+    t_io_fs_truncate* io_truncate_archivo = malloc(sizeof(t_io_fs_truncate));
+    io_truncate_archivo->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    io_truncate_archivo->nombre_archivo_length = *(uint32_t*)list_get(lista_paquete, 1);
+    io_truncate_archivo->nombre_archivo = list_get(lista_paquete, 2);
+    io_truncate_archivo->interfaz->nombre_length = *(uint32_t*)list_get(lista_paquete, 3); //AGREGADO
+    io_truncate_archivo->interfaz->nombre = list_get(lista_paquete, 4); //AGREGADO
+    io_truncate_archivo->interfaz->tipo = *(uint32_t*)list_get(lista_paquete, 5); //AGREGADO
+    io_truncate_archivo->tamanio = *(uint32_t*)list_get(lista_paquete, 6);
+
+	return io_truncate_archivo;
+}
+
+void  enviar_truncate_archivo(t_io_fs_truncate* nuevo_archivo, int socket ){
+    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
+    
+    paquete_archivo_nuevo = crear_paquete(IO_FS_TRUNCATE);
+    
+    agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->pid), sizeof(nuevo_archivo->pid));
+    agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->nombre_archivo_length, sizeof(nuevo_archivo->nombre_archivo_length));  
+    agregar_a_paquete(paquete_archivo_nuevo, nuevo_archivo->nombre_archivo, nuevo_archivo->nombre_archivo_length);
+    agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->interfaz->nombre_length, sizeof(nuevo_archivo->interfaz->nombre_length)); //AGREGADO
+    agregar_a_paquete(paquete_archivo_nuevo, nuevo_archivo->interfaz->nombre, nuevo_archivo->interfaz->nombre_length); //AGREGADO
+    agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->interfaz->tipo, sizeof(nuevo_archivo->interfaz->tipo)); //AGREGADO
+    agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->tamanio), sizeof(nuevo_archivo->tamanio));
+    enviar_paquete(paquete_archivo_nuevo, socket);  
+    
+}

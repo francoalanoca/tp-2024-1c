@@ -295,13 +295,21 @@ typedef struct{
     t_list *lista_de_instrucciones;
 } t_miniPCB;
 
-//Kernel le manda a IO
+//Kernel le manda a IO, usada en IO_FS_CREATE e IO_FS_DELETE
 typedef struct {
 	uint32_t pid;
     uint32_t nombre_archivo_length; 
     char* nombre_archivo;
     t_interfaz* interfaz; //AGREGADO   
 } t_io_crear_archivo;
+
+typedef struct {
+	uint32_t pid;
+    uint32_t nombre_archivo_length; 
+    char* nombre_archivo;
+    t_interfaz* interfaz; //AGREGADO
+    uint32_t tamanio;   
+} t_io_fs_truncate;
 
 
 void* recibir_buffer(int*, int);
@@ -344,5 +352,8 @@ void enviar_respuesta_instruccion(t_pcb* proxima_instruccion ,int socket_cpu);
 t_io_input* deserializar_input(t_list*  lista_paquete );
 t_io_crear_archivo* deserializar_io_crear_archivo(t_list*  lista_paquete );
 void  enviar_creacion_archivo(t_io_crear_archivo* nuevo_archivo, int socket );
+void  enviar_delete_archivo(t_io_crear_archivo* nuevo_archivo, int socket );
+t_io_fs_truncate* deserializar_io_truncate_archivo(t_list*  lista_paquete );
+void  enviar_truncate_archivo(t_io_fs_truncate* nuevo_archivo, int socket );
 #endif /* UTILS_H_ */
 

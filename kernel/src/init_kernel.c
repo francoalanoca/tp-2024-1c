@@ -225,10 +225,46 @@ while (control_key)
    case SOLICITUD_IO_FS_DELETE_A_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_DELETE_A_KERNEL desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_io_crear_archivo* io_delete_archivo = malloc(sizeof(t_io_crear_archivo));
+      io_delete_archivo = deserializar_io_crear_archivo(lista_paquete);
+
+      //AHORA DEBO ENVIAR A IO LO NECESARIO
+      enviar_delete_archivo(io_delete_archivo,socket_servidor);
+
+      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+      t_pcb* pcb_a_bloquear_delete = malloc(sizeof(t_pcb));
+      pcb_a_bloquear_delete = buscar_pcb_en_lista(planificador->cola_exec,io_delete_archivo->pid);
+      if(pcb_a_bloquear_delete != NULL){
+         bloquear_proceso(planificador,pcb_a_bloquear_delete);
+      }
+      else{
+         log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+      }
       break;
    case SOLICITUD_IO_FS_TRUNCATE_A_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_TRUNCATE_A_KERNEL desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_io_fs_truncate* io_truncate_archivo = malloc(sizeof(t_io_fs_truncate));
+      io_truncate_archivo = deserializar_io_truncate_archivo(lista_paquete);
+
+      //AHORA DEBO ENVIAR A IO LO NECESARIO
+      enviar_truncate_archivo(io_truncate_archivo,socket_servidor);
+
+      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+      t_pcb* pcb_a_bloquear_truncate = malloc(sizeof(t_pcb));
+      pcb_a_bloquear_truncate = buscar_pcb_en_lista(planificador->cola_exec,io_truncate_archivo->pid);
+      if(pcb_a_bloquear_delete != NULL){
+         bloquear_proceso(planificador,pcb_a_bloquear_truncate);
+      }
+      else{
+         log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+      }
       break;
    case SOLICITUD_IO_FS_WRITE_A_KERNEL:
       //TODO
