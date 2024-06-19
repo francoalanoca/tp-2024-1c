@@ -65,7 +65,8 @@ uint32_t crear_archivo(char* nombre);
 uint32_t borrar_archivo(char* nombre);
 //Agranda o achica un archivo a partir del tamaño dado, actualizando todas las estructuras
 uint32_t truncar_archivo(char* nombre, uint32_t tamanio);
-int leer_archivo(char* nombre, t_list* direcciones_memoria, int tamanio_lectura);
+//Lee archivo segun los datos especificados, arma un input y se lo pasa a memoria.
+void leer_archivo(t_io_readwrite_archivo* archivo, int socket);
 int escribir_archivo(char* nombre, t_list* direcciones_memoria, int tamanio_escritura);
 //Limpia los bits asignados en el bitmap hasta ajustar el tamaño solicitado
 void achicar_archivo(uint32_t tamanio,t_FCB* fcb);
@@ -108,6 +109,6 @@ void persistir_fcb(t_FCB *fcb);
 uint32_t encontrar_bit_libre(t_bitarray* bitarray_in); 
 
 //desearliza un paquete de creacion/eliminacion de archivo
-t_io_crear_archivo* deserializar_fs_gestion (t_list* lista_paquete);
+t_io_gestion_archivo* deserializar_fs_gestion (t_list* lista_paquete);
 
 #endif //TP_2024_1C_PASARONCOSAS_DIALFS_H

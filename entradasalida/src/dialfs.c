@@ -109,7 +109,7 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                     break;
                 }
                 break;  
-            case IO_FS_TRUNCATE :
+            case IO_FS_TRUNCATE : 
                 
                 log_info(logger_entrada_salida, "IO_FS_TRUNCATE recibida desde Kernel");
                     
@@ -117,7 +117,7 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 t_io_gestion_archivo* archivo_truncar = malloc(sizeof(t_io_gestion_archivo));
                 archivo_truncar = deserializar_fs_gestion (lista_paquete);
                 truncar_archivo(archivo_truncar->nombre_archivo, archivo_truncar->tamanio_archivo);
-                list_destroy(lista_paquete);
+                list_clean(lista_paquete);
                 free(archivo_truncar);
                 response = IO_K_GEN_SLEEP_FIN;
 
@@ -125,7 +125,25 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                     log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
                     break;
                 }
-                break;                                              
+                break;
+
+            case IO_FS_READ : 
+                
+                log_info(logger_entrada_salida, "IO_FS_READ recibida desde Kernel");
+                    
+                lista_paquete = recibir_paquete(socket_kernel);
+                t_io_readwrite_archivo* archivo_leer = malloc(sizeof(t_io_gestion_archivo));
+                archivo_truncar = deserializar_fs_gestion (lista_paquete);
+                leer_archivo(archivo_leer,socket_memoria);
+                list_clean(lista_paquete);
+                free(archivo_leer);
+                response = IO_K_GEN_SLEEP_FIN;
+
+                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                    log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
+                    break;
+                }
+                break;                                                                
 
             default:
                 response = OPERACION_INVALIDA;
@@ -452,6 +470,7 @@ uint32_t  borrar_archivo(char* nombre) {
          
 return 1 ;
 }
+
 uint32_t  truncar_archivo(char* nombre, uint32_t tamanio ){
     t_FCB* fcb;
     uint32_t tamanio_actual;
@@ -503,6 +522,31 @@ void agrandar_archivo(uint32_t nuevo_tamanio, t_FCB* fcb) {
 
 }
 
+
+void leer_archivo(t_io_readwrite_archivo* archivo, int socket){
+    char* datos_leidos = malloc(archivo->tamanio_operacion * sizeof(char));
+    t_io_input* input = malloc (sizeof(t_io_input));
+
+    // pararse en el byte a leer, y traer toda la info
+    if (fseek(archivo_bloques,archivo->puntero_archivo, SEEK_SET)!= 0){
+        log_error(logger_entrada_salida,"Error al mover el puntero de archivo al bloque: %d ",archivo->puntero_archivo);
+    }  else{
+        log_info(logger_entrada_salida, "PUNTERO POSICIONADO: %d",archivo->puntero_archivo );
+    };
+    if (fread(datos_leidos, archivo->tamanio_operacion, 1, archivo_bloques)<= 0){
+        log_error(logger_entrada_salida,"Error al leer el archivo ");
+    }  else{
+        log_info(logger_entrada_salida, "PID: %d - Leer Archivo: %s - Tamaño a Leer: %d- Puntero Archivo: %d", archivo->pid, archivo->nombre_archivo, archivo->tamanio_operacion, archivo->puntero_archivo);
+        log_info(logger_entrada_salida," Datos leidos, %s",datos_leidos);
+        input->pid =archivo->pid;
+        input->direcciones_fisicas =list_create();
+        list_add_all(input->direcciones_fisicas,archivo->direcciones_fisicas);
+        input->input_length =string_length(input) + 1;
+        input->input = datos_leidos;
+        enviar_input(input, socket, IO_FS_READ);
+    };
+
+}
 
 
 ////////////////////////////////////////////// UTILIDAD/////////////////////////////////////////////////

@@ -546,6 +546,54 @@ void enviar_input(t_io_input* io_input ,int socket, uint32_t op_code ) {
 
 }
 
+void enviar_io_readwrite(t_io_readwrite_archivo* io_readwrite ,int socket, uint32_t op_code ){
+    t_paquete* paquete_readwrite;
+    uint32_t list_tamanio = list_size(io_readwrite->direcciones_fisicas); 
+    paquete_readwrite = crear_paquete(op_code);
+ 
+    agregar_a_paquete(paquete_readwrite,  &io_readwrite->pid,  sizeof(uint32_t));     
+    agregar_a_paquete(paquete_readwrite, &io_readwrite->nombre_archivo_length, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_readwrite, io_readwrite->nombre_archivo, io_readwrite->nombre_archivo_length);       
+    agregar_a_paquete(paquete_readwrite, &list_tamanio, sizeof(uint32_t));  
+    //agrego cada elemento de la lista de direcciones fisicas
+    for (int i = 0; i < list_tamanio; i++) {
+        uint32_t direccion_fisica = (uint32_t*) list_get(io_readwrite->direcciones_fisicas, i);        
+        agregar_a_paquete(paquete_readwrite,  &direccion_fisica, sizeof(uint32_t));        
+    }   
+    agregar_a_paquete(paquete_readwrite,  &io_readwrite->tamanio_operacion,  sizeof(uint32_t));  
+    agregar_a_paquete(paquete_readwrite,  &io_readwrite->puntero_archivo,  sizeof(uint32_t));   
+    enviar_paquete(paquete_readwrite, socket);    
+    free(paquete_readwrite); 
+}
+
+t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete ){
+
+    t_io_readwrite_archivo* io_readwrite = malloc(sizeof(t_io_readwrite_archivo));
+    
+    io_readwrite->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    io_readwrite->nombre_archivo_length = *(uint32_t*)list_get(lista_paquete,1);
+    io_readwrite->nombre_archivo = list_get(lista_paquete, 2);
+    printf("Nombre archivo: %s \n",io_readwrite->nombre_archivo); 
+
+    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 3);
+    printf("tamanio lista: %d \n",tamanio_lista); // despues borrar print
+
+     // Deserializar cada elemento de la lista
+    io_readwrite->direcciones_fisicas = list_create();
+    for (int i = 0; i < tamanio_lista; i++) {
+        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
+        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 3 + i);
+        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ; // despues borrar print
+        list_add(io_readwrite->direcciones_fisicas, direccion_fisica);
+         printf("Valor agregado %d \n",direccion_fisica); // despues borrar print
+    }
+    io_readwrite->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,4+tamanio_lista+1);
+     printf("tamanio operacion %d \n",io_readwrite->tamanio_operacion);// despues borrar print
+    io_readwrite->puntero_archivo = *(uint32_t*)list_get(lista_paquete,4+tamanio_lista+2);
+     printf("Puntero archivo %d \n",io_readwrite->puntero_archivo); // despues borrar print
+    return io_readwrite; 
+    free(io_readwrite);
+}
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
