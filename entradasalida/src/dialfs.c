@@ -455,8 +455,7 @@ return 1 ;
 uint32_t  truncar_archivo(char* nombre, uint32_t tamanio ){
     t_FCB* fcb;
     uint32_t tamanio_actual;
-
-    fcb= buscar_cargar_fcb(nombre); //ver si usar esta o traer desde el diccionario
+    fcb = buscar_cargar_fcb(nombre); //ver si usar esta o traer desde el diccionario
 
     log_info(logger_entrada_salida, "Truncar Archivo: %s - Tamaño: %d ",fcb->nombre_archivo,tamanio );// LOG OBLIGATORIO
 
@@ -487,6 +486,22 @@ void achicar_archivo(uint32_t tamanio, t_FCB* fcb) {
 
 }
 
+void agrandar_archivo(uint32_t nuevo_tamanio, t_FCB* fcb) {
+    int nueva_posicion_inicial = hay_espacio_disponible(nuevo_tamanio); 
+
+    if (nueva_posicion_inicial> 0 ) {
+        mover_archivo(fcb, nueva_posicion_inicial);
+    }else {
+        log_info(logger_entrada_salida, "No hay más bloques disponibles"); // no verfico el caso sin espacio ISSUE #3568
+    }   
+    sincronizar_bitmap();
+    fcb->primer_bloque = nueva_posicion_inicial;
+    fcb->tamanio_archivo = nuevo_tamanio; 
+    persistir_fcb(fcb);
+    dictionary_put(fcb_dict,fcb->nombre_archivo, fcb);
+    log_info(logger_entrada_salida, "Truncar Archivo: %s - Tamaño: %d: " ,fcb->nombre_archivo ,nuevo_tamanio);
+
+}
 
 
 
@@ -503,10 +518,8 @@ t_io_crear_archivo* deserializar_fs_gestion (t_list* lista_paquete){
 uint32_t encontrar_bit_libre(t_bitarray* bitarray_in) {
 
     log_info(logger_entrada_salida, "tamaño del bitarray %d %d", bitarray_in->size, bitarray_test_bit(&bitarray_in, 0));
-
     uint32_t i;
     for (i = 0; i < bitarray_in->size; i++) {
-
         if (!bitarray_test_bit(bitarray_in, i)) {
             log_info(logger_entrada_salida, "Acceso a Bitmap - Bloque: %d - Estado: libre", i); //LOG OBLIGATORIO
             return i;
@@ -549,7 +562,6 @@ int hay_espacio_disponible(int espacio_necesario) {
 bool hay_espacio_total_disponible(int espacio_necesario){
     int espacio_disponible;
     for (int i = 0; i < bitarray_get_max_bit(bitarray); i++) {
-
         if (!bitarray_test_bit(bitarray, i)) {
             espacio_disponible++;
         }
@@ -603,10 +615,10 @@ int compactar(int espacio_necesario){
             posiciones_libres++;  
             j++;   // aumento el desplazamiento hacia la izquierda
         }
-
         if(posiciones_libres>0){
-            //si hay espacio mover el archivo esas posiciones libres
-            mover_archivo_izquierda(fcb, posiciones_libres);            
+            //si hay espacio mover el archivo a la nueva posicion
+            int nueva_posicion = fcb->primer_bloque-posiciones_libres;
+            mover_archivo(fcb, nueva_posicion);                  
         }            
         posicion_inicio = hay_espacio_contiguo_disponible(espacio_necesario);
         i++; // siguiente archivo  
@@ -652,27 +664,25 @@ void leer_bloque (int numero_bloque, int desplazamiento, int tamanio_lectura, vo
     };
 }
 
-void mover_archivo_izquierda(t_FCB* fcb_archivo, int posiciones){
+void mover_archivo(t_FCB* fcb_archivo, int nueva_posicion_inicial){
 
     int posicion_inicial = fcb_archivo->primer_bloque;
-    int tamanio_en_bloques = ceil( fcb_archivo->tamanio_archivo /cfg_entrada_salida->BLOCK_SIZE);;
+    int tamanio_en_bloques = ceil( fcb_archivo->tamanio_archivo /cfg_entrada_salida->BLOCK_SIZE);
 
     char* valor_bloque = malloc(cfg_entrada_salida->BLOCK_SIZE);
-        
-        for (int i = posicion_inicial; i < tamanio_en_bloques; i++){
-            leer_bloque (i, i*cfg_entrada_salida->BLOCK_SIZE, cfg_entrada_salida->BLOCK_SIZE, valor_bloque );
-            bitarray_clean_bit(bitarray, i);
-            escribir_bloque (posicion_inicial-posiciones, cfg_entrada_salida->BLOCK_SIZE, valor_bloque);
-            bitarray_set_bit(bitarray, i-posiciones);
-        }
+    int j = 0;    
+    for (int i = posicion_inicial; i <= tamanio_en_bloques; i++){
+        leer_bloque (i, i*cfg_entrada_salida->BLOCK_SIZE, cfg_entrada_salida->BLOCK_SIZE, valor_bloque );
+        bitarray_clean_bit(bitarray, i);
+        escribir_bloque (nueva_posicion_inicial+j, cfg_entrada_salida->BLOCK_SIZE, valor_bloque);
+        bitarray_set_bit(bitarray, nueva_posicion_inicial+j);
+        j++;
+    }
     // actualizo fcb en todas las estructuras
-    fcb_archivo ->primer_bloque = posicion_inicial-posiciones;
-    dictionary_remove(fcb_dict , fcb_archivo->nombre_archivo);
+    fcb_archivo ->primer_bloque = nueva_posicion_inicial;
     dictionary_put(fcb_dict ,fcb_archivo->nombre_archivo, fcb_archivo);
     persistir_fcb(fcb_archivo);
-
-    sincronizar_bitmap ();   
-
+    sincronizar_bitmap ();  
 }
 
 char* uint32_to_string (uint32_t number) {
@@ -683,3 +693,4 @@ char* uint32_to_string (uint32_t number) {
     }
     return str;
 }
+

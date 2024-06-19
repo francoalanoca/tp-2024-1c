@@ -60,23 +60,24 @@ extern t_dictionary* fcb_dict;
 
 ///////////////////////////////////////////////FUNCIONALIDADES//////////////////////////////////////
 //crea un archivo a partir de su nombre: Crea un fcb, lo persiste y lo agrega al diccionario de fbc.
-uint32_t  crear_archivo(char* nombre);
-uint32_t  truncar_archivo(char* nombre, uint32_t tamanio);
+uint32_t crear_archivo(char* nombre);
+//Borra un archivo a partir de su nombre:Libera bloques en el bitmap, elimina el fcb fisico, y lo saca del diccionario de fcb.
+uint32_t borrar_archivo(char* nombre);
+//Agranda o achica un archivo a partir del tamaño dado, actualizando todas las estructuras
+uint32_t truncar_archivo(char* nombre, uint32_t tamanio);
 int leer_archivo(char* nombre, t_list* direcciones_memoria, int tamanio_lectura);
 int escribir_archivo(char* nombre, t_list* direcciones_memoria, int tamanio_escritura);
+//Limpia los bits asignados en el bitmap hasta ajustar el tamaño solicitado
 void achicar_archivo(uint32_t tamanio,t_FCB* fcb);
+//verifica que haya espacio y mueve el archivo a la nueva posicion determinada por la compactacion
 void agrandar_archivo(uint32_t tamanio,t_FCB* fcb);
 
-//Borra un archivo a partir de su nombre:Libera bloques en el bitmap, elimina el fcb fisico, y lo saca del diccionario de fcb.
-uint32_t  borrar_archivo(char* nombre);
 //Devuelve la posicion del primer bit libre que encuentra.
 uint32_t encontrar_bit_libre(t_bitarray* bitarray);
 //Busca el archivo fcb.txt en el directiorio de fcb a partir del nombre de archivo
 t_FCB* buscar_cargar_fcb(char* nombre);
-
-//leer bloque contiguo
-//escribir bloque contiguo
-
+//Mueve el archivo a la posicion en bloques indicada, copia bloque por bloque, actualiza bitrarray, bitmap,fcb fisico, y dicccionario fcb
+void mover_archivo(t_FCB* fcb_archivo, int nueva_posicion_inicial);
 
 // devuelve la posicion desde la cual hay espacio disponible si no, está contiguo compacta, si no hay espacio devuelve -1
 int hay_espacio_disponible(int espacio_necesario); 
