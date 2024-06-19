@@ -261,6 +261,10 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
 t_io_direcciones_fisicas* deserializar_io_df(t_list*  lista_paquete );
 void enviar_output(t_io_output* io_output ,int socket_io);
 t_io_output* deserializar_output(t_list*  lista_paquete );
-void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket );
+// Kernel envía a IO Crear/Borrar/Truncar Archivo
+void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket, uint32_t cod_op);
+//Lo pueden usar IOy MEMOMORIA, para enviarse direcciones físicas y los datos contenidos o a guardar
+void enviar_input(t_io_input* io_input ,int socket, uint32_t op_code );
+
 #endif /* UTILS_H_ */
 
