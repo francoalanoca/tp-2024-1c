@@ -125,7 +125,7 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                     log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
                     break;
                 }
-                break;
+                break;    
 
             case IO_FS_READ : 
                 
@@ -143,7 +143,49 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                     log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
                     break;
                 }
-                break;                                                                
+                break;  
+           case IO_FS_WRITE : 
+                
+                log_info(logger_entrada_salida, "IO_FS_WRITE recibida desde Kernel");
+                 
+                t_io_direcciones_fisicas* solicitud_datos_escribir = malloc (sizeof(t_io_direcciones_fisicas));    
+                lista_paquete = recibir_paquete(socket_kernel);
+                t_io_readwrite_archivo* archivo_escribir = malloc(sizeof(t_io_gestion_archivo));                
+                archivo_escribir = deserializar_fs_gestion (lista_paquete);
+                char* datos_escribir = malloc(archivo_escribir->tamanio_operacion * sizeof(char));
+                solicitud_datos_escribir->pid = archivo_escribir->pid;
+                solicitud_datos_escribir->direcciones_fisicas = list_create ();
+                list_add(solicitud_datos_escribir->direcciones_fisicas,archivo_escribir->direcciones_fisicas);
+               //reenvio la solicitud a memoria
+                enviar_io_df(solicitud_datos_escribir, socket_memoria, IO_FS_WRITE);
+               
+                //Espero respuesta de memoria
+                if (recv(socket_memoria, &cop, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                  log_info(logger_entrada_salida, "DISCONNECT!");
+                 }
+
+                 if (cop == IO_FS_WRITE_M) {
+                    
+                    t_list* lista_paquete_nueva = list_create();     
+                    t_io_output* io_output_recibido = malloc(sizeof(t_io_output));
+                    
+                    lista_paquete_nueva = recibir_paquete(socket_memoria);                   
+                    io_output_recibido = deserializar_output(lista_paquete_nueva);                 
+                 
+                    datos_escribir = io_output_recibido->output;
+                    printf("Datos recibido para escribir:  %s \n",datos_escribir); // despues borrar
+
+                    escribir_archivo(archivo_escribir,datos_escribir);
+                    list_clean(lista_paquete);
+                    free(archivo_escribir);
+                    response = IO_K_GEN_SLEEP_FIN;
+
+                    if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                        log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
+                        break;
+                    }
+                  }
+                break;                                                                                            
 
             default:
                 response = OPERACION_INVALIDA;
@@ -545,10 +587,26 @@ void leer_archivo(t_io_readwrite_archivo* archivo, int socket){
         input->input = datos_leidos;
         enviar_input(input, socket, IO_FS_READ);
     };
-
 }
 
+void escribir_archivo(t_io_readwrite_archivo* archivo, char* datos_escribir){
 
+    // pararse en el byte a escribir,
+    if (fseek(archivo_bloques,archivo->puntero_archivo, SEEK_SET)!= 0){
+        log_error(logger_entrada_salida,"Error al mover el puntero de archivo al bloque: %d ",archivo->puntero_archivo);
+    }  else{
+        log_info(logger_entrada_salida, "PUNTERO POSICIONADO: %d",archivo->puntero_archivo );
+    };
+    if (fwrite(datos_escribir, archivo->tamanio_operacion, 1, archivo_bloques)<= 0){
+        log_info(logger_entrada_salida,"Error al escribir el archivo: %d ");
+   
+    }  else{
+        fflush(archivo_bloques); //agrego esto para "garantizar" que se escriba el archivo de bloques si no tengo que esperar un fclose
+        log_info(logger_entrada_salida, "PID: %d - Escribir Archivo: %s - Tamaño a Escribir: %d- Puntero Archivo: %d", archivo->pid, archivo->nombre_archivo, archivo->tamanio_operacion, archivo->puntero_archivo);
+        log_info(logger_entrada_salida,"Datos escritos, %s",datos_escribir);
+      
+    };
+}
 ////////////////////////////////////////////// UTILIDAD/////////////////////////////////////////////////
 t_io_gestion_archivo* deserializar_fs_gestion (t_list* lista_paquete){
     

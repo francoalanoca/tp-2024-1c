@@ -49,7 +49,9 @@ typedef enum
     IO_M_STDIN,                 // entradasalida envia input a memoria
     IO_M_STDIN_FIN,              // Memoria guardó con éxito el input
     IO_M_STDOUT,
-    IO_M_STDOUT_FIN
+    IO_M_STDOUT_FIN,
+    IO_FS_WRITE_M, // Memoria devuelve el valor a escribir en el archivo con un  t_io_output
+    IO_FS_READ_M // Es el ok de que se guardo bien el valor en memoria, pero no sé si hace falta
 }op_code; 
 
 typedef struct {
