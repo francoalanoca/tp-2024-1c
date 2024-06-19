@@ -451,7 +451,6 @@ uint32_t encontrar_bit_libre(t_bitarray* bitarray_in) {
 uint32_t  borrar_archivo(char* nombre) {
     t_FCB* fcb_eliminar = malloc(sizeof(t_FCB));
     fcb_eliminar = dictionary_get(fcb_dict,nombre);    
-    uint32_t i;
     char * path_archivo_borrar = string_new();
     
 
@@ -461,7 +460,7 @@ uint32_t  borrar_archivo(char* nombre) {
 
 // liberar bloques en bitmap
     if (fcb_eliminar->tamanio_archivo > 0) {
-        for (i = fcb_eliminar->primer_bloque; i < fcb_eliminar->tamanio_archivo; i++) {
+        for (int i = fcb_eliminar->primer_bloque; i < fcb_eliminar->tamanio_archivo; i++) {
             bitarray_clean_bit(bitarray, i);
             sincronizar_bitmap ();
         }  
@@ -510,8 +509,7 @@ void sincronizar_bitmap (){
 
 bool hay_espacio_total_disponible(int espacio_necesario){
     int espacio_disponible;
-    int i;
-    for (i = 0; i < bitarray_get_max_bit(bitarray); i++) {
+    for (int i = 0; i < bitarray_get_max_bit(bitarray); i++) {
 
         if (!bitarray_test_bit(bitarray, i)) {
             espacio_disponible++;
@@ -559,7 +557,98 @@ int hay_espacio_disponible(int espacio_necesario) {
         return -1;  
    }  
 }
+
 int compactar(int espacio_necesario){
+    int bloques_necesarios = (espacio_necesario + cfg_entrada_salida->BLOCK_SIZE - 1) / cfg_entrada_salida->BLOCK_SIZE;
+    int espacio_disponible = 0;
+    int posicion_inicio = -1;
+    char* valor_bloque = malloc(cfg_entrada_salida->BLOCK_SIZE);
+    t_FCB* fcb = malloc(sizeof(t_FCB));
+    t_list* fcbs = list_create();
+    fcbs = dictionary_elements(fcb_dict);
+    int i = 0;
+
+    while (posicion_inicio == -1 && i < list_size(fcbs)) { // mientras no haya espacio y queden archivos por mover
+      
+        log_info(logger_entrada_salida, "No hay espacio contiguo suficiente. Compactando...");
+               
+        int posiciones_libres  = 0;
+        int j  = 1;
+        fcb = list_get(fcbs,i);
+        
+        //acumular las posiciones libres a la izquierda,
+        while (!bitarray_test_bit(bitarray, fcb->primer_bloque-j)){
+            posiciones_libres++;  
+            j++;   // aumento el desplazamiento hacia la izquierda
+        }
+
+        if(posiciones_libres>0){
+            //si hay espacio mover el archivo esas posiciones libres
+            mover_archivo_izquierda(fcb, posiciones_libres);            
+        }            
+        posicion_inicio = hay_espacio_contiguo_disponible(espacio_necesario);
+        i++; // siguiente archivo  
+    } 
+
+    sincronizar_bitmap ();
+    log_info(logger_entrada_salida, "Espacio contiguo suficiente encontrado en la posición %d.", posicion_inicio);
+    sleep(cfg_entrada_salida->RETRASO_COMPACTACION);
+    return posicion_inicio;
 }    
 
-  
+void escribir_bloque (int numero_bloque, int tamanio_escritura, char *datos_escribir){ // los datos deberian ser void??
+
+    if (fseek(archivo_bloques,(numero_bloque * cfg_entrada_salida->BLOCK_SIZE ) , SEEK_SET)!= 0){
+        log_info(logger_entrada_salida,"Error al mover el puntero de archivo al bloque: %d ",numero_bloque);
+        return -1;
+    }  else{
+        log_info(logger_entrada_salida, "PUNTERO POSICIONADO EN BLOQUE: %d ",numero_bloque );
+    };
+
+    if (fwrite(datos_escribir, tamanio_escritura, 1, archivo_bloques)<= 0){
+        log_info(logger_entrada_salida,"Error al escribir el bloque: %d ",numero_bloque);
+        return -1;
+    }  else{
+        fflush(archivo_bloques); //agrego esto para "garantizar" que se escriba el archivo de bloques si no tengo que esperar un fclose
+        log_info(logger_entrada_salida, "BLOQUE: %d ESCRITO con valor %s",numero_bloque, datos_escribir);
+    };
+}
+
+void leer_bloque (int numero_bloque, int desplazamiento, int tamanio_lectura, void *datos ) {
+
+    if (fseek(archivo_bloques,(numero_bloque * cfg_entrada_salida->BLOCK_SIZE ) + desplazamiento, SEEK_SET)!= 0){
+        log_info(logger_entrada_salida,"Error al mover el puntero de archivo al bloque: %d ",numero_bloque);
+    }  else{
+        log_info(logger_entrada_salida, "PUNTERO POSICIONADO EN BLOQUE: %d DESPLAZADO %d",numero_bloque,desplazamiento );
+    };
+
+    if (fread(datos, tamanio_lectura, 1, archivo_bloques)<= 0){
+        log_info(logger_entrada_salida,"Error al leer el bloque: %d ",numero_bloque);
+    }  else{
+        log_info(logger_entrada_salida, "BLOQUE: %d LEIDO",numero_bloque);
+
+    };
+}
+
+void mover_archivo_izquierda(t_FCB* fcb_archivo, int posiciones){
+
+    int posicion_inicial = fcb_archivo->primer_bloque;
+    int tamanio_en_bloques = ceil( fcb_archivo->tamanio_archivo /cfg_entrada_salida->BLOCK_SIZE);;
+
+    char* valor_bloque = malloc(cfg_entrada_salida->BLOCK_SIZE);
+        
+        for (int i = posicion_inicial; i < tamanio_en_bloques; i++){
+            leer_bloque (i, i*cfg_entrada_salida->BLOCK_SIZE, cfg_entrada_salida->BLOCK_SIZE, valor_bloque );
+            bitarray_clean_bit(bitarray, i);
+            escribir_bloque (posicion_inicial-posiciones, cfg_entrada_salida->BLOCK_SIZE, valor_bloque);
+            bitarray_set_bit(bitarray, i-posiciones);
+        }
+    // actualizo fcb en todas las estructuras
+    fcb_archivo ->primer_bloque = posicion_inicial-posiciones;
+    dictionary_remove(fcb_dict , fcb_archivo->nombre_archivo);
+    dictionary_put(fcb_dict ,fcb_archivo->nombre_archivo, fcb_archivo);
+    persistir_fcb(fcb_archivo);
+
+    sincronizar_bitmap ();   
+
+}

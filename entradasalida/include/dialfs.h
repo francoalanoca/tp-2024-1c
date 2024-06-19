@@ -59,7 +59,6 @@ char* uint32_to_string (uint32_t number);
 extern t_dictionary* fcb_dict;
 
 ///////////////////////////////////////////////FUNCIONALIDADES//////////////////////////////////////
-uint32_t  abrir_archivo(char* nombre);
 //crea un archivo a partir de su nombre: Crea un fcb, lo persiste y lo agrega al diccionario de fbc.
 uint32_t  crear_archivo(char* nombre);
 uint32_t  truncar_archivo(char* nombre, uint32_t tamanio);
@@ -85,6 +84,11 @@ int hay_espacio_disponible(int espacio_necesario);
 bool hay_espacio_total_disponible(int espacio_necesario);
 //devulve la posicion desde la cual el espacio esta disponible y contiguo
 int hay_espacio_contiguo_disponible(int espacio_necesario);
+//Desplaza los bloques en el fs hasta encontrar el primer hueco que tenga el espacio necesario y devuelve la posición.
+int compactar(int espacio_necesario);
+//Mueve bloques en direccion a la posicion 0 del bitmap: actualiza bitarray, bitmap, y archivo de bloques
+void  mover_archivo_izquierda(t_FCB* fcb_archivo, int posiciones);
+
 //inicia la interfaz 
 void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria); 
 int crear_bitmap (char * path_archivo_bitmap);
@@ -102,7 +106,7 @@ void persistir_fcb(t_FCB *fcb);
 //devuelve la posicion de un bit libre en un bit array
 uint32_t encontrar_bit_libre(t_bitarray* bitarray_in); 
 
-//desearliza un paquete de creacion de archivo
+//desearliza un paquete de creacion/eliminacion de archivo
 t_io_crear_archivo* deserializar_fs_gestion (t_list* lista_paquete);
 
 #endif //TP_2024_1C_PASARONCOSAS_DIALFS_H
