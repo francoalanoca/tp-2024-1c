@@ -189,16 +189,13 @@ typedef struct {
 	uint32_t tiempo_espera;
 } t_io_espera;
 
-//Kernel le manda a IO
-
+//Kernel le manda a IO en operaciones STDIN, STDOUT y tambien IO le manda a memoria para que le pase el contenido a traves de un t_io_output
 typedef struct {
 	uint32_t pid;
     t_list*  direcciones_fisicas; 
 } t_io_direcciones_fisicas;
 
-
-
-//IO Le manda a memoria
+//IO Le manda a memoria para que guarde en la direccion_fisica
 typedef struct {
 	uint32_t pid;
     t_list*  direcciones_fisicas;
@@ -213,13 +210,23 @@ typedef struct {
     char* output;   
 } t_io_output;
 
-//Kernel le manda a io
+//Kernel le manda a io para crear/borrar/ truncar archivo
 typedef struct {
 	uint32_t pid;
     uint32_t nombre_archivo_length; 
     char* nombre_archivo; 
     uint32_t tamanio_archivo;  
 } t_io_gestion_archivo;
+
+//Kernel le manda a io para leer o escribir archivo
+typedef struct {
+	uint32_t pid;
+    uint32_t nombre_archivo_length; 
+    char* nombre_archivo; 
+    t_list*  direcciones_fisicas;
+    uint32_t tamanio_operacion;  
+    uint32_t puntero_archivo;
+} t_io_readwrite_archivo;
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
