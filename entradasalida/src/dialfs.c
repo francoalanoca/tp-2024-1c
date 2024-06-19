@@ -16,13 +16,9 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->buffer = malloc(sizeof(t_buffer));
     t_list* lista_paquete =  malloc(sizeof(t_list));
-
-
-
     
     path_archivo_bitmap  = string_new();
-    path_archivo_bloques = string_new();
-    
+    path_archivo_bloques = string_new();    
 
     string_append(&path_archivo_bitmap,cfg_entrada_salida->PATH_BASE_DIALFS); 
     string_append(&path_archivo_bitmap,"/bitmap.dat");
@@ -31,7 +27,7 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
     string_append(&path_archivo_bloques,"/bloques.dat");
 
 
-        //BITMAP//
+    //BITMAP//
     if(crear_bitmap (path_archivo_bitmap)>=0 ) {
         log_info(logger_entrada_salida, "Bitmap creado correctamente");
     }
@@ -50,8 +46,6 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
     }
 
     cargar_directorio_fcbs(cfg_entrada_salida->PATH_BASE_DIALFS);
-
-
 
     log_info(logger_entrada_salida, "Interfaz %s de tipo DIALFS iniciada",cfg_entrada_salida->NOMBRE_INTERFAZ);  
     
@@ -114,7 +108,24 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                     log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
                     break;
                 }
-                break;                
+                break;  
+            case IO_FS_TRUNCATE :
+                
+                log_info(logger_entrada_salida, "IO_FS_TRUNCATE recibida desde Kernel");
+                    
+                lista_paquete = recibir_paquete(socket_kernel);
+                t_io_crear_archivo* archivo_borrar = malloc(sizeof(t_io_crear_archivo));
+                archivo_borrar = deserializar_fs_gestion (lista_paquete);
+                borrar_archivo(archivo_borrar->nombre_archivo);
+                list_destroy(lista_paquete);
+                free(archivo_borrar);
+                response = IO_K_GEN_SLEEP_FIN;
+
+                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                    log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
+                    break;
+                }
+                break;                                              
 
             default:
                 response = OPERACION_INVALIDA;
@@ -128,8 +139,6 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
 }
 
 /////////////////////////////////////////////////INICIAR FS////////////////////////////////////
-
-
 
 
 int crear_bitmap (char * path_archivo_bitmap) {
@@ -243,7 +252,7 @@ int crear_archivo_bloques (char * path_archivo_bloques, int block_size, int bloc
     }
     return 0;
 }// fin cargar archivo de bloques
-///////////////////////////////////////////////PETICIONES//////////////////////////////////////
+
 //////////////////////////////////////////////ESTRUCTURAS//////////////////////////////////////
  t_FCB* inicializar_fcb(char* nombre_archivo, uint32_t tamanio_archivo, uint32_t primer_bloque) {
     t_FCB* fcb = malloc(sizeof(t_FCB));
@@ -260,21 +269,15 @@ int crear_archivo_bloques (char * path_archivo_bloques, int block_size, int bloc
 }
 
 t_FCB* cargar_fcb(t_config *file_fcb) {
-
-
     t_FCB* fcb = malloc(sizeof(t_FCB));
     if (!fcb) {
         perror("Error al cargar el FCB");
         exit(EXIT_FAILURE);
     }
-
-
     fcb->nombre_archivo = strdup(config_get_string_value(file_fcb, "nombre_archivo"));
     //log_info(logger_entradasalida, "ENTRO EN CARGAR FCB");
     fcb->tamanio_archivo = config_get_int_value(file_fcb, "tamanio_archivo");
-    fcb->primer_bloque = config_get_int_value(file_fcb, "primer_bloque");   
-
-
+    fcb->primer_bloque = config_get_int_value(file_fcb, "primer_bloque");  
     return fcb;
 }
 
@@ -285,7 +288,6 @@ void persistir_fcb(t_FCB *fcb) {
     strcpy(path_directory_fcb, cfg_entrada_salida->PATH_BASE_DIALFS);
     char file_path[100]; // Tamaño suficiente para almacenar la ruta completa del archivo
 
-
     snprintf(file_path, sizeof(file_path), "%s/%s",path_directory_fcb,fcb->nombre_archivo);
 
     t_config* file_fcb = config_create(file_path);
@@ -293,9 +295,8 @@ void persistir_fcb(t_FCB *fcb) {
         log_info(logger_entrada_salida, "ERROR AL CREAR  CONFIG PARA PERSISTIR ARCHIVO FCB %s", file_path);
     }
 
-   char* tamanio_archivo = uint32_to_string(fcb->tamanio_archivo);
-   char* primer_bloque = uint32_to_string(fcb->primer_bloque);
-
+    char* tamanio_archivo = uint32_to_string(fcb->tamanio_archivo);
+    char* primer_bloque = uint32_to_string(fcb->primer_bloque);
 
     config_set_value(file_fcb,"nombre_archivo", fcb->nombre_archivo );
     log_info(logger_entrada_salida, "PERSISTIDO PARAMETRO nombre_archivo: %s", fcb->nombre_archivo);
@@ -313,18 +314,6 @@ void persistir_fcb(t_FCB *fcb) {
     config_destroy(file_fcb);
 
 }
-
-
-char* uint32_to_string (uint32_t number) {
-    char* str ;
-    if (asprintf(&str, "%u", number)== -1) {
-        //error al asignar memoria
-        return NULL;
-    }
-    return str;
-}
-
-
 
 void init_fcb_dict() {
     fcb_dict = dictionary_create();
@@ -371,14 +360,11 @@ t_FCB* buscar_cargar_fcb(char* nombre) {
     if (fcb == NULL)  {
         log_info(logger_entrada_salida, "NO SE PUDO ASIGNAR MEMORIA AL FCB");
     };
-
-
     char path_fcb [100] ;
     strcpy(path_fcb, cfg_entrada_salida->PATH_BASE_DIALFS); // Directorio donde se encuentran los fcbs
     char file_path[100]; // Tamaño suficiente para almacenar la ruta completa del archivo
     snprintf(file_path, sizeof(file_path), "%s/%s",path_fcb,nombre);
     t_config* file_fcb;
-
 
     //cargar el fcb del archivo
     if((file_fcb = config_create(file_path)) == NULL){ //config_create: Devuelve un puntero hacia la estructura creada o NULL en caso de no encontrar el archivo en el path especificado
@@ -431,28 +417,11 @@ uint32_t  crear_archivo(char* nombre){
     } // fin else de existencia de archivo    
 }
 
-uint32_t encontrar_bit_libre(t_bitarray* bitarray_in) {
-
-    log_info(logger_entrada_salida, "tamaño del bitarray %d %d", bitarray_in->size, bitarray_test_bit(&bitarray_in, 0));
-
-    uint32_t i;
-    for (i = 0; i < bitarray_in->size; i++) {
-
-        if (!bitarray_test_bit(bitarray_in, i)) {
-            log_info(logger_entrada_salida, "Acceso a Bitmap - Bloque: %d - Estado: libre", i); //LOG OBLIGATORIO
-            return i;
-        }else {
-            log_info(logger_entrada_salida, "Acceso a Bitmap - Bloque: %d - Estado: ocupado", i); //LOG OBLIGATORIO
-        }
-    }
-    return -1; // Retorna -1 si no se encuentra ningún bit en 0
-}
 
 uint32_t  borrar_archivo(char* nombre) {
     t_FCB* fcb_eliminar = malloc(sizeof(t_FCB));
     fcb_eliminar = dictionary_get(fcb_dict,nombre);    
-    char * path_archivo_borrar = string_new();
-    
+    char * path_archivo_borrar = string_new();    
 
     string_append(&path_archivo_borrar,cfg_entrada_salida->PATH_BASE_DIALFS); 
     string_append(&path_archivo_borrar,"/");
@@ -479,11 +448,48 @@ uint32_t  borrar_archivo(char* nombre) {
 //dictionary_remove_and_destroy veo si lo uso
     dictionary_remove(fcb_dict,nombre);
 // mostrar como queda el diccionario
-
     log_info(logger_entrada_salida, "Tamanio diccionario: %d", dictionary_size(fcb_dict));
          
 return 1 ;
 }
+uint32_t  truncar_archivo(char* nombre, uint32_t tamanio ){
+    t_FCB* fcb;
+    uint32_t tamanio_actual;
+
+    fcb= buscar_cargar_fcb(nombre); //ver si usar esta o traer desde el diccionario
+
+    log_info(logger_entrada_salida, "Truncar Archivo: %s - Tamaño: %d ",fcb->nombre_archivo,tamanio );// LOG OBLIGATORIO
+
+    if(fcb->tamanio_archivo > tamanio) {
+      log_info(logger_entrada_salida, "SE PROCEDERA A ACHICAR AL ARCHIVO: %s",fcb->nombre_archivo);
+      achicar_archivo(tamanio,fcb);
+    }else {
+      log_info(logger_entrada_salida, "SE PROCEDERA A AGRANDAR AL ARCHIVO: %s",fcb->nombre_archivo);
+      agrandar_archivo(tamanio,fcb);
+
+    }
+    return 1;
+}
+
+void achicar_archivo(uint32_t tamanio, t_FCB* fcb) {
+  
+    uint32_t cant_bloques_desasignar = ceil((fcb->tamanio_archivo - tamanio) / cfg_entrada_salida->BLOCK_SIZE); 
+    uint32_t cant_bloques_asignados = ceil(fcb->tamanio_archivo / cfg_entrada_salida->BLOCK_SIZE);
+    uint32_t primer_bloque = fcb->primer_bloque;
+    uint32_t bloque_final = primer_bloque+cant_bloques_asignados -1 ;
+    //liberar posiciones en bitmap desde el bloque final
+    for (int i = bloque_final; i > bloque_final-cant_bloques_desasignar; i--) {
+        bitarray_clean_bit(bitarray,i);
+    }
+    sincronizar_bitmap();
+    fcb->tamanio_archivo = tamanio;
+    log_info(logger_entrada_salida, "Truncar Archivo: %s - Tamaño: %d: " ,fcb->nombre_archivo ,tamanio);
+
+}
+
+
+
+
 ////////////////////////////////////////////// UTILIDAD/////////////////////////////////////////////////
 t_io_crear_archivo* deserializar_fs_gestion (t_list* lista_paquete){
     
@@ -492,7 +498,23 @@ t_io_crear_archivo* deserializar_fs_gestion (t_list* lista_paquete){
     nuevo_archivo->nombre_archivo_length = *(uint32_t*)list_get(lista_paquete, 1);
     nuevo_archivo->nombre_archivo = list_get(lista_paquete, 2);    
 	return nuevo_archivo;
+}
 
+uint32_t encontrar_bit_libre(t_bitarray* bitarray_in) {
+
+    log_info(logger_entrada_salida, "tamaño del bitarray %d %d", bitarray_in->size, bitarray_test_bit(&bitarray_in, 0));
+
+    uint32_t i;
+    for (i = 0; i < bitarray_in->size; i++) {
+
+        if (!bitarray_test_bit(bitarray_in, i)) {
+            log_info(logger_entrada_salida, "Acceso a Bitmap - Bloque: %d - Estado: libre", i); //LOG OBLIGATORIO
+            return i;
+        }else {
+            log_info(logger_entrada_salida, "Acceso a Bitmap - Bloque: %d - Estado: ocupado", i); //LOG OBLIGATORIO
+        }
+    }
+    return -1; // Retorna -1 si no se encuentra ningún bit en 0
 }
 
 void sincronizar_bitmap (){
@@ -505,6 +527,23 @@ void sincronizar_bitmap (){
     } else {
         log_info(logger_entrada_salida, "SINCRONIZACION DE BITMAP EXITOSA");
     }
+}
+
+int hay_espacio_disponible(int espacio_necesario) {
+    int espacio_disponible;
+    int posicion_inicial;
+
+    if (hay_espacio_total_disponible(espacio_necesario)) {
+        posicion_inicial =  hay_espacio_contiguo_disponible(espacio_necesario);
+        if (posicion_inicial >= 0 ) {
+            return posicion_inicial;
+        }else {
+           posicion_inicial = compactar(espacio_necesario);
+            return posicion_inicial;
+        }     
+    } else {
+        return -1;  
+   }  
 }
 
 bool hay_espacio_total_disponible(int espacio_necesario){
@@ -539,23 +578,6 @@ int hay_espacio_contiguo_disponible(int espacio_necesario) {
         }
     }
     return -1; // No hay espacio contiguo suficiente
-}
-
-int hay_espacio_disponible(int espacio_necesario) {
-    int espacio_disponible;
-    int posicion_inicial;
-
-    if (hay_espacio_total_disponible(espacio_necesario)) {
-        posicion_inicial =  hay_espacio_contiguo_disponible(espacio_necesario);
-        if (posicion_inicial >= 0 ) {
-            return posicion_inicial;
-        }else {
-           posicion_inicial = compactar(espacio_necesario);
-            return posicion_inicial;
-        }     
-    } else {
-        return -1;  
-   }  
 }
 
 int compactar(int espacio_necesario){
@@ -651,4 +673,13 @@ void mover_archivo_izquierda(t_FCB* fcb_archivo, int posiciones){
 
     sincronizar_bitmap ();   
 
+}
+
+char* uint32_to_string (uint32_t number) {
+    char* str ;
+    if (asprintf(&str, "%u", number)== -1) {
+        //error al asignar memoria
+        return NULL;
+    }
+    return str;
 }
