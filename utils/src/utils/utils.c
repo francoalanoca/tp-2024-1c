@@ -517,7 +517,7 @@ void enviar_output(t_io_output* io_output ,int socket_io) {
 	return io_output;
 }
 
-void  enviar_gestionar_archivo(t_io_crear_archivo* nuevo_archivo, int socket, uint32_t cod_op ){
+void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket, uint32_t cod_op ){
     t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));;
     
     paquete_archivo_nuevo = crear_paquete(cod_op);
@@ -525,7 +525,7 @@ void  enviar_gestionar_archivo(t_io_crear_archivo* nuevo_archivo, int socket, ui
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->pid), sizeof(nuevo_archivo->pid));
     agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->nombre_archivo_length, sizeof(nuevo_archivo->nombre_archivo_length));  
     agregar_a_paquete(paquete_archivo_nuevo, nuevo_archivo->nombre_archivo, nuevo_archivo->nombre_archivo_length);
-       
+    agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->tamanio_archivo), sizeof(nuevo_archivo->tamanio_archivo));   
     enviar_paquete(paquete_archivo_nuevo, socket);  
   
   

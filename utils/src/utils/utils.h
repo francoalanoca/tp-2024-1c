@@ -213,12 +213,13 @@ typedef struct {
     char* output;   
 } t_io_output;
 
-//Memoria le manda a IO
+//Kernel le manda a io
 typedef struct {
 	uint32_t pid;
     uint32_t nombre_archivo_length; 
-    char* nombre_archivo;   
-} t_io_crear_archivo;
+    char* nombre_archivo; 
+    uint32_t tamanio_archivo;  
+} t_io_gestion_archivo;
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
@@ -253,6 +254,6 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
 t_io_direcciones_fisicas* deserializar_io_df(t_list*  lista_paquete );
 void enviar_output(t_io_output* io_output ,int socket_io);
 t_io_output* deserializar_output(t_list*  lista_paquete );
-void  enviar_creacion_archivo(t_io_crear_archivo* nuevo_archivo, int socket );
+void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket );
 #endif /* UTILS_H_ */
 

@@ -80,7 +80,7 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 log_info(logger_entrada_salida, "IO_FS_CREATE recibida desde Kernel");
                     
                 lista_paquete = recibir_paquete(socket_kernel);
-                t_io_crear_archivo* archivo_nuevo = malloc(sizeof(t_io_crear_archivo));
+                t_io_gestion_archivo* archivo_nuevo = malloc(sizeof(t_io_gestion_archivo));
                 archivo_nuevo = deserializar_fs_gestion (lista_paquete);
                 crear_archivo(archivo_nuevo->nombre_archivo);
                 list_clean(lista_paquete);
@@ -97,10 +97,10 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 log_info(logger_entrada_salida, "IO_FS_DELETE recibida desde Kernel");
                     
                 lista_paquete = recibir_paquete(socket_kernel);
-                t_io_crear_archivo* archivo_borrar = malloc(sizeof(t_io_crear_archivo));
+                t_io_gestion_archivo* archivo_borrar = malloc(sizeof(t_io_gestion_archivo));
                 archivo_borrar = deserializar_fs_gestion (lista_paquete);
                 borrar_archivo(archivo_borrar->nombre_archivo);
-                list_destroy(lista_paquete);
+                list_clean(lista_paquete);
                 free(archivo_borrar);
                 response = IO_K_GEN_SLEEP_FIN;
 
@@ -114,11 +114,11 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 log_info(logger_entrada_salida, "IO_FS_TRUNCATE recibida desde Kernel");
                     
                 lista_paquete = recibir_paquete(socket_kernel);
-                t_io_crear_archivo* archivo_borrar = malloc(sizeof(t_io_crear_archivo));
-                archivo_borrar = deserializar_fs_gestion (lista_paquete);
-                borrar_archivo(archivo_borrar->nombre_archivo);
+                t_io_gestion_archivo* archivo_truncar = malloc(sizeof(t_io_gestion_archivo));
+                archivo_truncar = deserializar_fs_gestion (lista_paquete);
+                truncar_archivo(archivo_truncar->nombre_archivo, archivo_truncar->tamanio_archivo);
                 list_destroy(lista_paquete);
-                free(archivo_borrar);
+                free(archivo_truncar);
                 response = IO_K_GEN_SLEEP_FIN;
 
                  if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
@@ -506,12 +506,13 @@ void agrandar_archivo(uint32_t nuevo_tamanio, t_FCB* fcb) {
 
 
 ////////////////////////////////////////////// UTILIDAD/////////////////////////////////////////////////
-t_io_crear_archivo* deserializar_fs_gestion (t_list* lista_paquete){
+t_io_gestion_archivo* deserializar_fs_gestion (t_list* lista_paquete){
     
-    t_io_crear_archivo* nuevo_archivo = malloc(sizeof(t_interfaz));
+    t_io_gestion_archivo* nuevo_archivo = malloc(sizeof(t_interfaz));
     nuevo_archivo->pid = *(uint32_t*)list_get(lista_paquete, 0);
     nuevo_archivo->nombre_archivo_length = *(uint32_t*)list_get(lista_paquete, 1);
-    nuevo_archivo->nombre_archivo = list_get(lista_paquete, 2);    
+    nuevo_archivo->nombre_archivo = list_get(lista_paquete, 2);  
+    nuevo_archivo->tamanio_archivo = *(uint32_t*)list_get(lista_paquete, 3);  
 	return nuevo_archivo;
 }
 
