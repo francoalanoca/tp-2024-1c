@@ -37,5 +37,7 @@ void imprimir_pcb(t_pcb* un_pcb);
 void enviar_pcb_a_cpu_por_dispatch(t_pcb* una_pcb);
 void destruir_pcb(t_pcb* un_pcb);
 void cambiar_estado(t_pcb* un_pcb, estado_pcb prox_estado);
+bool encontrar_por_pid(void* elemento, void* pid_ptr);
+
 
 #endif

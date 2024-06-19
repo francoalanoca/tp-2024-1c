@@ -237,16 +237,17 @@ void cambiar_estado(t_pcb* un_pcb, estado_pcb prox_estado) {
     un_pcb->estado = prox_estado;
 }
 
-
 void mostrar_estado_proceso(pid_t pid) {
     pthread_mutex_lock(&mutex_lista_procesos);
 
-    bool _encontrar_por_pid(void* elemento){
-        t_pcb* pcb = (t_pcb*)elemento;
-        return pcb->pid == pid;
+    // Verifica que lista_procesos esté inicializada y no sea NULL
+    if (lista_procesos == NULL) {
+        log_error(logger_kernel, "La lista de procesos no está inicializada.\n");
+        pthread_mutex_unlock(&mutex_lista_procesos);
+        return;
     }
 
-    t_pcb* pcb = list_find(lista_procesos, _encontrar_por_pid);
+    t_pcb* pcb = list_find_with_args(lista_procesos, encontrar_por_pid, &pid);
     
     if (pcb == NULL) {
         log_error(logger_kernel, "No se encontró el proceso con PID %d.\n", pid);
@@ -279,8 +280,6 @@ void mostrar_estado_proceso(pid_t pid) {
     pthread_mutex_unlock(&mutex_lista_procesos);
 }
 
-
-
 void ajustar_multiprogramacion(int nuevo_valor) {
     pthread_mutex_lock(&mutex_lista_procesos_listos);
 
@@ -292,3 +291,9 @@ void ajustar_multiprogramacion(int nuevo_valor) {
 
     pthread_mutex_unlock(&mutex_lista_procesos_listos);
 }
+
+// Función para encontrar un PCB por PID
+bool encontrar_por_pid(void* elemento, void* pid_ptr) {
+    t_pcb* pcb = (t_pcb*)elemento;
+    uint32_t pid = *(uint32_t*)pid_ptr;
+    return pcb->pid == pid;
