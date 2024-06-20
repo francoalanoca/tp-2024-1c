@@ -487,10 +487,10 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
 }
 
 //Memoria envia a entradasalida
-void enviar_output(t_io_output* io_output ,int socket_io) {
+void enviar_output(t_io_output* io_output ,int socket_io, uint32_t op_code) {
     t_paquete* paquete_output;
  
-    paquete_output = crear_paquete(IO_M_STDOUT_FIN);
+    paquete_output = crear_paquete(op_code);
  
     agregar_a_paquete(paquete_output,  &io_output->pid,  sizeof(uint32_t));         
     agregar_a_paquete(paquete_output, &io_output->output_length, sizeof(uint32_t));  

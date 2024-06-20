@@ -261,7 +261,7 @@ void enviar_espera(t_io_espera* io_espera, int socket);
 t_interfaz* deserializar_interfaz(t_list*  lista_paquete );
 void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion);
 t_io_direcciones_fisicas* deserializar_io_df(t_list*  lista_paquete );
-void enviar_output(t_io_output* io_output ,int socket_io);
+void enviar_output(t_io_output* io_output ,int socket_io, uint32_t op_code);
 t_io_output* deserializar_output(t_list*  lista_paquete );
 // Kernel envía a IO Crear/Borrar/Truncar Archivo
 void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket, uint32_t cod_op);
