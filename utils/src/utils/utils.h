@@ -311,6 +311,16 @@ typedef struct {
     uint32_t tamanio;   
 } t_io_fs_truncate;
 
+typedef struct {
+	uint32_t pid;
+    uint32_t nombre_archivo_length; 
+    char* nombre_archivo;
+    t_interfaz* interfaz; //AGREGADO
+    uint32_t direccion; 
+    uint32_t tamanio; 
+    uint32_t puntero_archivo;   
+} t_io_fs_write;
+
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
@@ -355,5 +365,9 @@ void  enviar_creacion_archivo(t_io_crear_archivo* nuevo_archivo, int socket );
 void  enviar_delete_archivo(t_io_crear_archivo* nuevo_archivo, int socket );
 t_io_fs_truncate* deserializar_io_truncate_archivo(t_list*  lista_paquete );
 void  enviar_truncate_archivo(t_io_fs_truncate* nuevo_archivo, int socket );
+ t_io_fs_write* deserializar_io_write_archivo(t_list*  lista_paquete );
+ void  enviar_write_archivo(t_io_fs_write* nuevo_archivo, int socket );
+ void  enviar_read_archivo(t_io_fs_write* nuevo_archivo, int socket );
+ 
 #endif /* UTILS_H_ */
 

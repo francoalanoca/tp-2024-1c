@@ -38,6 +38,7 @@ extern int conexion_cpu_dispatch;
 extern int conexion_cpu_interrupt;
 extern int conexion_memoria;
 extern int socket_servidor;
+extern t_dictionary* interfaces;
 typedef struct {
     int PUERTO_ESCUCHA;
     char* IP_MEMORIA;
@@ -60,5 +61,11 @@ static t_config_kernel *cfg_kernel_start()
     return cfg;
 }
 
+typedef struct{
+    char* nombre;
+    uint32_t tipo;
+    uint32_t conexion;
+
+}t_interfaz_diccionario;
 
 #endif /* INIT_KERNEL_H_ */

@@ -7,6 +7,7 @@ int conexion_cpu_dispatch;
 int conexion_cpu_interrupt;
 int conexion_memoria;
 int socket_servidor;
+t_dictionary* interfaces; //Diccionario donde se encuentran las interfaces que van llegando de IO
 
 int checkProperties(char *path_config) {
     // config valida
@@ -97,6 +98,8 @@ int init(char *path_config) {
     //inicializo el archivo de configuracion
     file_cfg_kernel = iniciar_config(path_config,logger_kernel); //"/Documents/tp_operativos/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config"
 
+    interfaces = dictionary_create();
+
     return checkProperties(path_config);
 }
  void Empezar_conexiones(){
@@ -173,7 +176,7 @@ while (control_key)
       break;
    case ENVIO_INTERFAZ:
       //TODO
-      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA          
       break;
    case ENVIAR_ERROR_MEMORIA_A_KERNEL:
       //TODO
@@ -259,7 +262,7 @@ while (control_key)
       //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
       t_pcb* pcb_a_bloquear_truncate = malloc(sizeof(t_pcb));
       pcb_a_bloquear_truncate = buscar_pcb_en_lista(planificador->cola_exec,io_truncate_archivo->pid);
-      if(pcb_a_bloquear_delete != NULL){
+      if(pcb_a_bloquear_truncate != NULL){
          bloquear_proceso(planificador,pcb_a_bloquear_truncate);
       }
       else{
@@ -269,10 +272,46 @@ while (control_key)
    case SOLICITUD_IO_FS_WRITE_A_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_WRITE_A_KERNEL desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_io_fs_write* io_write_archivo = malloc(sizeof(t_io_fs_write));
+      io_write_archivo = deserializar_io_write_archivo(lista_paquete);
+
+      //AHORA DEBO ENVIAR A IO LO NECESARIO
+      enviar_write_archivo(io_write_archivo,socket_servidor);
+
+      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+      t_pcb* pcb_a_bloquear_write = malloc(sizeof(t_pcb));
+      pcb_a_bloquear_write = buscar_pcb_en_lista(planificador->cola_exec,io_write_archivo->pid);
+      if(pcb_a_bloquear_write != NULL){
+         bloquear_proceso(planificador,pcb_a_bloquear_write);
+      }
+      else{
+         log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+      }
       break;
    case SOLICITUD_IO_FS_READ_A_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_READ_A_KERNEL desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_io_fs_write* io_read_archivo = malloc(sizeof(t_io_fs_write));
+      io_read_archivo = deserializar_io_write_archivo(lista_paquete);
+
+      //AHORA DEBO ENVIAR A IO LO NECESARIO
+      enviar_read_archivo(io_read_archivo,socket_servidor);
+
+      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+      t_pcb* pcb_a_bloquear_read = malloc(sizeof(t_pcb));
+      pcb_a_bloquear_read = buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid);
+      if(pcb_a_bloquear_read != NULL){
+         bloquear_proceso(planificador,pcb_a_bloquear_read);
+      }
+      else{
+         log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+      }
       break;
    case -1:
       log_error(logger_kernel, "Desconexion de cpu - Dispatch");
