@@ -253,7 +253,7 @@ int crear_bitmap (char * path_archivo_bitmap) {
         bitarray = bitarray_create_with_mode(bitmap, block_count, LSB_FIRST);
         log_info(logger_entrada_salida, "BITMAP CARGADO EN BITARRAY ");
         // Marca el primer bloque como utilizado
-        bitarray_set_bit(bitarray, 0);
+        //bitarray_set_bit(bitarray, 0);
 
     } else {
         log_info(logger_entrada_salida, "EL ARCHIVO DEL BITMAP YA EXISTE ");
@@ -568,9 +568,13 @@ void agrandar_archivo(uint32_t nuevo_tamanio, t_FCB* fcb) {
 void leer_archivo(t_io_readwrite_archivo* archivo, int socket){
     char* datos_leidos = malloc(archivo->tamanio_operacion * sizeof(char));
     t_io_input* input = malloc (sizeof(t_io_input));
-
+    t_FCB* fbc = malloc (sizeof(t_FCB));
+    fcb = dictionary_get(fcb_dict,archivo->nombre_archivo);
+    int primer_bloque =  fcb->primer_bloque;  
+    int puntero_archivo_bloques = (cfg_entrada_salida->BLOCK_SIZE*primer_bloque+1)+archivo->puntero_archivo;
+    
     // pararse en el byte a leer, y traer toda la info
-    if (fseek(archivo_bloques,archivo->puntero_archivo, SEEK_SET)!= 0){
+    if (fseek(archivo_bloques,puntero_archivo_bloques, SEEK_SET)!= 0){
         log_error(logger_entrada_salida,"Error al mover el puntero de archivo al bloque: %d ",archivo->puntero_archivo);
     }  else{
         log_info(logger_entrada_salida, "PUNTERO POSICIONADO: %d",archivo->puntero_archivo );
@@ -590,9 +594,13 @@ void leer_archivo(t_io_readwrite_archivo* archivo, int socket){
 }
 
 void escribir_archivo(t_io_readwrite_archivo* archivo, char* datos_escribir){
-
+    t_FCB* fbc = malloc (sizeof(t_FCB));
+    fcb = dictionary_get(fcb_dict,archivo->nombre_archivo);
+    int primer_bloque =  fcb->primer_bloque;  
+    int puntero_archivo_bloques = (cfg_entrada_salida->BLOCK_SIZE*primer_bloque+1)+archivo->puntero_archivo;
+    
     // pararse en el byte a escribir,
-    if (fseek(archivo_bloques,archivo->puntero_archivo, SEEK_SET)!= 0){
+    if (fseek(archivo_bloques,puntero_archivo_bloques, SEEK_SET)!= 0){
         log_error(logger_entrada_salida,"Error al mover el puntero de archivo al bloque: %d ",archivo->puntero_archivo);
     }  else{
         log_info(logger_entrada_salida, "PUNTERO POSICIONADO: %d",archivo->puntero_archivo );
