@@ -164,6 +164,7 @@ typedef struct
 {
     uint32_t pid;
     uint32_t program_counter;
+    uint32_t path_length;
     char* path;
     t_list* lista_recursos_pcb;
     pthread_mutex_t mutex_lista_recursos;
@@ -321,6 +322,19 @@ typedef struct {
     uint32_t puntero_archivo;   
 } t_io_fs_write;
 
+typedef struct {
+    uint32_t pid;
+    t_interfaz* interfaz;
+    uint32_t direccion; 
+    uint32_t tamanio; 
+} t_io_stdin_stdout;
+
+typedef struct {
+    uint32_t pid;
+    uint32_t nombre_length;
+    char* nombre_interfaz;
+    uint32_t unidades_de_trabajo;
+} t_io_gen_sleep;
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
@@ -365,9 +379,16 @@ void  enviar_creacion_archivo(t_io_crear_archivo* nuevo_archivo, int socket );
 void  enviar_delete_archivo(t_io_crear_archivo* nuevo_archivo, int socket );
 t_io_fs_truncate* deserializar_io_truncate_archivo(t_list*  lista_paquete );
 void  enviar_truncate_archivo(t_io_fs_truncate* nuevo_archivo, int socket );
- t_io_fs_write* deserializar_io_write_archivo(t_list*  lista_paquete );
- void  enviar_write_archivo(t_io_fs_write* nuevo_archivo, int socket );
- void  enviar_read_archivo(t_io_fs_write* nuevo_archivo, int socket );
+t_io_fs_write* deserializar_io_write_archivo(t_list*  lista_paquete );
+void  enviar_write_archivo(t_io_fs_write* nuevo_archivo, int socket );
+void  enviar_read_archivo(t_io_fs_write* nuevo_archivo, int socket );
+t_pcb* deserializar_pcb(t_list*  lista_paquete );
+t_io_stdin_stdout* deserializar_io_stdin_stdout(t_list*  lista_paquete );
+void  enviar_io_stdin_read(t_io_stdin_stdout* io_stdin_read, int socket );
+void  enviar_io_stdout_write(t_io_stdin_stdout* io_stdout_write, int socket );
+t_io_gen_sleep* deserializar_io_gen_sleep(t_list*  lista_paquete );
+void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket );
+ 
  
 #endif /* UTILS_H_ */
 

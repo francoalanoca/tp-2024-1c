@@ -173,34 +173,125 @@ while (control_key)
    case INTERRUPCION_CPU:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      //Recibo t_proceso_interrumpido desde cpu(funcion check_interrupt)
       break;
    case ENVIO_INTERFAZ:
       //TODO
-      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA          
+      //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA 
+      //Recibo PID,nombre de la interfaz y unidades de trabajo de cpu, debo pedir a kernel que realice la instruccion IO_GEN_SLEEP (comprobar interfaz en diccionaro de interfaces antes)         
+      log_info(logger_kernel,"Recibo ENVIO_INTERFAZ desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_io_gen_sleep* io_gen_sleep = malloc(sizeof(t_io_gen_sleep));
+      io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
+
+      
+      if(dictionary_has_key(interfaces,io_gen_sleep->nombre_interfaz)){
+         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
+         interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->nombre_interfaz);
+            //AHORA DEBO ENVIAR A IO LO NECESARIO
+         enviar_io_gen_sleep(io_gen_sleep,interfaz_encontrada->conexion);
+
+         //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+         t_pcb* pcb_a_bloquear_io_gen_sleep = malloc(sizeof(t_pcb));
+         pcb_a_bloquear_io_gen_sleep = buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid);
+         if(pcb_a_bloquear_io_gen_sleep != NULL){
+            bloquear_proceso(planificador,pcb_a_bloquear_io_gen_sleep);
+         }
+         else{
+            log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+         }
+      }
+      else{
+         //ver si la interfaz esta conectada y si permite la operacion
+      }
+
+      
+      
       break;
    case ENVIAR_ERROR_MEMORIA_A_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      //Recibo t_proceso(ver si seria solo el pcb) desde cpu al recibir un error de out of memory en instruccion resize
+      log_info(logger_kernel,"Recibo ENVIAR_ERROR_MEMORIA_A_KERNEL desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_pcb* proceso_recibido_error_memoria = malloc(sizeof(t_pcb));
+      proceso_recibido_error_memoria = deserializar_pcb(lista_paquete);
+
+      if(proceso_recibido_error_memoria != NULL){
+         desalojar_proceso(planificador,proceso_recibido_error_memoria);//esta bien en este caso que pase de exec a ready?
+      }
+      else{
+         log_info(logger_kernel,"El proceso recibido es nulo");
+      }
       break;
    case ENVIO_WAIT_A_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      //Recibo t_proceso(debe ser solo pcb?) y recurso desde cpu, debo asignar una instancia del recurso al proceso(verificar recursos disponibles)
       break;
    case ENVIO_SIGNAL_A_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      //Recibo t_proceso(debe ser solo pcb?) y recurso desde cpu, debo liberar una instancia del recurso al proceso(verificar recursos disponibles)
       break;
    case SOLICITUD_IO_STDIN_READ:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      //Recibo interfaz(solo el nombre y su length?), direccion y tamanio desde cpu, se solicita a IO que haga la operacion IO_STDIN_READ(hay que bloquear el porceso)
+      log_info(logger_kernel,"Recibo SOLICITUD_IO_STDIN_READ desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_io_stdin_stdout* io_stdin_read = malloc(sizeof(t_io_stdin_stdout));
+      io_stdin_read = deserializar_io_stdin_stdout(lista_paquete);
+
+      enviar_io_stdin_read(io_stdin_read,socket_servidor);
+
+      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+      t_pcb* pcb_a_bloquear_stdout_read = malloc(sizeof(t_pcb));
+      pcb_a_bloquear_stdout_read = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
+      if(pcb_a_bloquear_stdout_read != NULL){
+         bloquear_proceso(planificador,pcb_a_bloquear_stdout_read);
+      }
+      break;
       break;
    case SOLICITUD_IO_STDOUT_WRITE:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      //Recibo pid, interfaz(solo el nombre y su length?), direccion y tamanio desde cpu, se solicita a IO que haga la operacion IO_STDOUT_WRITE(hay que bloquear el porceso)
+      log_info(logger_kernel,"Recibo SOLICITUD_IO_STDOUT_WRITE desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_io_stdin_stdout* io_stdout_write = malloc(sizeof(t_io_stdin_stdout));
+      io_stdout_write = deserializar_io_stdin_stdout(lista_paquete);
+
+      enviar_io_stdout_write(io_stdout_write,socket_servidor);
+
+      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+      t_pcb* pcb_a_bloquear_stdout_write = malloc(sizeof(t_pcb));
+      pcb_a_bloquear_stdout_write = buscar_pcb_en_lista(planificador->cola_exec,io_stdout_write->pid);
+      if(pcb_a_bloquear_stdout_write != NULL){
+         bloquear_proceso(planificador,pcb_a_bloquear_stdout_write);
+      }
       break;
    case SOLICITUD_EXIT_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
+      //Recibo PCB desde cpu, se debe finalizar el proceso
+      log_info(logger_kernel,"Recibo SOLICITUD_EXIT_KERNEL desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_pcb* proceso_recibido = malloc(sizeof(t_pcb));
+      proceso_recibido = deserializar_pcb(lista_paquete);
+
+      if(proceso_recibido != NULL){
+         finalizar_proceso(planificador,proceso_recibido);
+      }
+      else{
+         log_info(logger_kernel,"El proceso recibido es nulo");
+      }
+
       break;
    case SOLICITUD_IO_FS_CREATE_A_KERNEL:
       //TODO

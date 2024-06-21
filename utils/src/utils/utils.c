@@ -730,3 +730,107 @@ void  enviar_read_archivo(t_io_fs_write* nuevo_archivo, int socket ){
     enviar_paquete(paquete_archivo_nuevo, socket);  
     
 }
+
+ t_pcb* deserializar_pcb(t_list*  lista_paquete ){
+
+    t_pcb* pcb = malloc(sizeof(t_pcb));
+    pcb->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    pcb->program_counter = *(uint32_t*)list_get(lista_paquete, 1);
+    pcb->path_length = *(uint32_t*)list_get(lista_paquete, 2);
+    pcb->path = list_get(lista_paquete, 3);
+    //TODO: VER EL TEMA DEL CAMPO LISTA_RECURSOS_PCB
+    /*uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 4);
+
+     // Deserializar cada elemento de la lista
+    pcb->lista_recursos_pcb = list_create();
+    for (int i = 0; i < tamanio_lista; i++) {
+        uint32_t* recurso = malloc(sizeof(uint32_t)); //de que tipo son los objetos de la lista?
+        recurso = *(uint32_t*)list_get(lista_paquete, 2 + i);
+        list_add(pcb->lista_recursos_pcb, recurso);
+    }*/
+
+    /*io_write_archivo->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    io_write_archivo->nombre_archivo_length = *(uint32_t*)list_get(lista_paquete, 1);
+    io_write_archivo->nombre_archivo = list_get(lista_paquete, 2);
+    io_write_archivo->interfaz->nombre_length = *(uint32_t*)list_get(lista_paquete, 3); //AGREGADO
+    io_write_archivo->interfaz->nombre = list_get(lista_paquete, 4); //AGREGADO
+    io_write_archivo->interfaz->tipo = *(uint32_t*)list_get(lista_paquete, 5); //AGREGADO
+    io_write_archivo->direccion= *(uint32_t*)list_get(lista_paquete, 6);
+    io_write_archivo->tamanio = *(uint32_t*)list_get(lista_paquete, 7);
+    io_write_archivo->puntero_archivo = *(uint32_t*)list_get(lista_paquete, 8);*/
+
+    pcb->mutex_lista_recursos = *(pthread_mutex_t*)list_get(lista_paquete, 5); //Revisar tamanio
+    //pcb->registros_cpu = (t_registros_CPU)list_get(lista_paquete, 6); //VER COMO DESEREALIZAR T_REGISTROS_CPU
+    pcb->estado = pcb->path_length = *(uint32_t*)list_get(lista_paquete, 7);
+    pcb->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete, 8);
+	return pcb;
+}
+
+ t_io_stdin_stdout* deserializar_io_stdin_stdout(t_list*  lista_paquete ){
+
+    t_io_stdin_stdout* io_stdin_stdout = malloc(sizeof(t_io_stdin_stdout));
+    io_stdin_stdout->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    io_stdin_stdout->interfaz->nombre_length = *(uint32_t*)list_get(lista_paquete, 1); //AGREGADO
+    io_stdin_stdout->interfaz->nombre = list_get(lista_paquete, 2); //AGREGADO
+    io_stdin_stdout->interfaz->tipo = *(uint32_t*)list_get(lista_paquete, 3); //AGREGADO
+    io_stdin_stdout->direccion= *(uint32_t*)list_get(lista_paquete, 4);
+    io_stdin_stdout->tamanio = *(uint32_t*)list_get(lista_paquete, 5);
+    
+
+	return io_stdin_stdout;
+}
+
+void  enviar_io_stdin_read(t_io_stdin_stdout* io_stdin_read, int socket ){
+    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
+    
+    paquete_archivo_nuevo = crear_paquete(IO_K_STDIN);
+    
+    agregar_a_paquete(paquete_archivo_nuevo, &(io_stdin_read->pid), sizeof(io_stdin_read->pid));
+    agregar_a_paquete(paquete_archivo_nuevo, &io_stdin_read->interfaz->nombre_length, sizeof(io_stdin_read->interfaz->nombre_length)); //AGREGADO
+    agregar_a_paquete(paquete_archivo_nuevo, io_stdin_read->interfaz->nombre, io_stdin_read->interfaz->nombre_length); //AGREGADO
+    agregar_a_paquete(paquete_archivo_nuevo, &io_stdin_read->interfaz->tipo, sizeof(io_stdin_read->interfaz->tipo)); //AGREGADO
+    agregar_a_paquete(paquete_archivo_nuevo, &(io_stdin_read->direccion), sizeof(io_stdin_read->direccion));
+    agregar_a_paquete(paquete_archivo_nuevo, &(io_stdin_read->tamanio), sizeof(io_stdin_read->tamanio));
+    enviar_paquete(paquete_archivo_nuevo, socket);  
+    
+}
+
+void  enviar_io_stdout_write(t_io_stdin_stdout* io_stdout_write, int socket ){
+    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
+    
+    paquete_archivo_nuevo = crear_paquete(IO_K_STDOUT);
+    
+    agregar_a_paquete(paquete_archivo_nuevo, &(io_stdout_write->pid), sizeof(io_stdout_write->pid));
+    agregar_a_paquete(paquete_archivo_nuevo, &io_stdout_write->interfaz->nombre_length, sizeof(io_stdout_write->interfaz->nombre_length)); //AGREGADO
+    agregar_a_paquete(paquete_archivo_nuevo, io_stdout_write->interfaz->nombre, io_stdout_write->interfaz->nombre_length); //AGREGADO
+    agregar_a_paquete(paquete_archivo_nuevo, &io_stdout_write->interfaz->tipo, sizeof(io_stdout_write->interfaz->tipo)); //AGREGADO
+    agregar_a_paquete(paquete_archivo_nuevo, &(io_stdout_write->direccion), sizeof(io_stdout_write->direccion));
+    agregar_a_paquete(paquete_archivo_nuevo, &(io_stdout_write->tamanio), sizeof(io_stdout_write->tamanio));
+    enviar_paquete(paquete_archivo_nuevo, socket);  
+    
+}
+
+ t_io_gen_sleep* deserializar_io_gen_sleep(t_list*  lista_paquete ){
+
+    t_io_gen_sleep* io_gen_sleep = malloc(sizeof(t_io_gen_sleep));
+    io_gen_sleep->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    io_gen_sleep->nombre_length = *(uint32_t*)list_get(lista_paquete, 1); 
+    io_gen_sleep->nombre_interfaz = list_get(lista_paquete, 2); 
+    io_gen_sleep->unidades_de_trabajo = *(uint32_t*)list_get(lista_paquete, 3); 
+    
+	return io_gen_sleep;
+}
+
+void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket ){
+    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
+    
+    paquete_archivo_nuevo = crear_paquete(IO_K_GEN_SLEEP);
+    
+    agregar_a_paquete(paquete_archivo_nuevo, &(io_gen_sleep->pid), sizeof(io_gen_sleep->pid));
+    agregar_a_paquete(paquete_archivo_nuevo, &io_gen_sleep->nombre_length, sizeof(io_gen_sleep->nombre_length)); 
+    agregar_a_paquete(paquete_archivo_nuevo, io_gen_sleep->nombre_interfaz, io_gen_sleep->nombre_length);
+    agregar_a_paquete(paquete_archivo_nuevo, &io_gen_sleep->unidades_de_trabajo, sizeof(io_gen_sleep->unidades_de_trabajo)); 
+
+    enviar_paquete(paquete_archivo_nuevo, socket);  
+    
+}
