@@ -67,7 +67,7 @@ uint32_t borrar_archivo(char* nombre);
 uint32_t truncar_archivo(char* nombre, uint32_t tamanio);
 //Lee archivo segun los datos especificados, arma un input y se lo pasa a memoria.
 void leer_archivo(t_io_readwrite_archivo* archivo, int socket);
-void escribir_archivo(t_io_readwrite_archivo* archivo, int socket);
+void escribir_archivo(t_io_readwrite_archivo* archivo, char* datos_escribir);
 //Limpia los bits asignados en el bitmap hasta ajustar el tamaño solicitado
 void achicar_archivo(uint32_t tamanio,t_FCB* fcb);
 //verifica que haya espacio y mueve el archivo a la nueva posicion determinada por la compactacion

@@ -133,7 +133,7 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                     
                 lista_paquete = recibir_paquete(socket_kernel);
                 t_io_readwrite_archivo* archivo_leer = malloc(sizeof(t_io_gestion_archivo));
-                archivo_truncar = deserializar_fs_gestion (lista_paquete);
+                archivo_leer = deserializar_fs_gestion (lista_paquete);
                 leer_archivo(archivo_leer,socket_memoria);
                 list_clean(lista_paquete);
                 free(archivo_leer);
@@ -459,7 +459,7 @@ uint32_t  crear_archivo(char* nombre){
             perror("Error al crear el archivo de fcb vacio para ");
         }
         uint32_t posicion_bit_libre = encontrar_bit_libre(bitarray);
-        if (posicion_bit_libre >0) {
+        if (posicion_bit_libre >=0) {
             
             fcb = inicializar_fcb(nombre,0, posicion_bit_libre);
             persistir_fcb(fcb);
@@ -568,9 +568,9 @@ void agrandar_archivo(uint32_t nuevo_tamanio, t_FCB* fcb) {
 void leer_archivo(t_io_readwrite_archivo* archivo, int socket){
     char* datos_leidos = malloc(archivo->tamanio_operacion * sizeof(char));
     t_io_input* input = malloc (sizeof(t_io_input));
-    t_FCB* fbc = malloc (sizeof(t_FCB));
-    fcb = dictionary_get(fcb_dict,archivo->nombre_archivo);
-    int primer_bloque =  fcb->primer_bloque;  
+    t_FCB* fbc_leer = malloc (sizeof(t_FCB));
+    fbc_leer = dictionary_get(fcb_dict,archivo->nombre_archivo);
+    int primer_bloque =  fbc_leer->primer_bloque;  
     int puntero_archivo_bloques = (cfg_entrada_salida->BLOCK_SIZE*primer_bloque+1)+archivo->puntero_archivo;
     
     // pararse en el byte a leer, y traer toda la info
@@ -594,9 +594,9 @@ void leer_archivo(t_io_readwrite_archivo* archivo, int socket){
 }
 
 void escribir_archivo(t_io_readwrite_archivo* archivo, char* datos_escribir){
-    t_FCB* fbc = malloc (sizeof(t_FCB));
-    fcb = dictionary_get(fcb_dict,archivo->nombre_archivo);
-    int primer_bloque =  fcb->primer_bloque;  
+    t_FCB* fbc_escribir = malloc (sizeof(t_FCB));
+    fbc_escribir = dictionary_get(fcb_dict,archivo->nombre_archivo);
+    int primer_bloque =  fbc_escribir->primer_bloque;  
     int puntero_archivo_bloques = (cfg_entrada_salida->BLOCK_SIZE*primer_bloque+1)+archivo->puntero_archivo;
     
     // pararse en el byte a escribir,
