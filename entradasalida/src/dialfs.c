@@ -132,8 +132,8 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 log_info(logger_entrada_salida, "IO_FS_READ recibida desde Kernel");
                     
                 lista_paquete = recibir_paquete(socket_kernel);
-                t_io_readwrite_archivo* archivo_leer = malloc(sizeof(t_io_gestion_archivo));
-                archivo_leer = deserializar_fs_gestion (lista_paquete);
+                t_io_readwrite_archivo* archivo_leer = malloc(sizeof(t_io_readwrite_archivo));
+                archivo_leer = deserializar_io_readwrite (lista_paquete);
                 leer_archivo(archivo_leer,socket_memoria);
                 list_clean(lista_paquete);
                 free(archivo_leer);
@@ -150,8 +150,8 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                  
                 t_io_direcciones_fisicas* solicitud_datos_escribir = malloc (sizeof(t_io_direcciones_fisicas));    
                 lista_paquete = recibir_paquete(socket_kernel);
-                t_io_readwrite_archivo* archivo_escribir = malloc(sizeof(t_io_gestion_archivo));                
-                archivo_escribir = deserializar_fs_gestion (lista_paquete);
+                t_io_readwrite_archivo* archivo_escribir = malloc(sizeof(t_io_readwrite_archivo));                
+                archivo_escribir = deserializar_io_readwrite (lista_paquete);
                 char* datos_escribir = malloc(archivo_escribir->tamanio_operacion * sizeof(char));
                 solicitud_datos_escribir->pid = archivo_escribir->pid;
                 solicitud_datos_escribir->direcciones_fisicas = list_create ();
@@ -550,7 +550,7 @@ void achicar_archivo(uint32_t tamanio, t_FCB* fcb) {
 void agrandar_archivo(uint32_t nuevo_tamanio, t_FCB* fcb) {
     int nueva_posicion_inicial = hay_espacio_disponible(nuevo_tamanio); 
 
-    if (nueva_posicion_inicial> 0 ) {
+    if (nueva_posicion_inicial>= 0 ) {
         mover_archivo(fcb, nueva_posicion_inicial);
     }else {
         log_info(logger_entrada_salida, "No hay más bloques disponibles"); // no verfico el caso sin espacio ISSUE #3568

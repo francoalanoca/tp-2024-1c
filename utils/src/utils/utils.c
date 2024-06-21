@@ -582,14 +582,14 @@ t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete ){
     io_readwrite->direcciones_fisicas = list_create();
     for (int i = 0; i < tamanio_lista; i++) {
         uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
-        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 3 + i);
-        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ; // despues borrar print
+        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 4 + i);
+        printf("Posicion %d, valor %d \n",4 + i, direccion_fisica) ; // despues borrar print
         list_add(io_readwrite->direcciones_fisicas, direccion_fisica);
          printf("Valor agregado %d \n",direccion_fisica); // despues borrar print
     }
-    io_readwrite->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,4+tamanio_lista+1);
+    io_readwrite->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,4+tamanio_lista);
      printf("tamanio operacion %d \n",io_readwrite->tamanio_operacion);// despues borrar print
-    io_readwrite->puntero_archivo = *(uint32_t*)list_get(lista_paquete,4+tamanio_lista+2);
+    io_readwrite->puntero_archivo = *(uint32_t*)list_get(lista_paquete,4+tamanio_lista+1);
      printf("Puntero archivo %d \n",io_readwrite->puntero_archivo); // despues borrar print
     return io_readwrite; 
     free(io_readwrite);
