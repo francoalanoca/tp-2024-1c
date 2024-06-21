@@ -202,8 +202,8 @@ typedef struct {
 }t_proceso;
 
 typedef struct{
-    t_proceso* proceso;
-    uint8_t tamanio_motivo_interrupcion;
+    t_pcb* pcb;
+    uint32_t tamanio_motivo_interrupcion;
     char* motivo_interrupcion;
 }t_proceso_interrumpido;
 
@@ -388,7 +388,7 @@ void  enviar_io_stdin_read(t_io_stdin_stdout* io_stdin_read, int socket );
 void  enviar_io_stdout_write(t_io_stdin_stdout* io_stdout_write, int socket );
 t_io_gen_sleep* deserializar_io_gen_sleep(t_list*  lista_paquete );
 void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket );
- 
+t_proceso_interrumpido* deserializar_proceso_interrumpido(t_list*  lista_paquete );
  
 #endif /* UTILS_H_ */
 

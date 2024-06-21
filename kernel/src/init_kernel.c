@@ -173,7 +173,13 @@ while (control_key)
    case INTERRUPCION_CPU:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
-      //Recibo t_proceso_interrumpido desde cpu(funcion check_interrupt)
+      //Recibo t_proceso_interrumpido(pcb y motivo?) desde cpu(funcion check_interrupt)
+      log_info(logger_kernel,"Recibo INTERRUPCION_CPU desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
+      proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
+      //poner proceso recibido en lista de procesos_interrumpidos? y activar semaforo para que el planificador continue con la finalizacion del proceso  
       break;
    case ENVIO_INTERFAZ:
       //TODO
