@@ -116,6 +116,7 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 lista_paquete = recibir_paquete(socket_kernel);
                 t_io_gestion_archivo* archivo_truncar = malloc(sizeof(t_io_gestion_archivo));
                 archivo_truncar = deserializar_fs_gestion (lista_paquete);
+                log_info(logger_entrada_salida, "IO_FS_TRUNCATE Tamaño solicitado %d",archivo_truncar->tamanio_archivo);
                 truncar_archivo(archivo_truncar->nombre_archivo, archivo_truncar->tamanio_archivo);
                 list_clean(lista_paquete);
                 free(archivo_truncar);
@@ -232,7 +233,7 @@ int crear_bitmap (char * path_archivo_bitmap) {
 
     if (st.st_size == 0) {
         // El archivo está vacío, establece el tamaño del archivo
-        log_info(logger_entrada_salida, "ESTABLECER EL TAMAÑO DEL BITMAP  : %d : " ,bitmap_size_in_bytes);
+        log_info(logger_entrada_salida, "ESTABLECER EL TAMAÑO DEL BITMAP  : %d Bytes" ,bitmap_size_in_bytes);
         if (ftruncate(fd_bitmap, bitmap_size_in_bytes) == -1) {
             perror("Error al establecer el tamaño del archivo");
             close(fd_bitmap);
@@ -240,7 +241,7 @@ int crear_bitmap (char * path_archivo_bitmap) {
         }
 
         // Mapea el archivo a la memoria
-         bitmap = mmap(NULL, block_count, PROT_READ | PROT_WRITE, MAP_SHARED, fd_bitmap, 0);
+         bitmap = mmap(NULL, block_count , PROT_READ | PROT_WRITE, MAP_SHARED, fd_bitmap, 0);
 
         if (bitmap == MAP_FAILED) {
             perror("Error al mapear el archivo");
@@ -250,8 +251,8 @@ int crear_bitmap (char * path_archivo_bitmap) {
 
         log_info(logger_entrada_salida, "BITMAP MAPEADO A MEMORIA ");
         // Inicializa el bitmap
-        bitarray = bitarray_create_with_mode(bitmap, block_count, LSB_FIRST);
-        log_info(logger_entrada_salida, "BITMAP CARGADO EN BITARRAY ");
+        bitarray = bitarray_create_with_mode(bitmap, bitmap_size_in_bytes, LSB_FIRST);
+        log_info(logger_entrada_salida, "BITMAP CARGADO EN BITARRAY con : %d bits", bitarray_get_max_bit(bitarray));
         // Marca el primer bloque como utilizado
         //bitarray_set_bit(bitarray, 0);
 
@@ -268,7 +269,7 @@ int crear_bitmap (char * path_archivo_bitmap) {
         }
 
         // Inicializa el bitmap
-        bitarray = bitarray_create(bitmap, block_count);
+        bitarray = bitarray_create(bitmap, bitmap_size_in_bytes);
         log_info(logger_entrada_salida, "BITMAP CARGADO EN BITARRAY ");
         //bitarray = bitarray_create_with_mode(bitmap, block_count, LSB_FIRST);
 
@@ -517,7 +518,8 @@ uint32_t  truncar_archivo(char* nombre, uint32_t tamanio ){
     t_FCB* fcb;
     uint32_t tamanio_actual;
     fcb = buscar_cargar_fcb(nombre); //ver si usar esta o traer desde el diccionario
-
+    tamanio_actual = fcb->tamanio_archivo;
+    uint32_t tamanio_total = tamanio_actual+ tamanio;
     log_info(logger_entrada_salida, "Truncar Archivo: %s - Tamaño: %d ",fcb->nombre_archivo,tamanio );// LOG OBLIGATORIO
 
     if(fcb->tamanio_archivo > tamanio) {
@@ -525,9 +527,10 @@ uint32_t  truncar_archivo(char* nombre, uint32_t tamanio ){
       achicar_archivo(tamanio,fcb);
     }else {
       log_info(logger_entrada_salida, "SE PROCEDERA A AGRANDAR AL ARCHIVO: %s",fcb->nombre_archivo);
-      agrandar_archivo(tamanio,fcb);
+      agrandar_archivo(tamanio_total,fcb);
 
     }
+     imprimir_estado_bitarray();
     return 1;
 }
 
@@ -551,16 +554,28 @@ void agrandar_archivo(uint32_t nuevo_tamanio, t_FCB* fcb) {
     int nueva_posicion_inicial = hay_espacio_disponible(nuevo_tamanio); 
 
     if (nueva_posicion_inicial>= 0 ) {
-        mover_archivo(fcb, nueva_posicion_inicial);
+        if (fcb->tamanio_archivo == 0 ) { // para archivos recien creados
+            log_info(logger_entrada_salida, "Archivo nunca usado");
+            int tamanio_en_bloques = ceil( nuevo_tamanio /cfg_entrada_salida->BLOCK_SIZE);
+            bitarray_clean_bit(bitarray,fcb->primer_bloque);                // borro la posicion actual en el bitmap
+            log_info(logger_entrada_salida, "Nueva posicion inicial: %d - Nuevo tamaño en bloques: %d ",nueva_posicion_inicial, tamanio_en_bloques);
+            for (int i = 0; i <tamanio_en_bloques; i++) {
+                    bitarray_set_bit(bitarray,i+nueva_posicion_inicial);
+                }
+            fcb->primer_bloque = nueva_posicion_inicial;        
+        }else {   
+            fcb->tamanio_archivo = nuevo_tamanio; 
+            mover_archivo(fcb, nueva_posicion_inicial);        
+        }
+    fcb->primer_bloque = nueva_posicion_inicial;
+    sincronizar_bitmap();
+    persistir_fcb(fcb);
+    dictionary_put(fcb_dict,fcb->nombre_archivo, fcb);
+    log_info(logger_entrada_salida, "Truncar Archivo: %s - Tamaño: %d: " ,fcb->nombre_archivo ,nuevo_tamanio);    
     }else {
         log_info(logger_entrada_salida, "No hay más bloques disponibles"); // no verfico el caso sin espacio ISSUE #3568
     }   
-    sincronizar_bitmap();
-    fcb->primer_bloque = nueva_posicion_inicial;
-    fcb->tamanio_archivo = nuevo_tamanio; 
-    persistir_fcb(fcb);
-    dictionary_put(fcb_dict,fcb->nombre_archivo, fcb);
-    log_info(logger_entrada_salida, "Truncar Archivo: %s - Tamaño: %d: " ,fcb->nombre_archivo ,nuevo_tamanio);
+
 
 }
 
@@ -628,9 +643,9 @@ t_io_gestion_archivo* deserializar_fs_gestion (t_list* lista_paquete){
 
 uint32_t encontrar_bit_libre(t_bitarray* bitarray_in) {
 
-    log_info(logger_entrada_salida, "tamaño del bitarray %d %d", bitarray_in->size, bitarray_test_bit(&bitarray_in, 0));
+    log_info(logger_entrada_salida, "tamaño del bitarray %d %d",bitarray_get_max_bit(bitarray_in), bitarray_test_bit(&bitarray_in, 0));
     uint32_t i;
-    for (i = 0; i < bitarray_in->size; i++) {
+    for (i = 0; i < bitarray_get_max_bit(bitarray_in); i++) {
         if (!bitarray_test_bit(bitarray_in, i)) {
             log_info(logger_entrada_salida, "Acceso a Bitmap - Bloque: %d - Estado: libre", i); //LOG OBLIGATORIO
             return i;
@@ -671,12 +686,15 @@ int hay_espacio_disponible(int espacio_necesario) {
 }
 
 bool hay_espacio_total_disponible(int espacio_necesario){
-    int espacio_disponible;
+    int espacio_disponible = 0;
     for (int i = 0; i < bitarray_get_max_bit(bitarray); i++) {
         if (!bitarray_test_bit(bitarray, i)) {
             espacio_disponible++;
         }
     }
+    printf("Cantidad de bits %d:",  bitarray_get_max_bit(bitarray));
+    printf("Bloques/bits libres %d:",  espacio_disponible);
+    printf("Espacio total disponible %d:",  espacio_disponible*cfg_entrada_salida->BLOCK_SIZE);
 return espacio_disponible*cfg_entrada_salida->BLOCK_SIZE > espacio_necesario;
 }   
 
@@ -779,7 +797,7 @@ void mover_archivo(t_FCB* fcb_archivo, int nueva_posicion_inicial){
 
     int posicion_inicial = fcb_archivo->primer_bloque;
     int tamanio_en_bloques = ceil( fcb_archivo->tamanio_archivo /cfg_entrada_salida->BLOCK_SIZE);
-
+    log_info(logger_entrada_salida, "Tamaño en bytes: %d Tamaño en bloques: %d",fcb_archivo->tamanio_archivo,tamanio_en_bloques);
     char* valor_bloque = malloc(cfg_entrada_salida->BLOCK_SIZE);
     int j = 0;    
     for (int i = posicion_inicial; i <= tamanio_en_bloques; i++){
@@ -805,3 +823,15 @@ char* uint32_to_string (uint32_t number) {
     return str;
 }
 
+void imprimir_estado_bitarray() {
+
+    log_info(logger_entrada_salida, "ESTADO BITARRAY:");
+    uint32_t i;
+    for (i = 0; i < bitarray_get_max_bit(bitarray); i++) {
+        if (bitarray_test_bit(bitarray, i)) {
+            log_info(logger_entrada_salida,"%d",1);         
+        }else {
+            log_info(logger_entrada_salida,"%d",0); 
+        }
+    }
+}
