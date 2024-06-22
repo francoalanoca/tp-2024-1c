@@ -774,7 +774,7 @@ int compactar(int espacio_necesario){
     return posicion_inicio;
 }    
 
-void escribir_bloque (int numero_bloque, int tamanio_escritura, char *datos_escribir){ // los datos deberian ser void??
+void escribir_bloque (int numero_bloque,  char *datos_escribir){ // los datos deberian ser void??
 
     if (fseek(archivo_bloques,(numero_bloque * cfg_entrada_salida->BLOCK_SIZE ) , SEEK_SET)!= 0){
         log_info(logger_entrada_salida,"Error al mover el puntero de archivo al bloque: %d ",numero_bloque);
@@ -783,7 +783,7 @@ void escribir_bloque (int numero_bloque, int tamanio_escritura, char *datos_escr
         log_info(logger_entrada_salida, "PUNTERO POSICIONADO EN BLOQUE: %d ",numero_bloque );
     };
 
-    if (fwrite(datos_escribir, tamanio_escritura, 1, archivo_bloques)<= 0){
+    if (fwrite(datos_escribir,  cfg_entrada_salida->BLOCK_SIZE, 1, archivo_bloques)<= 0){
         log_info(logger_entrada_salida,"Error al escribir el bloque: %d ",numero_bloque);
         return -1;
     }  else{
@@ -792,15 +792,15 @@ void escribir_bloque (int numero_bloque, int tamanio_escritura, char *datos_escr
     };
 }
 
-void leer_bloque (int numero_bloque, int desplazamiento, int tamanio_lectura, void *datos ) {
+void leer_bloque (int numero_bloque, void *datos ) {
 
-    if (fseek(archivo_bloques,(numero_bloque * cfg_entrada_salida->BLOCK_SIZE ) + desplazamiento, SEEK_SET)!= 0){
+    if (fseek(archivo_bloques,(numero_bloque * cfg_entrada_salida->BLOCK_SIZE ), SEEK_SET)!= 0){
         log_info(logger_entrada_salida,"Error al mover el puntero de archivo al bloque: %d ",numero_bloque);
     }  else{
-        log_info(logger_entrada_salida, "PUNTERO POSICIONADO EN BLOQUE: %d DESPLAZADO %d",numero_bloque,desplazamiento );
+        log_info(logger_entrada_salida, "PUNTERO POSICIONADO EN BLOQUE: %d DESPLAZADO %d",numero_bloque,numero_bloque * cfg_entrada_salida->BLOCK_SIZE );
     };
 
-    if (fread(datos, tamanio_lectura, 1, archivo_bloques)<= 0){
+    if (fread(datos, cfg_entrada_salida->BLOCK_SIZE, 1, archivo_bloques)<= 0){
         log_info(logger_entrada_salida,"Error al leer el bloque: %d ",numero_bloque);
     }  else{
         log_info(logger_entrada_salida, "BLOQUE: %d LEIDO",numero_bloque);
@@ -820,9 +820,9 @@ void mover_archivo(t_FCB* fcb_archivo, int nueva_posicion_inicial){
         char* valor_bloque = malloc(cfg_entrada_salida->BLOCK_SIZE);
         int j = 0;    
         for (int i = posicion_inicial; i <= posicion_inicial+tamanio_en_bloques-1; i++){
-            leer_bloque (i, i*cfg_entrada_salida->BLOCK_SIZE, cfg_entrada_salida->BLOCK_SIZE, valor_bloque );
+            leer_bloque (i, valor_bloque );
             bitarray_clean_bit(bitarray, i);
-            escribir_bloque (nueva_posicion_inicial+j, cfg_entrada_salida->BLOCK_SIZE, valor_bloque);
+            escribir_bloque (nueva_posicion_inicial+j,valor_bloque);
             bitarray_set_bit(bitarray, nueva_posicion_inicial+j);
             j++;
         }
