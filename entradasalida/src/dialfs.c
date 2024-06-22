@@ -527,7 +527,7 @@ uint32_t  truncar_archivo(char* nombre, uint32_t tamanio ){
       achicar_archivo(tamanio,fcb);
     }else {
       log_info(logger_entrada_salida, "SE PROCEDERA A AGRANDAR AL ARCHIVO: %s",fcb->nombre_archivo);
-      agrandar_archivo(tamanio_total,fcb);
+      agrandar_archivo(tamanio_total,nombre);
 
     }
      imprimir_estado_bitarray();
@@ -550,19 +550,24 @@ void achicar_archivo(uint32_t tamanio, t_FCB* fcb) {
 
 }
 
-void agrandar_archivo(uint32_t nuevo_tamanio, t_FCB* fcb) {
+void agrandar_archivo(uint32_t nuevo_tamanio, char* nombre_archivo) {
     int nueva_posicion_inicial = hay_espacio_disponible(nuevo_tamanio); 
+    t_FCB* fcb = malloc(sizeof( t_FCB));
+    fcb = dictionary_get(fcb_dict,nombre_archivo);
 
     if (nueva_posicion_inicial>= 0 ) {
         if (fcb->tamanio_archivo == 0 ) { // para archivos recien creados
             log_info(logger_entrada_salida, "Archivo nunca usado");
             int tamanio_en_bloques = ceil( nuevo_tamanio /cfg_entrada_salida->BLOCK_SIZE);
+            
             bitarray_clean_bit(bitarray,fcb->primer_bloque);                // borro la posicion actual en el bitmap
+            log_info(logger_entrada_salida, "Primer bloque borrado: %d", fcb->primer_bloque);
             log_info(logger_entrada_salida, "Nueva posicion inicial: %d - Nuevo tamaño en bloques: %d ",nueva_posicion_inicial, tamanio_en_bloques);
             for (int i = 0; i <tamanio_en_bloques; i++) {
                     bitarray_set_bit(bitarray,i+nueva_posicion_inicial);
                 }
-            fcb->primer_bloque = nueva_posicion_inicial;        
+            fcb->primer_bloque = nueva_posicion_inicial; 
+            fcb->tamanio_archivo = nuevo_tamanio;        
         }else {   
             fcb->tamanio_archivo = nuevo_tamanio; 
             mover_archivo(fcb, nueva_posicion_inicial);        
@@ -692,10 +697,10 @@ bool hay_espacio_total_disponible(int espacio_necesario){
             espacio_disponible++;
         }
     }
-    printf("Cantidad de bits %d:",  bitarray_get_max_bit(bitarray));
-    printf("Bloques/bits libres %d:",  espacio_disponible);
-    printf("Espacio total disponible %d:",  espacio_disponible*cfg_entrada_salida->BLOCK_SIZE);
-return espacio_disponible*cfg_entrada_salida->BLOCK_SIZE > espacio_necesario;
+    log_info(logger_entrada_salida,"Cantidad de bits %d:",  bitarray_get_max_bit(bitarray));
+    log_info(logger_entrada_salida,"Bloques/bits libres %d:",  espacio_disponible);
+   log_info(logger_entrada_salida,"Espacio total disponible %d:",  espacio_disponible*cfg_entrada_salida->BLOCK_SIZE);
+return espacio_disponible*cfg_entrada_salida->BLOCK_SIZE >= espacio_necesario;
 }   
 
 int hay_espacio_contiguo_disponible(int espacio_necesario) {
@@ -722,7 +727,7 @@ int hay_espacio_contiguo_disponible(int espacio_necesario) {
 }
 
 int compactar(int espacio_necesario){
-    int bloques_necesarios = (espacio_necesario + cfg_entrada_salida->BLOCK_SIZE - 1) / cfg_entrada_salida->BLOCK_SIZE;
+    
     int espacio_disponible = 0;
     int posicion_inicio = -1;
     char* valor_bloque = malloc(cfg_entrada_salida->BLOCK_SIZE);
@@ -731,31 +736,41 @@ int compactar(int espacio_necesario){
     fcbs = dictionary_elements(fcb_dict);
     int i = 0;
 
-    while (posicion_inicio == -1 && i < list_size(fcbs)) { // mientras no haya espacio y queden archivos por mover
-      
+    while (posicion_inicio == -1 ) { // mientras no haya espacio 
+   
         log_info(logger_entrada_salida, "No hay espacio contiguo suficiente. Compactando...");
                
         int posiciones_libres  = 0;
         int j  = 1;
         fcb = list_get(fcbs,i);
-        
+        int flg_stop = 0;
+        log_info(logger_entrada_salida, "Nombre de archivo: %s",fcb->nombre_archivo); 
         //acumular las posiciones libres a la izquierda,
-        while (!bitarray_test_bit(bitarray, fcb->primer_bloque-j)){
+        if(fcb->primer_bloque == 0){flg_stop = 1;} // por si el primner bloque es 0 no se puede mover a la izquierda
+        while (flg_stop == 0  && !bitarray_test_bit(bitarray, fcb->primer_bloque-j) ){
             posiciones_libres++;  
-            j++;   // aumento el desplazamiento hacia la izquierda
+            if(fcb->primer_bloque-j > 0){j++;}// aumento el desplazamiento hacia la izquierda
+            else {flg_stop = 1;} // para de moverme porque el indice solo llega a 0     
+            log_info(logger_entrada_salida, "cuenta posicion libre: %d ", posiciones_libres);
         }
         if(posiciones_libres>0){
             //si hay espacio mover el archivo a la nueva posicion
+            log_info(logger_entrada_salida, "Posiciones libres: %d",posiciones_libres);
             int nueva_posicion = fcb->primer_bloque-posiciones_libres;
-            mover_archivo(fcb, nueva_posicion);                  
-        }            
+            log_info(logger_entrada_salida, "Nueva posicion: %d",nueva_posicion);
+            mover_archivo(fcb, nueva_posicion); 
+            imprimir_estado_bitarray();               
+        } 
+                  
         posicion_inicio = hay_espacio_contiguo_disponible(espacio_necesario);
-        i++; // siguiente archivo  
+        if(i < list_size(fcbs)-1){i++;  log_info(logger_entrada_salida, "Indice archivo: %d",i);} // siguiente archivo
+        else {i = 0;} // si termino la lista de archivo y no hay lugar arranco a moverlos de nuevo
+           
     } 
 
     sincronizar_bitmap ();
     log_info(logger_entrada_salida, "Espacio contiguo suficiente encontrado en la posición %d.", posicion_inicio);
-    sleep(cfg_entrada_salida->RETRASO_COMPACTACION);
+    usleep(cfg_entrada_salida->RETRASO_COMPACTACION);
     return posicion_inicio;
 }    
 
@@ -798,14 +813,19 @@ void mover_archivo(t_FCB* fcb_archivo, int nueva_posicion_inicial){
     int posicion_inicial = fcb_archivo->primer_bloque;
     int tamanio_en_bloques = ceil( fcb_archivo->tamanio_archivo /cfg_entrada_salida->BLOCK_SIZE);
     log_info(logger_entrada_salida, "Tamaño en bytes: %d Tamaño en bloques: %d",fcb_archivo->tamanio_archivo,tamanio_en_bloques);
-    char* valor_bloque = malloc(cfg_entrada_salida->BLOCK_SIZE);
-    int j = 0;    
-    for (int i = posicion_inicial; i <= tamanio_en_bloques; i++){
-        leer_bloque (i, i*cfg_entrada_salida->BLOCK_SIZE, cfg_entrada_salida->BLOCK_SIZE, valor_bloque );
-        bitarray_clean_bit(bitarray, i);
-        escribir_bloque (nueva_posicion_inicial+j, cfg_entrada_salida->BLOCK_SIZE, valor_bloque);
-        bitarray_set_bit(bitarray, nueva_posicion_inicial+j);
-        j++;
+    if(fcb_archivo->tamanio_archivo == 0){
+        bitarray_clean_bit(bitarray,posicion_inicial);               
+	    bitarray_set_bit(bitarray,nueva_posicion_inicial);
+    }else{    
+        char* valor_bloque = malloc(cfg_entrada_salida->BLOCK_SIZE);
+        int j = 0;    
+        for (int i = posicion_inicial; i <= posicion_inicial+tamanio_en_bloques-1; i++){
+            leer_bloque (i, i*cfg_entrada_salida->BLOCK_SIZE, cfg_entrada_salida->BLOCK_SIZE, valor_bloque );
+            bitarray_clean_bit(bitarray, i);
+            escribir_bloque (nueva_posicion_inicial+j, cfg_entrada_salida->BLOCK_SIZE, valor_bloque);
+            bitarray_set_bit(bitarray, nueva_posicion_inicial+j);
+            j++;
+        }
     }
     // actualizo fcb en todas las estructuras
     fcb_archivo ->primer_bloque = nueva_posicion_inicial;

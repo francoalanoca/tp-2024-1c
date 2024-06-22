@@ -71,7 +71,7 @@ void escribir_archivo(t_io_readwrite_archivo* archivo, char* datos_escribir);
 //Limpia los bits asignados en el bitmap hasta ajustar el tamaño solicitado
 void achicar_archivo(uint32_t tamanio,t_FCB* fcb);
 //verifica que haya espacio y mueve el archivo a la nueva posicion determinada por la compactacion
-void agrandar_archivo(uint32_t tamanio,t_FCB* fcb);
+void agrandar_archivo(uint32_t nuevo_tamanio, char* nombre_archivo);
 
 //Devuelve la posicion del primer bit libre que encuentra.
 uint32_t encontrar_bit_libre(t_bitarray* bitarray);
