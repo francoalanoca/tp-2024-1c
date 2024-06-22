@@ -122,15 +122,15 @@ log_info(logger_entrada_salida, "dentro iniciar interface\n");
         return EXIT_FAILURE;
     }
 
-
-    if ( (hacer_handshake (socket_memoria) == HANDSHAKE_OK)){
-        log_info(logger_entrada_salida, "Correcto en handshake con memoria\n");
-    }
-    else {
-        log_info(logger_entrada_salida, "Error en handshake con memoria\n");
-        return EXIT_FAILURE;
-    }
-
+    if ( tipo_interfaz_enum != GENERICA ){
+        if ( (hacer_handshake (socket_memoria) == HANDSHAKE_OK)){
+            log_info(logger_entrada_salida, "Correcto en handshake con memoria\n");
+        }
+        else {
+            log_info(logger_entrada_salida, "Error en handshake con memoria\n");
+            return EXIT_FAILURE;
+        }
+     }
 // PRESENTAR    
     if ( (presentar_interfaz (socket_kernel, interfaz) == INTERFAZ_RECIBIDA)){
         log_info(logger_entrada_salida, "Interfaz presentada correctamente a kernel\n");      
