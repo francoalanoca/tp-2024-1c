@@ -100,7 +100,7 @@ void procesar_conexion(void *v_args){
                 t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido)); //REVISAR
                 log_info(logger_cpu, "SE RECIBE INTERRUPCION DE KERNEL");
                 proceso_interrumpido = proceso_interrumpido_deserializar(paquete->buffer); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
-                if(proceso_interrumpido->proceso->pcb->pid == proceso_actual->pcb->pid){
+                if(proceso_interrumpido->pcb->pid == proceso_actual->pcb->pid){
                     proceso_interrumpido_actual = proceso_interrumpido;
                     interrupcion_kernel = true;
                    
@@ -286,7 +286,7 @@ t_proceso_interrumpido *proceso_interrumpido_deserializar(t_buffer *buffer) {
 	int tamanio_pcb = malloc(sizeof(int));
 tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
 //REVISAR ACA (DESERIALIZACION)
-    proceso_interrumpido->proceso->pcb = buffer_read_pcb(buffer, tamanio_pcb);
+    proceso_interrumpido->pcb = buffer_read_pcb(buffer, tamanio_pcb);
 
    // proceso_interrumpido->proceso->cantidad_instrucciones = buffer_read_uint8(buffer);
    // proceso->instrucciones = buffer_read_instruccion(buffer);
@@ -294,9 +294,9 @@ tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
 			buffer_read_instruccion(buffer,sizeof(list_get(proceso_interrumpido->proceso->instrucciones,i)));
 	  }//*/
 
-   	  for(int i = 0; i < list_size(proceso_interrumpido->proceso->interfaces); i++){	
+   	 /* for(int i = 0; i < list_size(proceso_interrumpido->interfaces); i++){	
 			buffer_read_interfaz(buffer,sizeof(list_get(proceso_interrumpido->proceso->interfaces,i)));
-	  }
+	  }*/
 	  
 	  free(tamanio_pcb);
 

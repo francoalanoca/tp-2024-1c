@@ -163,12 +163,13 @@ typedef struct
 {
     uint32_t pid;
     uint32_t program_counter;
+    uint32_t path_length;
     char* path;
     t_list* lista_recursos_pcb;
     pthread_mutex_t mutex_lista_recursos;
     t_registros_CPU* registros_cpu;
-    uint32_t quantum;
-    int estado;
+    uint32_t estado;
+    uint32_t tiempo_ejecucion; 
 }t_pcb;
 
 typedef enum {
@@ -200,8 +201,8 @@ typedef struct {
 }t_proceso;
 
 typedef struct{
-    t_proceso* proceso;
-    uint8_t tamanio_motivo_interrupcion;
+    t_pcb* pcb;
+    uint32_t tamanio_motivo_interrupcion;
     char* motivo_interrupcion;
 }t_proceso_interrumpido;
 
