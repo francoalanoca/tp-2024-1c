@@ -119,12 +119,64 @@ void crear_proceso(t_planificador* planificador, char* path_pseudocodigo) {
     // Notificar a la memoria para crear el proceso
 }
 
-// elimina un proceso
 void eliminar_proceso(t_planificador* planificador, t_pcb* proceso) {
     if (list_contains(planificador->cola_exec, proceso)) {
         // Enviar señal de interrupción a la CPU
+        t_paquete* paquete = crear_paquete(INTERRUPCION_CPU);
+        t_buffer* buffer = crear_buffer();
+
+        // Serializar el proceso a interrumpir
+        t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
+        proceso_interrumpido->proceso = proceso;
+        proceso_interrumpido->tamanio_motivo_interrupcion = strlen("ELIMINAR_PROCESO") + 1;
+        proceso_interrumpido->motivo_interrupcion = strdup("ELIMINAR_PROCESO");
+
+        // Serializar el proceso interrumpido
+        buffer = proceso_interrumpido_serializar(proceso_interrumpido);
+        
+        agregar_a_paquete(paquete, buffer->stream, buffer->size);
+
+        // Enviar el paquete a través del puerto de interrupción
+        enviar_paquete(paquete, conexion_cpu_interrupt);
+
         // Esperar a que la CPU retorne el Contexto de Ejecución
+        sem_wait(&sem_contexto_ejecucion_recibido);
+
+        // Obtener el contexto de ejecución actualizado
+        t_pcb* pcb_actualizado = recibir_pcb(conexion_cpu_dispatch);
+
+        // Actualizar el proceso con el contexto de ejecución recibido
+        actualizar_proceso(proceso, pcb_actualizado);
+
+        // Liberar memoria
+        free(proceso_interrumpido->motivo_interrupcion);
+        free(proceso_interrumpido);
+        eliminar_paquete(paquete);
+        free(buffer->stream);
+        free(buffer);
+        free(pcb_actualizado);
     }
+
     // Notificar a la memoria para liberar las estructuras del proceso
+    t_paquete* paquete_memoria = crear_paquete(LIBERAR_PROCESO);
+    t_buffer* buffer_memoria = crear_buffer();
+
+    // Serializar el PID del proceso a liberar
+    buffer_write_uint32(buffer_memoria, proceso->pcb->pid);
+
+    agregar_a_paquete(paquete_memoria, buffer_memoria->stream, buffer_memoria->size);
+
+    // Enviar el paquete a la memoria
+    enviar_paquete(paquete_memoria, conexion_memoria);
+
+    // Esperar confirmación de la memoria
+    sem_wait(&sem_confirmacion_memoria);
+
+    // Liberar memoria
+    eliminar_paquete(paquete_memoria);
+    free(buffer_memoria->stream);
+    free(buffer_memoria);
+
+    // Finalizar el proceso en el planificador
     finalizar_proceso(planificador, proceso);
 }
