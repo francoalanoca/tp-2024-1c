@@ -88,18 +88,19 @@ void procesar_conexion(void *v_args){
         switch (cop){
             case NUEVO_PROCESO:
             {
-                t_proceso* proceso = malloc(sizeof(t_proceso)); //REVISAR
-                log_info(logger_cpu, "PROCESO RECIBIDO");
-                proceso = proceso_deserializar(paquete->buffer); 
+                t_list* lista_paquete_nuevo_proceso = recibir_paquete(cliente_socket);
+                t_proceso* proceso = malloc(sizeof(t_proceso));
+                proceso = proceso_deserializar(lista_paquete_nuevo_proceso); 
                 proceso_actual = proceso; //Agregar a lista de procesos?
                 free(proceso);
                 break;
             }
              case INTERRUPCION_CPU:
             {
+                t_list* lista_paquete_proceso_interrumpido = recibir_paquete(cliente_socket);
                 t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido)); //REVISAR
                 log_info(logger_cpu, "SE RECIBE INTERRUPCION DE KERNEL");
-                proceso_interrumpido = proceso_interrumpido_deserializar(paquete->buffer); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
+                proceso_interrumpido = proceso_interrumpido_deserializar(lista_paquete_proceso_interrumpido); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
                 if(proceso_interrumpido->pcb->pid == proceso_actual->pcb->pid){
                     proceso_interrumpido_actual = proceso_interrumpido;
                     interrupcion_kernel = true;
@@ -113,27 +114,28 @@ void procesar_conexion(void *v_args){
              case INSTRUCCION_RECIBIDA:
             {
                 log_info(logger_cpu, "SE RECIBE INSTRUCCION DE MEMORIA");
-                instr_t* proxima_instruccion = malloc(sizeof(instr_t)); //REVISAR
-                proxima_instruccion = instruccion_deserializar(paquete->buffer); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
-                if(proxima_instruccion != NULL){
-                    prox_inst = proxima_instruccion;
+                t_list* lista_paquete_instruccion_rec = recibir_paquete(cliente_socket);
+                instr_t* instruccion_recibida = malloc(sizeof(instr_t));
+                instruccion_recibida = instruccion_deserializar(lista_paquete_instruccion_rec);
+                
+                if(instruccion_recibida != NULL){
+                    prox_inst = instruccion_recibida;
                     //SEMAFORO QUE ACTIVA EL SEGUIMIENTO DEL FLUJO EN FETCH
-                    free(proxima_instruccion);
+                    free(instruccion_recibida);
                     //  log_info(logger_cpu, "POST SEMAFORO");
                     // sem_post(&sem_conexion_lista);
                 }
                 else{
                     log_info(logger_cpu, "ERROR AL  RECIBIR INSTRUCCION DE MEMORIA");
-                    free(proxima_instruccion);
+                    free(instruccion_recibida);
                 }
                 break;
             }
             case MARCO_RECIBIDO:
             {
                 log_info(logger_cpu, "MARCO RECIBIDO");
-                uint32_t marco_rec;
-                
-                marco_rec = buffer_read_uint32(paquete->buffer); 
+                t_list* lista_paquete_marco_rec = recibir_paquete(cliente_socket);
+                uint32_t marco_rec = deserealizar_marco(lista_paquete_marco_rec);
                 marco_recibido = marco_rec; 
                 sem_post(&sem_marco_recibido);
                 break;
@@ -141,9 +143,9 @@ void procesar_conexion(void *v_args){
             case PETICION_VALOR_MEMORIA_RTA:
             {
                 log_info(logger_cpu, "PETICION_VALOR_MEMORIA_RTA");
-                uint32_t valor_rec;
-                
-                valor_rec = buffer_read_uint32(paquete->buffer); 
+                t_list* lista_paquete_valor_memoria_rec = recibir_paquete(cliente_socket);
+                uint32_t valor_rec = deserealizar_valor_memoria(lista_paquete_valor_memoria_rec);
+               
                 valor_registro_obtenido = valor_rec; 
                 sem_post(&sem_valor_registro_recibido);
                 break;
@@ -151,20 +153,18 @@ void procesar_conexion(void *v_args){
             case SOLICITUD_RESIZE_RTA:
             {
                 log_info(logger_cpu, "SOLICITUD_RESIZE_RTA");
-                char* valor_rec;
-                
-                valor_rec = buffer_read_uint32(paquete->buffer); 
-                strcpy(rta_resize, valor_rec); 
+                t_list* lista_paquete_rta_resize = recibir_paquete(cliente_socket);
+                t_rta_resize* valor_rta_resize = deserealizar_rta_resize(lista_paquete_rta_resize);
+                strcpy(rta_resize, valor_rta_resize->rta); 
                 sem_post(&sem_valor_resize_recibido);
                 break;
             }
             case SOLICITUD_TAMANIO_PAGINA_RTA:
             {
                 log_info(logger_cpu, "SOLICITUD_TAMANIO_PAGINA_RTA");
-                uint32_t valor_rec;
-                
-                valor_rec = buffer_read_uint32(paquete->buffer); 
-                tamanio_pagina = valor_rec; 
+                t_list* lista_paquete_tamanio_pag = recibir_paquete(cliente_socket);
+                uint32_t valor_tamanio_pag = deserealizar_tamanio_pag(lista_paquete_tamanio_pag); 
+                tamanio_pagina = valor_tamanio_pag; 
                 sem_post(&sem_valor_tamanio_pagina);
             }
             
@@ -183,76 +183,49 @@ int hacer_handshake (int socket_cliente){
     return recibir_operacion(socket_cliente);
 }
 
-void buffer_read(t_buffer *buffer, void *data, uint32_t size){
-	void* stream = buffer->stream;
-    // Deserializamos los campos que tenemos en el buffer
-    memcpy(&data, stream, size);
-    stream += size;
+t_proceso *proceso_deserializar(t_list*  lista_paquete_proceso ) {
+    printf("entro a proceso_deserializar\n");
+    t_proceso *proceso_nuevo = malloc(sizeof(t_proceso));
+    uint32_t tamanio_lista = malloc(sizeof(uint32_t));
+
+    proceso_nuevo->pcb->pid = *(uint32_t*)list_get(lista_paquete_proceso, 0);
+     
+    proceso_nuevo->pcb->pid = *(uint32_t*)list_get(lista_paquete_proceso, 0);
+    proceso_nuevo->pcb->program_counter = *(uint32_t*)list_get(lista_paquete_proceso, 1);
+    proceso_nuevo->pcb->path_length = *(uint32_t*)list_get(lista_paquete_proceso, 2);
+    proceso_nuevo->pcb->path = list_get(lista_paquete_proceso, 3);
+    //TODO: VER EL TEMA DEL CAMPO LISTA_RECURSOS_PCB
+    /*uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 4);
+
+     // Deserializar cada elemento de la lista
+    pcb->lista_recursos_pcb = list_create();
+    for (int i = 0; i < tamanio_lista; i++) {
+        uint32_t* recurso = malloc(sizeof(uint32_t)); //de que tipo son los objetos de la lista?
+        recurso = *(uint32_t*)list_get(lista_paquete, 4 + i);
+        list_add(pcb->lista_recursos_pcb, recurso);
+    }*/
+
+    
+
+    proceso_nuevo->pcb->mutex_lista_recursos = *(pthread_mutex_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+1); //Revisar tamanio
+    proceso_nuevo->pcb->registros_cpu->PC = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+2);
+    proceso_nuevo->pcb->registros_cpu->AX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+3);
+    proceso_nuevo->pcb->registros_cpu->BX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+4);
+    proceso_nuevo->pcb->registros_cpu->CX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+5);
+    proceso_nuevo->pcb->registros_cpu->DX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+6);
+    proceso_nuevo->pcb->registros_cpu->EAX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+7);
+    proceso_nuevo->pcb->registros_cpu->EBX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+8);
+    proceso_nuevo->pcb->registros_cpu->ECX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+9);
+    proceso_nuevo->pcb->registros_cpu->EDX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+10);
+    proceso_nuevo->pcb->registros_cpu->SI = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+11);
+    proceso_nuevo->pcb->registros_cpu->DI = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+12);
+    proceso_nuevo->pcb->estado = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+13);
+    proceso_nuevo->pcb->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+14);
+    //TODO: VER EL TEMA DEL CAMPO INTERFACES(lista en t_proceso)	
+	return proceso_nuevo;
 }
 
-uint8_t buffer_read_uint8(t_buffer *buffer){
-	uint8_t valor = malloc(sizeof(uint8_t));
-	buffer_read(buffer,&valor,sizeof(uint8_t));
-	return valor;
-}
 
-uint32_t buffer_read_uint32(t_buffer *buffer){
-	uint32_t valor = malloc(sizeof(uint32_t));
-	buffer_read(buffer,&valor,sizeof(uint32_t));
-	return valor;
-}
-
-t_pcb *buffer_read_pcb(t_buffer *buffer, uint32_t *length){
-	t_pcb * valor = malloc(length);
-	buffer_read(buffer,&valor,length);//REVISAR
-	return valor;
-}
-
-instr_t *buffer_read_instruccion(t_buffer *buffer, uint32_t *length){
-	instr_t * valor = malloc(length);
-	buffer_read(buffer,&valor,length);//REVISAR
-	return valor;
-}
-
-t_interfaz *buffer_read_interfaz(t_buffer *buffer, uint32_t *length){
-	t_interfaz * valor = malloc(length);
-	buffer_read(buffer,&valor,length);//REVISAR
-	return valor;
-}
-
-/*tipo_instruccion buffer_read_tipo_instruccion(t_buffer *buffer){
-	tipo_instruccion  valor = malloc(sizeof(tipo_instruccion));//REVISAR
-	buffer_read(buffer,&valor,sizeof(tipo_instruccion));
-	return valor;
-}*/
-
-t_proceso *proceso_deserializar(t_buffer *buffer) {
-    t_proceso *proceso = malloc(sizeof(t_proceso));
-	
-	int tamanio_pcb = malloc(sizeof(int));
-tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
-//REVISAR ACA (DESERIALIZACION)
-    proceso->pcb = buffer_read_pcb(buffer, tamanio_pcb);
-   // proceso->cantidad_instrucciones = buffer_read_uint8(buffer);
-   // proceso->instrucciones = buffer_read_instruccion(buffer);
-   	 /* for(int i = 0; i < proceso->cantidad_instrucciones; i++){	
-			buffer_read_instruccion(buffer,sizeof(list_get(proceso->instrucciones,i)));
-	  }*/
-
-   	  for(int i = 0; i < list_size(proceso->interfaces); i++){	
-			buffer_read_interfaz(buffer,sizeof(list_get(proceso->interfaces,i)));
-	  }
-	  
-	  free(tamanio_pcb);
-
-    return proceso;
-}
-
-char *buffer_read_string(t_buffer *buffer, uint32_t *length){
-	char * valor = malloc(length); //* (uint32_t) sizeof(char)); //REVISAR, agregar * y + 1?
-	buffer_read(buffer,&valor,length);//REVISAR
-	return valor;
-}
 
 void* crear_servidor_interrupt(char* ip_cpu){
     log_info(logger_cpu, "empieza crear_servidor_interrupt");
@@ -280,58 +253,89 @@ log_info(logger_cpu, "va a escuchar");
     while (server_escuchar(logger_cpu, "SERVER CPU INTERRUPT", (uint32_t)fd_mod2));
 }
 
-t_proceso_interrumpido *proceso_interrumpido_deserializar(t_buffer *buffer) {
-    t_proceso_interrumpido *proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
-	
-	int tamanio_pcb = malloc(sizeof(int));
-tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
-//REVISAR ACA (DESERIALIZACION)
-    proceso_interrumpido->pcb = buffer_read_pcb(buffer, tamanio_pcb);
+t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete_proceso_interrumpido) {
+    t_proceso_interrumpido *proceso_interrumpido_nuevo = malloc(sizeof(t_proceso_interrumpido));
+	uint32_t tamanio_lista = malloc(sizeof(uint32_t));
 
-   // proceso_interrumpido->proceso->cantidad_instrucciones = buffer_read_uint8(buffer);
-   // proceso->instrucciones = buffer_read_instruccion(buffer);
-   	/*  for(int i = 0; i < proceso_interrumpido->proceso->cantidad_instrucciones; i++){	
-			buffer_read_instruccion(buffer,sizeof(list_get(proceso_interrumpido->proceso->instrucciones,i)));
-	  }//*/
+    proceso_interrumpido_nuevo->pcb->pid = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 0);
+    proceso_interrumpido_nuevo->pcb->program_counter = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 1);
+    proceso_interrumpido_nuevo->pcb->path_length = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 2);
+    proceso_interrumpido_nuevo->pcb->path = list_get(lista_paquete_proceso_interrumpido, 3);
+    //TODO: VER EL TEMA DEL CAMPO LISTA_RECURSOS_PCB
+    /*uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 4);
 
-   	 /* for(int i = 0; i < list_size(proceso_interrumpido->interfaces); i++){	
-			buffer_read_interfaz(buffer,sizeof(list_get(proceso_interrumpido->proceso->interfaces,i)));
-	  }*/
-	  
-	  free(tamanio_pcb);
+     // Deserializar cada elemento de la lista
+    pcb->lista_recursos_pcb = list_create();
+    for (int i = 0; i < tamanio_lista; i++) {
+        uint32_t* recurso = malloc(sizeof(uint32_t)); //de que tipo son los objetos de la lista?
+        recurso = *(uint32_t*)list_get(lista_paquete, 4 + i);
+        list_add(pcb->lista_recursos_pcb, recurso);
+    }*/
 
-      proceso_interrumpido->tamanio_motivo_interrupcion = buffer_read_uint8(buffer);
+    
 
-      strcpy(proceso_interrumpido->motivo_interrupcion, buffer_read_string(buffer, proceso_interrumpido->tamanio_motivo_interrupcion));
-
-         // proceso_interrumpido->proceso = proceso_deserializar(buffer->stream->proceso); //TODO:VER COMO AGREGAR
-          //proceso_interrumpido->motivo_interrupcion = buffer->stream->motivo_interrupcion;
-
-
-    return proceso_interrumpido;
+    proceso_interrumpido_nuevo->pcb->mutex_lista_recursos = *(pthread_mutex_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+1); //Revisar tamanio
+    proceso_interrumpido_nuevo->pcb->registros_cpu->PC = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+2);
+    proceso_interrumpido_nuevo->pcb->registros_cpu->AX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+3);
+    proceso_interrumpido_nuevo->pcb->registros_cpu->BX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+4);
+    proceso_interrumpido_nuevo->pcb->registros_cpu->CX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+5);
+    proceso_interrumpido_nuevo->pcb->registros_cpu->DX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+6);
+    proceso_interrumpido_nuevo->pcb->registros_cpu->EAX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+7);
+    proceso_interrumpido_nuevo->pcb->registros_cpu->EBX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+8);
+    proceso_interrumpido_nuevo->pcb->registros_cpu->ECX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+9);
+    proceso_interrumpido_nuevo->pcb->registros_cpu->EDX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+10);
+    proceso_interrumpido_nuevo->pcb->registros_cpu->SI = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+11);
+    proceso_interrumpido_nuevo->pcb->registros_cpu->DI = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+12);
+    proceso_interrumpido_nuevo->pcb->estado = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+13);
+    proceso_interrumpido_nuevo->pcb->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+14);
+    proceso_interrumpido_nuevo->tamanio_motivo_interrupcion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+15);	
+    proceso_interrumpido_nuevo->motivo_interrupcion = list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+16);
+    return proceso_interrumpido_nuevo;
 }
 
-instr_t* instruccion_deserializar(t_buffer *buffer){
+instr_t* instruccion_deserializar(t_list* lista_paquete_inst){
         instr_t *instruccion_nueva = malloc(sizeof(instr_t));
-	
-	/*int tamanio_pcb = malloc(sizeof(int));
-tamanio_pcb = sizeof(uint32_t) * 3 + sizeof(uint32_t) * 7 + sizeof(uint8_t) * 4;
-//REVISAR ACA (DESERIALIZACION)
-    proceso_interrumpido->proceso->pcb = buffer_read_pcb(buffer, tamanio_pcb);*/
-    instruccion_nueva->idLength = buffer_read_uint8(buffer);
-    instruccion_nueva->id = buffer_read_uint8(buffer);
-    instruccion_nueva->param1Length = buffer_read_uint8(buffer);
-    instruccion_nueva->param1 = buffer_read_string(buffer,instruccion_nueva->param1Length);  //funcion buffer_read_string debe recibir length de uint_8?
-    instruccion_nueva->param2Length = buffer_read_uint8(buffer);
-    instruccion_nueva->param2 = buffer_read_string(buffer,instruccion_nueva->param2Length); 
-    instruccion_nueva->param3Length = buffer_read_uint8(buffer);
-    instruccion_nueva->param3 = buffer_read_string(buffer,instruccion_nueva->param3Length); 
-    instruccion_nueva->param4Length = buffer_read_uint8(buffer);
-    instruccion_nueva->param4 = buffer_read_string(buffer,instruccion_nueva->param4Length); 
-    instruccion_nueva->param5Length = buffer_read_uint8(buffer);
-    instruccion_nueva->param5 = buffer_read_string(buffer,instruccion_nueva->param5Length); 
 
+    instruccion_nueva->idLength = *(uint32_t*)list_get(lista_paquete_inst, 0);
+    instruccion_nueva->id = *(uint32_t*)list_get(lista_paquete_inst, 1);
+    instruccion_nueva->param1Length = *(uint32_t*)list_get(lista_paquete_inst, 2); 
+    instruccion_nueva->param1 = list_get(lista_paquete_inst, 3);
+    instruccion_nueva->param2Length = *(uint32_t*)list_get(lista_paquete_inst, 4); 
+    instruccion_nueva->param2 = list_get(lista_paquete_inst, 5);
+    instruccion_nueva->param3Length = *(uint32_t*)list_get(lista_paquete_inst, 6); 
+    instruccion_nueva->param3 = list_get(lista_paquete_inst, 7);
+    instruccion_nueva->param4Length = *(uint32_t*)list_get(lista_paquete_inst, 8); 
+    instruccion_nueva->param4 = list_get(lista_paquete_inst, 9);
+    instruccion_nueva->param5Length = *(uint32_t*)list_get(lista_paquete_inst, 10); 
+    instruccion_nueva->param5 = list_get(lista_paquete_inst, 11);
 
+	return instruccion_nueva;
+}
 
-    return instruccion_nueva;
+ uint32_t deserealizar_marco(t_list*  lista_paquete ){
+    uint32_t marco_recibido = malloc(sizeof(uint32_t));
+    marco_recibido = *(uint32_t*)list_get(lista_paquete, 0);
+
+	return marco_recibido;
+}
+
+uint32_t deserealizar_valor_memoria(t_list*  lista_paquete ){
+    uint32_t valor_recibido = malloc(sizeof(uint32_t));
+    valor_recibido = *(uint32_t*)list_get(lista_paquete, 0);
+
+	return valor_recibido;
+}
+
+t_rta_resize* deserealizar_rta_resize(t_list*  lista_paquete ){
+    t_rta_resize* valor_rta_resize = malloc(sizeof(t_rta_resize));
+    valor_rta_resize->tamanio_rta= *(uint32_t*)list_get(lista_paquete, 0);
+    valor_rta_resize->rta= list_get(lista_paquete, 1);
+	return valor_rta_resize;
+}
+
+uint32_t deserealizar_tamanio_pag(t_list*  lista_paquete ){
+    uint32_t valor_tam_pag = malloc(sizeof(uint32_t));
+    valor_tam_pag = *(uint32_t*)list_get(lista_paquete, 0);
+
+	return valor_tam_pag;
 }

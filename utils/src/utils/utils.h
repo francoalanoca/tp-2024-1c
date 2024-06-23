@@ -295,6 +295,10 @@ typedef struct{
     t_list *lista_de_instrucciones;
 } t_miniPCB;
 
+typedef struct{
+    uint32_t tamanio_rta;
+    char *rta;
+} t_rta_resize;
 
 
 
