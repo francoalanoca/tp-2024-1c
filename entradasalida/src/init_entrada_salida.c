@@ -123,6 +123,12 @@ log_info(logger_entrada_salida, "dentro iniciar interface\n");
     }
 
     if ( tipo_interfaz_enum != GENERICA ){
+
+        
+    socket_memoria = crear_conexion(logger_entrada_salida, "MEMORIA", cfg_entrada_salida->IP_MEMORIA, cfg_entrada_salida->PUERTO_MEMORIA);
+    
+    log_info(logger_entrada_salida, "Socket de MEMORIA : %d\n",socket_memoria);   
+         
         if ( (hacer_handshake (socket_memoria) == HANDSHAKE_OK)){
             log_info(logger_entrada_salida, "Correcto en handshake con memoria\n");
         }

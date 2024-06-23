@@ -21,11 +21,7 @@ int main(char argc, char *argv[]) {
     socket_kernel = crear_conexion(logger_entrada_salida, "KERNEL", cfg_entrada_salida->IP_KERNEL, cfg_entrada_salida->PUERTO_KERNEL);
     
     log_info(logger_entrada_salida, "Socket de KERNEL : %d\n",socket_kernel);   
-    
-    socket_memoria = crear_conexion(logger_entrada_salida, "MEMORIA", cfg_entrada_salida->IP_MEMORIA, cfg_entrada_salida->PUERTO_MEMORIA);
-    
-    log_info(logger_entrada_salida, "Socket de MEMORIA : %d\n",socket_memoria);   
-     
+
 
     
     //INICIAR INTERFACE//
