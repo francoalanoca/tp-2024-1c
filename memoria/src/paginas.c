@@ -141,34 +141,34 @@ int buscar_marco_pagina(int proceso_pid, int numero_de_pagina){
 
 
 
-char* administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
+// char* administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
 
 
-    //Reservo una cantidad de marcos por tamaño de proceso
-    int marcos_a_reservar = calcular_marcos(tamanio_proceso);
+//     //Reservo una cantidad de marcos por tamaño de proceso
+//     int marcos_a_reservar = calcular_marcos(tamanio_proceso);
 
-    //Recorro mientras sea menor a la cantidad de frames
-    for (int i = 0; i < marcos_a_reservar; i++){
+//     //Recorro mientras sea menor a la cantidad de frames
+//     for (int i = 0; i < marcos_a_reservar; i++){
 
-        t_pagina *pagina = malloc(sizeof(t_pagina));
+//         t_pagina *pagina = malloc(sizeof(t_pagina));
 
-        pagina->marco = -1;                 //No se le asigno un marco
-        pagina->posicion = -1;              //No se le asigno una posicion
-        pagina->presencia = false;          //No esta en memoria hasta ahora
-        pagina->modificado = false;         //NO fue modificado
+//         pagina->marco = -1;                 //No se le asigno un marco
+//         pagina->posicion = -1;              //No se le asigno una posicion
+//         pagina->presencia = false;          //No esta en memoria hasta ahora
+//         pagina->modificado = false;         //NO fue modificado
        
-        list_add(tabla_de_paginas->lista_de_paginas, pagina);
-    }
+//         list_add(tabla_de_paginas->lista_de_paginas, pagina);
+//     }
 
 
-    //Si el tamaño es 0
-    //if(tamanio_proceso == 0)
+//     //Si el tamaño es 0
+//     //if(tamanio_proceso == 0)
 
-    //SI el tamaño es menor al frame
-    //if(tamanio_proceso < )
-    //Si el tamaño es mayor al frame (Page faul)
+//     //SI el tamaño es menor al frame
+//     //if(tamanio_proceso < )
+//     //Si el tamaño es mayor al frame (Page faul)
 
-}
+// }
 
 
 
