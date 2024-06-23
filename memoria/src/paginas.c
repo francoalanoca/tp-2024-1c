@@ -3,15 +3,15 @@
 
 
 
-//Funcion que crea un proceso a partir de un pid y el tamanio de un proceso
-void crear_proceso(int proceso_pid, int tamanio_proceso){
+//Funcion que crea la tabla de paginas a partir de un pid
+void crear_proceso(int proceso_pid){
 
-    printf("Creacion del proceso PID %i - Tamanio %i", proceso_pid, tamanio_proceso);
+    printf("Creacion del proceso PID %i", proceso_pid);
     printf("Iniciando estructuras");
 
     //Guardo en una varia de tipo struct la tabla creada
-    t_tabla_de_paginas *tabla_de_paginas = crear_tabla_pagina(proceso_pid, tamanio_proceso);
-    log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, calcular_marcos(tamanio_proceso));
+    t_tabla_de_paginas *tabla_de_paginas = crear_tabla_pagina(proceso_pid);
+    log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, sizeof(tabla_de_paginas));
 
     list_add(lista_tablas_de_paginas, tabla_de_paginas);
 }
@@ -19,8 +19,8 @@ void crear_proceso(int proceso_pid, int tamanio_proceso){
 
 
 
-//Funcion que a partir de un pid y tamaño de un proceso devuelve una tabla de paginas
-t_tabla_de_paginas *crear_tabla_pagina(int pid, int tamanio_proceso){
+//Funcion que a partir de un pid devuelve una tabla de paginas
+t_tabla_de_paginas *crear_tabla_pagina(int pid){
 
 
     //Inicializo una variable tabla de pagina de tipo struct y le asigno un tamaño
@@ -30,18 +30,6 @@ t_tabla_de_paginas *crear_tabla_pagina(int pid, int tamanio_proceso){
     tabla_de_paginas->id = pid;
     tabla_de_paginas->lista_de_paginas = list_create();
 
-    //Recorro mientras sea menor a la cantidad de frames
-    for (int i = 0; i < calcular_marcos(tamanio_proceso); i++){
-
-        t_pagina *pagina = malloc(sizeof(t_pagina));
-
-        pagina->marco = -1;                 //No se le asigno un marco
-        pagina->posicion = -1;              //No se le asigno una posicion
-        pagina->presencia = false;          //No esta en memoria hasta ahora
-        pagina->modificado = false;         //NO fue modificado
-       
-        list_add(tabla_de_paginas->lista_de_paginas, pagina);
-    }
 
     return tabla_de_paginas;
 }
@@ -150,6 +138,39 @@ int buscar_marco_pagina(int proceso_pid, int numero_de_pagina){
 
     return -1;
 }
+
+
+
+char* administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
+
+
+    //Reservo una cantidad de marcos por tamaño de proceso
+    int marcos_a_reservar = calcular_marcos(tamanio_proceso);
+
+    //Recorro mientras sea menor a la cantidad de frames
+    for (int i = 0; i < marcos_a_reservar; i++){
+
+        t_pagina *pagina = malloc(sizeof(t_pagina));
+
+        pagina->marco = -1;                 //No se le asigno un marco
+        pagina->posicion = -1;              //No se le asigno una posicion
+        pagina->presencia = false;          //No esta en memoria hasta ahora
+        pagina->modificado = false;         //NO fue modificado
+       
+        list_add(tabla_de_paginas->lista_de_paginas, pagina);
+    }
+
+
+    //Si el tamaño es 0
+    //if(tamanio_proceso == 0)
+
+    //SI el tamaño es menor al frame
+    //if(tamanio_proceso < )
+    //Si el tamaño es mayor al frame (Page faul)
+
+}
+
+
 
 
 

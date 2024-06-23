@@ -3,29 +3,29 @@
 
 
 
-//Funcion que crea hilos para cada modulo y los va atendiendo
-void escuchar_modulos(){
-    //Atender a Kernel
-    pthread_t hilo_kernel;
-    //se crea un nuevo hilo que atiende al cliente
-    pthread_create(&hilo_kernel, NULL, (void*) memoria_atender_kernel, NULL);
-    //se desacopla del hilo principal para no interferir
-    pthread_detach(hilo_kernel);
+// //Funcion que crea hilos para cada modulo y los va atendiendo
+// void escuchar_modulos(){
+//     //Atender a Kernel
+//     pthread_t hilo_kernel;
+//     //se crea un nuevo hilo que atiende al cliente
+//     pthread_create(&hilo_kernel, NULL, (void*) memoria_atender_kernel, NULL);
+//     //se desacopla del hilo principal para no interferir
+//     pthread_detach(hilo_kernel);
 
-    //Atender a Cpu
-    pthread_t hilo_cpu;
-    //se crea un nuevo hilo que atiende al cliente
-    pthread_create(&hilo_cpu, NULL, (void*) memoria_atender_cpu, NULL);
-    //se desacopla del hilo principal para no interferir
-    pthread_detach(hilo_cpu);
+//     //Atender a Cpu
+//     pthread_t hilo_cpu;
+//     //se crea un nuevo hilo que atiende al cliente
+//     pthread_create(&hilo_cpu, NULL, (void*) memoria_atender_cpu, NULL);
+//     //se desacopla del hilo principal para no interferir
+//     pthread_detach(hilo_cpu);
 
-    //Atender a EntradaSalida
-    pthread_t hilo_entradasalida;
-    //se crea un nuevo hilo que atiende al cliente
-    pthread_create(&hilo_entradasalida, NULL, (void*)memoria_atender_io, NULL);
-    //caundo el hilo principal llega a join este se detiene hasta que se termine el hilo actual en lugar de deacoplarse
-    pthread_join(hilo_entradasalida, NULL);
-}
+//     //Atender a EntradaSalida
+//     pthread_t hilo_entradasalida;
+//     //se crea un nuevo hilo que atiende al cliente
+//     pthread_create(&hilo_entradasalida, NULL, (void*)memoria_atender_io, NULL);
+//     //caundo el hilo principal llega a join este se detiene hasta que se termine el hilo actual en lugar de deacoplarse
+//     pthread_join(hilo_entradasalida, NULL);
+// }
 
 
 
@@ -58,8 +58,8 @@ void memoria_atender_kernel(){
         case CREAR_PROCESO_KERNEL:
             valores = recibir_paquete(fd_kernel);
             t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);
-            leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  //No corre ver
-            crear_proceso(iniciar_proceso->pid, iniciar_proceso->tamanio);
+            leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  
+            crear_proceso(iniciar_proceso->pid);
 
             enviar_respuesta_crear_proceso(iniciar_proceso, fd_kernel);
             break;
@@ -94,7 +94,12 @@ void memoria_atender_cpu(){
     t_list* valores =  malloc(sizeof(t_list));
     t_proceso_memoria* solicitud_instruccion = malloc(sizeof(t_proceso_memoria));
     t_busqueda_marco* solicitud_marco = malloc(sizeof(t_busqueda_marco));
-    t_io_input* peticion_valor = malloc(sizeof(t_io_direcciones_fisicas));
+    t_io_input* peticion_leer = malloc(sizeof(t_io_direcciones_fisicas));
+    //t_io_input* peticion_guardar = malloc(sizeof(t_io_input));
+    //t_resize* solicitud_resize = malloc(sizeof(t_resize));
+    //t_copy* copiar_valor = malloc(sizeof(t_copy));
+
+
 
 	while (1) {
 
@@ -137,9 +142,9 @@ void memoria_atender_cpu(){
 
         case PETICION_VALOR_MEMORIA:
             valores = recibir_paquete(fd_cpu);
-            peticion_valor = deserializar_peticion_valor(valores);     
-            void* valor = leer_memoria(peticion_valor->direcciones_fisicas, peticion_valor->input_length);          //ver
-            log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d", peticion_valor->pid, peticion_valor->direcciones_fisicas);    //ver
+            peticion_leer = deserializar_peticion_valor(valores);     
+            void* valor = leer_memoria(peticion_leer->direcciones_fisicas, peticion_leer->input_length);          //ver
+            log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d", peticion_leer->pid, peticion_leer->direcciones_fisicas);    //ver
             enviar_peticion_valor(valor, fd_cpu);                            
             break;
 
@@ -153,15 +158,15 @@ void memoria_atender_cpu(){
 
         // case SOLICITUD_RESIZE:
         //     valores = recibir_paquete(fd_cpu);
-        //     t_list* solicitud_resize = deserializar_solicitud_resize(valores);
-        //     administrar_resize(solicitud_resize);
+        //     solicitud_resize = deserializar_solicitud_resize(valores);
+        //     administrar_resize(solicitud_resize->pid, solicitud_resize->tamanio);
         //     enviar_respuesta_resize(solicitud_resize, fd_cpu);
         //     break;
 
         // case ENVIO_COPY_STRING_A_MEMORIA:
         //     valores = recibir_paquete(fd_cpu);
-        //     t_list* copiar_valor = deserializar_copiar_valor(valores);
-        //     copiar_solicitud(copiar_valor);
+        //     copiar_valor = deserializar_copiar_valor(valores);
+        //     copiar_solicitud(copiar_valor->pid, capiar_valor->direccion_fisica, copiar_valor->valor);
         //     break;
 
 		case -1:
@@ -251,6 +256,66 @@ void memoria_atender_io(){
             enviar_output(io_output ,fd_entradasalida);
 
             break;
+
+
+
+        case IO_FS_WRITE:
+
+            printf("Received IO_FS_WRITE request\n");
+
+            t_io_output* io_escritura = malloc(sizeof(t_io_input));
+            t_io_direcciones_fisicas* io_fs_write = malloc(sizeof(t_io_direcciones_fisicas));
+                
+                                
+            valores = recibir_paquete(new_socket);
+            io_stdout = deserializar_io_df(valores);
+        
+            if (valores == NULL || list_size(valores) == 0) {
+                printf("Failed to receive data or empty list\n");
+                break;
+            }
+            printf("despues de recbir paquete\n");
+            char* escritura ="HOLA!"; // Pesa 6 bytes
+            uint32_t tamanio_escritura = string_length(escritura)+1;
+            io_escritura->pid = io_fs_write->pid;
+            io_escritura->output_length = tamanio_escritura;
+            io_escritura->output = escritura;
+            printf("Tamanio output %d\n",io_escritura->output_length);
+            enviar_output(io_escritura ,new_socket, IO_FS_WRITE_M);
+
+            printf("Memoria server sent IO_M_STDOUT_FIN to client\n");
+            break;
+
+
+        case IO_FS_READ:
+
+            printf("Received IO_FS_READ request\n");
+
+            // Assuming recibir_paquete fills the list with the received data
+            valores = recibir_paquete(new_socket);
+
+         
+            deserializar_input(valores);
+        
+            if (valores == NULL || list_size(valores) == 0) {
+                printf("Failed to receive data or empty list\n");
+                break;
+            }
+            printf("despues de recbir paquete\n");
+            request_type = (uint32_t)(uintptr_t)list_get(valores, 1);
+
+            response_interfaz = IO_FS_READ_M;
+            if (send(new_socket, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                perror("send INTERFAZ_RECIBIDA response");
+                break;
+            }
+
+            printf("Memoria server sent IO_FS_READ_M to client\n");
+            break;
+
+
+
+            
 
 		case -1:
 			log_error(logger_memoria, "Entrada/salida se desconecto. Terminando servidor.");

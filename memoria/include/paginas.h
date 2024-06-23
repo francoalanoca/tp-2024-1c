@@ -13,8 +13,8 @@
 
 
 
-void crear_proceso(int proceso_pid, int tamanio_proceso);
-t_tabla_de_paginas *crear_tabla_pagina(int pid, int tamanio_proceso);
+void crear_proceso(int proceso_pid);
+t_tabla_de_paginas *crear_tabla_pagina(int pid);
 int calcular_marcos(int tamanio_proceso);
 t_tabla_de_paginas *busco_tabla_de_paginas_por_PID(int proceso_pid);
 t_pagina *busco_pagina_por_marco(t_list *lista_de_paginas, int marco);

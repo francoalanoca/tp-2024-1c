@@ -5,50 +5,92 @@
 int iniciar_servidor_memoria(t_log* logger, char* puerto)
 {
 
-	int socket_servidor;
+	int server_fd, new_socket;
+    struct sockaddr_in address;
+    int opt = 1;
+    int addrlen = sizeof(address);
 
-	struct addrinfo hints, *servinfo;
+    // Creating socket file descriptor
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
+    // Forcefully attaching socket to the port 8003
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR , &opt, sizeof(opt))) {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT); //cfg->puerto_memoria
 
-	getaddrinfo(NULL, puerto, &hints, &servinfo);
+    // Binding the socket to the port 8003
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+    if (listen(server_fd, 3) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+    printf("Memoria server is listening on %s:%d...\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port));
 
-	socket_servidor = socket(servinfo -> ai_family,
-							 servinfo -> ai_socktype,
-							 servinfo -> ai_protocol);
-							 
-	bind(socket_servidor,servinfo -> ai_addr, servinfo -> ai_addrlen);
-	log_info(logger, "Bind terminado");
-	listen(socket_servidor, SOMAXCONN);
-	log_info(logger, "Listen terminado");
+    while (1) {
 
-	freeaddrinfo(servinfo);
-	log_trace(logger, "Listo para escuchar a mi cliente");
+		//ESpera el cliente
+        if ((new_socket = accept(server_fd, (struct sockaddr )&address, (socklen_t)&addrlen)) < 0) {
+            perror("accept");
+            exit(EXIT_FAILURE);
+        }
+        printf("Memoria server received connection from client at %s:%d\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port));
 
-	return socket_servidor;
+        pthread_t client_thread;
+        int* new_sock = malloc(sizeof(int));
+        if (new_sock == NULL) {
+            perror("malloc failed");
+            close(new_socket);
+            continue;
+        }
+
+        *new_sock = new_socket;
+
+		//crear hilos aca?
+
+        if (pthread_create(&client_thread, NULL, handle_client, (void*)new_sock) != 0) { //funcion q atiende a todos quientes
+
+		//crear hilos aca?
+            perror("pthread_create");
+            free(new_sock);
+            close(new_socket);
+            continue;
+        }
+        pthread_detach(client_thread);  // Detach the thread so that it cleans up after itself
+    }
+
+    close(server_fd);
+    return 0;
+
 }
 
 
-
+//
 //Funcion que inicia y crea el socket del servido memoria y liego espera a sus clientes dandoles sus socket
-void iniciar_conexiones(){
-	//Iniciar server de Memoria
-    fd_memoria = iniciar_servidor_memoria(logger_memoria, cfg_memoria->PUERTO_ESCUCHA);
-    log_info(logger_memoria,"Inicio de server Memoria exitosamente");
+// void iniciar_conexiones(){
+// 	//Iniciar server de Memoria
+//     fd_memoria = iniciar_servidor_memoria(logger_memoria, cfg_memoria->PUERTO_ESCUCHA);
+//     log_info(logger_memoria,"Inicio de server Memoria exitosamente");
 
-    //Esperar al cliente Kernel
-    log_info(logger_memoria, "Esperando a Kernel");
-    fd_kernel = esperar_cliente(logger_memoria, "Kernel", fd_memoria);
-    //Esperar al cliente Cpu
-    log_info(logger_memoria, "Esperando Cpu");
-    fd_cpu = esperar_cliente(logger_memoria, "Cpu", fd_memoria);
-    //Esperar al cliente EntradaSalida
-    log_info(logger_memoria, "Esperando a Entrada Salida");
-    fd_entradasalida = esperar_cliente(logger_memoria, "Entrada Salida", fd_memoria);
-}
+//     //Esperar al cliente Kernel
+//     log_info(logger_memoria, "Esperando a Kernel");
+//     fd_kernel = esperar_cliente(logger_memoria, "Kernel", fd_memoria);
+//     //Esperar al cliente Cpu
+//     log_info(logger_memoria, "Esperando Cpu");
+//     fd_cpu = esperar_cliente(logger_memoria, "Cpu", fd_memoria);
+//     //Esperar al cliente EntradaSalida
+//     log_info(logger_memoria, "Esperando a Entrada Salida");
+//     fd_entradasalida = esperar_cliente(logger_memoria, "Entrada Salida", fd_memoria);
+// }
 
 
 
