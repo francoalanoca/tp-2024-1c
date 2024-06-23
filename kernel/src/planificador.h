@@ -15,11 +15,13 @@ typedef struct {
     t_list* cola_new;      
     t_list* cola_ready;    
     t_list* cola_exec;     
-    t_list* cola_blocked;  
+    t_dictionary* cola_blocked;  
     t_list* cola_exit;     
     t_algoritmo_planificacion algoritmo; 
     int quantum;          
 } t_planificador;
+
+
 
 // ver si falta poner alguna libreria
 extern t_planificador* planificador;

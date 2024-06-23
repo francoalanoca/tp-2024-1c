@@ -22,7 +22,8 @@ t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, in
     planificador->cola_new = list_create();
     planificador->cola_ready = list_create();
     planificador->cola_exec = list_create();
-    planificador->cola_blocked = list_create();
+    planificador->cola_blocked = dictionary_create();
+    dictionary_put(planificador->cola_blocked ,"RECURSO_1",list_create())//poner en funcion
     planificador->cola_exit = list_create();
     planificador->algoritmo = algoritmo;
     planificador->quantum = quantum;
@@ -71,7 +72,7 @@ void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
 
 void bloquear_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_remove(planificador->cola_exec, proceso);
-    list_add(planificador->cola_blocked, proceso);
+    list_add(planificador->cola_blocked, proceso);//MODIFICAR
 }
 
 void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso) {

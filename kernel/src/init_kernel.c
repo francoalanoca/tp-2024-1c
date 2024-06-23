@@ -208,6 +208,7 @@ while (control_key)
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
+               
             }
          }
          else{
