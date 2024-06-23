@@ -191,25 +191,33 @@ while (control_key)
       t_io_gen_sleep* io_gen_sleep = malloc(sizeof(t_io_gen_sleep));
       io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
 
-      
-      if(dictionary_has_key(interfaces,io_gen_sleep->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
-         interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->nombre_interfaz);
-            //AHORA DEBO ENVIAR A IO LO NECESARIO
-         enviar_io_gen_sleep(io_gen_sleep,interfaz_encontrada->conexion);
+      //Verifico que la interfaz exista y este conectada
+      if(dictionary_has_key(interfaces,io_gen_sleep->interfaz->nombre)){
+         if(interfaz_permite_operacion(io_gen_sleep->interfaz->tipo,IO_GEN_SLEEP)){
+            t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
+            interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->interfaz->nombre);
+               //AHORA DEBO ENVIAR A IO LO NECESARIO
+            enviar_io_gen_sleep(io_gen_sleep,interfaz_encontrada->conexion);
 
-         //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
-         t_pcb* pcb_a_bloquear_io_gen_sleep = malloc(sizeof(t_pcb));
-         pcb_a_bloquear_io_gen_sleep = buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid);
-         if(pcb_a_bloquear_io_gen_sleep != NULL){
-            bloquear_proceso(planificador,pcb_a_bloquear_io_gen_sleep);
+            //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+            t_pcb* pcb_a_bloquear_io_gen_sleep = malloc(sizeof(t_pcb));
+            pcb_a_bloquear_io_gen_sleep = buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid);
+            if(pcb_a_bloquear_io_gen_sleep != NULL){
+               bloquear_proceso(planificador,pcb_a_bloquear_io_gen_sleep);
+            }
+            else{
+               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+               //ENVIAR PROCESO A EXIT
+            }
          }
          else{
-            log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+            log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
+            //ENVIAR PROCESO A EXIT
          }
+         
       }
       else{
-         //ver si la interfaz esta conectada y si permite la operacion
+         log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
       }
 
       
@@ -485,6 +493,28 @@ t_pcb* buscar_pcb_en_lista(t_list* lista_de_pcb, uint32_t pid){
    }
    
    return NULL;
+}
+
+bool interfaz_permite_operacion(t_tipo_interfaz_enum tipo_interfaz, tipo_instruccion instruccion){
+   switch (tipo_interfaz)
+   {
+   case GENERICA:
+      return (instruccion == IO_GEN_SLEEP);
+      break;
+   case STDIN:
+      return (instruccion == IO_STDIN_READ);
+      break;
+   case STDOUT:
+      return (instruccion == IO_STDOUT_WRITE);
+      break;
+   case DIALFS:
+      return (instruccion == IO_FS_CREATE || instruccion == IO_FS_DELETE || instruccion == IO_FS_TRUNCATE || instruccion == IO_FS_READ || instruccion == IO_FS_WRITE);
+      break;
+   
+   default:
+   printf("INTERFAZ NO ENCONTRADA");
+      break;
+   }
 }
 
 

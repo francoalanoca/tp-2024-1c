@@ -331,8 +331,7 @@ typedef struct {
 
 typedef struct {
     uint32_t pid;
-    uint32_t nombre_length;
-    char* nombre_interfaz;
+    t_interfaz* interfaz;
     uint32_t unidades_de_trabajo;
 } t_io_gen_sleep;
 

@@ -814,9 +814,10 @@ void  enviar_io_stdout_write(t_io_stdin_stdout* io_stdout_write, int socket ){
 
     t_io_gen_sleep* io_gen_sleep = malloc(sizeof(t_io_gen_sleep));
     io_gen_sleep->pid = *(uint32_t*)list_get(lista_paquete, 0);
-    io_gen_sleep->nombre_length = *(uint32_t*)list_get(lista_paquete, 1); 
-    io_gen_sleep->nombre_interfaz = list_get(lista_paquete, 2); 
-    io_gen_sleep->unidades_de_trabajo = *(uint32_t*)list_get(lista_paquete, 3); 
+    io_gen_sleep->interfaz->nombre_length = *(uint32_t*)list_get(lista_paquete, 1); 
+    io_gen_sleep->interfaz->nombre = list_get(lista_paquete, 2); 
+    io_gen_sleep->interfaz->tipo = *(t_tipo_interfaz_enum*)list_get(lista_paquete, 3); 
+    io_gen_sleep->unidades_de_trabajo = *(uint32_t*)list_get(lista_paquete, 4); 
     
 	return io_gen_sleep;
 }
@@ -827,8 +828,9 @@ void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket ){
     paquete_archivo_nuevo = crear_paquete(IO_K_GEN_SLEEP);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(io_gen_sleep->pid), sizeof(io_gen_sleep->pid));
-    agregar_a_paquete(paquete_archivo_nuevo, &io_gen_sleep->nombre_length, sizeof(io_gen_sleep->nombre_length)); 
-    agregar_a_paquete(paquete_archivo_nuevo, io_gen_sleep->nombre_interfaz, io_gen_sleep->nombre_length);
+    agregar_a_paquete(paquete_archivo_nuevo, &io_gen_sleep->interfaz->nombre_length, sizeof(io_gen_sleep->interfaz->nombre_length)); 
+    agregar_a_paquete(paquete_archivo_nuevo, io_gen_sleep->interfaz->nombre, io_gen_sleep->interfaz->nombre_length);
+    agregar_a_paquete(paquete_archivo_nuevo, &io_gen_sleep->interfaz->tipo, sizeof(io_gen_sleep->interfaz->tipo)); 
     agregar_a_paquete(paquete_archivo_nuevo, &io_gen_sleep->unidades_de_trabajo, sizeof(io_gen_sleep->unidades_de_trabajo)); 
 
     enviar_paquete(paquete_archivo_nuevo, socket);  
