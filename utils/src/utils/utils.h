@@ -69,7 +69,9 @@ typedef enum
     IO_M_STDIN,                 // entradasalida envia input a memoria
     IO_M_STDIN_FIN,              // Memoria guardó con éxito el input
     IO_M_STDOUT,
-    IO_M_STDOUT_FIN
+    IO_M_STDOUT_FIN,
+    IO_FS_WRITE_M, // Memoria devuelve el valor a escribir en el archivo con un  t_io_output
+    IO_FS_READ_M // Es el ok de que se guardo bien el valor en memoria, pero no sé si hace falta
 }op_code; 
 
 typedef struct {
@@ -225,8 +227,7 @@ typedef struct {
 	uint32_t tiempo_espera;
 } t_io_espera;
 
-//Kernel le manda a IO
-
+//Kernel le manda a IO en operaciones STDIN, STDOUT y tambien IO le manda a memoria para que le pase el contenido a traves de un t_io_output
 typedef struct {
 	uint32_t pid;
     t_list*  direcciones_fisicas; 
@@ -250,6 +251,23 @@ typedef struct {
     char* output;   
 } t_io_output;
 
+//Kernel le manda a io para crear/borrar/ truncar archivo
+typedef struct {
+	uint32_t pid;
+    uint32_t nombre_archivo_length; 
+    char* nombre_archivo; 
+    uint32_t tamanio_archivo;  
+} t_io_gestion_archivo;
+
+//Kernel le manda a io para leer o escribir archivo
+typedef struct {
+	uint32_t pid;
+    uint32_t nombre_archivo_length; 
+    char* nombre_archivo; 
+    t_list*  direcciones_fisicas;
+    uint32_t tamanio_operacion;  
+    uint32_t puntero_archivo;
+} t_io_readwrite_archivo;
 
 //Kernel-Memoria (struct para cop crear proceso)
 typedef struct{
@@ -294,7 +312,7 @@ void enviar_espera(t_io_espera* io_espera, int socket);
 t_interfaz* deserializar_interfaz(t_list*  lista_paquete );
 void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion);
 t_io_direcciones_fisicas* deserializar_io_df(t_list*  lista_paquete );
-void enviar_output(t_io_output* io_output ,int socket_io);
+void enviar_output(t_io_output* io_output ,int socket_io, uint32_t op_code);
 t_io_output* deserializar_output(t_list*  lista_paquete );
 t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete );
 void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket_kernel);
@@ -306,5 +324,14 @@ void enviar_solicitud_marco(int marco ,int socket_cpu);
 void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu);
 void enviar_peticion_valor(void* valor ,int socket_cpu);
 t_io_input* deserializar_input(t_list*  lista_paquete );
+// Kernel envía a IO Crear/Borrar/Truncar Archivo
+void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket, uint32_t cod_op);
+//Lo pueden usar IOy MEMOMORIA, para enviarse direcciones físicas y los datos contenidos o a guardar
+void enviar_input(t_io_input* io_input ,int socket, uint32_t op_code );
+// Kernel a IO para leer o escribir archivo
+void enviar_io_readwrite(t_io_readwrite_archivo* io_readwrite ,int socket, uint32_t op_code );
+//IO recibe una peticion de escrir o leer archivo
+t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete );
+
 #endif /* UTILS_H_ */
 
