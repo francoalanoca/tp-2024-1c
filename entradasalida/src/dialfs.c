@@ -607,8 +607,9 @@ void leer_archivo(t_io_readwrite_archivo* archivo, int socket){
         input->pid =archivo->pid;
         input->direcciones_fisicas =list_create();
         list_add_all(input->direcciones_fisicas,archivo->direcciones_fisicas);
-        input->input_length =string_length(input) + 1;
         input->input = datos_leidos;
+        input->input_length =string_length(datos_leidos) + 1;
+        log_info(logger_entrada_salida, "input lenght: %d",input->input_length);
         enviar_input(input, socket, IO_FS_READ);
     };
 }
