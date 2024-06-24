@@ -22,9 +22,9 @@ int main(int argc, char* argv[]) {
 	log_info(logger_memoria, "Se inicio correctamente la Memoria");
 
 
-	//------------------Conexiones------------------------
-	iniciar_conexiones();
-	log_info(logger_memoria, "Se iniciaron correctamente las conexiones");
+	//------------------Server------------------------
+	 iniciar_servidor_memoria();
+	
 
 
 	//------------------Hilos------------------------------
