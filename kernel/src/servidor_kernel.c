@@ -58,7 +58,7 @@ void procesar_conexion(void *void_args) {
             case HANDSHAKE_OK:
 
                 log_info(logger_kernel, "handshake recibido exitosamente con I/O");
-                break;
+                
 
             break;
             default:
@@ -70,4 +70,25 @@ void procesar_conexion(void *void_args) {
 
     log_warning(logger, "El cliente se desconecto de %s server", server_name);
     return;
+}
+
+
+
+void Empezar_conexiones(){
+
+    //conexion con cpu-dispatch
+    conexion_cpu_dispatch = crear_conexion(logger_kernel, "KERNEL", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);
+    
+    log_info(logger_kernel, "Socket de KERNEL : %d\n",conexion_cpu_dispatch);  
+
+    //conexion con cpu-interrupt
+    conexion_cpu_interrupt = crear_conexion(logger_kernel, "KERNEL", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_INTERRUPT);
+    
+    log_info(logger_kernel, "Socket de KERNEL : %d\n",conexion_cpu_interrupt);
+
+    //conexion con memoria
+    conexion_memoria = crear_conexion(logger_kernel, "MEMORIA", cfg_kernel->IP_MEMORIA, cfg_kernel->PUERTO_MEMORIA);
+    
+    log_info(logger_kernel, "Socket de MEMORIA : %d\n",conexion_memoria); 
+
 }

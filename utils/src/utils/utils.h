@@ -161,8 +161,6 @@ typedef struct
     uint32_t pid;
     uint32_t program_counter;
     char* path;
-    t_list* lista_recursos_pcb;
-    pthread_mutex_t mutex_lista_recursos;
     t_registros_CPU registros_cpu;
     int estado;
 }t_pcb;
