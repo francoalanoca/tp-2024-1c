@@ -603,15 +603,12 @@ t_io_input* deserializar_input(t_list*  lista_paquete ){
          printf("Valor agregado %d \n",direccion_fisica);
     }
 
-
     io_input->input_length = *(uint32_t*)list_get(lista_paquete,2+tamanio_lista);
     printf("Cantidad caracteres input: %d \n",io_input->input_length);
     io_input->input = list_get(lista_paquete, 2+tamanio_lista+1);
-    printf("Input: %s \n",io_input->input);
-    
+    printf("Input: %s \n",io_input->input);    
 
     return io_input;
-
 }
 
 // Kernel envía a io un stdin usando op_cod= IO_K_STDIN
@@ -658,10 +655,10 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
 }
 
 //Memoria envia a entradasalida
-void enviar_output(t_io_output* io_output ,int socket_io) {
+void enviar_output(t_io_output* io_output ,int socket_io, uint32_t op_code) {
     t_paquete* paquete_output;
  
-    paquete_output = crear_paquete(IO_M_STDOUT_FIN);
+    paquete_output = crear_paquete(op_code);
  
     agregar_a_paquete(paquete_output,  &io_output->pid,  sizeof(uint32_t));         
     agregar_a_paquete(paquete_output, &io_output->output_length, sizeof(uint32_t));  
@@ -679,10 +676,91 @@ void enviar_output(t_io_output* io_output ,int socket_io) {
     t_io_output* io_output = malloc(sizeof(t_io_output));
     io_output->pid = *(uint32_t*)list_get(lista_paquete, 0);
     io_output->output_length = *(uint32_t*)list_get(lista_paquete, 1);
-    io_output->output = list_get(lista_paquete, 2);
-   
+    io_output->output = list_get(lista_paquete, 2);  
     
 	return io_output;
+}
+
+void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket, uint32_t cod_op ){
+    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));;
+    
+    paquete_archivo_nuevo = crear_paquete(cod_op);
+    
+    agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->pid), sizeof(nuevo_archivo->pid));
+    agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->nombre_archivo_length, sizeof(nuevo_archivo->nombre_archivo_length));  
+    agregar_a_paquete(paquete_archivo_nuevo, nuevo_archivo->nombre_archivo, nuevo_archivo->nombre_archivo_length);
+    agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->tamanio_archivo), sizeof(nuevo_archivo->tamanio_archivo));   
+    enviar_paquete(paquete_archivo_nuevo, socket);    
+}
+
+void enviar_input(t_io_input* io_input ,int socket, uint32_t op_code ) {
+    t_paquete* paquete_input;
+ 
+    paquete_input = crear_paquete(op_code);
+ 
+    agregar_a_paquete(paquete_input,  &io_input->pid,  sizeof(uint32_t));      
+    uint32_t list_tamanio = list_size(io_input->direcciones_fisicas);    
+    agregar_a_paquete(paquete_input, &list_tamanio, sizeof(uint32_t));  
+    //agrego cada elemento de la lista de direcciones fisicas
+    for (int i = 0; i < list_tamanio; i++) {
+        uint32_t direccion_fisica = (uint32_t*) list_get(io_input->direcciones_fisicas, i);        
+        agregar_a_paquete(paquete_input,  &direccion_fisica, sizeof(uint32_t));        
+    }   
+
+    agregar_a_paquete(paquete_input, &io_input->input_length, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_input, io_input->input, io_input->input_length);  
+    enviar_paquete(paquete_input, socket);    
+    free(paquete_input);     
+
+}
+
+void enviar_io_readwrite(t_io_readwrite_archivo* io_readwrite ,int socket, uint32_t op_code ){
+    t_paquete* paquete_readwrite;
+    uint32_t list_tamanio = list_size(io_readwrite->direcciones_fisicas); 
+    paquete_readwrite = crear_paquete(op_code);
+ 
+    agregar_a_paquete(paquete_readwrite,  &io_readwrite->pid,  sizeof(uint32_t));     
+    agregar_a_paquete(paquete_readwrite, &io_readwrite->nombre_archivo_length, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_readwrite, io_readwrite->nombre_archivo, io_readwrite->nombre_archivo_length);       
+    agregar_a_paquete(paquete_readwrite, &list_tamanio, sizeof(uint32_t));  
+    //agrego cada elemento de la lista de direcciones fisicas
+    for (int i = 0; i < list_tamanio; i++) {
+        uint32_t direccion_fisica = (uint32_t*) list_get(io_readwrite->direcciones_fisicas, i);        
+        agregar_a_paquete(paquete_readwrite,  &direccion_fisica, sizeof(uint32_t));        
+    }   
+    agregar_a_paquete(paquete_readwrite,  &io_readwrite->tamanio_operacion,  sizeof(uint32_t));  
+    agregar_a_paquete(paquete_readwrite,  &io_readwrite->puntero_archivo,  sizeof(uint32_t));   
+    enviar_paquete(paquete_readwrite, socket);    
+    free(paquete_readwrite); 
+}
+
+t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete ){
+
+    t_io_readwrite_archivo* io_readwrite = malloc(sizeof(t_io_readwrite_archivo));
+    
+    io_readwrite->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    io_readwrite->nombre_archivo_length = *(uint32_t*)list_get(lista_paquete,1);
+    io_readwrite->nombre_archivo = list_get(lista_paquete, 2);
+    printf("Nombre archivo: %s \n",io_readwrite->nombre_archivo); 
+
+    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 3);
+    printf("tamanio lista: %d \n",tamanio_lista); // despues borrar print
+
+     // Deserializar cada elemento de la lista
+    io_readwrite->direcciones_fisicas = list_create();
+    for (int i = 0; i < tamanio_lista; i++) {
+        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
+        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 4 + i);
+        printf("Posicion %d, valor %d \n",4 + i, direccion_fisica) ; // despues borrar print
+        list_add(io_readwrite->direcciones_fisicas, direccion_fisica);
+         printf("Valor agregado %d \n",direccion_fisica); // despues borrar print
+    }
+    io_readwrite->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,4+tamanio_lista);
+     printf("tamanio operacion %d \n",io_readwrite->tamanio_operacion);// despues borrar print
+    io_readwrite->puntero_archivo = *(uint32_t*)list_get(lista_paquete,4+tamanio_lista+1);
+     printf("Puntero archivo %d \n",io_readwrite->puntero_archivo); // despues borrar print
+    return io_readwrite; 
+    free(io_readwrite);
 }
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)

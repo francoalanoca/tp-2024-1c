@@ -56,15 +56,19 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
                 io_input->input_length = string_length(input) + 1;
                 io_input->input = input;
                 
-                response = enviar_input(io_input, socket_memoria);
-
-                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
-                    log_error(logger_entrada_salida, " Error al enviar respuesta de STDIN a Kernel");
-                    break;
-                }
+                enviar_input(io_input, socket_memoria, IO_M_STDIN);                
+               
                 free(io_input);
                 break;
+            case IO_M_STDIN_FIN:
+               
+                log_info(logger_entrada_salida, "Se guardo inpunt correctamente en memoria: \n");
+                response = IO_K_STDIN_FIN;        
 
+                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                    log_error(logger_entrada_salida, " Error al enviar respuesta de IO_K_STDIN_FIN a Kernel");
+                    break;
+                }
             default:
                 response = OPERACION_INVALIDA;
                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
@@ -122,40 +126,4 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
     return 0;
 }
 
-op_code  enviar_input(t_io_input* io_input ,int socket_memoria) {
-    t_paquete* paquete_input;
- 
-    paquete_input = crear_paquete(IO_M_STDIN);
- 
-    agregar_a_paquete(paquete_input,  &io_input->pid,  sizeof(uint32_t));     
-    
-    uint32_t list_tamanio = list_size(io_input->direcciones_fisicas);
-    
-    agregar_a_paquete(paquete_input, &list_tamanio, sizeof(uint32_t));
-  
-    //agrego cada elemento de la lista de direcciones fisicas
-    for (int i = 0; i < list_tamanio; i++) {
-        uint32_t direccion_fisica = (uint32_t*) list_get(io_input->direcciones_fisicas, i);
-        
-        agregar_a_paquete(paquete_input,  &direccion_fisica, sizeof(uint32_t));
-        
-    }   
-
-    agregar_a_paquete(paquete_input, &io_input->input_length, sizeof(uint32_t));  
-    agregar_a_paquete(paquete_input, io_input->input, io_input->input_length);  
-    enviar_paquete(paquete_input, socket_memoria);    
-    free(paquete_input);
-    if ( recibir_operacion(socket_memoria) == IO_M_STDIN_FIN ){
-        log_info(logger_entrada_salida, "Se guardo inpunt correctamente en memoria: \n");
-
-        return IO_K_STDIN_FIN;
-        
-        }
-    else {
-        
-        log_error(logger_entrada_salida, "Error al intentar guardar input en  memoria.\n");
-        return -1; 
-    }          
-
-}
 
