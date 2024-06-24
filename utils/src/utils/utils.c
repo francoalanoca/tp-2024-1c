@@ -763,6 +763,16 @@ t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete ){
     free(io_readwrite);
 }
 
+t_io_output* armar_io_output(uint32_t pid, char* output){
+            t_io_output* io_output = malloc(sizeof(t_io_output));
+            uint32_t tamanio_output = string_length(output)+1;
+            io_output->pid = pid;
+            io_output->output_length = tamanio_output;
+            io_output->output = output;
+           return  io_output;    
+}
+    
+
 void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
 	  log_destroy(logger);

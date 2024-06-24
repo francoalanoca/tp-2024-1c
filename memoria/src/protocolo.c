@@ -155,7 +155,7 @@ void memoria_atender_cliente(void* socket_cliente){
             io_output->output = output;
 
             printf("Tamanio output %d\n",io_output->output_length);
-            enviar_output(io_output ,socket_cliente);
+            enviar_output(io_output ,socket_cliente, IO_M_STDOUT_FIN );
             list_clean(valores);    
             break;
         case IO_FS_WRITE://Lee de memoria y escribe en un archivo

@@ -354,6 +354,8 @@ void enviar_input(t_io_input* io_input ,int socket, uint32_t op_code );
 void enviar_io_readwrite(t_io_readwrite_archivo* io_readwrite ,int socket, uint32_t op_code );
 //IO recibe una peticion de escrir o leer archivo
 t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete );
+// Devuelve un out a partit de un pid y un valor char*
+t_io_output* armar_io_output(uint32_t pid, char* output);
 
 #endif /* UTILS_H_ */
 
