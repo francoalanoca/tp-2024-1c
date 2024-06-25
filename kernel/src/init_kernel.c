@@ -3,6 +3,7 @@
 t_log *logger_kernel; // Definición de la variable global
 t_config_kernel *cfg_kernel;
 t_config *file_cfg_kernel;
+t_pcb* pcb;
 int conexion_cpu_dispatch;
 int conexion_cpu_interrupt;
 int conexion_memoria;
@@ -111,7 +112,6 @@ int hacer_handshake (int socket_cliente){
 }
 
 
-
 void cerrar_programa() {
 
     //cortar_conexiones();
@@ -121,9 +121,4 @@ void cerrar_programa() {
     log_info(logger_kernel, "TERMINANDO_EL_LOG");
     log_destroy(logger_kernel);
 }
-
-
-
-
-
 

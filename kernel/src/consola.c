@@ -2,6 +2,8 @@
 
  int identificador_pid;
  pthread_mutex_t mutex_pid;
+ pthread_mutex_t mutex_process_id = PTHREAD_MUTEX_INITIALIZER; // Definición
+int process_id = 0; // Definición
 
 //Funcion que implementa el inicio de la consola iterativa
 void iniciar_consola_interactiva(int conexion){
@@ -81,10 +83,14 @@ void atender_instruccion_validada(char* leido){
 
         //Procedo a ejecuratar el script
 
-    }else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0){  //INICIAR_PROCESO [PATH]
-        cargar_string_al_buffer(un_buffer, comando_consola[1]);     //[PATH]
-       
-        //Procedo a iniciar el proceso
+    } else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0) { //INICIAR_PROCESO [NOMBRE]
+        if (comando_consola[1] == NULL) {
+            fprintf(stderr, "Error: se debe proporcionar el nombre del proceso.\n");
+            return;
+        }
+        cargar_string_al_buffer(un_buffer, comando_consola[1]); //[NOMBRE]
+
+        // Procedo a iniciar el proceso
         f_iniciar_proceso(un_buffer);
 
     }else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0){    //FINALIZAR_PROCESO [PID]
@@ -131,51 +137,86 @@ void atender_instruccion_validada(char* leido){
 
 //Funcion que carga las instrucciones de path para iniciar un proceso en New
 void f_iniciar_proceso(t_buffer* un_buffer) {
-    char* path = extraer_string_del_buffer(un_buffer);  // Extraemos del buffer
+    char* path = extraer_string_del_buffer(un_buffer);  // Extraemos el path del buffer
     if (path == NULL) {
         fprintf(stderr, "Error: no se pudo extraer el path del buffer.\n");
         return;
     }
-    log_trace(logger_kernel, "BUFFER (%d): [PATH: %s]", path);
-    eliminar_buffer(un_buffer);
 
-    t_pcb* pcb = crear_pcb(path);
-    if (pcb == NULL) {
-        fprintf(stderr, "Error: no se pudo crear el PCB.\n");
+    char* nombre = extraer_string_del_buffer(un_buffer);  // Extraemos el nombre del buffer
+    if (nombre == NULL) {
+        fprintf(stderr, "Error: no se pudo extraer el nombre del buffer.\n");
         free(path);
         return;
     }
 
-    // Cambiar el estado del PCB a ESTADO_LISTO
-    cambiar_estado(pcb, ESTADO_READY);
+    log_trace(logger_kernel, "BUFFER: [PATH: %s, NOMBRE: %s]", path, nombre);
+    eliminar_buffer(un_buffer);
+
+    t_pcb* pcb = crear_pcb(path,nombre);
+    if (pcb == NULL) {
+        fprintf(stderr, "Error: no se pudo crear el PCB.\n");
+        free(path);
+        free(nombre);
+        return;
+    }
+
+
+    //enviar_creacion_de_proceso_a_memoria(t_pcb* pcb, int conexion_memoria)
+
+    //int cop = recibir_operacion(conexion_memoria);
+    //if(cop==CREAR_PROCESO_FIN)
+
+    // Cambiar el estado del PCB a ESTADO_READY
+    if (agregar_proceso( planificador, pcb)){
+
+    log_info(logger_kernel, "Proceso enviado a new");
+
+    };
 
     imprimir_pcb(pcb);
-    enviar_pcb_a_cpu_por_dispatch(pcb);
+
+    //pcb2 obtener_proximo_proceso(t_planificador* planificador)
+    //enviar_pcb_a_cpu_por_dispatch(pcb2); //declarar pcb2
+
     destruir_pcb(pcb);
     free(path);
+    free(nombre);
+
 }
 
-t_pcb* crear_pcb(char* path) {
+
+
+
+
+
+
+
+
+
+t_pcb* crear_pcb(char* path, char* nombre) {
     t_pcb* nuevo_pcb = malloc(sizeof(t_pcb));
     if (nuevo_pcb == NULL) {
-        log_error(logger_kernel, "No se pudo asignar memoria para el nuevo pcb\n");
+        log_error(logger_kernel, "No se pudo asignar memoria para el nuevo PCB\n");
         return NULL;
     }
 
-    pthread_mutex_lock(&mutex_process_id);
-    process_id++;
-    nuevo_pcb->pid = process_id;
-    pthread_mutex_unlock(&mutex_process_id);
+    //pthread_mutex_lock(&mutex_process_id);
+    //process_id++;
+    //nuevo_pcb->pid = process_id;
+    //pthread_mutex_unlock(&mutex_process_id);
 
     nuevo_pcb->program_counter = 0;
-    nuevo_pcb->path = strdup(path);
-    //nuevo_pcb->lista_recursos_pcb = list_create();
+    nuevo_pcb->path = strdup(path);  // Guardar el path del proceso
+    //nuevo_pcb->nombre_proceso = strdup(nombre);  // Guardar el nombre del proceso
+    //nuevo_pcb->lista_recursos_pcb = list_create(); // hacerlo en diccionario 
     nuevo_pcb->estado = ESTADO_NEW;
 
    /* if (pthread_mutex_init(&nuevo_pcb->mutex_lista_recursos, NULL) != 0) {
-        log_error(logger_kernel, "No se pudo inicializar el mutex para el pcb\n");
+        log_error(logger_kernel, "No se pudo inicializar el mutex para el PCB\n");
         free(nuevo_pcb->path);
-        list_destroy(nuevo_pcb->lista_recursos_pcb);
+        //free(nuevo_pcb->nombre_proceso);
+       // list_destroy(nuevo_pcb->lista_recursos_pcb);
         free(nuevo_pcb);
         return NULL;
     }*/
@@ -197,48 +238,50 @@ t_pcb* crear_pcb(char* path) {
     return nuevo_pcb;
 }
 
-void imprimir_pcb(t_pcb* un_pcb) {
-    log_info(logger_kernel, "<PCB_%d> [%s] [Estado: %d]", un_pcb->pid, un_pcb->path, un_pcb->estado);
+void imprimir_pcb(t_pcb* pcb) {
+    //log_info(logger_kernel, "<PCB_%d> [%s] [Nombre: %s] [Estado: %d]", pcb->pid, pcb->path, pcb->nombre_proceso, pcb->estado);
 }
 
-void enviar_pcb_a_cpu_por_dispatch(t_pcb* una_pcb) {
+void enviar_pcb_a_cpu_por_dispatch(t_pcb* pcb) {
 
     // Cambiar el estado del PCB a ESTADO_EJECUTANDO antes de enviarlo a la CPU
-    //cambiar_estado(una_pcb, ESTADO_RUNNING);
+    //cambiar_estado(pcb, ESTADO_RUNNING);
 
 
     t_paquete* un_paquete = crear_paquete(conexion_cpu_dispatch);
-    agregar_a_paquete(un_paquete, una_pcb->pid, sizeof(uint32_t));
-    agregar_a_paquete(un_paquete, una_pcb->program_counter, sizeof(uint32_t)); // cambiar a agregar_a_paquete y agregar sizeof.
+    agregar_a_paquete(un_paquete, pcb->pid, sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, pcb->program_counter, sizeof(uint32_t)); // cambiar a agregar_a_paquete y agregar sizeof.
 
-    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.PC), sizeof(uint32_t));
-    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.AX), sizeof(uint8_t));
-    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.BX), sizeof(uint8_t));
-    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.CX), sizeof(uint8_t));
-    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.DX), sizeof(uint8_t));
-    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.EAX), sizeof(uint32_t));
-    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.EBX), sizeof(uint32_t));
-    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.ECX), sizeof(uint32_t));
-    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.SI), sizeof(uint32_t));
-    agregar_a_paquete(un_paquete, &(una_pcb->registros_cpu.DI), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(pcb->registros_cpu.PC), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(pcb->registros_cpu.AX), sizeof(uint8_t));
+    agregar_a_paquete(un_paquete, &(pcb->registros_cpu.BX), sizeof(uint8_t));
+    agregar_a_paquete(un_paquete, &(pcb->registros_cpu.CX), sizeof(uint8_t));
+    agregar_a_paquete(un_paquete, &(pcb->registros_cpu.DX), sizeof(uint8_t));
+    agregar_a_paquete(un_paquete, &(pcb->registros_cpu.EAX), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(pcb->registros_cpu.EBX), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(pcb->registros_cpu.ECX), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(pcb->registros_cpu.SI), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(pcb->registros_cpu.DI), sizeof(uint32_t));
 
     enviar_paquete(un_paquete, conexion_cpu_dispatch);
     eliminar_paquete(un_paquete);
 }
 
-void destruir_pcb(t_pcb* un_pcb) {
-    if (un_pcb->path) free(un_pcb->path);
-    //list_destroy(un_pcb->lista_recursos_pcb);
-    //pthread_mutex_destroy(&un_pcb->mutex_lista_recursos);
-    free(un_pcb);
+void destruir_pcb(t_pcb* pcb) {
+    if (pcb->path) free(pcb->path);
+    //if (pcb->nombre_proceso) free(pcb->nombre_proceso);
+    //list_destroy(pcb->lista_recursos_pcb);
+   // pthread_mutex_destroy(&pcb->mutex_lista_recursos);
+    free(pcb);
 }
 
-void cambiar_estado(t_pcb* un_pcb, estado_pcb prox_estado) {
-    un_pcb->estado = prox_estado;
+void cambiar_estado(t_pcb* pcb, estado_pcb prox_estado) {
+    pcb->estado = prox_estado;
 }
+
 
 void mostrar_estado_proceso(pid_t pid) {
-    /*pthread_mutex_lock(&mutex_lista_procesos);
+   /* pthread_mutex_lock(&mutex_lista_procesos);
 
     // Verifica que lista_procesos esté inicializada y no sea NULL
     if (lista_procesos == NULL) {
@@ -274,7 +317,7 @@ void mostrar_estado_proceso(pid_t pid) {
                 break;
         }
 
-        log_info(logger_kernel, "Estado del proceso con PID %d: %s\n", pid, estado_str);
+        //log_info(logger_kernel, "Estado del proceso con PID %d [%s]: %s\n", pid, pcb->nombre_proceso, estado_str);
     }
 
     pthread_mutex_unlock(&mutex_lista_procesos);*/
@@ -297,4 +340,4 @@ bool encontrar_por_pid(void* elemento, void* pid_ptr) {
     t_pcb* pcb = (t_pcb*)elemento;
     uint32_t pid = *(uint32_t*)pid_ptr;
     return pcb->pid == pid;
-    }
+}

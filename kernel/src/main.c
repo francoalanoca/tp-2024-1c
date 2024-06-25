@@ -9,6 +9,9 @@
 #include <arpa/inet.h>
 #include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/main.h>
 #include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/planificador.h>
+//#include <main.h>
+//#include <planificador.h>
+
 
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
@@ -47,7 +50,10 @@ int main(char argc, char *argv[]) {
  
 //EMPEZAR PLANIFICACIONES
 
+
     planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM,cfg_kernel->GRADO_MULTIPROGRAMACION);
+   // planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM);
+
 
 //CERRAR PROGRAMA
 

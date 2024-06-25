@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <utils/utils.h>
+
 // Enumeración para los algoritmos de planificación
 typedef enum {
     FIFO,
@@ -31,6 +32,7 @@ extern t_planificador* planificador;
 // Inicializa un nuevo planificador
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum, int grado_multiprogramacion);
 // Destruye el planificador y libera la memoria
+
 void destruir_planificador(t_planificador* planificador);
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso);
 t_algoritmo_planificacion obtener_algoritmo_planificador(const char* algoritmo_planificacion);

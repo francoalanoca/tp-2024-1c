@@ -22,6 +22,7 @@ bool interfaz_permite_operacion(t_tipo_interfaz_enum tipo_interfaz, tipo_instruc
 // Variables Globales
 extern t_log *logger_kernel;
 extern t_config* file_cfg_kernel;
+extern t_pcb* pcb;
 extern int conexion_cpu_dispatch;
 extern int conexion_cpu_interrupt;
 extern int conexion_memoria;

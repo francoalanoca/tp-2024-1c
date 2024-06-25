@@ -4,74 +4,59 @@ t_log *logger_entrada_salida; // Definición de la variable global
 t_config_entrada_salida *cfg_entrada_salida;
 t_config *file_cfg_entrada_salida;
 t_interfaz* interfaz;
-int checkProperties(char *path_config) {
-    // config valida
-    t_config *config = config_create(path_config);
-    if (config == NULL) {
-        log_error(logger_entrada_salida, "Ocurrió un error al intentar abrir el archivo config");
-        return false;
-    }
 
-    char *properties[] = {
-            "TIPO_INTERFAZ",
-            "TIEMPO_UNIDAD_TRABAJO",
-            "IP_KERNEL",
-            "PUERTO_KERNEL",
-            "IP_MEMORIA",
-            "PUERTO_MEMORIA",
-            "PATH_BASE_DIALFS",
-            "BLOCK_SIZE",
-            "BLOCK_COUNT",
-            "RETRASO_COMPACTACION",
-            NULL};
-
-    // Falta alguna propiedad
-    if (!config_has_all_properties(config, properties)) {
-        log_error(logger_entrada_salida, "Propiedades faltantes en el archivo de configuracion");
-        return false;
-    }
-
-    config_destroy(config);
-
-    return true;
-}
 
 int cargar_configuracion(char *nombre_interfaz_custom, char *path) {
 
     file_cfg_entrada_salida = config_create(path);
 
+
+    cfg_entrada_salida->NOMBRE_INTERFAZ = strdup(nombre_interfaz_custom);
+    log_info(logger_entrada_salida, "NOMBRE_INTERFAZ cargado correctamente: %s", cfg_entrada_salida->NOMBRE_INTERFAZ);
+
     cfg_entrada_salida->TIPO_INTERFAZ = strdup(config_get_string_value(file_cfg_entrada_salida, "TIPO_INTERFAZ"));
     log_info(logger_entrada_salida, "TIPO_INTERFAZ cargado correctamente: %s", cfg_entrada_salida->TIPO_INTERFAZ);
-
-    cfg_entrada_salida->TIEMPO_UNIDAD_TRABAJO = config_get_int_value(file_cfg_entrada_salida, "TIEMPO_UNIDAD_TRABAJO");
-    log_info(logger_entrada_salida, "TIEMPO_UNIDAD_TRABAJO cargado correctamente: %d", cfg_entrada_salida->TIEMPO_UNIDAD_TRABAJO);
-
+    
+    if (strcmp(cfg_entrada_salida->TIPO_INTERFAZ, "DIALFS") == 0 || strcmp(cfg_entrada_salida->TIPO_INTERFAZ, "GENERICA") == 0  ) {
+        
+        cfg_entrada_salida->TIEMPO_UNIDAD_TRABAJO = config_get_int_value(file_cfg_entrada_salida, "TIEMPO_UNIDAD_TRABAJO");
+        log_info(logger_entrada_salida, "TIEMPO_UNIDAD_TRABAJO cargado correctamente: %d", cfg_entrada_salida->TIEMPO_UNIDAD_TRABAJO);
+     } 
+    
     cfg_entrada_salida->IP_KERNEL = strdup(config_get_string_value(file_cfg_entrada_salida, "IP_KERNEL"));
     log_info(logger_entrada_salida, "IP_KERNEL cargado correctamente: %s", cfg_entrada_salida->IP_KERNEL);
 
     cfg_entrada_salida->PUERTO_KERNEL = strdup(config_get_string_value(file_cfg_entrada_salida, "PUERTO_KERNEL"));
     log_info(logger_entrada_salida, "PUERTO_KERNEL cargado correctamente: %s", cfg_entrada_salida->PUERTO_KERNEL);
+   
+    if (strcmp(cfg_entrada_salida->TIPO_INTERFAZ, "GENERICA") != 0) {        
+        
+        cfg_entrada_salida->IP_MEMORIA = strdup(config_get_string_value(file_cfg_entrada_salida, "IP_MEMORIA"));
+        log_info(logger_entrada_salida, "IP_MEMORIA cargado correctamente: %s", cfg_entrada_salida->IP_MEMORIA);
 
-    cfg_entrada_salida->IP_MEMORIA = strdup(config_get_string_value(file_cfg_entrada_salida, "IP_MEMORIA"));
-    log_info(logger_entrada_salida, "IP_MEMORIA cargado correctamente: %s", cfg_entrada_salida->IP_MEMORIA);
+        cfg_entrada_salida->PUERTO_MEMORIA = strdup(config_get_string_value(file_cfg_entrada_salida, "PUERTO_MEMORIA"));
+        log_info(logger_entrada_salida, "PUERTO_MEMORIA cargado correctamente: %s", cfg_entrada_salida->PUERTO_MEMORIA);
+    }    
 
-    cfg_entrada_salida->PUERTO_MEMORIA = strdup(config_get_string_value(file_cfg_entrada_salida, "PUERTO_MEMORIA"));
-    log_info(logger_entrada_salida, "PUERTO_MEMORIA cargado correctamente: %s", cfg_entrada_salida->PUERTO_MEMORIA);
+    if (strcmp(cfg_entrada_salida->TIPO_INTERFAZ, "DIALFS") == 0 ) {
 
-    cfg_entrada_salida->PATH_BASE_DIALFS = strdup(config_get_string_value(file_cfg_entrada_salida, "PATH_BASE_DIALFS"));
-    log_info(logger_entrada_salida, "PATH_BASE_DIALFS cargado correctamente: %s", cfg_entrada_salida->PATH_BASE_DIALFS);
-
-    cfg_entrada_salida->BLOCK_SIZE = config_get_int_value(file_cfg_entrada_salida, "BLOCK_SIZE");
-    log_info(logger_entrada_salida, "BLOCK_SIZE cargado correctamente: %d", cfg_entrada_salida->BLOCK_SIZE);
     
-    cfg_entrada_salida->BLOCK_COUNT = config_get_int_value(file_cfg_entrada_salida, "BLOCK_COUNT");
-    log_info(logger_entrada_salida, "BLOCK_COUNT cargado correctamente: %d", cfg_entrada_salida->BLOCK_COUNT);
+        cfg_entrada_salida->PATH_BASE_DIALFS = strdup(config_get_string_value(file_cfg_entrada_salida, "PATH_BASE_DIALFS"));
+        log_info(logger_entrada_salida, "PATH_BASE_DIALFS cargado correctamente: %s", cfg_entrada_salida->PATH_BASE_DIALFS);
 
-    cfg_entrada_salida->RETRASO_COMPACTACION = config_get_int_value(file_cfg_entrada_salida, "RETRASO_COMPACTACION");
-    log_info(logger_entrada_salida, "RETRASO_COMPACTACION cargado correctamente: %d", cfg_entrada_salida->RETRASO_COMPACTACION);
+        cfg_entrada_salida->BLOCK_SIZE = config_get_int_value(file_cfg_entrada_salida, "BLOCK_SIZE");
+        log_info(logger_entrada_salida, "BLOCK_SIZE cargado correctamente: %d", cfg_entrada_salida->BLOCK_SIZE);
+    
+        cfg_entrada_salida->BLOCK_COUNT = config_get_int_value(file_cfg_entrada_salida, "BLOCK_COUNT");
+        log_info(logger_entrada_salida, "BLOCK_COUNT cargado correctamente: %d", cfg_entrada_salida->BLOCK_COUNT);
 
-    cfg_entrada_salida->NOMBRE_INTERFAZ = strdup(nombre_interfaz_custom);
-    log_info(logger_entrada_salida, "NOMBRE_INTERFAZ cargado correctamente: %s", cfg_entrada_salida->NOMBRE_INTERFAZ);
+        cfg_entrada_salida->RETRASO_COMPACTACION = config_get_int_value(file_cfg_entrada_salida, "RETRASO_COMPACTACION");
+        log_info(logger_entrada_salida, "RETRASO_COMPACTACION cargado correctamente: %d", cfg_entrada_salida->RETRASO_COMPACTACION);
+        
+    }
+
+
+
 
     log_info(logger_entrada_salida, "Archivo de configuracion cargado correctamente");
     config_destroy(file_cfg_entrada_salida);
@@ -80,7 +65,7 @@ int cargar_configuracion(char *nombre_interfaz_custom, char *path) {
  
 
 
-int init(char *path_config) {
+int init(char *path_config){ 
     //inicializo estructura de configuracion
     cfg_entrada_salida = cfg_entrada_salida_start();
 
@@ -92,7 +77,7 @@ int init(char *path_config) {
     //inicializo el archivo de configuracion
     file_cfg_entrada_salida = iniciar_config(path_config, logger_entrada_salida);
 
-    return checkProperties(path_config);
+    return 1;
 }
 
 int hacer_handshake (int socket_cliente){
@@ -137,15 +122,21 @@ log_info(logger_entrada_salida, "dentro iniciar interface\n");
         return EXIT_FAILURE;
     }
 
+    if ( tipo_interfaz_enum != GENERICA ){
 
-    if ( (hacer_handshake (socket_memoria) == HANDSHAKE_OK)){
-        log_info(logger_entrada_salida, "Correcto en handshake con memoria\n");
-    }
-    else {
-        log_info(logger_entrada_salida, "Error en handshake con memoria\n");
-        return EXIT_FAILURE;
-    }
-
+        
+    socket_memoria = crear_conexion(logger_entrada_salida, "MEMORIA", cfg_entrada_salida->IP_MEMORIA, cfg_entrada_salida->PUERTO_MEMORIA);
+    
+    log_info(logger_entrada_salida, "Socket de MEMORIA : %d\n",socket_memoria);   
+         
+        if ( (hacer_handshake (socket_memoria) == HANDSHAKE_OK)){
+            log_info(logger_entrada_salida, "Correcto en handshake con memoria\n");
+        }
+        else {
+            log_info(logger_entrada_salida, "Error en handshake con memoria\n");
+            return EXIT_FAILURE;
+        }
+     }
 // PRESENTAR    
     if ( (presentar_interfaz (socket_kernel, interfaz) == INTERFAZ_RECIBIDA)){
         log_info(logger_entrada_salida, "Interfaz presentada correctamente a kernel\n");      
@@ -173,7 +164,7 @@ log_info(logger_entrada_salida, "dentro iniciar interface\n");
 
             case DIALFS :
 
-                log_info(logger_entrada_salida, "Interfaz DIALFS iniciada");
+                iniciar_interfaz_dialfs (socket_kernel, socket_memoria);
                 break;                             
 
             default:

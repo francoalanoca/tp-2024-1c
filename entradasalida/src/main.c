@@ -8,7 +8,7 @@ int main(char argc, char *argv[]) {
     int socket_memoria;
     int socket_kernel;
 
-    printf("iniciando\n");
+    printf("iniciando...\n");
       printf("nombre de interfaz custom: %s \n",nombre_interfaz_custom);
     if (!init(path_config) || !cargar_configuracion(nombre_interfaz_custom, path_config)) {
         cerrar_programa();
@@ -21,11 +21,7 @@ int main(char argc, char *argv[]) {
     socket_kernel = crear_conexion(logger_entrada_salida, "KERNEL", cfg_entrada_salida->IP_KERNEL, cfg_entrada_salida->PUERTO_KERNEL);
     
     log_info(logger_entrada_salida, "Socket de KERNEL : %d\n",socket_kernel);   
-    
-    socket_memoria = crear_conexion(logger_entrada_salida, "MEMORIA", cfg_entrada_salida->IP_MEMORIA, cfg_entrada_salida->PUERTO_MEMORIA);
-    
-    log_info(logger_entrada_salida, "Socket de MEMORIA : %d\n",socket_memoria);   
-     
+
 
     
     //INICIAR INTERFACE//
