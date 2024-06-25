@@ -3,8 +3,8 @@
 
 int main(int argc, char* argv[]) {
 
-	//char* path_config = argv[1];
-	char* path_config = "memoria.config";
+	char* path_config = argv[1];
+	
 
 
 	if (!init(path_config) || !cargar_configuracion(path_config)) {
@@ -24,11 +24,6 @@ int main(int argc, char* argv[]) {
 
 	//------------------Server------------------------
 	 iniciar_servidor_memoria();
-	
-
-
-	//------------------Hilos------------------------------
-	//escuchar_modulos();
 
 	//terminar_programa(fd_memoria, logger_memoria, file_cfg_memoria);
 	return 0;

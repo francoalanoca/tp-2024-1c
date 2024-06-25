@@ -85,8 +85,8 @@ int cargar_configuracion(char *path_config) {
     file_cfg_memoria = config_create(path_config);
 
     //Cargo en la variable tipo config las configuraciones iniciales
-    cfg_memoria->PUERTO_ESCUCHA = strdup(config_get_string_value(file_cfg_memoria, "PUERTO_ESCUCHA"));
-    log_info(logger_memoria, "PUERTO_ESCUCHA cargado correctamente: %s", cfg_memoria->PUERTO_ESCUCHA);
+    cfg_memoria->PUERTO_ESCUCHA = config_get_int_value(file_cfg_memoria, "PUERTO_ESCUCHA");
+    log_info(logger_memoria, "PUERTO_ESCUCHA cargado correctamente: %d", cfg_memoria->PUERTO_ESCUCHA);
 
     cfg_memoria->TAM_MEMORIA = config_get_int_value(file_cfg_memoria, "TAM_MEMORIA");
     log_info(logger_memoria, "TAM_MEMORIA cargado correctamente: %d", cfg_memoria->TAM_MEMORIA);

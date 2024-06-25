@@ -1,35 +1,33 @@
 #include <../include/protocolo.h>
 
 //Funcion que atiende la peticion de Kernel segun el cod
-void memoria_atender_cliente(void* socket_cliente){
-    
-    
+void memoria_atender_cliente(void* socket){
+     int socket_cliente = *(int*)socket;
+    uint32_t cod_op;
 	op_code response;
     t_list* valores =  malloc(sizeof(t_list));
-
-	t_list* valores =  malloc(sizeof(t_list));
     t_io_input* input = malloc(sizeof(t_io_input));
     //t_paquete* paquete;
-	op_code response;
-	
-     //t_proceso_memoria contexto_ejecucion;
-    
+	void* output;
+     //t_proceso_memoria contexto_ejecucion;    
     //t_paquete* paquete;
-	op_code response;
-    t_list* valores =  malloc(sizeof(t_list));
     t_proceso_memoria* solicitud_instruccion = malloc(sizeof(t_proceso_memoria));
     t_busqueda_marco* solicitud_marco = malloc(sizeof(t_busqueda_marco));
     t_io_input* peticion_leer = malloc(sizeof(t_io_direcciones_fisicas));
-    //t_io_input* peticion_guardar = malloc(sizeof(t_io_input));
     //t_resize* solicitud_resize = malloc(sizeof(t_resize));
     //t_copy* copiar_valor = malloc(sizeof(t_copy));
 
 
 
-	while (1) {
-        //Se queda esperando a que KErnel le envie algo y extrae el cod de operacion
-		int cod_op = recibir_operacion(socket_cliente);
-		switch (cod_op) {
+while (1) {
+       
+//uint32_t cod_op = recibir_operacion(socket_cliente);
+ if (recv(socket_cliente, &cod_op, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+            log_info(logger_memoria, "DISCONNECT!");
+
+            break;
+        }
+switch (cod_op) {
 		
 		case HANDSHAKE:
 			log_info(logger_memoria, "Handshake realizado con cliente");
@@ -124,9 +122,9 @@ void memoria_atender_cliente(void* socket_cliente){
             }        
 
             escribir_memoria(input->pid, input->direcciones_fisicas, input->input, input->input_length);    //ver
-            uint32_t response_interfaz = IO_M_STDIN_FIN;
-            if (send(socket_cliente, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
-                perror("send INTERFAZ_RECIBIDA response");
+            response = IO_M_STDIN_FIN;
+            if (send(socket_cliente, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                perror("send IO_M_STDIN response");
                 break;
             }
 
@@ -148,7 +146,7 @@ void memoria_atender_cliente(void* socket_cliente){
                 break;
             }
 
-            void* output = leer_memoria(io_stdout->direcciones_fisicas, io_output->output_length);      //ver
+             output = leer_memoria(io_stdout->direcciones_fisicas, io_output->output_length);      //ver
             uint32_t tamanio_output = string_length(output)+1;
             io_output->pid = io_stdout->pid;
             io_output->output_length = tamanio_output;
@@ -172,7 +170,7 @@ void memoria_atender_cliente(void* socket_cliente){
                 printf("El paquete vino vacío\n");
                 break;
             }
-            void* output = leer_memoria(io_stdout->direcciones_fisicas, io_output->output_length);      //ver
+            output = leer_memoria(io_stdout->direcciones_fisicas, io_output->output_length);      //ver
             char* escritura ="HOLA!"; // Pesa 6 bytes  reemplazar esto por función de memoria que busca el valor
             
             uint32_t tamanio_escritura = string_length(escritura)+1;
@@ -192,9 +190,9 @@ void memoria_atender_cliente(void* socket_cliente){
             input = deserializar_input(valores);        
              
             escribir_memoria(input->pid, input->direcciones_fisicas, input->input, input->input_length);      
-            response_interfaz = IO_FS_READ_M; // termina de escribir
-            if (send(socket_cliente, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
-                perror("send INTERFAZ_RECIBIDA response");
+            response = IO_FS_READ_M; // termina de escribir
+            if (send(socket_cliente, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                perror("send IO_FS_READ_M response");
                 break;
             }
 

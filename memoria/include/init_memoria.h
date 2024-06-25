@@ -19,7 +19,7 @@ extern int fd_entradasalida;
 
 typedef struct
 {
-    char* PUERTO_ESCUCHA;
+    uint32_t PUERTO_ESCUCHA;
     uint32_t TAM_MEMORIA;
     uint32_t TAM_PAGINA;
     char* PATH_INSTRUCCIONES;

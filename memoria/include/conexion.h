@@ -4,7 +4,7 @@
 #include <utils/utils.h>
 
 #include "../include/init_memoria.h"
-
+#include <../include/protocolo.h>
 int iniciar_servidor_memoria();
 
 //int hacer_handshake (int socket_cliente);
