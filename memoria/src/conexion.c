@@ -10,7 +10,7 @@ int iniciar_servidor_memoria()
     char ip_str[INET_ADDRSTRLEN];
     struct addrinfo hints, *server_info;
     char puerto[6];
-  struct addrinfo *p ;
+    struct addrinfo *p ;
     sprintf(puerto, "%d", cfg_memoria->PUERTO_ESCUCHA);
     
     memset(&hints, 0, sizeof(hints)); 
@@ -26,7 +26,6 @@ int iniciar_servidor_memoria()
             perror("Falló el socket");
             continue;
         }
-
         if (bind(memoria_server_fd, p->ai_addr, p->ai_addrlen) == -1) {
             close(memoria_server_fd);
             perror("Falló el bind");
@@ -42,16 +41,12 @@ int iniciar_servidor_memoria()
 
     inet_ntop(server_info->ai_family, server_info->ai_addr, ip_str, sizeof(ip_str));
     freeaddrinfo(server_info);
-   
-
-   
-    
+       
     if (listen(memoria_server_fd, SOMAXCONN) < 0) {
         perror("Falló el listen");
         exit(EXIT_FAILURE);
     }    
-  
-   
+     
     log_info(logger_memoria, "Servidor MEMORIA está escuchando en %s:%d...\n", ip_str, cfg_memoria->PUERTO_ESCUCHA);
 
 
