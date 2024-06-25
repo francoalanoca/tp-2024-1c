@@ -9,7 +9,7 @@ int iniciar_servidor_memoria()
     int err;
     char ip_str[INET_ADDRSTRLEN];
     struct addrinfo hints, *server_info;
-    char puerto[6];
+    char puerto[6]; 
     struct addrinfo *p ;
     sprintf(puerto, "%d", cfg_memoria->PUERTO_ESCUCHA);
     

@@ -3,10 +3,13 @@
 
 #include<stdio.h>
 #include<stdlib.h>
-#include <stdint.h>
+#include<stdint.h>
 #include<sys/socket.h>
 #include<unistd.h>
 #include<netdb.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include<commons/log.h>
 #include<commons/collections/list.h>
 #include<commons/config.h>
