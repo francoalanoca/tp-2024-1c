@@ -7,6 +7,12 @@
         "consola.h": "c",
         "log.h": "c",
         "main.h": "c",
-        "kernel.h": "c"
+        "kernel.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c",
+        "protocolo.h": "c",
+        "protocolo_kernel.h": "c"
     }
 }

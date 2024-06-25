@@ -55,14 +55,14 @@ void memoria_atender_kernel(){
             }
             break;
 
-        // case CREAR_PROCESO_KERNEL:
-        //     valores = recibir_paquete(fd_kernel);
-        //     t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);
-        //     leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  //No corre ver
-        //     crear_proceso(iniciar_proceso->pcb->pid, iniciar_proceso->tamanio);
+        case CREAR_PROCESO_KERNEL:
+            valores = recibir_paquete(fd_kernel);
+            t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);
+            leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  //No corre ver
+            crear_proceso(iniciar_proceso->pid, iniciar_proceso->tamanio);
 
-        //     enviar_respuesta_crear_proceso(iniciar_proceso, fd_kernel);
-        //     break;
+            enviar_respuesta_crear_proceso(iniciar_proceso, fd_kernel);
+            break;
 
 		// case FINALIZAR_PROCESO:
 		// 	valores = recibir_paquete(fd_kernel);
@@ -92,7 +92,9 @@ void memoria_atender_cpu(){
     //t_paquete* paquete;
 	op_code response;
     t_list* valores =  malloc(sizeof(t_list));
-
+    t_proceso_memoria* solicitud_instruccion = malloc(sizeof(t_proceso_memoria));
+    t_busqueda_marco* solicitud_marco = malloc(sizeof(t_busqueda_marco));
+    t_io_input* peticion_valor = malloc(sizeof(t_io_direcciones_fisicas));
 
 	while (1) {
 
@@ -113,28 +115,39 @@ void memoria_atender_cpu(){
 
         case PROXIMA_INSTRUCCION:
             valores = recibir_paquete(fd_cpu);
-            t_proceso_memoria* proxima_instruccion = deserializar_proxima_instruccion(valores);         
-            char* instruccion = buscar_instruccion(proxima_instruccion->pid, proxima_instruccion->program_counter);
+            solicitud_instruccion = deserializar_proxima_instruccion(valores);         
+            char* instruccion = buscar_instruccion(solicitud_instruccion->pid, solicitud_instruccion->program_counter);
             log_trace(logger_memoria, "Se Encontro la Instruccion: %s", instruccion);
-        
 		//     usleep(cfg_memoria->RETARDO_RESPUESTA);
-            enviar_respuesta_instruccion(proxima_instruccion, fd_cpu);     
+            enviar_respuesta_instruccion(instruccion, fd_cpu);     
+            break;
+
+        case PEDIDO_MARCO_A_MEMORIA:
+            valores = recibir_paquete(fd_cpu);
+            solicitud_marco = deserializar_solicitud_marco(valores);
+            int marco = buscar_marco_pagina(solicitud_marco->pid, solicitud_marco->nro_pagina);
+            enviar_solicitud_marco(marco, fd_cpu);
             break;
 
 
-        // case PETICION_VALOR_MEMORIA:
-        //     valores = recibir_paquete(fd_cpu);
-        //     int direccion_fisica = deserializar_peticion_valor(valores);     //ver
-        //     void* valor = leer_memoria(direccion_fisica);
-        //     log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d", leer_de_memoria->pcb->pid, leer_de_memoria->direccion_fisica);
-        //     enviar_peticion_valor(valor, fd_cpu);                            //ver
-        //     break;
+        case SOLICITUD_TAMANIO_PAGINA:
+            printf("Envio tamaño de pagina\n");
+            enviar_solicitud_tamanio(cfg_memoria->TAM_PAGINA, fd_cpu);
+            break;
+
+        case PETICION_VALOR_MEMORIA:
+            valores = recibir_paquete(fd_cpu);
+            peticion_valor = deserializar_peticion_valor(valores);     
+            void* valor = leer_memoria(peticion_valor->direcciones_fisicas, peticion_valor->input_length);          //ver
+            log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d", peticion_valor->pid, peticion_valor->direcciones_fisicas);    //ver
+            enviar_peticion_valor(valor, fd_cpu);                            
+            break;
 
         // case GUARDAR_EN_DIRECCION_FISICA:
         //     valores = recibir_paquete(fd_cpu);
-        //     t_list* peticion_guardar = deserializar_peticion_guardar(valores);   //ver
-        //     escribir_memoria(peticion_guardar->pid, peticion_guardar->direccion_fisica, peticion_guardar->valor, peticion_guardar->tamanio);
-        //     log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Direccion fisica: %d", peticion_guardar->pcb->pid, peticion_guardar->direccion_fisica);
+        //     t_io_input* peticion_guardar = deserializar_input(valores);   //ver
+        //     escribir_memoria(peticion_guardar->pid, peticion_guardar->direcciones_fisicas, peticion_guardar->input, peticion_guardar->input_length);
+        //     log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Direccion fisica: %d", peticion_guardar->pid, peticion_guardar->direccion_fisica);
         //     free(peticion_guardar);
         //     break;
 
@@ -168,9 +181,10 @@ void memoria_atender_cpu(){
 void memoria_atender_io(){
     
 	t_list* valores =  malloc(sizeof(t_list));
+    t_io_input* input = malloc(sizeof(t_io_input));
     //t_paquete* paquete;
 	op_code response;
-	uint32_t request_type;
+	
 
 
 	while (1) {
@@ -190,21 +204,19 @@ void memoria_atender_io(){
 
         case IO_M_STDIN:
 
-            printf("Solicitud IO_M_STDIN recibida\n");
-
             // Llenamos la lista con los datos recibidos de recibir_paquete 
             valores = recibir_paquete(fd_entradasalida);
 
             // Deserializamos los valores de la lista 
-            deserializar_input(valores);
-        
+            input = deserializar_input(valores);
+
             if (valores == NULL || list_size(valores) == 0) {
                 printf("Failed to receive data or empty list\n");
                 break;
             }
             printf("despues de recbir paquete\n");
-            request_type = (uint32_t)(uintptr_t)list_get(valores, 1);
 
+            escribir_memoria(input->pid, input->direcciones_fisicas, input->input, input->input_length);    //ver
             uint32_t response_interfaz = IO_M_STDIN_FIN;
             if (send(fd_entradasalida, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
                 perror("send INTERFAZ_RECIBIDA response");
@@ -217,12 +229,9 @@ void memoria_atender_io(){
 
 		case IO_M_STDOUT:
 
-            printf("Solicitud IO_M_STDOUT recibida\n");
-
             t_io_output* io_output = malloc(sizeof(t_io_input));
             t_io_direcciones_fisicas* io_stdout = malloc(sizeof(t_io_direcciones_fisicas));
                 
-                                
             valores = recibir_paquete(fd_entradasalida);
             io_stdout = deserializar_io_df(valores);
         
@@ -232,7 +241,7 @@ void memoria_atender_io(){
             }
 
             printf("despues de recbir paquete\n");
-            char* output = "LA PUERCA ESTA EN LA POCILGA";
+            void* output = leer_memoria(io_stdout->direcciones_fisicas, io_output->output_length);      //ver
             uint32_t tamanio_output = string_length(output)+1;
             io_output->pid = io_stdout->pid;
             io_output->output_length = tamanio_output;
@@ -241,7 +250,6 @@ void memoria_atender_io(){
             printf("Tamanio output %d\n",io_output->output_length);
             enviar_output(io_output ,fd_entradasalida);
 
-            printf("Memoria envio IO_M_STDOUT_FIN a IO\n");
             break;
 
 		case -1:

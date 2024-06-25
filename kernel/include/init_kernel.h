@@ -6,26 +6,12 @@
 //#define PUERTO_ESCUCHA 5000 // Puerto de escucha para conexiones entrantes
 
 #include <utils/utils.h>
-#include <planificador.h>
+#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/planificador.h>
 
 int checkProperties(char *path_config);
-
 int cargar_configuracion(char *path);
-
 int init(char *path_config);
-
 int hacer_handshake (int socket_cliente);
-
-void Empezar_conexiones();
-
-void AtenderMsjDeConexiones();
-
-void Kernel_atender_cpu_dispatch();
-
-void Kernel_atender_cpu_interrupt();
-
-void Kernel_atender_memoria();
-
 void cerrar_programa();
 
 t_pcb* buscar_pcb_en_lista(t_list* lista_de_pcb, uint32_t pid);

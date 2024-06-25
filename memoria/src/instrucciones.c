@@ -30,7 +30,7 @@ void leer_instrucciones(char* nombre_archivo) {
 
 	char *linea, *tokens;
 	//instr_t *inst;
-	t_list *instrucciones = list_create();
+	//t_list *instrucciones = list_create();
 	size_t len;
 
 	linea = string_new();

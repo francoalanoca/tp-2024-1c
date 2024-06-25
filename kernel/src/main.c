@@ -7,7 +7,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <main.h>
+#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/main.h>
+#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/planificador.h>
 
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
@@ -34,17 +35,22 @@ int main(char argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-//CONEXION
-    Empezar_conexiones();     
-
-    AtenderMsjDeConexiones();
-
 //INICIAR SERVIDOR y CONSOLA
+
     crearServidor();
  
     iniciar_consola_interactiva();
     
-    planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM);
+// ESCUCHAR A LOS MODULOS
+ 
+    Escuchar_Msj_De_Conexiones();
+ 
+//EMPEZAR PLANIFICACIONES
+
+    planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM,cfg_kernel->GRADO_MULTIPROGRAMACION);
+
+//CERRAR PROGRAMA
 
     cerrar_programa();
+
 }
