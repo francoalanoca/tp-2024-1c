@@ -1,6 +1,6 @@
-#include <servidor_kernel.h>
+#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/servidor_kernel.h>
 
-int socket_servidor;
+
 
 void* crearServidor(){
  
@@ -58,16 +58,66 @@ void procesar_conexion(void *void_args) {
             case HANDSHAKE_OK:
 
                 log_info(logger_kernel, "handshake recibido exitosamente con I/O");
-                break;
+                
 
             break;
             default:
                 log_error(logger, "Algo anduvo mal en el server de %s", server_name);
                 log_info(logger, "Cop: %d", cop);
                 return;
-        }
+            case INTERFAZ_ENVIAR:
+                printf("Received INTERFAZ_ENVIAR request\n");
+
+                t_list* lista_paquete_interfaz = malloc(sizeof(t_list));
+                lista_paquete_interfaz = recibir_paquete(conexion_cpu_dispatch);
+
+         
+                t_interfaz* interfaz_recibida = deserializar_interfaz(lista_paquete_interfaz);
+        
+                if (lista_paquete_interfaz == NULL || list_size(lista_paquete_interfaz) == 0) {
+                    printf("Failed to receive data or empty list\n");
+                    break;
+                }
+                // armar estructura con la interfaz recibida y cargar al diccionario
+                t_interfaz_diccionario* interfaz_nueva = malloc(sizeof(t_interfaz_diccionario));
+                interfaz_nueva->nombre = interfaz_recibida->nombre;
+                interfaz_nueva->tipo = interfaz_recibida->tipo;
+                interfaz_nueva->conexion = cliente_socket;
+			    
+                dictionary_put(interfaces,interfaz_recibida->nombre,interfaz_nueva);
+
+                uint32_t response_interfaz = INTERFAZ_RECIBIDA;
+                if (send(cliente_socket, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                perror("send INTERFAZ_RECIBIDA response");
+                }
+
+                free(interfaz_nueva);   
+                free(lista_paquete_interfaz);
+                break;
+            }
     }
 
     log_warning(logger, "El cliente se desconecto de %s server", server_name);
     return;
+}
+
+
+
+void Empezar_conexiones(){
+
+    //conexion con cpu-dispatch
+    conexion_cpu_dispatch = crear_conexion(logger_kernel, "KERNEL", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);
+    
+    log_info(logger_kernel, "Socket de KERNEL : %d\n",conexion_cpu_dispatch);  
+
+    //conexion con cpu-interrupt
+    conexion_cpu_interrupt = crear_conexion(logger_kernel, "KERNEL", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_INTERRUPT);
+    
+    log_info(logger_kernel, "Socket de KERNEL : %d\n",conexion_cpu_interrupt);
+
+    //conexion con memoria
+    conexion_memoria = crear_conexion(logger_kernel, "MEMORIA", cfg_kernel->IP_MEMORIA, cfg_kernel->PUERTO_MEMORIA);
+    
+    log_info(logger_kernel, "Socket de MEMORIA : %d\n",conexion_memoria); 
+
 }
