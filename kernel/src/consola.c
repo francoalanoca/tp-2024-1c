@@ -2,6 +2,7 @@
 
  int identificador_pid;
  pthread_mutex_t mutex_pid;
+ uint32_t pcb2;
 
 //Funcion que implementa el inicio de la consola iterativa
 void iniciar_consola_interactiva(int conexion){
@@ -77,9 +78,14 @@ void atender_instruccion_validada(char* leido){
     t_buffer* un_buffer = crear_buffer();
 
     if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0){    //EJECUTAR_SCRIPT [PATH]
-        cargar_string_al_buffer(un_buffer, comando_consola[1]);     //[PATH]
+        if (comando_consola[1] == NULL) {
+            fprintf(stderr, "Error: se debe proporcionar el path del script.\n");
+            return;
+        }
+        cargar_string_al_buffer(un_buffer, comando_consola[1]); // [PATH]
 
-        //Procedo a ejecuratar el script
+        // Procedo a ejecutar el script
+        f_ejecutar_script(comando_consola[1]);
 
     } else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0) { //INICIAR_PROCESO [NOMBRE]
         if (comando_consola[1] == NULL) {
@@ -112,7 +118,7 @@ void atender_instruccion_validada(char* leido){
 
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
         
-        inicializar_planificador(); //algoritmno, quantum?? ---> quiero preguntar.
+        inicializar_planificador(algoritmo, quantum); //algoritmno, quantum?? ---> quiero preguntar.
 
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         
@@ -160,21 +166,21 @@ void f_iniciar_proceso(t_buffer* un_buffer) {
     }
 
 
-    //enviar_creacion_de_proceso_a_memoria(t_pcb* pcb, int conexion_memoria)
+    enviar_creacion_de_proceso_a_memoria(pcb,conexion_memoria);
 
-    //int cop = recibir_operacion(conexion_memoria);
-    //if(cop==CREAR_PROCESO_FIN)
+    int cop = recibir_operacion(conexion_memoria);
+    if(cop==CREAR_PROCESO_KERNEL_FIN);
 
     // Cambiar el estado del PCB a ESTADO_READY
     if (agregar_proceso( planificador, pcb)){
 
     log_info(logger_kernel, "Proceso enviado a new");
 
-    };
+    }
 
     imprimir_pcb(pcb);
 
-    //pcb2 obtener_proximo_proceso(t_planificador* planificador)
+    pcb2 == obtener_proximo_proceso(planificador);
     enviar_pcb_a_cpu_por_dispatch(pcb2); //declarar pcb2
 
     destruir_pcb(pcb);
@@ -207,17 +213,8 @@ t_pcb* crear_pcb(char* path, char* nombre) {
     nuevo_pcb->program_counter = 0;
     nuevo_pcb->path = strdup(path);  // Guardar el path del proceso
     nuevo_pcb->nombre_proceso = strdup(nombre);  // Guardar el nombre del proceso
-    nuevo_pcb->lista_recursos_pcb = list_create(); // hacerlo en diccionario 
     nuevo_pcb->estado = ESTADO_NEW;
 
-    if (pthread_mutex_init(&nuevo_pcb->mutex_lista_recursos, NULL) != 0) {
-        log_error(logger_kernel, "No se pudo inicializar el mutex para el PCB\n");
-        free(nuevo_pcb->path);
-        free(nuevo_pcb->nombre_proceso);
-        list_destroy(nuevo_pcb->lista_recursos_pcb);
-        free(nuevo_pcb);
-        return NULL;
-    }
 
     // Inicializar registros CPU
     nuevo_pcb->registros_cpu.AX = 0;
@@ -268,8 +265,6 @@ void enviar_pcb_a_cpu_por_dispatch(t_pcb* pcb) {
 void destruir_pcb(t_pcb* pcb) {
     if (pcb->path) free(pcb->path);
     if (pcb->nombre_proceso) free(pcb->nombre_proceso);
-    list_destroy(pcb->lista_recursos_pcb);
-    pthread_mutex_destroy(&pcb->mutex_lista_recursos);
     free(pcb);
 }
 
@@ -338,3 +333,35 @@ bool encontrar_por_pid(void* elemento, void* pid_ptr) {
     t_pcb* pcb = (t_pcb*)elemento;
     uint32_t pid = *(uint32_t*)pid_ptr;
     return pcb->pid == pid;
+}
+
+void f_ejecutar_script(char* path) {
+    FILE* file = fopen(path, "r");
+    if (file == NULL) {
+        log_error(logger_kernel, "No se pudo abrir el archivo de script en la ruta especificada: %s", path);
+        return;
+    }
+
+    char* linea = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    while ((read = getline(&linea, &len, file)) != -1) {
+        // Removemos el salto de línea
+        if (linea[read - 1] == '\n') {
+            linea[read - 1] = '\0';
+        }
+
+        log_info(logger_kernel, "Ejecutando comando: %s", linea);
+
+        // Validamos y ejecutamos cada línea del archivo
+        if (validacion_de_instruccion_de_consola(linea)) {
+            atender_instruccion_validada(linea);
+        } else {
+            log_error(logger_kernel, "Comando no reconocido en el script: %s", linea);
+        }
+    }
+
+    free(linea);
+    fclose(file);
+}
