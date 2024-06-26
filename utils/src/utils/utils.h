@@ -341,6 +341,9 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
 t_proceso_memoria* deserializar_proxima_instruccion(t_list*  lista_paquete );
 t_busqueda_marco* deserializar_solicitud_marco(t_list*  lista_paquete );
 t_io_direcciones_fisicas* deserializar_peticion_valor(t_list*  lista_paquete );
+t_escribir_leer* deserializar_peticion_guardar(t_list*  lista_paquete);
+t_resize* deserializar_solicitud_resize(t_list*  lista_paquete);
+t_copy* deserializar_solicitud_copy(t_list*  lista_paquete);
 void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu);
 void enviar_solicitud_marco(int marco ,int socket_cpu);
 void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu);

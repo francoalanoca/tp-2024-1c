@@ -519,6 +519,67 @@ t_io_direcciones_fisicas* deserializar_peticion_valor(t_list*  lista_paquete ){
 
 
 
+t_escribir_leer* deserializar_peticion_guardar(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_escribir_leer* peticion_guardar = malloc(sizeof(t_escribir_leer));
+    
+    peticion_guardar->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", peticion_guardar->pid);
+    
+    peticion_guardar->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Direccion fisica: %d \n", peticion_guardar->direccion_fisica);
+
+    peticion_guardar->tamanio = *(uint32_t*)list_get(lista_paquete, 2);
+    printf("Tamanio proceso: %d \n", peticion_guardar->tamanio);
+
+    peticion_guardar->valor = list_get(lista_paquete, 3);
+    printf("Valor: %s \n", peticion_guardar->valor);
+
+    return peticion_guardar;
+
+}
+
+
+
+t_resize* deserializar_solicitud_resize(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_resize* solicitud_resize = malloc(sizeof(t_resize));
+    
+    solicitud_resize->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", solicitud_resize->pid);
+    
+    solicitud_resize->tamanio = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Tamanio proceso: %d \n", solicitud_resize->tamanio);
+
+    solicitud_resize->valor = list_get(lista_paquete, 2);
+    printf("Valor: %s \n", solicitud_resize->valor);
+
+    return solicitud_resize;
+
+}
+
+
+t_copy* deserializar_solicitud_copy(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_copy* solicitud_copy = malloc(sizeof(t_copy));
+    
+    solicitud_copy->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", solicitud_copy->pid);
+    
+    solicitud_copy->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Direccion fisica: %d \n", solicitud_copy->direccion_fisica);
+
+    solicitud_copy->valor = list_get(lista_paquete, 2);
+    printf("Valor: %s \n", solicitud_copy->valor);
+
+    return solicitud_copy;
+
+}
+
+
 void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu) {
     t_paquete* paquete_instruccion;
  
