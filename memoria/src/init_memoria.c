@@ -121,11 +121,11 @@ void inicializar_memoria(){
 	pthread_mutex_init(&mutex_memoria, NULL);
 	cantidad_page_fault = 0;
 	cantidad_frames = cfg_memoria->TAM_MEMORIA / cfg_memoria->TAM_PAGINA;
-	//bitmap_frames = crear_bitmap(cantidad_frames);   
+	bitmap_frames = crear_bitmap(cantidad_frames);   
 }
 
-/*
-//La bibliote bitarray no me la reconoce
+
+
 
 //Funcion que redondea el valor al multiplo cercano de base y retorna
 int redondear_a_multiplo_mas_cercano_de(int base, int valor){
@@ -141,7 +141,7 @@ t_bitarray *crear_bitmap(int entradas){
     // al multiplo mas cercano mayor que el valor. Entonces si son 4 entradas -> 8, 15 -> 16, etc.
     if (ent % 8 != 0){
         ent = redondear_a_multiplo_mas_cercano_de(8, ent); 
-        log_trace(logger, "tamanio inusual de memoria/pagina causo conflicto, redondeando al multiplo de 8 mas cercano: %i", ent);
+        log_trace(logger_memoria, "tamanio inusual de memoria/pagina causo conflicto, redondeando al multiplo de 8 mas cercano: %i", ent);
     }
 
     void *puntero = malloc(ent / 8);
@@ -154,7 +154,7 @@ t_bitarray *crear_bitmap(int entradas){
     return bitmap;
 }
 
-*/
+
 
 
 void cerrar_programa() {

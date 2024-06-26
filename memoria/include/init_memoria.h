@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include <pthread.h>
 #include <utils/utils.h>
 
@@ -80,6 +81,8 @@ int init(char *path_config);
 int checkProperties(char *path_config);
 int cargar_configuracion(char *path_config);
 void inicializar_memoria();
+int redondear_a_multiplo_mas_cercano_de(int base, int valor);
+t_bitarray *crear_bitmap(int entradas);
 void cerrar_programa();
 
 

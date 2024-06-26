@@ -11,7 +11,7 @@ void crear_proceso(int proceso_pid){
 
     //Guardo en una varia de tipo struct la tabla creada
     t_tabla_de_paginas *tabla_de_paginas = crear_tabla_pagina(proceso_pid);
-    log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, sizeof(tabla_de_paginas));
+    log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, sizeof(t_tabla_de_paginas));
 
     list_add(lista_tablas_de_paginas, tabla_de_paginas);
 }
@@ -99,23 +99,89 @@ t_pagina *busco_pagina_por_marco(t_list *lista_de_paginas, int marco){
 
 
 void escribir_memoria(int proceso_pid, int direccion_fisica, void* valor, int tamanio){
-    int marco = direccion_fisica / cfg_memoria->TAM_PAGINA;
 
-    t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
+    int espacio_escrito = 0;
 
-    t_pagina *pagina = busco_pagina_por_marco(tabla_de_paginas->lista_de_paginas, marco);
+    while (tamanio > 0){
+    
+        int marco = direccion_fisica / cfg_memoria->TAM_PAGINA;
+        int offset = direccion_fisica % cfg_memoria->TAM_PAGINA;
+        int espacio_restante_marco = cfg_memoria->TAM_PAGINA - offset;
+        int espacio_a_escribir;
 
-    memcpy(memoria + direccion_fisica, valor, tamanio);
+        if (tamanio < espacio_restante_marco){
+            espacio_a_escribir = tamanio;
+        }
+        else{
+            espacio_a_escribir = espacio_restante_marco;
+        }
 
-    //Actualizamos que fue modificado
-    pagina->modificado = true;
+        memcpy(memoria + direccion_fisica, valor, tamanio);
+
+        //Actualizamos que fue modificado
+        //pagina->modificado = true;
+
+        espacio_escrito = espacio_escrito + espacio_a_escribir;
+        tamanio = tamanio - espacio_a_escribir;
+
+        //Si todavia hay espacio que tiene que ser escrito
+        if (tamanio > 0){
+
+            t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
+
+            t_pagina *pagina = busco_pagina_por_marco(tabla_de_paginas->lista_de_paginas, marco + 1);
+            
+            //Actualizamos la df para que empiece desde el sig frame
+            direccion_fisica = pagina->marco * cfg_memoria->TAM_PAGINA;
+        }
+    }
 }
 
 
 
+
+
+
 void* leer_memoria(int direccion_fisica, int tamanio){
+
+    //Reservo espacio para la variable que voy a devolver
     void* leido = malloc(tamanio);
-    memcpy(leido, memoria + direccion_fisica, tamanio);
+
+    int espacio_leido = 0;
+
+    t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
+
+    //Mientras haya algo para leer
+    while (tamanio > 0){
+        
+        int marco = direccion_fisica / cfg_memoria->TAM_PAGINA;
+        int offset = direccion_fisica % cfg_memoria->TAM_PAGINA;
+        int espacio_restante_marco = cfg_memoria->TAM_PAGINA - offset;
+        int espacio_a_leer;
+
+        if (tamanio < espacio_restante_marco){
+            espacio_a_leer = tamanio
+        }
+        else{
+            espacio_a_leer = espacio_restante_marco;
+        }
+
+        memcpy(leido, memoria + direccion_fisica, tamanio);
+
+        espacio_leido = espacio_leido + espacio_a_leer;
+        tamanio = tamanio - espacio_a_leer;
+        direccion_fisica = direccion_fisica + espacio_a_leer;
+
+        //SI todavia hay tamanio por leer
+        if (tamanio > 0){
+            t_pagina *pagina = busco_pagina_por_marco(tabla_de_paginas->lista_de_paginas, marco + 1);
+
+            //Actualizamos la df para que empiece desde el sig frame
+            direccion_fisica = pagina->marco * cfg_memoria->TAM_PAGINA;
+        }
+        
+    }
+    
     return leido;
 }
 
@@ -141,34 +207,34 @@ int buscar_marco_pagina(int proceso_pid, int numero_de_pagina){
 
 
 
-// char* administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
+char* administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
 
 
-//     //Reservo una cantidad de marcos por tamaño de proceso
-//     int marcos_a_reservar = calcular_marcos(tamanio_proceso);
+    //Reservo una cantidad de marcos por tamaño de proceso
+    int marcos_a_reservar = calcular_marcos(tamanio_proceso);
 
-//     //Recorro mientras sea menor a la cantidad de frames
-//     for (int i = 0; i < marcos_a_reservar; i++){
+    //Recorro mientras sea menor a la cantidad de frames
+    for (int i = 0; i < marcos_a_reservar; i++){
 
-//         t_pagina *pagina = malloc(sizeof(t_pagina));
+        t_pagina *pagina = malloc(sizeof(t_pagina));
 
-//         pagina->marco = -1;                 //No se le asigno un marco
-//         pagina->posicion = -1;              //No se le asigno una posicion
-//         pagina->presencia = false;          //No esta en memoria hasta ahora
-//         pagina->modificado = false;         //NO fue modificado
-       
-//         list_add(tabla_de_paginas->lista_de_paginas, pagina);
-//     }
+        pagina->marco = -1;                 //No se le asigno un marco
+        pagina->posicion = -1;              //No se le asigno una posicion
+        pagina->presencia = false;          //No esta en memoria hasta ahora
+        pagina->modificado = false;         //NO fue modificado
+    
+        //list_add(tabla_de_paginas->lista_de_paginas, pagina);
+    }
 
 
-//     //Si el tamaño es 0
-//     //if(tamanio_proceso == 0)
+    //Si el tamaño es 0
+    //if(tamanio_proceso == 0)
 
-//     //SI el tamaño es menor al frame
-//     //if(tamanio_proceso < )
-//     //Si el tamaño es mayor al frame (Page faul)
+    //SI el tamaño es menor al frame
+    //if(tamanio_proceso < )
+    //Si el tamaño es mayor al frame (Page faul)
 
-// }
+}
 
 
 
