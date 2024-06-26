@@ -308,27 +308,6 @@ typedef struct{
 } t_escribir_leer;
 
 
-
-//Memoria
-typedef struct{
-    int id;
-    t_list *lista_de_paginas;
-}t_tabla_de_paginas;
-
-//Memoria
-typedef struct{
-    int marco;
-    int posicion;
-    bool presencia;
-    bool modificado;
-}t_pagina;
-
-//Memoria
-typedef struct{
-    int pid;
-    t_list *lista_de_instrucciones;
-} t_miniPCB;
-
 //Kernel le manda a IO, usada en IO_FS_CREATE e IO_FS_DELETE
 typedef struct {
 	uint32_t pid;
