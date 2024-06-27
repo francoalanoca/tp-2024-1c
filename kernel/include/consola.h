@@ -41,6 +41,7 @@ void destruir_pcb(t_pcb* pcb);
 void cambiar_estado(t_pcb* un_pcb, estado_pcb prox_estado);
 bool encontrar_por_pid(void* elemento, void* pid_ptr);
 t_pcb* obtener_proximo_proceso(t_planificador* planificador);
+obtener_algoritmo_planificador(const char* algoritmo_planificacion);
 
 
 #endif
