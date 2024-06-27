@@ -1,7 +1,7 @@
 #ifndef SERVIDOR_KERNEL_H_
 #define SERVIDOR_KERNEL_H_
 
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/init_kernel.h>
+#include "../include/init_kernel.h"
 #include <utils/utils.h>
 #include <pthread.h>
 

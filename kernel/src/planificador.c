@@ -1,4 +1,4 @@
-#include "/home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/planificador.h"
+#include "../include/planificador.h"
 // ver si tengo que incluir la libreria donde esta el pcb
 //#include "../include/servidorCpu.c"
 //#include "../include/servidorCpu.h"
