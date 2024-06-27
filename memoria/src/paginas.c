@@ -223,26 +223,15 @@ uint32_t buscar_marco_pagina(uint32_t proceso_pid, uint32_t numero_de_pagina){
 
 //Funciones para resize
 
-uint32_t obtener_marco_libre(uint32_t ultimo_frame){
-
+uint32_t obtener_marco_libre(){
     //Recorro la memoria para marcar los frames libres
-    for (uint32_t i = ultimo_frame; i < cantidad_frames_memoria; i++){
-
+    for (uint32_t i = 0; i < cantidad_frames_memoria; i++){
         //Si la posicion del array esta disponible
         if (!bitarray_test_bit(bitmap_frames, i)){
-            
-            //marco como ocupado
-            bitarray_set_bit(bitmap_frames, i);
-
-            //devuelvo el marco libre
             return i;
         }
     }
-
-    // int tamanio_proceso = obtener_tamanio_proceso_bitmap();
-    // msync(bitmap, tamanio_proceso, MS_SYNC);
     log_trace(logger_memoria, "No se obtuvo un marco libre");
-
     return -1;
 }
 
