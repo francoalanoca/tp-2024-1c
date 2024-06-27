@@ -1,4 +1,4 @@
-#include <init_kernel.h>
+#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/init_kernel.h>
 
 t_log *logger_kernel; // Definición de la variable global
 t_config_kernel *cfg_kernel;
@@ -7,6 +7,8 @@ t_pcb* pcb;
 int conexion_cpu_dispatch;
 int conexion_cpu_interrupt;
 int conexion_memoria;
+int socket_servidor;
+t_dictionary* interfaces; //Diccionario donde se encuentran las interfaces que van llegando de IO
 
 int checkProperties(char *path_config) {
     // config valida
@@ -97,6 +99,8 @@ int init(char *path_config) {
     //inicializo el archivo de configuracion
     file_cfg_kernel = iniciar_config(path_config,logger_kernel); //"/Documents/tp_operativos/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config"
 
+    interfaces = dictionary_create();
+
     return checkProperties(path_config);
 }
 
@@ -107,6 +111,7 @@ int hacer_handshake (int socket_cliente){
     return recibir_operacion(socket_cliente);
 }
 
+
 void cerrar_programa() {
 
     //cortar_conexiones();
@@ -116,3 +121,4 @@ void cerrar_programa() {
     log_info(logger_kernel, "TERMINANDO_EL_LOG");
     log_destroy(logger_kernel);
 }
+

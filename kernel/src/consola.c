@@ -1,7 +1,9 @@
-#include "consola.h"
+#include "/home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/consola.h"
 
  int identificador_pid;
  pthread_mutex_t mutex_pid;
+ pthread_mutex_t mutex_process_id = PTHREAD_MUTEX_INITIALIZER; // Definición
+int process_id = 0; // Definición
  uint32_t pcb2;
 
 //Funcion que implementa el inicio de la consola iterativa
@@ -78,6 +80,10 @@ void atender_instruccion_validada(char* leido){
     t_buffer* un_buffer = crear_buffer();
 
     if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0){    //EJECUTAR_SCRIPT [PATH]
+        cargar_string_al_buffer(un_buffer, comando_consola[1]);     //[PATH]
+
+        //Procedo a ejecuratar el script
+
         if (comando_consola[1] == NULL) {
             fprintf(stderr, "Error: se debe proporcionar el path del script.\n");
             return;
@@ -119,6 +125,7 @@ void atender_instruccion_validada(char* leido){
 
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
         
+        //inicializar_planificador(); //algoritmno, quantum?? ---> quiero preguntar.
         inicializar_planificador(obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION), cfg_kernel->QUANTUM); 
 
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
@@ -181,10 +188,13 @@ void f_iniciar_proceso(t_buffer* un_buffer) {
 
     log_info(logger_kernel, "Proceso enviado a new");
 
+    };
     }
 
     imprimir_pcb(pcb);
 
+    //pcb2 obtener_proximo_proceso(t_planificador* planificador)
+    //enviar_pcb_a_cpu_por_dispatch(pcb2); //declarar pcb2
     pcb2 == obtener_proximo_proceso(planificador);
     enviar_pcb_a_cpu_por_dispatch(pcb2); //declarar pcb2
 
@@ -210,16 +220,26 @@ t_pcb* crear_pcb(char* path, char* nombre) {
         return NULL;
     }
 
-    pthread_mutex_lock(&mutex_process_id);
-    process_id++;
-    nuevo_pcb->pid = process_id;
-    pthread_mutex_unlock(&mutex_process_id);
+    //pthread_mutex_lock(&mutex_process_id);
+    //process_id++;
+    //nuevo_pcb->pid = process_id;
+    //pthread_mutex_unlock(&mutex_process_id);
 
     nuevo_pcb->program_counter = 0;
     nuevo_pcb->path = strdup(path);  // Guardar el path del proceso
+    //nuevo_pcb->nombre_proceso = strdup(nombre);  // Guardar el nombre del proceso
+    //nuevo_pcb->lista_recursos_pcb = list_create(); // hacerlo en diccionario 
     nuevo_pcb->nombre_proceso = strdup(nombre);  // Guardar el nombre del proceso
     nuevo_pcb->estado = ESTADO_NEW;
 
+   /* if (pthread_mutex_init(&nuevo_pcb->mutex_lista_recursos, NULL) != 0) {
+        log_error(logger_kernel, "No se pudo inicializar el mutex para el PCB\n");
+        free(nuevo_pcb->path);
+        //free(nuevo_pcb->nombre_proceso);
+       // list_destroy(nuevo_pcb->lista_recursos_pcb);
+        free(nuevo_pcb);
+        return NULL;
+    }*/
 
     // Inicializar registros CPU
     nuevo_pcb->registros_cpu.AX = 0;
@@ -239,7 +259,7 @@ t_pcb* crear_pcb(char* path, char* nombre) {
 }
 
 void imprimir_pcb(t_pcb* pcb) {
-    log_info(logger_kernel, "<PCB_%d> [%s] [Nombre: %s] [Estado: %d]", pcb->pid, pcb->path, pcb->nombre_proceso, pcb->estado);
+    //log_info(logger_kernel, "<PCB_%d> [%s] [Nombre: %s] [Estado: %d]", pcb->pid, pcb->path, pcb->nombre_proceso, pcb->estado);
 }
 
 void enviar_pcb_a_cpu_por_dispatch(t_pcb* pcb) {
@@ -269,6 +289,9 @@ void enviar_pcb_a_cpu_por_dispatch(t_pcb* pcb) {
 
 void destruir_pcb(t_pcb* pcb) {
     if (pcb->path) free(pcb->path);
+    //if (pcb->nombre_proceso) free(pcb->nombre_proceso);
+    //list_destroy(pcb->lista_recursos_pcb);
+   // pthread_mutex_destroy(&pcb->mutex_lista_recursos);
     if (pcb->nombre_proceso) free(pcb->nombre_proceso);
     free(pcb);
 }
@@ -279,7 +302,7 @@ void cambiar_estado(t_pcb* pcb, estado_pcb prox_estado) {
 
 
 void mostrar_estado_proceso(pid_t pid) {
-    pthread_mutex_lock(&mutex_lista_procesos);
+   /* pthread_mutex_lock(&mutex_lista_procesos);
 
     // Verifica que lista_procesos esté inicializada y no sea NULL
     if (lista_procesos == NULL) {
@@ -315,14 +338,16 @@ void mostrar_estado_proceso(pid_t pid) {
                 break;
         }
 
+        //log_info(logger_kernel, "Estado del proceso con PID %d [%s]: %s\n", pid, pcb->nombre_proceso, estado_str);
+    }
         log_info(logger_kernel, "Estado del proceso con PID %d [%s]: %s\n", pid, pcb->nombre_proceso, estado_str);
     }
 
-    pthread_mutex_unlock(&mutex_lista_procesos);
+    pthread_mutex_unlock(&mutex_lista_procesos);*/
 }
 
 void ajustar_multiprogramacion(int nuevo_valor) {
-    pthread_mutex_lock(&mutex_lista_procesos_listos);
+    /*pthread_mutex_lock(&mutex_lista_procesos_listos);
 
     grado_multiprogramacion = nuevo_valor;
     log_info(logger_kernel, "Grado de multiprogramación ajustado a %d\n", nuevo_valor);
@@ -330,7 +355,7 @@ void ajustar_multiprogramacion(int nuevo_valor) {
     // Aca se podría agregar lógica adicional para mover procesos entre estados
     // dependiendo del nuevo grado de multiprogramación.
 
-    pthread_mutex_unlock(&mutex_lista_procesos_listos);
+    pthread_mutex_unlock(&mutex_lista_procesos_listos);*/
 }
 
 // Función para encontrar un PCB por PID
@@ -338,6 +363,8 @@ bool encontrar_por_pid(void* elemento, void* pid_ptr) {
     t_pcb* pcb = (t_pcb*)elemento;
     uint32_t pid = *(uint32_t*)pid_ptr;
     return pcb->pid == pid;
+}
+
 }
 
 void f_ejecutar_script(char* path) {
