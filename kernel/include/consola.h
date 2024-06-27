@@ -31,8 +31,8 @@ extern int process_id; // Declaración externa
 void iniciar_consola_interactiva(int conexion);
 bool validacion_de_instruccion_de_consola(char* leido);
 void atender_instruccion_validada(char* leido);
-
-//t_planificador *inicializar_planificador(t_algoritmo_planificacion algoritmo, uint32_t quantum);
+void f_ejecutar_script(char* path);
+t_planificador *inicializar_planificador(t_algoritmo_planificacion algoritmo, uint32_t quantum);
 void detener_planificacion(t_planificador* planificador);
 void mostrar_estado_proceso(pid_t pid);
 void ajustar_multiprogramacion(int nuevo_valor);
