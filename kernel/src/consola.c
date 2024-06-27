@@ -115,6 +115,7 @@ void atender_instruccion_validada(char* leido){
     }else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0){    //DETENER_PLANIFICACION
         
         detener_planificacion(planificador);
+     
 
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
         
@@ -123,12 +124,16 @@ void atender_instruccion_validada(char* leido){
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         
         int valor = atoi(comando_consola[1]);
+        int valor = atoi(comando_consola[1]);
         ajustar_multiprogramacion(valor);
+      
       
     }else if (strcmp(comando_consola[0], "PROCESO_ESTADO") == 0){   //PROCESO_ESTADO
         
         pid_t pid = atoi(comando_consola[1]);
+        pid_t pid = atoi(comando_consola[1]);
         mostrar_estado_proceso(pid);
+      
       
     }else{
         log_error(logger_kernel, "Comando no reconocido que logro pasar el filtro!!!");
