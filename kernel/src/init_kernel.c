@@ -72,9 +72,9 @@ int cargar_configuracion(char *path) {
     log_info(logger_kernel, "QUANTUM cargado correctamente: %d", cfg_kernel->QUANTUM);
 
     cfg_kernel->RECURSOS =  config_get_array_value(file_cfg_kernel, "RECURSOS");
-    log_info(logger_kernel, "RECURSOS cargado correctamente: ");// por ahora no logueamos lo cargado
+    log_info(logger_kernel, "RECURSOS cargado correctamente:%s ",cfg_kernel->RECURSOS[1]);// por ahora no logueamos lo cargado
 
-    cfg_kernel->INSTANCIAS_RECURSOS =  config_get_array_value(file_cfg_kernel, "INSTANCIAS_RECURSOS");
+    cfg_kernel->INSTANCIAS_RECURSOS = config_get_array_value(file_cfg_kernel, "INSTANCIA_RECURSOS");
     log_info(logger_kernel, "INSTANCIAS_RECURSOS cargado correctamente: "); // por ahora no logueamos lo cargado
 
     cfg_kernel->GRADO_MULTIPROGRAMACION = config_get_int_value(file_cfg_kernel, "GRADO_MULTIPROGRAMACION");

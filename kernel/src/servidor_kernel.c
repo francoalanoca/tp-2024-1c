@@ -1,4 +1,4 @@
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/servidor_kernel.h>
+#include "../include/servidor_kernel.h"
 
 
 

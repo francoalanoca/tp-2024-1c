@@ -38,7 +38,7 @@ typedef struct {
     char* ALGORITMO_PLANIFICACION;
     int QUANTUM;
     char** RECURSOS;
-    char ** INSTANCIAS_RECURSOS;
+    char** INSTANCIAS_RECURSOS;
     int GRADO_MULTIPROGRAMACION;
 } t_config_kernel;
 
