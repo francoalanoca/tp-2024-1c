@@ -47,7 +47,7 @@ int cargar_configuracion(char *path) {
 
     file_cfg_kernel = config_create(path); //"/Documents/tp_operativos/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config"
 
-    cfg_kernel->PUERTO_ESCUCHA = config_get_int_value(file_cfg_kernel, "PUERTO_ESCUCHA");
+    cfg_kernel->PUERTO_ESCUCHA = strdup(config_get_string_value(file_cfg_kernel, "PUERTO_ESCUCHA"));
     log_info(logger_kernel, "PUERTO_ESCUCHA cargado correctamente: %d", cfg_kernel->PUERTO_ESCUCHA);
 
     cfg_kernel->IP_MEMORIA = strdup(config_get_string_value(file_cfg_kernel, "IP_MEMORIA"));

@@ -29,7 +29,7 @@ extern int conexion_memoria;
 extern int socket_servidor;
 extern t_dictionary* interfaces;
 typedef struct {
-    int PUERTO_ESCUCHA;
+    char* PUERTO_ESCUCHA;
     char* IP_MEMORIA;
     int PUERTO_MEMORIA;
     char* IP_CPU;

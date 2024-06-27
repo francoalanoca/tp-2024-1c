@@ -1,10 +1,9 @@
 #include "../include/servidor_kernel.h"
 
 
-
 void* crearServidor(){
  
-    socket_servidor = iniciar_servidor(logger_kernel, "SERVER KERNEL", "127.0.0.0", cfg_kernel->PUERTO_ESCUCHA);
+    socket_servidor = iniciar_servidor(logger_kernel, "SERVER KERNEL", "127.0.0.0",cfg_kernel->PUERTO_ESCUCHA );
     if (socket_servidor == 0) {
         log_error(logger_kernel, "Fallo al crear el servidor, cerrando KERNEL");
         return EXIT_FAILURE;
