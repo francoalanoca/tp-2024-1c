@@ -642,7 +642,7 @@ void enviar_peticion_valor(void* valor ,int socket_cpu) {
 }
 
 
-
+/*
 void enviar_resultado_guardar(void* valor, int socket_cliente){
     t_paquete* paquete_valor;
 
@@ -654,7 +654,7 @@ void enviar_resultado_guardar(void* valor, int socket_cliente){
     printf("Se envio respuesta de guardado"); 
     free(paquete_valor);
 }
-
+*/
 
 
 // usar en memoria cuando recibe IO_M_STDIN
