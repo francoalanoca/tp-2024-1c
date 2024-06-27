@@ -11,7 +11,7 @@ void crear_proceso(uint32_t proceso_pid){
 
     //Guardo en una varia de tipo struct la tabla creada
     t_tabla_de_paginas *tabla_de_paginas = crear_tabla_pagina(proceso_pid);
-    log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, sizeof(t_tabla_de_paginas));
+    //log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, sizeof(t_tabla_de_paginas));
 
     list_add(lista_tablas_de_paginas, tabla_de_paginas);
 }
@@ -98,9 +98,11 @@ t_pagina *busco_pagina_por_marco(t_list *lista_de_paginas, uint32_t marco){
 
 
 
-void escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor, uint32_t tamanio){
+void* escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor, uint32_t tamanio){
 
+    void* escrito = malloc(tamanio);
     uint32_t espacio_escrito = 0;
+    //t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
 
     while (tamanio > 0){
     
@@ -118,6 +120,7 @@ void escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* val
 
         memcpy(memoria + direccion_fisica, valor, tamanio);
 
+        //t_pagina *pagina = busco_pagina_por_marco(tabla_de_paginas->lista_de_paginas, marco);
         //Actualizamos que fue modificado
         //pagina->modificado = true;
 
@@ -135,6 +138,8 @@ void escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* val
             direccion_fisica = pagina->marco * cfg_memoria->TAM_PAGINA;
         }
     }
+    escrito = "OK";
+    return escrito;
 }
 
 
@@ -189,11 +194,11 @@ void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
 
 
 
-//Posible implementacion de copy
+//Posible implementacion de copy si solo escribo
 // void copiar_solicitud(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor){
 
-//     void* valor_a_copiar = leer_memoria(proceso_pid, direccion_fisica,);
-//     escribir_memoria(proceso_pid, direccion_fisica, valor,);
+//     void* valor_a_copiar = leer_memoria(proceso_pid, direccion_fisica, strlen(valor));
+//     escribir_memoria(proceso_pid, direccion_fisica, valor, strlen(valor));
 // }
 
 
@@ -216,11 +221,41 @@ uint32_t buscar_marco_pagina(uint32_t proceso_pid, uint32_t numero_de_pagina){
 
 
 
+//Funciones para resize
+
+uint32_t obtener_marco_libre(uint32_t ultimo_frame){
+
+    //Recorro la memoria para marcar los frames libres
+    for (uint32_t i = ultimo_frame; i < cantidad_frames_memoria; i++){
+
+        //Si la posicion del array esta disponible
+        if (!bitarray_test_bit(bitmap_frames, i)){
+            
+            //marco como ocupado
+            bitarray_set_bit(bitmap_frames, i);
+
+            //devuelvo el marco libre
+            return i;
+        }
+    }
+
+    // int tamanio_proceso = obtener_tamanio_proceso_bitmap();
+    // msync(bitmap, tamanio_proceso, MS_SYNC);
+    log_trace(logger_memoria, "No se obtuvo un marco libre");
+
+    return -1;
+}
+
+
+
+
 char* administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
 
 
-    //Reservo una cantidad de marcos por tamaño de proceso
-    int marcos_a_reservar = calcular_marcos(tamanio_proceso);
+    //Variable que indica cantidad de frames por proceso
+    uint32_t marcos_a_reservar = calcular_marcos(tamanio_proceso);
+
+    log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, marcos_a_reservar);
 
     //Recorro mientras sea menor a la cantidad de frames
     for (int i = 0; i < marcos_a_reservar; i++){
@@ -238,11 +273,18 @@ char* administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
 
     //Si el tamaño es 0
     //if(tamanio_proceso == 0)
+    //"no hay nada para hacer"
+
+    //while(tamanio_preceso < memoria)
+    //sino devolver "out of memory"
 
     //SI el tamaño es menor al frame
-    //if(tamanio_proceso < )
-    //Si el tamaño es mayor al frame (Page faul)
+    //if(tamanio_proceso < frame)
+    //obtener_marco_libre(0)
 
+    //Si el tamaño es mayor al frame busco mas
+    //if(tamanio_proceso > frame)
+    //obtener_marco_libre(ultimo_frame)
 }
 
 

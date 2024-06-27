@@ -643,6 +643,20 @@ void enviar_peticion_valor(void* valor ,int socket_cpu) {
 
 
 
+void enviar_resultado_guardar(void* valor, int socket_cliente){
+    t_paquete* paquete_valor;
+
+    paquete_valor = crear_paquete(GUARDAR_EN_DIRECCION_FISICA_RTA);
+
+    agregar_a_paquete(paquete_valor, &valor,  sizeof(void*));
+
+    enviar_paquete(paquete_valor, socket_cliente);
+    printf("Se envio respuesta de guardado"); 
+    free(paquete_valor);
+}
+
+
+
 // usar en memoria cuando recibe IO_M_STDIN
 t_io_input* deserializar_input(t_list*  lista_paquete ){
 

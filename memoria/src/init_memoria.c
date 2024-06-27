@@ -16,7 +16,7 @@ void* memoria;
 t_list* lista_tablas_de_paginas;
 t_list* lista_miniPCBs;
 pthread_mutex_t mutex_memoria;
-uint32_t cantidad_frames;       //seria tam_memoria / tam_pagina
+uint32_t cantidad_frames_memoria;       //seria tam_memoria / tam_pagina
 uint32_t cantidad_page_fault;       
 t_bitarray *bitmap_frames;
 
@@ -120,8 +120,8 @@ void inicializar_memoria(){
     instrucciones_de_procesos = dictionary_create();        //memoria de instrucciones
 	pthread_mutex_init(&mutex_memoria, NULL);
 	cantidad_page_fault = 0;
-	cantidad_frames = cfg_memoria->TAM_MEMORIA / cfg_memoria->TAM_PAGINA;
-	bitmap_frames = crear_bitmap(cantidad_frames);   
+	cantidad_frames_memoria = cfg_memoria->TAM_MEMORIA / cfg_memoria->TAM_PAGINA;
+	bitmap_frames = crear_bitmap(cantidad_frames_memoria);   
 }
 
 

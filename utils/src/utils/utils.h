@@ -348,6 +348,7 @@ void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu);
 void enviar_solicitud_marco(int marco ,int socket_cpu);
 void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu);
 void enviar_peticion_valor(void* valor ,int socket_cpu);
+void enviar_resultado_guardar(void* valor, int socket_cliente);
 t_io_input* deserializar_input(t_list*  lista_paquete );
 // Kernel envía a IO Crear/Borrar/Truncar Archivo
 void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket, uint32_t cod_op);
