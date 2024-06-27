@@ -1,5 +1,5 @@
 
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/protocolo_kernel.h>
+#include "../include/protocolo_kernel.h"
 //#include <protocolo_kernel.h>
 
 
