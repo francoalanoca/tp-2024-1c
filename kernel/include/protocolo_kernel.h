@@ -3,8 +3,8 @@
 #include <utils/utils.h>
 #include <pthread.h>
 #include <commons/string.h>
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/init_kernel.h>
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/consola.h>
+#include "../include/init_kernel.h"
+#include "../include/consola.h"
 //#include <utils/utils.h>
 //#include <pthread.h>
 //#include <commons/string.h>

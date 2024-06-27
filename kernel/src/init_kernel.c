@@ -1,4 +1,4 @@
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/init_kernel.h>
+#include "../include/init_kernel.h"
 
 t_log *logger_kernel; // Definición de la variable global
 t_config_kernel *cfg_kernel;
@@ -71,11 +71,11 @@ int cargar_configuracion(char *path) {
     cfg_kernel->QUANTUM = config_get_int_value(file_cfg_kernel, "QUANTUM");
     log_info(logger_kernel, "QUANTUM cargado correctamente: %d", cfg_kernel->QUANTUM);
 
-    cfg_kernel->RECURSOS = strdup(config_get_string_value(file_cfg_kernel, "RECURSOS"));
+    cfg_kernel->RECURSOS =  config_get_array_value(file_cfg_kernel, "RECURSOS");
     log_info(logger_kernel, "RECURSOS cargado correctamente: ");// por ahora no logueamos lo cargado
 
-    //cfg_kernel->INSTANCIAS_RECURSOS = strdup(config_get_string_value(file_cfg_kernel, "INSTANCIAS_RECURSOS"));
-    //log_info(logger_kernel, "INSTANCIAS_RECURSOS cargado correctamente: "); // por ahora no logueamos lo cargado
+    cfg_kernel->INSTANCIAS_RECURSOS =  config_get_array_value(file_cfg_kernel, "INSTANCIAS_RECURSOS");
+    log_info(logger_kernel, "INSTANCIAS_RECURSOS cargado correctamente: "); // por ahora no logueamos lo cargado
 
     cfg_kernel->GRADO_MULTIPROGRAMACION = config_get_int_value(file_cfg_kernel, "GRADO_MULTIPROGRAMACION");
     log_info(logger_kernel, "GRADO_MULTIPROGRAMACION cargado correctamente: %d", cfg_kernel->GRADO_MULTIPROGRAMACION);

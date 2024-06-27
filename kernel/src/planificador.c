@@ -4,7 +4,7 @@
 //#include "../include/servidorCpu.h"
 
 // Devuelve un t_algoritmo a partir de la config cargada
-t_algoritmo_planificacion obtener_algoritmo_planificador(const char* algoritmo_planificacion) {
+t_algoritmo_planificacion obtener_algoritmo_planificador(char* algoritmo_planificacion) {
     if (strcmp(algoritmo_planificacion, "FIFO") == 0) {
         return FIFO;
     } else if (strcmp(algoritmo_planificacion, "ROUND ROBIN") == 0) {

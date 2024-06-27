@@ -5,14 +5,14 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <readline/readline.h>
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/init_kernel.h>
+#include "../include/init_kernel.h"
 //#include <init_kernel.h>
 #include <utils/utils.h>
 #include <commons/log.h>
 #include <commons/config.h>
 #include <stdint.h>
 #include <string.h>
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/planificador.h>
+#include "../include/planificador.h"
 //#include <planificador.h>
 
 
@@ -45,7 +45,7 @@ void destruir_pcb(t_pcb* pcb);
 void cambiar_estado(t_pcb* un_pcb, estado_pcb prox_estado);
 bool encontrar_por_pid(void* elemento, void* pid_ptr);
 t_pcb* obtener_proximo_proceso(t_planificador* planificador);
-obtener_algoritmo_planificador(const char* algoritmo_planificacion);
+
 
 
 #endif

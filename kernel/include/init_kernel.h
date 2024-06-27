@@ -6,7 +6,7 @@
 //#define PUERTO_ESCUCHA 5000 // Puerto de escucha para conexiones entrantes
 
 #include <utils/utils.h>
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/planificador.h>
+#include "../include/planificador.h"
 
 int checkProperties(char *path_config);
 int cargar_configuracion(char *path);

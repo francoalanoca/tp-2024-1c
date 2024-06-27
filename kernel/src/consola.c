@@ -1,11 +1,11 @@
-#include "/home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/consola.h"
+#include "../include/consola.h"
 
  int identificador_pid;
  pthread_mutex_t mutex_pid;
  pthread_mutex_t mutex_process_id = PTHREAD_MUTEX_INITIALIZER; // Definición
 int process_id = 0; // Definición
- uint32_t pcb2;
-
+ t_pcb* pcb2;
+t_algoritmo_planificacion algortimo ;
 //Funcion que implementa el inicio de la consola iterativa
 void iniciar_consola_interactiva(int conexion){
     conexion_memoria = conexion;
@@ -105,7 +105,7 @@ void atender_instruccion_validada(char* leido){
 
     }else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0){    //FINALIZAR_PROCESO [PID]
        
-        pid_t pid = atoi(comando_consola[1]);
+        int pid = atoi(comando_consola[1]);
         if (kill(pid, SIGTERM) == 0) {
             printf("Proceso con PID %d finalizado exitosamente.\n", pid);
         } else {
@@ -126,19 +126,20 @@ void atender_instruccion_validada(char* leido){
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
         
         //inicializar_planificador(); //algoritmno, quantum?? ---> quiero preguntar.
-        planificador = inicializar_planificador(obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION), cfg_kernel->QUANTUM, cfg_kernel->grado_multiprogramacion ); 
+        algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
+        planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
 
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         
         int valor = atoi(comando_consola[1]);
-        int valor = atoi(comando_consola[1]);
+   
         ajustar_multiprogramacion(valor);
       
       
     }else if (strcmp(comando_consola[0], "PROCESO_ESTADO") == 0){   //PROCESO_ESTADO
         
         pid_t pid = atoi(comando_consola[1]);
-        pid_t pid = atoi(comando_consola[1]);
+       
         mostrar_estado_proceso(pid);
       
       
@@ -189,13 +190,13 @@ void f_iniciar_proceso(t_buffer* un_buffer) {
     log_info(logger_kernel, "Proceso enviado a new");
 
     };
-    }
+    
 
     imprimir_pcb(pcb);
 
     //pcb2 obtener_proximo_proceso(t_planificador* planificador)
     //enviar_pcb_a_cpu_por_dispatch(pcb2); //declarar pcb2
-    pcb2 == obtener_proximo_proceso(planificador);
+    pcb2 = obtener_proximo_proceso(planificador);
     enviar_pcb_a_cpu_por_dispatch(pcb2); //declarar pcb2
 
     destruir_pcb(pcb);
@@ -229,7 +230,7 @@ t_pcb* crear_pcb(char* path, char* nombre) {
     nuevo_pcb->path = strdup(path);  // Guardar el path del proceso
     //nuevo_pcb->nombre_proceso = strdup(nombre);  // Guardar el nombre del proceso
     //nuevo_pcb->lista_recursos_pcb = list_create(); // hacerlo en diccionario 
-    nuevo_pcb->nombre_proceso = strdup(nombre);  // Guardar el nombre del proceso
+
     nuevo_pcb->estado = ESTADO_NEW;
 
    /* if (pthread_mutex_init(&nuevo_pcb->mutex_lista_recursos, NULL) != 0) {
@@ -292,7 +293,7 @@ void destruir_pcb(t_pcb* pcb) {
     //if (pcb->nombre_proceso) free(pcb->nombre_proceso);
     //list_destroy(pcb->lista_recursos_pcb);
    // pthread_mutex_destroy(&pcb->mutex_lista_recursos);
-    if (pcb->nombre_proceso) free(pcb->nombre_proceso);
+
     free(pcb);
 }
 
@@ -365,7 +366,7 @@ bool encontrar_por_pid(void* elemento, void* pid_ptr) {
     return pcb->pid == pid;
 }
 
-}
+
 
 void f_ejecutar_script(char* path) {
     FILE* file = fopen(path, "r");
