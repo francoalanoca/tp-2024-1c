@@ -689,24 +689,25 @@ t_io_memo_escritura* deserializar_input(t_list*  lista_paquete ){
 // Kernel envía a io un stdin usando op_cod= IO_K_STDIN
 void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion){
 
-    t_paquete* paquete_espera = malloc(sizeof(t_paquete));    
+    t_paquete* paquete_df = malloc(sizeof(t_paquete));    
    
-    paquete_espera = crear_paquete(codigo_operacion); 
+    paquete_df = crear_paquete(codigo_operacion); 
     
-    agregar_a_paquete(paquete_espera, &io_df->pid, sizeof(io_df->pid)); 
+    agregar_a_paquete(paquete_df, &io_df->pid, sizeof(io_df->pid)); 
     
     uint32_t list_tamanio = list_size(io_df->direcciones_fisicas);
    
-    agregar_a_paquete(paquete_espera, &list_tamanio, sizeof(uint32_t));
+    agregar_a_paquete(paquete_df, &list_tamanio, sizeof(uint32_t));
 
     for (int i = 0; i < list_tamanio; i++) {
         uint32_t* direccion_fisica = (uint32_t*) list_get(io_df->direcciones_fisicas, i);
         
-        agregar_a_paquete(paquete_espera,  &direccion_fisica, sizeof(uint32_t));
+        agregar_a_paquete(paquete_df,  &direccion_fisica, sizeof(uint32_t));
         
     }   
-       
-    enviar_paquete(paquete_espera, socket);  
+     agregar_a_paquete(paquete_df, &io_df->tamanio_operacion, sizeof(uint32_t));    
+    enviar_paquete(paquete_df, socket);
+     free(paquete_df);  
   printf("Se envio io df\n");
 
 }
@@ -724,7 +725,8 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
         direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
         list_add(io_df->direcciones_fisicas, direccion_fisica);
     }
-
+    io_df->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,2+tamanio_lista);
+    printf("Tamanio operacion: %d \n",io_df->tamanio_operacion);
     return io_df;
 
 }
@@ -845,53 +847,6 @@ t_io_output* armar_io_output(uint32_t pid, char* output){
             io_output->output_length = tamanio_output;
             io_output->output = output;
            return  io_output;    
-}
-    
-void enviar_io_memo_lectura(t_io_memo_lectura*  io_memo_lectura, int socket, uint32_t cod_op){
-    t_paquete* paquete_input;
- 
-    paquete_input = crear_paquete(cod_op);
- 
-    agregar_a_paquete(paquete_input,  &io_memo_lectura->pid,  sizeof(uint32_t));      
-    uint32_t list_tamanio = list_size(io_memo_lectura->direcciones_fisicas);    
-    agregar_a_paquete(paquete_input, &list_tamanio, sizeof(uint32_t));  
-    //agrego cada elemento de la lista de direcciones fisicas
-    for (int i = 0; i < list_tamanio; i++) {
-        uint32_t direccion_fisica = (uint32_t*) list_get(io_memo_lectura->direcciones_fisicas, i);        
-        agregar_a_paquete(paquete_input,  &direccion_fisica, sizeof(uint32_t));        
-    }   
-    agregar_a_paquete(paquete_input, &io_memo_lectura->tamanio_operacion, sizeof(uint32_t));  
-   
-    enviar_paquete(paquete_input, socket);    
-    free(paquete_input);     
-
-}
-
-t_io_memo_lectura* deserializar_io_memo_lectura(t_list* lista_paquete){
-
-    t_io_memo_lectura* io_memo_lectura = malloc(sizeof(t_io_memo_lectura));
-    
-    io_memo_lectura->pid = *(uint32_t*)list_get(lista_paquete, 0);
-    printf("Pid recibido: %d \n",io_memo_lectura->pid);
-    
-    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
-    printf("tamanio lista: %d \n",tamanio_lista);
-
-     // Deserializar cada elemento de la lista
-    io_memo_lectura->direcciones_fisicas = list_create();
-    for (int i = 0; i < tamanio_lista; i++) {
-        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
-        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
-        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ;
-        list_add(io_memo_lectura->direcciones_fisicas, direccion_fisica);
-         printf("Valor agregado %d \n",direccion_fisica);
-    }
-
-    io_memo_lectura->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,2+tamanio_lista);
-    printf("Cantidad caracteres input: %d \n",io_memo_lectura->tamanio_operacion);
-
-    return io_memo_lectura;
-    free (io_memo_lectura);
 }
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)

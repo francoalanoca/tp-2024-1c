@@ -146,10 +146,10 @@ switch (cod_op) {
              printf("Recibida IO_M_STDOUT \n");
 
             t_io_output* io_output = malloc(sizeof(t_io_output));
-            t_io_memo_lectura* io_stdout = malloc(sizeof(t_io_memo_lectura));
+            t_io_direcciones_fisicas* io_stdout = malloc(sizeof(t_io_direcciones_fisicas));
                 
             valores = recibir_paquete(socket_cliente);
-            io_stdout = deserializar_io_memo_lectura(valores);
+            io_stdout = deserializar_io_df(valores);
         
             if (valores == NULL || list_size(valores) == 0) {
                 printf("El paquete vino vacío\n");
@@ -172,11 +172,11 @@ switch (cod_op) {
             printf("Recibida IO_FS_WRITE \n");
 
             t_io_output* io_escritura = malloc(sizeof(t_io_output));
-            t_io_memo_lectura* io_fs_write = malloc(sizeof(t_io_memo_lectura));
+            t_io_direcciones_fisicas* io_fs_write = malloc(sizeof(t_io_direcciones_fisicas));
                 
                                 
             valores = recibir_paquete(socket_cliente);
-            io_fs_write = deserializar_io_memo_lectura(valores);
+            io_fs_write = deserializar_io_df(valores);
         
             if (valores == NULL || list_size(valores) == 0) {
                 printf("El paquete vino vacío\n");

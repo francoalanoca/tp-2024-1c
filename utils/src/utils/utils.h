@@ -242,16 +242,10 @@ typedef struct {
 typedef struct {
 	uint32_t pid;
     t_list*  direcciones_fisicas; 
+    uint32_t tamanio_operacion;
 } t_io_direcciones_fisicas;
 
-// IO le manda a memoria  en STDOUT y IO_FS_WRITE para que le pase el contenido a traves de un t_io_output
-typedef struct {
-	uint32_t pid;
-    t_list*  direcciones_fisicas;
-    uint32_t tamanio_operacion;
-} t_io_memo_lectura;
-
-//IO Le manda a memoria para escritura
+//IO Le manda a memoria para escritura con IO_FS_READ y STDIN_READ
 typedef struct {
 	uint32_t pid;
     t_list*  direcciones_fisicas;
@@ -259,7 +253,7 @@ typedef struct {
     char* input;   
 } t_io_memo_escritura;
 
-//Memoria le manda a IO
+//Memoria le manda a IO  como resultado de un IO_FS_WRITE o un STDOUT_WRITE
 typedef struct {
 	uint32_t pid;
     uint32_t output_length; 
@@ -433,9 +427,6 @@ void enviar_io_readwrite(t_io_readwrite_archivo* io_readwrite ,int socket, uint3
 t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete );
 // Devuelve un out a partit de un pid y un valor char*
 t_io_output* armar_io_output(uint32_t pid, char* output);
-// De io se envia a memoria un  t_io_memo_escritura para escribir
-void enviar_io_memo_lectura(t_io_memo_lectura*  io_memo_lectura, int socket, uint32_t cod_op);
-// Memoria recibe t_io_memo_escritura para escribir
-t_io_memo_lectura* deserializar_io_memo_lectura(t_list* lista_paquete);
+
 #endif /* UTILS_H_ */
 
