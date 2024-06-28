@@ -24,5 +24,8 @@ void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
 uint32_t buscar_marco_pagina(uint32_t proceso_pid, uint32_t numero_de_pagina);
 //void finalizar_proceso(uint32_t proceso_pid);
 
-
+// Devuelve la totalidad bytes disponibles en la memoria
+int espacio_disponible();
+// devuelve el primer marco libre que encuentra desde la posicion 0 del bitmap
+uint32_t obtener_marco_libre();
 #endif

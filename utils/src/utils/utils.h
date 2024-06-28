@@ -50,6 +50,7 @@ typedef enum
     SOLICITUD_EXIT_KERNEL = 125, //CPU solicita a kernel la finalización del proceso
     SOLICITUD_TAMANIO_PAGINA =130,//CPU solicita a memoria el tamanio de pagina
     SOLICITUD_TAMANIO_PAGINA_RTA =135,//Memoria envia a CPU el tamanio de pagina
+    OUT_OF_MEMORY,
 
  //---------------ENTRADASALIDA-KERNEL-------------------
     INTERFAZ_ENVIAR,            // EntradaSalida, avisa que envía la interfaz creada

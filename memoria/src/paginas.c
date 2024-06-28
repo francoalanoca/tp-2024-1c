@@ -238,46 +238,49 @@ uint32_t obtener_marco_libre(){
 
 
 
-char* administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
+op_code administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
 
+    t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
 
-    //Variable que indica cantidad de frames por proceso
+    int ultima_pagina = list_size(tabla_de_paginas->lista_de_paginas);
     uint32_t marcos_a_reservar = calcular_marcos(tamanio_proceso);
 
     log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, marcos_a_reservar);
 
-    //Recorro mientras sea menor a la cantidad de frames
-    for (int i = 0; i < marcos_a_reservar; i++){
+    if(tamanio_proceso == 0){
+        return SOLICITUD_RESIZE_RTA;
+    }else{    
+        if(tamanio_proceso < espacio_disponible()){
+            //Recorro mientras sea menor a la cantidad de frames
+            for (int i = 0; i < marcos_a_reservar; i++){
+                t_pagina *pagina = malloc(sizeof(t_pagina));
 
-        t_pagina *pagina = malloc(sizeof(t_pagina));
-
-        pagina->marco = -1;                 //No se le asigno un marco
-        pagina->posicion = -1;              //No se le asigno una posicion
-        pagina->presencia = false;          //No esta en memoria hasta ahora
-        pagina->modificado = false;         //NO fue modificado
-    
-        //list_add(tabla_de_paginas->lista_de_paginas, pagina);
-    }
-
-
-    //Si el tamaño es 0
-    //if(tamanio_proceso == 0)
-    //"no hay nada para hacer"
-
-    //while(tamanio_preceso < memoria)
-    //sino devolver "out of memory"
-
-    //SI el tamaño es menor al frame
-    //if(tamanio_proceso < frame)
-    //obtener_marco_libre(0)
-
-    //Si el tamaño es mayor al frame busco mas
-    //if(tamanio_proceso > frame)
-    //obtener_marco_libre(ultimo_frame)
+                pagina->marco = obtener_marco_libre();                 
+                pagina->posicion = ultima_pagina+i;             
+                pagina->presencia = false;          
+                pagina->modificado = false;        
+            
+                list_add(tabla_de_paginas->lista_de_paginas, pagina);
+            }
+            return SOLICITUD_RESIZE_RTA;
+        }else{
+            return OUT_OF_MEMORY;
+        }
+    }  
 }
 
 
+int espacio_disponible(){
+    int frames_libres = 0;   
 
+    for (uint32_t i = 0; i < bitarray_get_max_bit(bitmap_frames); i++){
+    //Si la posicion del array esta disponible
+        if (!bitarray_test_bit(bitmap_frames, i)){
+            frames_libres++ ;
+        }
+    }
+    return frames_libres*cfg_memoria->TAM_PAGINA;
+}
 
 
 /*
