@@ -38,7 +38,7 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
                 log_info(logger_entrada_salida, "Handshake recibido handshake exitosamente con Kernel");
                 
                 break;     
-            case IO_K_STDIN:
+            case IO_K_STDIN:{
                 t_io_memo_escritura* io_input = malloc(sizeof(t_io_memo_escritura));
                 t_io_direcciones_fisicas* io_stdin = malloc(sizeof(t_io_direcciones_fisicas));
                 
@@ -60,6 +60,7 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
                
                 free(io_input);
                 break;
+                }
             case IO_M_STDIN_FIN:
                
                 log_info(logger_entrada_salida, "Se guardo inpunt correctamente en memoria: \n");

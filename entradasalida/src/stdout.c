@@ -34,7 +34,7 @@ void iniciar_interfaz_stdout (int socket_kernel, int socket_memoria) {
                 log_info(logger_entrada_salida, "Handshake recibido handshake exitosamente con Kernel");
                 
                 break;     
-            case IO_K_STDOUT:
+            case IO_K_STDOUT:{
 
                 t_io_direcciones_fisicas* io_stdout = malloc(sizeof(t_io_direcciones_fisicas));
                 
@@ -80,7 +80,7 @@ void iniciar_interfaz_stdout (int socket_kernel, int socket_memoria) {
                  
                 
                 break;
-
+                }
             default:
                 response = OPERACION_INVALIDA;
                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
