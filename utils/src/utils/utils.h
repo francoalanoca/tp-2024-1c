@@ -436,4 +436,3 @@ t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete );
 t_io_output* armar_io_output(uint32_t pid, char* output);
 
 #endif /* UTILS_H_ */
-

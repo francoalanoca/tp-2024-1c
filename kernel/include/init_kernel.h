@@ -6,7 +6,7 @@
 //#define PUERTO_ESCUCHA 5000 // Puerto de escucha para conexiones entrantes
 
 #include <utils/utils.h>
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/planificador.h>
+#include "../include/planificador.h"
 
 int checkProperties(char *path_config);
 int cargar_configuracion(char *path);
@@ -29,16 +29,16 @@ extern int conexion_memoria;
 extern int socket_servidor;
 extern t_dictionary* interfaces;
 typedef struct {
-    int PUERTO_ESCUCHA;
+    char* PUERTO_ESCUCHA;
     char* IP_MEMORIA;
-    int PUERTO_MEMORIA;
+    char* PUERTO_MEMORIA;
     char* IP_CPU;
-    int PUERTO_CPU_DISPATCH;
-    int PUERTO_CPU_INTERRUPT;
+    char* PUERTO_CPU_DISPATCH;
+    char* PUERTO_CPU_INTERRUPT;
     char* ALGORITMO_PLANIFICACION;
     int QUANTUM;
     char** RECURSOS;
-    char ** INSTANCIAS_RECURSOS;
+    char** INSTANCIAS_RECURSOS;
     int GRADO_MULTIPROGRAMACION;
 } t_config_kernel;
 
