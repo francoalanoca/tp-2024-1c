@@ -98,7 +98,7 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
     for (i; i < tamanio_operacion-1; i++){
         ch = getchar();
         printf("Caracter leído: %c (Código ASCII: %d)\n", ch, ch); // Depuración
-        input[i++] = ch;
+        input[i] = ch;
 
     }
 
