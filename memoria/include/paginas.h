@@ -8,11 +8,6 @@
 #include "../include/init_memoria.h"
 
 
-
-
-
-
-
 void crear_proceso(uint32_t proceso_pid);
 t_tabla_de_paginas *crear_tabla_pagina(int pid);
 uint32_t calcular_marcos(uint32_t tamanio_proceso);

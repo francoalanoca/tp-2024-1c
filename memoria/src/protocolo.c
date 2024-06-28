@@ -6,7 +6,7 @@ void memoria_atender_cliente(void* socket){
     uint32_t cod_op;
 	op_code response;
     t_list* valores =  malloc(sizeof(t_list));
-    t_io_input* input = malloc(sizeof(t_io_input));
+    t_io_memo_escritura* input = malloc(sizeof(t_io_memo_escritura));
     //t_paquete* paquete;
 	void* output;
      //t_proceso_memoria contexto_ejecucion;    
@@ -145,18 +145,19 @@ switch (cod_op) {
 		case IO_M_STDOUT: // Lee de memoria e imprime por pantalla
              printf("Recibida IO_M_STDOUT \n");
 
-            t_io_output* io_output = malloc(sizeof(t_io_input));
-            t_io_direcciones_fisicas* io_stdout = malloc(sizeof(t_io_direcciones_fisicas));
+            t_io_output* io_output = malloc(sizeof(t_io_output));
+            t_io_memo_lectura* io_stdout = malloc(sizeof(t_io_memo_lectura));
                 
             valores = recibir_paquete(socket_cliente);
-            io_stdout = deserializar_io_df(valores);
+            io_stdout = deserializar_io_memo_lectura(valores);
         
             if (valores == NULL || list_size(valores) == 0) {
                 printf("El paquete vino vacío\n");
                 break;
             }
 
-             output = leer_memoria(io_stdout->direcciones_fisicas, io_output->output_length);      //ver
+             
+            output =  leer_memoria(io_stdout->pid, list_get(io_stdout->direcciones_fisicas,0), io_stdout->tamanio_operacion);
             uint32_t tamanio_output = string_length(output)+1;
             io_output->pid = io_stdout->pid;
             io_output->output_length = tamanio_output;
@@ -170,19 +171,19 @@ switch (cod_op) {
         case IO_FS_WRITE://Lee de memoria y escribe en un archivo
             printf("Recibida IO_FS_WRITE \n");
 
-            t_io_output* io_escritura = malloc(sizeof(t_io_input));
-            t_io_direcciones_fisicas* io_fs_write = malloc(sizeof(t_io_direcciones_fisicas));
+            t_io_output* io_escritura = malloc(sizeof(t_io_output));
+            t_io_memo_lectura* io_fs_write = malloc(sizeof(t_io_memo_lectura));
                 
                                 
             valores = recibir_paquete(socket_cliente);
-            io_stdout = deserializar_io_df(valores);
+            io_fs_write = deserializar_io_memo_lectura(valores);
         
             if (valores == NULL || list_size(valores) == 0) {
                 printf("El paquete vino vacío\n");
                 break;
             }
-            output = leer_memoria(io_stdout->direcciones_fisicas, io_output->output_length);      //ver
-            char* escritura ="HOLA!"; // Pesa 6 bytes  reemplazar esto por función de memoria que busca el valor
+            char* escritura = leer_memoria(io_fs_write->pid, list_get(io_fs_write->direcciones_fisicas,0), io_fs_write->tamanio_operacion);     //ver
+            
             
             uint32_t tamanio_escritura = string_length(escritura)+1;
             io_escritura->pid = io_fs_write->pid;

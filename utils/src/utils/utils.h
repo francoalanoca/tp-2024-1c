@@ -228,22 +228,26 @@ typedef struct {
 	uint32_t tiempo_espera;
 } t_io_espera;
 
-//Kernel le manda a IO en operaciones STDIN, STDOUT y tambien IO le manda a memoria para que le pase el contenido a traves de un t_io_output
+//Kernel le manda a IO en operaciones STDIN, STDOUT 
 typedef struct {
 	uint32_t pid;
     t_list*  direcciones_fisicas; 
 } t_io_direcciones_fisicas;
 
+// IO le manda a memoria  en STDOUT y IO_FS_WRITE para que le pase el contenido a traves de un t_io_output
+typedef struct {
+	uint32_t pid;
+    t_list*  direcciones_fisicas;
+    uint32_t tamanio_operacion;
+} t_io_memo_lectura;
 
-
-
-//IO Le manda a memoria
+//IO Le manda a memoria para escritura
 typedef struct {
 	uint32_t pid;
     t_list*  direcciones_fisicas;
     uint32_t input_length; 
     char* input;   
-} t_io_input;
+} t_io_memo_escritura;
 
 //Memoria le manda a IO
 typedef struct {
@@ -350,17 +354,20 @@ void enviar_solicitud_marco(int marco ,int socket_cpu);
 void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu);
 void enviar_peticion_valor(void* valor ,int socket_cpu);
 void enviar_resultado_guardar(void* valor, int socket_cliente);
-t_io_input* deserializar_input(t_list*  lista_paquete );
+t_io_memo_escritura* deserializar_input(t_list*  lista_paquete );
 // Kernel envía a IO Crear/Borrar/Truncar Archivo
 void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket, uint32_t cod_op);
 //Lo pueden usar IOy MEMOMORIA, para enviarse direcciones físicas y los datos contenidos o a guardar
-void enviar_input(t_io_input* io_input ,int socket, uint32_t op_code );
+void enviar_input(t_io_memo_escritura* io_input ,int socket, uint32_t op_code );
 // Kernel a IO para leer o escribir archivo
 void enviar_io_readwrite(t_io_readwrite_archivo* io_readwrite ,int socket, uint32_t op_code );
 //IO recibe una peticion de escrir o leer archivo
 t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete );
 // Devuelve un out a partit de un pid y un valor char*
 t_io_output* armar_io_output(uint32_t pid, char* output);
-
+// De io se envia a memoria un  t_io_memo_escritura para escribir
+void enviar_io_memo_lectura(t_io_memo_lectura*  io_memo_lectura, int socket, uint32_t cod_op);
+// Memoria recibe t_io_memo_escritura para escribir
+t_io_memo_lectura* deserializar_io_memo_lectura(t_list* lista_paquete);
 #endif /* UTILS_H_ */
 

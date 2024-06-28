@@ -165,7 +165,7 @@ void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
         uint32_t espacio_a_leer;
 
         if (tamanio < espacio_restante_marco){
-            espacio_a_leer = tamanio
+            espacio_a_leer = tamanio;
         }
         else{
             espacio_a_leer = espacio_restante_marco;
