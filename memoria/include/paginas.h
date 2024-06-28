@@ -18,7 +18,7 @@ void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
 void* copiar_solicitud(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor);
 uint32_t buscar_marco_pagina(uint32_t proceso_pid, uint32_t numero_de_pagina);
 void finalizar_proceso(uint32_t proceso_pid);
-
+op_code administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso);
 // Devuelve la totalidad bytes disponibles en la memoria
 int espacio_disponible();
 // devuelve el primer marco libre que encuentra desde la posicion 0 del bitmap
