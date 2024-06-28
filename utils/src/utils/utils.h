@@ -60,6 +60,8 @@ typedef enum
     SOLICITUD_TAMANIO_PAGINA =130,//CPU solicita a memoria el tamanio de pagina
     SOLICITUD_TAMANIO_PAGINA_RTA =135,//Memoria envia a CPU el tamanio de pagina
     OUT_OF_MEMORY,
+    GUARDAR_EN_DIRECCION_FISICA_RTA,
+    ENVIO_COPY_STRING_A_MEMORIA_RTA,
 
  //---------------ENTRADASALIDA-KERNEL-------------------
     INTERFAZ_ENVIAR,            // EntradaSalida, avisa que envía la interfaz creada
@@ -281,7 +283,6 @@ typedef struct {
 //Kernel-Memoria (struct para cop crear proceso)
 typedef struct{
     uint32_t pid;                     //pcb del proceso
-    uint32_t tamanio;               //tamaño del proceso
     char *archivo_pseudocodigo;     //nombre del proceso
 } t_m_crear_proceso;
 
@@ -397,7 +398,10 @@ t_copy* deserializar_solicitud_copy(t_list*  lista_paquete);
 void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu);
 void enviar_solicitud_marco(int marco ,int socket_cpu);
 void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu);
-void enviar_peticion_valor(void* valor ,int socket_cpu);
+void enviar_peticion_valor(void* respuesta_leer ,int socket_cpu);
+void enviar_resultado_guardar(void* respuesta_escribir, int socket_cliente);
+void enviar_respuesta_resize(op_code respuesta_resize, int socket_cliente);
+void enviar_resultado_copiar(void* respuesta_copy, int socket_cliente);
 t_io_memo_escritura* deserializar_input(t_list*  lista_paquete );
 t_io_crear_archivo* deserializar_io_crear_archivo(t_list*  lista_paquete );
 void  enviar_creacion_archivo(t_io_crear_archivo* nuevo_archivo, int socket );

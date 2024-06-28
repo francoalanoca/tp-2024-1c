@@ -23,12 +23,8 @@ int main(int argc, char* argv[]) {
 
 
 	//------------------Server------------------------
-	 iniciar_servidor_memoria();
+	iniciar_servidor_memoria();
 
-	//terminar_programa(fd_memoria, logger_memoria, file_cfg_memoria);
+	terminar_programa(fd_memoria, logger_memoria, file_cfg_memoria);
 	return 0;
 }
-
-// void iterator(char* value) {
-// 	log_info(logger_memoria, "%s", value);
-// }
