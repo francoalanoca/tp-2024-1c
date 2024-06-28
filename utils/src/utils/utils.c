@@ -449,6 +449,31 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
 
 
 
+uint32_t* deserializar_finalizar_proceso(t_list*  lista_paquete ){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    uint32_t* proceso_a_finalizar = malloc(sizeof(uint32_t));
+    
+    proceso_a_finalizar = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", proceso_a_finalizar);
+
+    return proceso_a_finalizar;
+}
+
+
+void enviar_respuesta_finalizar_proceso(uint32_t pid_proceso_a_finalizar ,int socket_kernel) {
+    t_paquete* paquete_finalizar_proceso;
+ 
+    paquete_finalizar_proceso = crear_paquete(FINALIZAR_PROCESO_FIN);
+ 
+    agregar_a_paquete(paquete_finalizar_proceso, &pid_proceso_a_finalizar,  sizeof(uint32_t));
+    
+    enviar_paquete(paquete_finalizar_proceso, socket_kernel);   
+    printf("Proceso enviado"); 
+    free(paquete_finalizar_proceso);
+    
+}
+
 
 //Mmoria deserializa lo enviado por Cpu
 t_proceso_memoria* deserializar_proxima_instruccion(t_list*  lista_paquete ){

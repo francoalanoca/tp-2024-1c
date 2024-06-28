@@ -51,10 +51,10 @@ switch (cod_op) {
 
 		case FINALIZAR_PROCESO:
             valores = recibir_paquete(socket_cliente);
-            t_pcb* finalizar_proceso = deserializar_finalizar_proceso(valores);
-            finalizar_preceso(finalizar_proceso->pid);
+            uint32_t pid_proceso_a_finalizar = deserializar_finalizar_proceso(valores);
+            finalizar_preceso(pid_proceso_a_finalizar);
         //    usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
-            enviar_respuesta_finalizar_proceso(finalizar_proceso, socket_cliente);
+            enviar_respuesta_finalizar_proceso(pid_proceso_a_finalizar, socket_cliente);
             break;
 
 /*---------------------------- CPU-------------------------*/
