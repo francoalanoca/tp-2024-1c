@@ -351,6 +351,11 @@ typedef struct {
     uint32_t unidades_de_trabajo;
 } t_io_gen_sleep;
 
+typedef struct{
+    uint32_t tamanio_rta;
+    char *rta;
+} t_rta_resize;
+
 void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
 int esperar_cliente(t_log *logger, const char *name, int socket_servidor);

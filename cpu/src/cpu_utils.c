@@ -197,64 +197,64 @@ void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger){
     switch(registro_elegido){
         case PC:
         {
-           proceso->pcb->registros_cpu->PC = valor;
+           proceso->pcb->registros_cpu.PC = valor;
             break;
         }
         case AX:
         {
-           proceso->pcb->registros_cpu->AX = valor;
+           proceso->pcb->registros_cpu.AX = valor;
             break;
         }
         case BX:
         {
-           proceso->pcb->registros_cpu->BX = valor;
+           proceso->pcb->registros_cpu.BX = valor;
             break;
         }
         case CX:
         {
-           proceso->pcb->registros_cpu->CX = valor;
+           proceso->pcb->registros_cpu.CX = valor;
             break;
         }
         case DX:
         {
-           proceso->pcb->registros_cpu->DX = valor;
+           proceso->pcb->registros_cpu.DX = valor;
             break;
         }
         case EAX:
         {
-           proceso->pcb->registros_cpu->EAX = valor;
+           proceso->pcb->registros_cpu.EAX = valor;
             break;
         }
         case EBX:
         {
-           proceso->pcb->registros_cpu->EBX = valor;
+           proceso->pcb->registros_cpu.EBX = valor;
             break;
         }
         case ECX:
         {
-           proceso->pcb->registros_cpu->ECX = valor;
+           proceso->pcb->registros_cpu.ECX = valor;
             break;
         }
         case EDX:
         {
-           proceso->pcb->registros_cpu->EDX = valor;
+           proceso->pcb->registros_cpu.EDX = valor;
             break;
         }
         case SI:
         {
-           proceso->pcb->registros_cpu->SI = valor;
+           proceso->pcb->registros_cpu.SI = valor;
             break;
         }
         case DI:
         {
-           proceso->pcb->registros_cpu->DI = valor;
+           proceso->pcb->registros_cpu.DI = valor;
             break;
         }
         default:
         log_info(logger, "El registro no existe");
     }
 
-    //proceso->pcb->registros_cpu->AX;
+    //proceso->pcb->registros_cpu.AX;
    // registro = valor;
 }
 
@@ -268,57 +268,57 @@ void sum(char* registro_destino, char* registro_origen, t_proceso* proceso, t_lo
     switch(id_registro_destino){
         case PC:
         {
-           proceso->pcb->registros_cpu->PC = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu.PC = valor_reg_destino + valor_reg_origen;
             break;
         }
         case AX:
         {
-           proceso->pcb->registros_cpu->AX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu.AX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case BX:
         {
-           proceso->pcb->registros_cpu->BX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu.BX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case CX:
         {
-           proceso->pcb->registros_cpu->CX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu.CX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case DX:
         {
-           proceso->pcb->registros_cpu->DX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu.DX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case EAX:
         {
-           proceso->pcb->registros_cpu->EAX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu.EAX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case EBX:
         {
-           proceso->pcb->registros_cpu->EBX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu.EBX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case ECX:
         {
-           proceso->pcb->registros_cpu->ECX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu.ECX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case EDX:
         {
-           proceso->pcb->registros_cpu->EDX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu.EDX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case SI:
         {
-           proceso->pcb->registros_cpu->SI = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu.SI = valor_reg_destino + valor_reg_origen;
             break;
         }
         case DI:
         {
-           proceso->pcb->registros_cpu->DI = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu.DI = valor_reg_destino + valor_reg_origen;
             break;
         }
         default:
@@ -339,57 +339,57 @@ void sub(char* registro_destino, char* registro_origen, t_proceso* proceso, t_lo
     switch(id_registro_destino){
         case PC:
         {
-           proceso->pcb->registros_cpu->PC = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu.PC = valor_reg_destino - valor_reg_origen;
             break;
         }
         case AX:
         {
-           proceso->pcb->registros_cpu->AX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu.AX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case BX:
         {
-           proceso->pcb->registros_cpu->BX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu.BX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case CX:
         {
-           proceso->pcb->registros_cpu->CX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu.CX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case DX:
         {
-           proceso->pcb->registros_cpu->DX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu.DX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case EAX:
         {
-           proceso->pcb->registros_cpu->EAX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu.EAX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case EBX:
         {
-           proceso->pcb->registros_cpu->EBX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu.EBX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case ECX:
         {
-           proceso->pcb->registros_cpu->ECX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu.ECX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case EDX:
         {
-           proceso->pcb->registros_cpu->EDX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu.EDX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case SI:
         {
-           proceso->pcb->registros_cpu->SI = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu.SI = valor_reg_destino - valor_reg_origen;
             break;
         }
         case DI:
         {
-           proceso->pcb->registros_cpu->DI = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu.DI = valor_reg_destino - valor_reg_origen;
             break;
         }
         default:
@@ -424,8 +424,7 @@ enviar_interfaz_a_kernel(interfaz_elegida, unidades_de_trabajo,conexion_kernel);
 void generar_interrupcion_a_kernel(int conexion){
     printf("entro a generar_interrupcion_a_kernel\n");
     t_paquete* paquete_interrupcion_kernel;
-    uint32_t tamanio_lista = malloc(sizeof(uint32_t));
-    tamanio_lista = proceso_interrumpido_actual->pcb->lista_recursos_pcb->elements_count;
+    
  
     paquete_interrupcion_kernel = crear_paquete(INTERRUPCION_CPU);
  
@@ -433,25 +432,17 @@ void generar_interrupcion_a_kernel(int conexion){
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->program_counter, sizeof(uint32_t));  
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->path_length, sizeof(uint32_t)); 
     agregar_a_paquete(paquete_interrupcion_kernel, proceso_interrumpido_actual->pcb->path, proceso_interrumpido_actual->pcb->path_length);
-    //VER SI ES UNA LISTA O DEBE SER UN DICCIONARIO
-    uint32_t recurso = malloc(sizeof(uint32_t));
-    for (int i = 0; i < tamanio_lista; i++) {
-        recurso = list_get(proceso_interrumpido_actual->pcb->lista_recursos_pcb, i);
-        agregar_a_paquete(paquete_interrupcion_kernel, &recurso, sizeof(uint32_t)); //CONFIRMAR EL TIPO DE DATO DE LA LISTA/DICCIONARIO
-
-    }
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->mutex_lista_recursos, sizeof(pthread_mutex_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu->PC, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu->AX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu->BX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu->CX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu->DX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu->EAX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu->EBX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu->ECX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu->EDX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu->SI, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu->DI, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.PC, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.EAX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.EBX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.ECX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.EDX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.SI, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.DI, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->estado, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->tiempo_ejecucion, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->tamanio_motivo_interrupcion, sizeof(uint32_t));
@@ -459,7 +450,7 @@ void generar_interrupcion_a_kernel(int conexion){
 
     enviar_paquete(paquete_interrupcion_kernel, conexion);   
     free(paquete_interrupcion_kernel);
-    free(tamanio_lista);
+    
 }
 
 t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso){
@@ -514,57 +505,57 @@ uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso, t
     switch(id_registro){
         case PC:
         {
-           return proceso->pcb->registros_cpu->PC;
+           return proceso->pcb->registros_cpu.PC;
             break;
         }
         case AX:
         {
-           return proceso->pcb->registros_cpu->AX;
+           return proceso->pcb->registros_cpu.AX;
             break;
         }
         case BX:
         {
-           return proceso->pcb->registros_cpu->BX;
+           return proceso->pcb->registros_cpu.BX;
             break;
         }
         case CX:
         {
-           return proceso->pcb->registros_cpu->CX;
+           return proceso->pcb->registros_cpu.CX;
             break;
         }
         case DX:
         {
-           return proceso->pcb->registros_cpu->DX;
+           return proceso->pcb->registros_cpu.DX;
             break;
         }
         case EAX:
         {
-           return proceso->pcb->registros_cpu->EAX;
+           return proceso->pcb->registros_cpu.EAX;
             break;
         }
         case EBX:
         {
-           return proceso->pcb->registros_cpu->EBX;
+           return proceso->pcb->registros_cpu.EBX;
             break;
         }
         case ECX:
         {
-           return proceso->pcb->registros_cpu->ECX;
+           return proceso->pcb->registros_cpu.ECX;
             break;
         }
         case EDX:
         {
-           return proceso->pcb->registros_cpu->EDX;
+           return proceso->pcb->registros_cpu.EDX;
             break;
         }
         case SI:
         {
-           return proceso->pcb->registros_cpu->SI;
+           return proceso->pcb->registros_cpu.SI;
             break;
         }
         case DI:
         {
-           return proceso->pcb->registros_cpu->DI;
+           return proceso->pcb->registros_cpu.DI;
             break;
         }
         default:
@@ -792,7 +783,7 @@ void copy_string(uint32_t tamanio){
     //uint32_t valor_registro_SI = obtenerValorActualRegistro(id_registro_SI,proceso, logger);
 
     uint32_t dir_fisica_SI = malloc(sizeof(uint32_t));
-    dir_fisica_SI = mmu(proceso_actual->pcb->registros_cpu->SI,tamanio_pagina,socket_memoria);
+    dir_fisica_SI = mmu(proceso_actual->pcb->registros_cpu.SI,tamanio_pagina,socket_memoria);
 
     pedir_valor_a_memoria(dir_fisica_SI,proceso_actual->pcb->pid,socket_memoria);
     wait(&sem_valor_registro_recibido);
@@ -802,7 +793,7 @@ void copy_string(uint32_t tamanio){
     valor_a_enviar = string_substring_until(valor_registro_obtenido,tamanio); //VER BIEN QUE HACE LA FUNCION
 
     uint32_t dir_fisica_DI = malloc(sizeof(uint32_t));
-    dir_fisica_DI = mmu(proceso_actual->pcb->registros_cpu->DI,tamanio_pagina,socket_memoria);
+    dir_fisica_DI = mmu(proceso_actual->pcb->registros_cpu.DI,tamanio_pagina,socket_memoria);
 
     guardar_string_en_memoria(valor_a_enviar,tamanio,dir_fisica_DI,proceso_actual->pcb->pid);
 }
@@ -913,8 +904,6 @@ void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio){
 void envia_error_de_memoria_a_kernel(t_proceso* proceso){
         printf("entro a envia_error_de_memoria_a_kernel\n");
         t_paquete* paquete_error_memoria;
-        uint32_t tamanio_lista = malloc(sizeof(uint32_t));
-        tamanio_lista = proceso->pcb->lista_recursos_pcb->elements_count;
    
     paquete_error_memoria = crear_paquete(ENVIAR_ERROR_MEMORIA_A_KERNEL); 
     
@@ -922,25 +911,17 @@ void envia_error_de_memoria_a_kernel(t_proceso* proceso){
     agregar_a_paquete(paquete_error_memoria, &proceso->pcb->program_counter, sizeof(uint32_t));  
     agregar_a_paquete(paquete_error_memoria, &proceso->pcb->path_length, sizeof(uint32_t)); 
     agregar_a_paquete(paquete_error_memoria, proceso->pcb->path, proceso->pcb->path_length);
-    //VER SI ES UNA LISTA O DEBE SER UN DICCIONARIO
-    uint32_t recurso =  malloc(sizeof(uint32_t));
-    for (int i = 0; i < tamanio_lista; i++) {
-        recurso = list_get(proceso_interrumpido_actual->pcb->lista_recursos_pcb, i);
-        agregar_a_paquete(paquete_error_memoria, &recurso, sizeof(uint32_t)); //CONFIRMAR EL TIPO DE DATO DE LA LISTA/DICCIONARIO
-
-    }
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->mutex_lista_recursos, sizeof(pthread_mutex_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu->PC, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu->AX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu->BX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu->CX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu->DX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu->EAX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu->EBX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu->ECX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu->EDX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu->SI, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu->DI, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.PC, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.EAX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.EBX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.ECX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.EDX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.SI, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.DI, sizeof(uint32_t));
     agregar_a_paquete(paquete_error_memoria, &proceso->pcb->estado, sizeof(uint32_t));
     agregar_a_paquete(paquete_error_memoria, &proceso->pcb->tiempo_ejecucion, sizeof(uint32_t));
     
@@ -971,8 +952,6 @@ void solicitar_wait_kernel(t_proceso* proceso,uint32_t recurso_tamanio ,char* re
         printf("entro a solicitar_wait_kernel\n");
         
         t_paquete* paquete_wait_kernel;
-        uint32_t tamanio_lista = malloc(sizeof(uint32_t));
-        tamanio_lista = proceso->pcb->lista_recursos_pcb->elements_count;
    
         paquete_wait_kernel = crear_paquete(ENVIO_WAIT_A_KERNEL); 
         
@@ -980,25 +959,17 @@ void solicitar_wait_kernel(t_proceso* proceso,uint32_t recurso_tamanio ,char* re
         agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->program_counter, sizeof(uint32_t));  
         agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->path_length, sizeof(uint32_t)); 
         agregar_a_paquete(paquete_wait_kernel, proceso->pcb->path, proceso->pcb->path_length);
-        //VER SI ES UNA LISTA O DEBE SER UN DICCIONARIO
-        uint32_t recurso_actual =  malloc(sizeof(uint32_t));
-    for (int i = 0; i < tamanio_lista; i++) {
-        recurso_actual = list_get(proceso_interrumpido_actual->pcb->lista_recursos_pcb, i);
-        agregar_a_paquete(paquete_wait_kernel, &recurso, sizeof(uint32_t)); //CONFIRMAR EL TIPO DE DATO DE LA LISTA/DICCIONARIO
-
-        }
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->mutex_lista_recursos, sizeof(pthread_mutex_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu->PC, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu->AX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu->BX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu->CX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu->DX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu->EAX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu->EBX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu->ECX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu->EDX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu->SI, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu->DI, sizeof(uint32_t));
+        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.PC, sizeof(uint32_t));
+        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.EAX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.EBX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.ECX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.EDX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.SI, sizeof(uint32_t));
+        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.DI, sizeof(uint32_t));
         agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->estado, sizeof(uint32_t));
         agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->tiempo_ejecucion, sizeof(uint32_t));
         agregar_a_paquete(paquete_wait_kernel, &recurso_tamanio, sizeof(uint32_t));
@@ -1006,15 +977,12 @@ void solicitar_wait_kernel(t_proceso* proceso,uint32_t recurso_tamanio ,char* re
         
         enviar_paquete(paquete_wait_kernel, conexion_kernel); 
         free(paquete_wait_kernel);
-        free(tamanio_lista);
 
 }
 
 void solicitar_signal_kernel(t_proceso* proceso,uint32_t recurso_tamanio,char* recurso){
         printf("entro a solicitar_wait_kernel\n");
         t_paquete* paquete_signal_kernel;
-        uint32_t tamanio_lista = malloc(sizeof(uint32_t));
-        tamanio_lista = proceso->pcb->lista_recursos_pcb->elements_count;
    
         paquete_signal_kernel = crear_paquete(ENVIO_SIGNAL_A_KERNEL); 
         
@@ -1022,25 +990,17 @@ void solicitar_signal_kernel(t_proceso* proceso,uint32_t recurso_tamanio,char* r
         agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->program_counter, sizeof(uint32_t));  
         agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->path_length, sizeof(uint32_t)); 
         agregar_a_paquete(paquete_signal_kernel, proceso->pcb->path, proceso->pcb->path_length);
-        //VER SI ES UNA LISTA O DEBE SER UN DICCIONARIO
-        uint32_t recurso_actual =  malloc(sizeof(uint32_t));
-    for (int i = 0; i < tamanio_lista; i++) {
-        recurso_actual = list_get(proceso_interrumpido_actual->pcb->lista_recursos_pcb, i);
-        agregar_a_paquete(paquete_signal_kernel, &recurso, sizeof(uint32_t)); //CONFIRMAR EL TIPO DE DATO DE LA LISTA/DICCIONARIO
-
-        }
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->mutex_lista_recursos, sizeof(pthread_mutex_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu->PC, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu->AX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu->BX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu->CX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu->DX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu->EAX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu->EBX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu->ECX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu->EDX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu->SI, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu->DI, sizeof(uint32_t));
+        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.PC, sizeof(uint32_t));
+        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.EAX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.EBX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.ECX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.EDX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.SI, sizeof(uint32_t));
+        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.DI, sizeof(uint32_t));
         agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->estado, sizeof(uint32_t));
         agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->tiempo_ejecucion, sizeof(uint32_t));
         agregar_a_paquete(paquete_signal_kernel, &recurso_tamanio, sizeof(uint32_t));
@@ -1048,7 +1008,6 @@ void solicitar_signal_kernel(t_proceso* proceso,uint32_t recurso_tamanio,char* r
         
         enviar_paquete(paquete_signal_kernel, conexion_kernel); 
         free(paquete_signal_kernel);
-        free(tamanio_lista);
 }
 
 void solicitar_io_stdin_read_a_kernel(uint32_t tamanio_nombre_interfaz,char* nombre_interfaz, uint32_t direccion, uint32_t tamanio){
@@ -1092,33 +1051,23 @@ void solicitar_io_stdout_write_a_kernel(uint32_t tamanio_nombre_interfaz, char* 
 void solicitar_exit_a_kernel(t_proceso* proceso){
         printf("entro a solicitar_io_stdout_write_a_kernel\n");
         t_paquete* paquete_exit_kernel;
-        uint32_t tamanio_lista = malloc(sizeof(uint32_t));
-        tamanio_lista = proceso->pcb->lista_recursos_pcb->elements_count;
         paquete_exit_kernel = crear_paquete(SOLICITUD_EXIT_KERNEL); 
         
         agregar_a_paquete(paquete_exit_kernel,  &proceso->pcb->pid,  sizeof(uint32_t));         
         agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->program_counter, sizeof(uint32_t));  
         agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->path_length, sizeof(uint32_t)); 
         agregar_a_paquete(paquete_exit_kernel, proceso->pcb->path, proceso->pcb->path_length);
-        //VER SI ES UNA LISTA O DEBE SER UN DICCIONARIO
-        uint32_t recurso =  malloc(sizeof(uint32_t));
-    for (int i = 0; i < tamanio_lista; i++) {
-        recurso = list_get(proceso_interrumpido_actual->pcb->lista_recursos_pcb, i);
-        agregar_a_paquete(paquete_exit_kernel, &recurso, sizeof(uint32_t)); //CONFIRMAR EL TIPO DE DATO DE LA LISTA/DICCIONARIO
-
-        }
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->mutex_lista_recursos, sizeof(pthread_mutex_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu->PC, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu->AX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu->BX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu->CX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu->DX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu->EAX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu->EBX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu->ECX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu->EDX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu->SI, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu->DI, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.PC, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.EAX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.EBX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.ECX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.EDX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.SI, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.DI, sizeof(uint32_t));
         agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->estado, sizeof(uint32_t));
         agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->tiempo_ejecucion, sizeof(uint32_t));
         
