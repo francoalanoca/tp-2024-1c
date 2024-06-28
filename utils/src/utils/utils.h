@@ -59,11 +59,9 @@ typedef enum
     ENVIO_COPY_STRING_A_MEMORIA = 100, //CPU solicita a memoria que guarde el valor en la direccion pasada por parametro
     SOLICITUD_TAMANIO_PAGINA =130,//CPU solicita a memoria el tamanio de pagina
     SOLICITUD_TAMANIO_PAGINA_RTA =135,//Memoria envia a CPU el tamanio de pagina
-    SOLICITUD_IO_FS_CREATE_A_KERNEL =140, //CPU envia a kernel la solicitud de IO_FS_CREATE
-    SOLICITUD_IO_FS_DELETE_A_KERNEL =145, //CPU envia a kernel la solicitud de IO_FS_DELETE
-    SOLICITUD_IO_FS_TRUNCATE_A_KERNEL =150, //CPU envia a kernel la solicitud de IO_FS_TRUNCATE
-    SOLICITUD_IO_FS_WRITE_A_KERNEL =155, //CPU envia a kernel la solicitud de IO_FS_WRITE
-    SOLICITUD_IO_FS_READ_A_KERNEL =160, //CPU envia a kernel la solicitud de IO_FS_READ
+    OUT_OF_MEMORY,
+    GUARDAR_EN_DIRECCION_FISICA_RTA,
+    ENVIO_COPY_STRING_A_MEMORIA_RTA,
 
  //---------------ENTRADASALIDA-KERNEL-------------------
     INTERFAZ_ENVIAR,            // EntradaSalida, avisa que envía la interfaz creada
@@ -177,11 +175,10 @@ typedef struct
     uint32_t program_counter;
     uint32_t path_length;
     char* path;
-    t_list* lista_recursos_pcb;
-    pthread_mutex_t mutex_lista_recursos;
-    t_registros_CPU* registros_cpu;
+    t_registros_CPU registros_cpu;
     uint32_t estado;
-    uint32_t tiempo_ejecucion; 
+    uint32_t tiempo_ejecucion;
+    uint32_t quantum; 
 }t_pcb;
 
 typedef enum {
@@ -305,30 +302,54 @@ typedef struct {
 } t_copy;
 
 typedef struct{
-    int id;
-    t_list *lista_de_paginas;
-}t_tabla_de_paginas;
-
-//Memoria
-typedef struct{
-    int marco;
-    int posicion;
-    bool presencia;
-    bool modificado;
-}t_pagina;
-
-//Memoria
-typedef struct{
-    int pid;
-    t_list *lista_de_instrucciones;
-} t_miniPCB;
-
-typedef struct{
-    uint32_t tamanio_rta;
-    char *rta;
-} t_rta_resize;
+    uint32_t pid;
+    uint32_t direccion_fisica;
+    uint32_t tamanio;
+    char* valor;
+} t_escribir_leer;
 
 
+//Kernel le manda a IO, usada en IO_FS_CREATE e IO_FS_DELETE
+typedef struct {
+	uint32_t pid;
+    uint32_t nombre_archivo_length; 
+    char* nombre_archivo;
+    t_interfaz* interfaz; //AGREGADO   
+} t_io_crear_archivo;
+
+
+typedef struct {
+	uint32_t pid;
+    uint32_t nombre_archivo_length; 
+    char* nombre_archivo;
+    t_interfaz* interfaz; //AGREGADO
+    uint32_t tamanio;   
+} t_io_fs_truncate;
+
+typedef struct {
+	uint32_t pid;
+    uint32_t nombre_archivo_length; 
+    char* nombre_archivo;
+    t_interfaz* interfaz; //AGREGADO
+    uint32_t direccion; 
+    uint32_t tamanio; 
+    uint32_t puntero_archivo;   
+} t_io_fs_write;
+
+
+
+typedef struct {
+    uint32_t pid;
+    t_interfaz* interfaz;
+    uint32_t direccion; 
+    uint32_t tamanio; 
+} t_io_stdin_stdout;
+
+typedef struct {
+    uint32_t pid;
+    t_interfaz* interfaz;
+    uint32_t unidades_de_trabajo;
+} t_io_gen_sleep;
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
@@ -415,4 +436,3 @@ t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete );
 t_io_output* armar_io_output(uint32_t pid, char* output);
 
 #endif /* UTILS_H_ */
-
