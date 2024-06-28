@@ -37,7 +37,7 @@ void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger);
 void sum(char* registro_destino, char* registro_origen, t_proceso* proceso, t_log *logger);
 void sub(char* registro_destino, char* registro_origen, t_proceso* proceso, t_log *logger);
 void jnz(char* registro, uint32_t inst, t_proceso* proceso, t_log* logger);
-void io_gen_sleep(char* interfaz, uint32_t unidades_de_trabajo, t_proceso* proceso);
+void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo, t_proceso* proceso);
 void generar_interrupcion_a_kernel(int conexion);
 t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso);
 void* crear_servidor_dispatch(char* ip_cpu);//
@@ -45,7 +45,7 @@ void* crear_servidor_interrupt(char* ip_cpu);//
 registros identificarRegistro(char* registro);
 uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso, t_log* logger);
 t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso);
-void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint32_t unidades_de_trabajo, int conexion);
+void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, uint32_t unidades_de_trabajo, int conexion);
 uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion);
 bool verificar_existencia_en_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t indice);
 //char* uint32_to_string(uint32_t number);

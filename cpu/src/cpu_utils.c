@@ -406,15 +406,18 @@ void jnz(char* registro, uint32_t inst, t_proceso* proceso, t_log* logger){
     }
 }
 //void io_gen_sleep(Interfaz interfaz, int unidades_de_trabajo){ //TODO: VER PARAMETROS
-void io_gen_sleep(char* interfaz, uint32_t unidades_de_trabajo, t_proceso* proceso){
+void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo, t_proceso* proceso){
    // t_interfaz interfaz_elegida = malloc(sizeof(t_interfaz));//REVISAR
-   t_interfaz* interfaz_elegida;
-    interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
-    if(interfaz_elegida != NULL){
-enviar_interfaz_a_kernel(interfaz_elegida, unidades_de_trabajo,conexion_kernel);//VER IMPLEMENTACION
+   //t_interfaz* interfaz_elegida;
+    //interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
+    printf("Entra a io_gen_sleep");
+    uint32_t tamanio_nombre_interfaz = malloc(sizeof(uint32_t));
+    tamanio_nombre_interfaz = string_length(nombre_interfaz) * sizeof(char);
+    if(nombre_interfaz != NULL){
+enviar_interfaz_a_kernel(nombre_interfaz,tamanio_nombre_interfaz, unidades_de_trabajo,conexion_kernel);//VER IMPLEMENTACION
     }
     
-    printf("Entra a io_gen_sleep");
+    
 }
 
 
@@ -574,15 +577,15 @@ t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso){
       return NULL;
 }
 
-void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint32_t unidades_de_trabajo, int conexion){
+void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, uint32_t unidades_de_trabajo, int conexion){
     printf("entro a enviar_interfaz_a_kernel\n");
     t_paquete* paquete_interfaz_kernel;
    
     paquete_interfaz_kernel = crear_paquete(ENVIO_INTERFAZ); 
     
     agregar_a_paquete(paquete_interfaz_kernel, &proceso_actual->pcb->pid, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interfaz_kernel, &interfaz_elegida->nombre_length, sizeof(uint32_t)); 
-    agregar_a_paquete(paquete_interfaz_kernel, interfaz_elegida->nombre, interfaz_elegida->nombre_length);
+    agregar_a_paquete(paquete_interfaz_kernel, &tamanio_nombre, sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_interfaz_kernel, nombre_interfaz, tamanio_nombre);
     agregar_a_paquete(paquete_interfaz_kernel, &unidades_de_trabajo, sizeof(uint32_t));
     
        
