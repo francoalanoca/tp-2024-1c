@@ -194,12 +194,15 @@ void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
 
 
 
-//Posible implementacion de copy si solo escribo
-// void copiar_solicitud(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor){
 
-//     void* valor_a_copiar = leer_memoria(proceso_pid, direccion_fisica, strlen(valor));
-//     escribir_memoria(proceso_pid, direccion_fisica, valor, strlen(valor));
-// }
+void* copiar_solicitud(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor){
+
+    void* copiado = malloc(strlen(valor));
+
+    copiado = escribir_memoria(proceso_pid, direccion_fisica, valor, strlen(valor));
+
+    return copiado;
+}
 
 
 
@@ -283,7 +286,7 @@ int espacio_disponible(){
 }
 
 
-/*
+
 //Puede que falte detallar mas de cerrar del todo el proceso
 //Funcion que en base al id de un proceso finalizamos sus estructuras
 void finalizar_proceso(uint32_t proceso_pid){
@@ -307,4 +310,3 @@ void finalizar_proceso(uint32_t proceso_pid){
     
     log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, list_size(tabla_de_paginas->lista_de_paginas));
 }
-*/

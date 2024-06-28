@@ -14,9 +14,9 @@ void memoria_atender_cliente(void* socket){
     t_proceso_memoria* solicitud_instruccion = malloc(sizeof(t_proceso_memoria));
     t_busqueda_marco* solicitud_marco = malloc(sizeof(t_busqueda_marco));
     t_escribir_leer* peticion_leer = malloc(sizeof(t_io_direcciones_fisicas));
-    //t_escribir_leer* peticion_escribir = malloc(sizeof(t_escribir_leer));
-    //t_resize* solicitud_resize = malloc(sizeof(t_resize));
-    //t_copy* copiar_valor = malloc(sizeof(t_copy));
+    t_escribir_leer* peticion_escribir = malloc(sizeof(t_escribir_leer));
+    t_resize* solicitud_resize = malloc(sizeof(t_resize));
+    t_copy* copiar_valor = malloc(sizeof(t_copy));
 
 
 
@@ -45,17 +45,17 @@ switch (cod_op) {
             t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);
             leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  
             crear_proceso(iniciar_proceso->pid);
-            //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
+        //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_respuesta_crear_proceso(iniciar_proceso, socket_cliente);
             break;
 
-		// case FINALIZAR_PROCESO:
-		// 	   valores = recibir_paquete(socket_cliente);
-        //     t_pcb* finalizar_proceso = deserializar_finalizar_proceso(valores);
-		// 	   finalizar_preceso(finalizar_proceso->pid);
-        //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
-        //     enviar_respuesta_finalizar_proceso(finalizar_proceso, socket_cliente);
-        //     break;
+		case FINALIZAR_PROCESO:
+            valores = recibir_paquete(socket_cliente);
+            uint32_t pid_proceso_a_finalizar = deserializar_finalizar_proceso(valores);
+            finalizar_preceso(pid_proceso_a_finalizar);
+        //    usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
+            enviar_respuesta_finalizar_proceso(pid_proceso_a_finalizar, socket_cliente);
+            break;
 
 /*---------------------------- CPU-------------------------*/
         case PROXIMA_INSTRUCCION:
@@ -85,36 +85,37 @@ switch (cod_op) {
         case PETICION_VALOR_MEMORIA:
             valores = recibir_paquete(socket_cliente);
             peticion_leer = deserializar_peticion_valor(valores);     
-            void* valor = leer_memoria(peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);          
+            void* respuesta_leer = leer_memoria(peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);          
             log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d - Tamaño: %d", peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);    
-            enviar_peticion_valor(valor, socket_cliente);                            
+            enviar_peticion_valor(respuesta_leer, socket_cliente);                            
             break;
 
-        // case GUARDAR_EN_DIRECCION_FISICA:
-        //     valores = recibir_paquete(socket_cliente);
-        //     peticion_escribir = deserializar_peticion_guardar(valores);   
-        //     void* vañor = escribir_memoria(peticion_escribir->pid, peticion_escribir->direccion_fisica, peticion_escribir->valor, peticion_escribir->tamanio);
-        //     log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Direccion fisica: %d - Tamaño: %d", peticion_escribir->pid, peticion_escribir->direccion_fisica), peticion_escribir->tamanio;
-        //     free(peticion_escribir);
+        case GUARDAR_EN_DIRECCION_FISICA:
+            valores = recibir_paquete(socket_cliente);
+            peticion_escribir = deserializar_peticion_guardar(valores);   
+            void* respuesta_escribir = escribir_memoria(peticion_escribir->pid, peticion_escribir->direccion_fisica, peticion_escribir->valor, peticion_escribir->tamanio);
+            log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Direccion fisica: %d - Tamaño: %d", peticion_escribir->pid, peticion_escribir->direccion_fisica), peticion_escribir->tamanio;
+            free(peticion_escribir);
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
-        //     enviar_resultado_guardar(valor, socket_cliente);
-        //     break;
+            enviar_resultado_guardar(respuesta_escribir, socket_cliente);
+            break;
 
-        // case SOLICITUD_RESIZE:
-        //     valores = recibir_paquete(socket_cliente);
-        //     solicitud_resize = deserializar_solicitud_resize(valores);
-        //     administrar_resize(solicitud_resize->pid, solicitud_resize->tamanio);
+        case SOLICITUD_RESIZE:
+            valores = recibir_paquete(socket_cliente);
+            solicitud_resize = deserializar_solicitud_resize(valores);
+            op_code respuesta_resize = administrar_resize(solicitud_resize->pid, solicitud_resize->tamanio);
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
-        //     enviar_respuesta_resize(solicitud_resize, socket_cliente);
-        //     break;
+            enviar_respuesta_resize(respuesta_resize, socket_cliente);
+            break;
 
-        // case ENVIO_COPY_STRING_A_MEMORIA:
-        //     valores = recibir_paquete(socket_cliente);
-        //     copiar_valor = deserializar_solicitud_copy(valores);
-        //     copiar_solicitud(copiar_valor->pid, capiar_valor->direccion_fisica, copiar_valor->valor);
+        case ENVIO_COPY_STRING_A_MEMORIA:
+            valores = recibir_paquete(socket_cliente);
+            copiar_valor = deserializar_solicitud_copy(valores);
+            void* respuesta_copy = copiar_solicitud(copiar_valor->pid, copiar_valor->direccion_fisica, copiar_valor->valor);
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
-        //     break;
+            enviar_resultado_copy(respuesta_copy, socket_cliente);
+            break;
 		
 /*---------------------------- ENTRADASALIDA-------------------------*/  
         case IO_M_STDIN: // lee de teclado y escribe en memoria

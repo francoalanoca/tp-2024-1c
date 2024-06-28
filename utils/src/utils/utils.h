@@ -59,7 +59,11 @@ typedef enum
     ENVIO_COPY_STRING_A_MEMORIA = 100, //CPU solicita a memoria que guarde el valor en la direccion pasada por parametro
     SOLICITUD_TAMANIO_PAGINA =130,//CPU solicita a memoria el tamanio de pagina
     SOLICITUD_TAMANIO_PAGINA_RTA =135,//Memoria envia a CPU el tamanio de pagina
-    OUT_OF_MEMORY,
+    SOLICITUD_IO_FS_CREATE_A_KERNEL =140, //CPU envia a kernel la solicitud de IO_FS_CREATE
+    SOLICITUD_IO_FS_DELETE_A_KERNEL =145, //CPU envia a kernel la solicitud de IO_FS_DELETE
+    SOLICITUD_IO_FS_TRUNCATE_A_KERNEL =150, //CPU envia a kernel la solicitud de IO_FS_TRUNCATE
+    SOLICITUD_IO_FS_WRITE_A_KERNEL =155, //CPU envia a kernel la solicitud de IO_FS_WRITE
+    SOLICITUD_IO_FS_READ_A_KERNEL =160, //CPU envia a kernel la solicitud de IO_FS_READ
 
  //---------------ENTRADASALIDA-KERNEL-------------------
     INTERFAZ_ENVIAR,            // EntradaSalida, avisa que envía la interfaz creada
@@ -75,6 +79,7 @@ typedef enum
     CREAR_PROCESO_KERNEL,       // Kerner le solicita a Memoria crear las estructuras necesarias
     CREAR_PROCESO_KERNEL_FIN,
     FINALIZAR_PROCESO,          // Kernel le solicita a Memoria liberar el espacio en memoria del proceso
+    FINALIZAR_PROCESO_FIN,
  //---------------ENTRADASALIDA-MEMORIA-------------------
     IO_M_STDIN,                 // entradasalida envia input a memoria
     IO_M_STDIN_FIN,              // Memoria guardó con éxito el input
@@ -172,10 +177,11 @@ typedef struct
     uint32_t program_counter;
     uint32_t path_length;
     char* path;
-    t_registros_CPU registros_cpu;
+    t_list* lista_recursos_pcb;
+    pthread_mutex_t mutex_lista_recursos;
+    t_registros_CPU* registros_cpu;
     uint32_t estado;
-    uint32_t tiempo_ejecucion;
-    uint32_t quantum; 
+    uint32_t tiempo_ejecucion; 
 }t_pcb;
 
 typedef enum {
@@ -281,7 +287,6 @@ typedef struct {
 //Kernel-Memoria (struct para cop crear proceso)
 typedef struct{
     uint32_t pid;                     //pcb del proceso
-    uint32_t tamanio;               //tamaño del proceso
     char *archivo_pseudocodigo;     //nombre del proceso
 } t_m_crear_proceso;
 
@@ -300,54 +305,30 @@ typedef struct {
 } t_copy;
 
 typedef struct{
-    uint32_t pid;
-    uint32_t direccion_fisica;
-    uint32_t tamanio;
-    char* valor;
-} t_escribir_leer;
+    int id;
+    t_list *lista_de_paginas;
+}t_tabla_de_paginas;
+
+//Memoria
+typedef struct{
+    int marco;
+    int posicion;
+    bool presencia;
+    bool modificado;
+}t_pagina;
+
+//Memoria
+typedef struct{
+    int pid;
+    t_list *lista_de_instrucciones;
+} t_miniPCB;
+
+typedef struct{
+    uint32_t tamanio_rta;
+    char *rta;
+} t_rta_resize;
 
 
-//Kernel le manda a IO, usada en IO_FS_CREATE e IO_FS_DELETE
-typedef struct {
-	uint32_t pid;
-    uint32_t nombre_archivo_length; 
-    char* nombre_archivo;
-    t_interfaz* interfaz; //AGREGADO   
-} t_io_crear_archivo;
-
-
-typedef struct {
-	uint32_t pid;
-    uint32_t nombre_archivo_length; 
-    char* nombre_archivo;
-    t_interfaz* interfaz; //AGREGADO
-    uint32_t tamanio;   
-} t_io_fs_truncate;
-
-typedef struct {
-	uint32_t pid;
-    uint32_t nombre_archivo_length; 
-    char* nombre_archivo;
-    t_interfaz* interfaz; //AGREGADO
-    uint32_t direccion; 
-    uint32_t tamanio; 
-    uint32_t puntero_archivo;   
-} t_io_fs_write;
-
-
-
-typedef struct {
-    uint32_t pid;
-    t_interfaz* interfaz;
-    uint32_t direccion; 
-    uint32_t tamanio; 
-} t_io_stdin_stdout;
-
-typedef struct {
-    uint32_t pid;
-    t_interfaz* interfaz;
-    uint32_t unidades_de_trabajo;
-} t_io_gen_sleep;
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);
@@ -388,6 +369,8 @@ t_io_output* deserializar_output(t_list*  lista_paquete );
 t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete );
 void enviar_pcb_a_memoria(t_m_crear_proceso* pcb, int socket_memoria);
 void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket_kernel);
+uint32_t* deserializar_finalizar_proceso(t_list*  lista_paquete );
+void enviar_respuesta_finalizar_proceso(uint32_t pid_proceso_a_finalizar ,int socket_kernel);
 t_proceso_memoria* deserializar_proxima_instruccion(t_list*  lista_paquete );
 t_busqueda_marco* deserializar_solicitud_marco(t_list*  lista_paquete );
 t_io_direcciones_fisicas* deserializar_peticion_valor(t_list*  lista_paquete );
@@ -397,7 +380,10 @@ t_copy* deserializar_solicitud_copy(t_list*  lista_paquete);
 void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu);
 void enviar_solicitud_marco(int marco ,int socket_cpu);
 void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu);
-void enviar_peticion_valor(void* valor ,int socket_cpu);
+void enviar_peticion_valor(void* respuesta_leer ,int socket_cpu);
+void enviar_resultado_guardar(void* respuesta_escribir, int socket_cliente);
+void enviar_respuesta_resize(op_code respuesta_resize, int socket_cliente);
+void enviar_resultado_copiar(void* respuesta_copy, int socket_cliente);
 t_io_memo_escritura* deserializar_input(t_list*  lista_paquete );
 t_io_crear_archivo* deserializar_io_crear_archivo(t_list*  lista_paquete );
 void  enviar_creacion_archivo(t_io_crear_archivo* nuevo_archivo, int socket );
