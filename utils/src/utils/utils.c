@@ -519,6 +519,67 @@ t_io_direcciones_fisicas* deserializar_peticion_valor(t_list*  lista_paquete ){
 
 
 
+t_escribir_leer* deserializar_peticion_guardar(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_escribir_leer* peticion_guardar = malloc(sizeof(t_escribir_leer));
+    
+    peticion_guardar->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", peticion_guardar->pid);
+    
+    peticion_guardar->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Direccion fisica: %d \n", peticion_guardar->direccion_fisica);
+
+    peticion_guardar->tamanio = *(uint32_t*)list_get(lista_paquete, 2);
+    printf("Tamanio proceso: %d \n", peticion_guardar->tamanio);
+
+    peticion_guardar->valor = list_get(lista_paquete, 3);
+    printf("Valor: %s \n", peticion_guardar->valor);
+
+    return peticion_guardar;
+
+}
+
+
+
+t_resize* deserializar_solicitud_resize(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_resize* solicitud_resize = malloc(sizeof(t_resize));
+    
+    solicitud_resize->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", solicitud_resize->pid);
+    
+    solicitud_resize->tamanio = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Tamanio proceso: %d \n", solicitud_resize->tamanio);
+
+    solicitud_resize->valor = list_get(lista_paquete, 2);
+    printf("Valor: %s \n", solicitud_resize->valor);
+
+    return solicitud_resize;
+
+}
+
+
+t_copy* deserializar_solicitud_copy(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_copy* solicitud_copy = malloc(sizeof(t_copy));
+    
+    solicitud_copy->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", solicitud_copy->pid);
+    
+    solicitud_copy->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Direccion fisica: %d \n", solicitud_copy->direccion_fisica);
+
+    solicitud_copy->valor = list_get(lista_paquete, 2);
+    printf("Valor: %s \n", solicitud_copy->valor);
+
+    return solicitud_copy;
+
+}
+
+
 void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu) {
     t_paquete* paquete_instruccion;
  
@@ -581,11 +642,25 @@ void enviar_peticion_valor(void* valor ,int socket_cpu) {
 }
 
 
+/*
+void enviar_resultado_guardar(void* valor, int socket_cliente){
+    t_paquete* paquete_valor;
+
+    paquete_valor = crear_paquete(GUARDAR_EN_DIRECCION_FISICA_RTA);
+
+    agregar_a_paquete(paquete_valor, &valor,  sizeof(void*));
+
+    enviar_paquete(paquete_valor, socket_cliente);
+    printf("Se envio respuesta de guardado"); 
+    free(paquete_valor);
+}
+*/
+
 
 // usar en memoria cuando recibe IO_M_STDIN
-t_io_input* deserializar_input(t_list*  lista_paquete ){
+t_io_memo_escritura* deserializar_input(t_list*  lista_paquete ){
 
-    t_io_input* io_input = malloc(sizeof(t_io_input));
+    t_io_memo_escritura* io_input = malloc(sizeof(t_io_memo_escritura));
     
     io_input->pid = *(uint32_t*)list_get(lista_paquete, 0);
     printf("Pid recibido: %d \n",io_input->pid);
@@ -693,7 +768,7 @@ void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket, 
     enviar_paquete(paquete_archivo_nuevo, socket);    
 }
 
-void enviar_input(t_io_input* io_input ,int socket, uint32_t op_code ) {
+void enviar_input(t_io_memo_escritura* io_input ,int socket, uint32_t op_code ) {
     t_paquete* paquete_input;
  
     paquete_input = crear_paquete(op_code);
@@ -772,6 +847,52 @@ t_io_output* armar_io_output(uint32_t pid, char* output){
            return  io_output;    
 }
     
+void enviar_io_memo_lectura(t_io_memo_lectura*  io_memo_lectura, int socket, uint32_t cod_op){
+    t_paquete* paquete_input;
+ 
+    paquete_input = crear_paquete(cod_op);
+ 
+    agregar_a_paquete(paquete_input,  &io_memo_lectura->pid,  sizeof(uint32_t));      
+    uint32_t list_tamanio = list_size(io_memo_lectura->direcciones_fisicas);    
+    agregar_a_paquete(paquete_input, &list_tamanio, sizeof(uint32_t));  
+    //agrego cada elemento de la lista de direcciones fisicas
+    for (int i = 0; i < list_tamanio; i++) {
+        uint32_t direccion_fisica = (uint32_t*) list_get(io_memo_lectura->direcciones_fisicas, i);        
+        agregar_a_paquete(paquete_input,  &direccion_fisica, sizeof(uint32_t));        
+    }   
+    agregar_a_paquete(paquete_input, &io_memo_lectura->tamanio_operacion, sizeof(uint32_t));  
+   
+    enviar_paquete(paquete_input, socket);    
+    free(paquete_input);     
+
+}
+
+t_io_memo_lectura* deserializar_io_memo_lectura(t_list* lista_paquete){
+
+    t_io_memo_lectura* io_memo_lectura = malloc(sizeof(t_io_memo_lectura));
+    
+    io_memo_lectura->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n",io_memo_lectura->pid);
+    
+    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("tamanio lista: %d \n",tamanio_lista);
+
+     // Deserializar cada elemento de la lista
+    io_memo_lectura->direcciones_fisicas = list_create();
+    for (int i = 0; i < tamanio_lista; i++) {
+        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
+        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
+        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ;
+        list_add(io_memo_lectura->direcciones_fisicas, direccion_fisica);
+         printf("Valor agregado %d \n",direccion_fisica);
+    }
+
+    io_memo_lectura->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,2+tamanio_lista);
+    printf("Cantidad caracteres input: %d \n",io_memo_lectura->tamanio_operacion);
+
+    return io_memo_lectura;
+    free (io_memo_lectura);
+}
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)
 {
