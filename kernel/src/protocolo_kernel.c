@@ -111,11 +111,63 @@ while (control_key)
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
       //Recibo t_proceso(debe ser solo pcb?) y recurso desde cpu, debo asignar una instancia del recurso al proceso(verificar recursos disponibles)
+      log_info(logger_kernel,"Recibo ENVIO_WAIT_A_KERNEL desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_recurso* recurso_recibido_wait = malloc(sizeof(t_recurso));
+      recurso_recibido_wait = deserializar_recurso(lista_paquete);
+      uint32_t indice_recurso_wait = buscar_indice_recurso(recurso_recibido_wait->nombre_recurso);
+      if(indice_recurso_wait != NULL){
+         uint32_t valor_indice_recurso = list_get(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_wait);
+         if(valor_indice_recurso != 0){
+            list_replace(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_wait,valor_indice_recurso - 1);
+         }
+         else{
+            //NO HAY INSTANCIAS DISPONIBLES, AGREAGAR A COLA DE BLOQUEADOS DEL RECURSO
+            t_list* lista_bloqueados_correspondiente = dictionary_get(planificador->cola_blocked,recurso_recibido_wait->nombre_recurso);
+            //t_pcb pcb_a_agregar = encontrar_proceso_pid(planificador->cola_exec,recurso_recibido->pid);
+            
+               list_add(lista_bloqueados_correspondiente,recurso_recibido_wait->pcb);
+               dictionary_remove_and_destroy(planificador->cola_blocked,recurso_recibido_wait->nombre_recurso,list_destroy);   
+               dictionary_put(planificador->cola_blocked ,recurso_recibido_wait->nombre_recurso,lista_bloqueados_correspondiente);
+
+         }
+         
+      }
+      else{
+         //NO EXISTE RECURSO, MANDAR A EXIT
+      }
       break;
    case ENVIO_SIGNAL_A_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
       //Recibo t_proceso(debe ser solo pcb?) y recurso desde cpu, debo liberar una instancia del recurso al proceso(verificar recursos disponibles)
+      log_info(logger_kernel,"Recibo ENVIO_SIGNAL_A_KERNEL desde CPU");
+      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      
+      t_recurso* recurso_recibido_signal = malloc(sizeof(t_recurso));
+      recurso_recibido_signal = deserializar_recurso(lista_paquete);
+      uint32_t indice_recurso_signal = buscar_indice_recurso(recurso_recibido_signal->nombre_recurso);
+      if(indice_recurso_signal != NULL){
+         uint32_t valor_indice_recurso = list_get(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_signal);
+         list_replace(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_signal,valor_indice_recurso + 1);
+
+         t_list* lista_bloqueados_correspondiente = dictionary_get(planificador->cola_blocked,recurso_recibido_signal->nombre_recurso);
+         if(lista_bloqueados_correspondiente->elements_count > 0){
+             //t_pcb pcb_a_agregar = encontrar_proceso_pid(planificador->cola_exec,recurso_recibido->pid);
+            uint32_t indice_primer_valor = malloc(sizeof(uint32_t));
+            indice_primer_valor = buscar_indice_primer_valor_no_nulo(lista_bloqueados_correspondiente);
+               t_pcb* pcb_desbloqueado = malloc(sizeof(t_pcb));
+               pcb_desbloqueado = list_remove(lista_bloqueados_correspondiente,indice_primer_valor);
+               dictionary_remove_and_destroy(planificador->cola_blocked,recurso_recibido_signal->nombre_recurso,list_destroy);   
+               dictionary_put(planificador->cola_blocked ,recurso_recibido_signal->nombre_recurso,lista_bloqueados_correspondiente);
+           //poner el pcb_desbloqueado en cola ready?
+         }
+          //mandar a cpu que continue la ejecucion del pcb que llega por parametro? 
+      }
+      else{
+         //NO EXISTE RECURSO, MANDAR A EXIT
+      }
       break;
    case SOLICITUD_IO_STDIN_READ:
       //TODO
@@ -396,4 +448,77 @@ bool interfaz_permite_operacion(t_tipo_interfaz_enum tipo_interfaz, tipo_instruc
    printf("INTERFAZ NO ENCONTRADA");
       break;
    }
+}
+
+t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid) {
+    for (int i = 0; i < list_size(lista_procesos); i++) {
+        t_pcb* proceso = list_get(lista_procesos, i);
+        if (proceso->pid == pid) {
+            return proceso;
+        }
+    }
+    return NULL;
+}
+
+uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb) {
+    for (int i = 0; i < list_size(lista_procesos); i++) {
+        t_pcb* proceso = list_get(lista_procesos, i);
+        if (proceso->pid == pcb->pid) {
+            return i;
+        }
+    }
+    return NULL;
+}
+
+ t_recurso* deserializar_recurso(t_list*  lista_paquete ){
+
+    t_recurso* recurso = malloc(sizeof(t_recurso));
+    recurso->pcb->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    recurso->pcb->program_counter = *(uint32_t*)list_get(lista_paquete, 1); 
+    recurso->pcb->path_length = *(uint32_t*)list_get(lista_paquete, 2); 
+    recurso->pcb->path = list_get(lista_paquete, 3);
+    recurso->pcb->registros_cpu.PC = *(uint32_t*)list_get(lista_paquete, 4);
+    recurso->pcb->registros_cpu.AX = *(uint32_t*)list_get(lista_paquete, 5);
+    recurso->pcb->registros_cpu.BX = *(uint32_t*)list_get(lista_paquete, 6); 
+    recurso->pcb->registros_cpu.CX = *(uint32_t*)list_get(lista_paquete, 7); 
+    recurso->pcb->registros_cpu.DX = *(uint32_t*)list_get(lista_paquete, 8);
+    recurso->pcb->registros_cpu.EAX = *(uint32_t*)list_get(lista_paquete, 9);
+    recurso->pcb->registros_cpu.EBX = *(uint32_t*)list_get(lista_paquete, 10);
+    recurso->pcb->registros_cpu.ECX = *(uint32_t*)list_get(lista_paquete, 11);
+    recurso->pcb->registros_cpu.EDX = *(uint32_t*)list_get(lista_paquete, 12); 
+    recurso->pcb->registros_cpu.SI = *(uint32_t*)list_get(lista_paquete, 13);
+    recurso->pcb->registros_cpu.DI = *(uint32_t*)list_get(lista_paquete, 14);  
+    recurso->pcb->estado = *(uint32_t*)list_get(lista_paquete, 15);
+    recurso->pcb->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete, 16);
+    recurso->pcb->quantum = *(uint32_t*)list_get(lista_paquete, 17);
+    recurso->nombre_recurso_length = *(uint32_t*)list_get(lista_paquete, 18); 
+    recurso->nombre_recurso = list_get(lista_paquete, 19); 
+    
+	return recurso;
+}
+
+
+uint32_t buscar_indice_recurso(char* nombre_recurso){
+   t_list* lista_recursos = malloc(sizeof(t_list));
+   lista_recursos = cfg_kernel->RECURSOS;
+   uint32_t indice_encontrado = malloc(sizeof(uint32_t));
+   indice_encontrado = NULL;
+
+   for (size_t i = 0; i < lista_recursos->elements_count; i++)
+   {
+      if(strcmp(list_get(lista_recursos,i), nombre_recurso) == 0){
+         indice_encontrado = i;
+      }
+   }
+   return indice_encontrado;
+}
+
+uint32_t buscar_indice_primer_valor_no_nulo(t_list* lista){
+   for (size_t i = 0; i < lista->elements_count; i++)
+   {
+      if(list_get(lista,i) != NULL){
+         return i;
+      }
+   }
+   
 }
