@@ -12,9 +12,5 @@
 
 
 
-void escuchar_modulos();
-void memoria_atender_kernel();
-void memoria_atender_cpu();
-void memoria_atender_io();
-
+void memoria_atender_cliente(void* socket_cliente);
 #endif

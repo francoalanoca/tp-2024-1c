@@ -39,7 +39,7 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
                 
                 break;     
             case IO_K_STDIN:
-                t_io_input* io_input = malloc(sizeof(t_io_input));
+                t_io_memo_escritura* io_input = malloc(sizeof(t_io_memo_escritura));
                 t_io_direcciones_fisicas* io_stdin = malloc(sizeof(t_io_direcciones_fisicas));
                 
                 log_info(logger_entrada_salida, "Recibido IO_K_STDIN desde kernel");
@@ -47,13 +47,13 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
                 lista_paquete = recibir_paquete(socket_kernel);
                 io_stdin = deserializar_io_df(lista_paquete);
                 
-                esperar_ingreso_teclado();
+                esperar_ingreso_teclado(io_stdin->tamanio_operacion);
 
                 //armo la estructura input para enviar                
                 io_input->pid =io_stdin->pid;
                 io_input->direcciones_fisicas =list_create();
                 list_add_all(io_input->direcciones_fisicas,io_stdin->direcciones_fisicas);
-                io_input->input_length = string_length(input) + 1;
+                io_input->input_length =io_stdin->tamanio_operacion;
                 io_input->input = input;
                 
                 enviar_input(io_input, socket_memoria, IO_M_STDIN);                
@@ -81,12 +81,11 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
 
 }
 
- int esperar_ingreso_teclado() {
-    size_t size = TAMANIO_INICIAL_BUFFER;
-    size_t len = 0;
+ int esperar_ingreso_teclado(int tamanio_operacion) { // cada char ocupa 1 byte
+ 
     int ch;
-
-    input = (char *)malloc(TAMANIO_INICIAL_BUFFER * sizeof(char));
+    int i = 0;
+    input = (char *)malloc(tamanio_operacion);
     if (input == NULL) {
         log_error(logger_entrada_salida, "Error al asignar memoria a input");
         return 1;
@@ -96,30 +95,14 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
     fflush(stdout); // Asegúrate de que la salida se vacíe
 
     // levanta caracter a caracter hasta que encuentra un "enter" de la variable stdin
-    while ((ch = getchar()) != '\n' && ch != EOF) {
+    for (i; i < tamanio_operacion-1; i++){
+        ch = getchar();
         printf("Caracter leído: %c (Código ASCII: %d)\n", ch, ch); // Depuración
-        input[len++] = ch;
+        input[i] = ch;
 
-        // Si se alcanza el tamaño del buffer, redimensionarlo al doble
-        if (len == size) {
-            size *= 2;
-            char *new_input = (char *)realloc(input, size * sizeof(char));
-            if (new_input == NULL) {
-                log_error(logger_entrada_salida, "Error al redimensionar memoria.\n");
-                free(input);
-                return 1;
-            }
-            input = new_input;
-        }
     }
 
-    if (ch == '\n') {
-        printf("Caracter de nueva línea leído, saliendo del bucle.\n"); // Depuración
-    } else if (ch == EOF) {
-        printf("EOF leído, saliendo del bucle.\n"); // Depuración
-    }
-
-    input[len] = '\0'; // Agrega el terminador nulo al final de la cadena
+    input[tamanio_operacion] = '\0'; // Agrega el terminador nulo al final de la cadena
     log_info(logger_entrada_salida, "Se ingresó la cadena: %s\n", input);
 
     // free(input); // Libera la memoria asignada si es necesario en otro lugar

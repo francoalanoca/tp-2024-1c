@@ -193,64 +193,64 @@ void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger){
     switch(registro_elegido){
         case PC:
         {
-           proceso->pcb->registrosCPU->PC = valor;
+           proceso->pcb->registros_cpu->PC = valor;
             break;
         }
         case AX:
         {
-           proceso->pcb->registrosCPU->AX = valor;
+           proceso->pcb->registros_cpu->AX = valor;
             break;
         }
         case BX:
         {
-           proceso->pcb->registrosCPU->BX = valor;
+           proceso->pcb->registros_cpu->BX = valor;
             break;
         }
         case CX:
         {
-           proceso->pcb->registrosCPU->CX = valor;
+           proceso->pcb->registros_cpu->CX = valor;
             break;
         }
         case DX:
         {
-           proceso->pcb->registrosCPU->DX = valor;
+           proceso->pcb->registros_cpu->DX = valor;
             break;
         }
         case EAX:
         {
-           proceso->pcb->registrosCPU->EAX = valor;
+           proceso->pcb->registros_cpu->EAX = valor;
             break;
         }
         case EBX:
         {
-           proceso->pcb->registrosCPU->EBX = valor;
+           proceso->pcb->registros_cpu->EBX = valor;
             break;
         }
         case ECX:
         {
-           proceso->pcb->registrosCPU->ECX = valor;
+           proceso->pcb->registros_cpu->ECX = valor;
             break;
         }
         case EDX:
         {
-           proceso->pcb->registrosCPU->EDX = valor;
+           proceso->pcb->registros_cpu->EDX = valor;
             break;
         }
         case SI:
         {
-           proceso->pcb->registrosCPU->SI = valor;
+           proceso->pcb->registros_cpu->SI = valor;
             break;
         }
         case DI:
         {
-           proceso->pcb->registrosCPU->DI = valor;
+           proceso->pcb->registros_cpu->DI = valor;
             break;
         }
         default:
         log_info(logger, "El registro no existe");
     }
 
-    //proceso->pcb->registrosCPU.AX;
+    //proceso->pcb->registros_cpu.AX;
    // registro = valor;
 }
 
@@ -264,57 +264,57 @@ void sum(char* registro_destino, char* registro_origen, t_proceso* proceso, t_lo
     switch(id_registro_destino){
         case PC:
         {
-           proceso->pcb->registrosCPU->PC = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu->PC = valor_reg_destino + valor_reg_origen;
             break;
         }
         case AX:
         {
-           proceso->pcb->registrosCPU->AX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu->AX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case BX:
         {
-           proceso->pcb->registrosCPU->BX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu->BX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case CX:
         {
-           proceso->pcb->registrosCPU->CX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu->CX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case DX:
         {
-           proceso->pcb->registrosCPU->DX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu->DX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case EAX:
         {
-           proceso->pcb->registrosCPU->EAX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu->EAX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case EBX:
         {
-           proceso->pcb->registrosCPU->EBX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu->EBX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case ECX:
         {
-           proceso->pcb->registrosCPU->ECX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu->ECX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case EDX:
         {
-           proceso->pcb->registrosCPU->EDX = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu->EDX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case SI:
         {
-           proceso->pcb->registrosCPU->SI = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu->SI = valor_reg_destino + valor_reg_origen;
             break;
         }
         case DI:
         {
-           proceso->pcb->registrosCPU->DI = valor_reg_destino + valor_reg_origen;
+           proceso->pcb->registros_cpu->DI = valor_reg_destino + valor_reg_origen;
             break;
         }
         default:
@@ -335,57 +335,57 @@ void sub(char* registro_destino, char* registro_origen, t_proceso* proceso, t_lo
     switch(id_registro_destino){
         case PC:
         {
-           proceso->pcb->registrosCPU->PC = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu->PC = valor_reg_destino - valor_reg_origen;
             break;
         }
         case AX:
         {
-           proceso->pcb->registrosCPU->AX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu->AX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case BX:
         {
-           proceso->pcb->registrosCPU->BX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu->BX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case CX:
         {
-           proceso->pcb->registrosCPU->CX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu->CX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case DX:
         {
-           proceso->pcb->registrosCPU->DX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu->DX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case EAX:
         {
-           proceso->pcb->registrosCPU->EAX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu->EAX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case EBX:
         {
-           proceso->pcb->registrosCPU->EBX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu->EBX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case ECX:
         {
-           proceso->pcb->registrosCPU->ECX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu->ECX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case EDX:
         {
-           proceso->pcb->registrosCPU->EDX = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu->EDX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case SI:
         {
-           proceso->pcb->registrosCPU->SI = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu->SI = valor_reg_destino - valor_reg_origen;
             break;
         }
         case DI:
         {
-           proceso->pcb->registrosCPU->DI = valor_reg_destino - valor_reg_origen;
+           proceso->pcb->registros_cpu->DI = valor_reg_destino - valor_reg_origen;
             break;
         }
         default:
@@ -529,7 +529,7 @@ void buffer_add_pcb(t_buffer* buffer,  t_pcb* pcb){
 	buffer_add(buffer, &pcb->pid, sizeof(int));
 	buffer_add(buffer, &pcb->program_counter, sizeof(int));
 	buffer_add(buffer, &pcb->quantum, sizeof(int));
-	buffer_add(buffer, &pcb->registrosCPU, sizeof(t_registros_CPU));
+	buffer_add(buffer, &pcb->registros_cpu, sizeof(t_registros_CPU));
 }
 
 void buffer_add_instruccion(t_buffer* buffer, instr_t* instruccion){
@@ -743,57 +743,57 @@ uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso, t
     switch(id_registro){
         case PC:
         {
-           return proceso->pcb->registrosCPU->PC;
+           return proceso->pcb->registros_cpu->PC;
             break;
         }
         case AX:
         {
-           return proceso->pcb->registrosCPU->AX;
+           return proceso->pcb->registros_cpu->AX;
             break;
         }
         case BX:
         {
-           return proceso->pcb->registrosCPU->BX;
+           return proceso->pcb->registros_cpu->BX;
             break;
         }
         case CX:
         {
-           return proceso->pcb->registrosCPU->CX;
+           return proceso->pcb->registros_cpu->CX;
             break;
         }
         case DX:
         {
-           return proceso->pcb->registrosCPU->DX;
+           return proceso->pcb->registros_cpu->DX;
             break;
         }
         case EAX:
         {
-           return proceso->pcb->registrosCPU->EAX;
+           return proceso->pcb->registros_cpu->EAX;
             break;
         }
         case EBX:
         {
-           return proceso->pcb->registrosCPU->EBX;
+           return proceso->pcb->registros_cpu->EBX;
             break;
         }
         case ECX:
         {
-           return proceso->pcb->registrosCPU->ECX;
+           return proceso->pcb->registros_cpu->ECX;
             break;
         }
         case EDX:
         {
-           return proceso->pcb->registrosCPU->EDX;
+           return proceso->pcb->registros_cpu->EDX;
             break;
         }
         case SI:
         {
-           return proceso->pcb->registrosCPU->SI;
+           return proceso->pcb->registros_cpu->SI;
             break;
         }
         case DI:
         {
-           return proceso->pcb->registrosCPU->DI;
+           return proceso->pcb->registros_cpu->DI;
             break;
         }
         default:
@@ -1089,7 +1089,7 @@ void copy_string(uint32_t tamanio){
     //uint32_t valor_registro_SI = obtenerValorActualRegistro(id_registro_SI,proceso, logger);
 
     uint32_t dir_fisica_SI = malloc(sizeof(uint32_t));
-    dir_fisica_SI = mmu(proceso_actual->pcb->registrosCPU->SI,tamanio_pagina,socket_memoria);
+    dir_fisica_SI = mmu(proceso_actual->pcb->registros_cpu->SI,tamanio_pagina,socket_memoria);
 
     pedir_valor_a_memoria(dir_fisica_SI);
     wait(&sem_valor_registro_recibido);
@@ -1099,7 +1099,7 @@ void copy_string(uint32_t tamanio){
     valor_a_enviar = string_substring_until(valor_registro_obtenido,tamanio); //VER BIEN QUE HACE LA FUNCION
 
     uint32_t dir_fisica_DI = malloc(sizeof(uint32_t));
-    dir_fisica_DI = mmu(proceso_actual->pcb->registrosCPU->DI,tamanio_pagina,socket_memoria);
+    dir_fisica_DI = mmu(proceso_actual->pcb->registros_cpu->DI,tamanio_pagina,socket_memoria);
 
     guardar_string_en_memoria(valor_a_enviar,tamanio,dir_fisica_DI);
 }

@@ -519,6 +519,67 @@ t_io_direcciones_fisicas* deserializar_peticion_valor(t_list*  lista_paquete ){
 
 
 
+t_escribir_leer* deserializar_peticion_guardar(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_escribir_leer* peticion_guardar = malloc(sizeof(t_escribir_leer));
+    
+    peticion_guardar->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", peticion_guardar->pid);
+    
+    peticion_guardar->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Direccion fisica: %d \n", peticion_guardar->direccion_fisica);
+
+    peticion_guardar->tamanio = *(uint32_t*)list_get(lista_paquete, 2);
+    printf("Tamanio proceso: %d \n", peticion_guardar->tamanio);
+
+    peticion_guardar->valor = list_get(lista_paquete, 3);
+    printf("Valor: %s \n", peticion_guardar->valor);
+
+    return peticion_guardar;
+
+}
+
+
+
+t_resize* deserializar_solicitud_resize(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_resize* solicitud_resize = malloc(sizeof(t_resize));
+    
+    solicitud_resize->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", solicitud_resize->pid);
+    
+    solicitud_resize->tamanio = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Tamanio proceso: %d \n", solicitud_resize->tamanio);
+
+    solicitud_resize->valor = list_get(lista_paquete, 2);
+    printf("Valor: %s \n", solicitud_resize->valor);
+
+    return solicitud_resize;
+
+}
+
+
+t_copy* deserializar_solicitud_copy(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_copy* solicitud_copy = malloc(sizeof(t_copy));
+    
+    solicitud_copy->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", solicitud_copy->pid);
+    
+    solicitud_copy->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Direccion fisica: %d \n", solicitud_copy->direccion_fisica);
+
+    solicitud_copy->valor = list_get(lista_paquete, 2);
+    printf("Valor: %s \n", solicitud_copy->valor);
+
+    return solicitud_copy;
+
+}
+
+
 void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu) {
     t_paquete* paquete_instruccion;
  
@@ -581,11 +642,25 @@ void enviar_peticion_valor(void* valor ,int socket_cpu) {
 }
 
 
+/*
+void enviar_resultado_guardar(void* valor, int socket_cliente){
+    t_paquete* paquete_valor;
+
+    paquete_valor = crear_paquete(GUARDAR_EN_DIRECCION_FISICA_RTA);
+
+    agregar_a_paquete(paquete_valor, &valor,  sizeof(void*));
+
+    enviar_paquete(paquete_valor, socket_cliente);
+    printf("Se envio respuesta de guardado"); 
+    free(paquete_valor);
+}
+*/
+
 
 // usar en memoria cuando recibe IO_M_STDIN
-t_io_input* deserializar_input(t_list*  lista_paquete ){
+t_io_memo_escritura* deserializar_input(t_list*  lista_paquete ){
 
-    t_io_input* io_input = malloc(sizeof(t_io_input));
+    t_io_memo_escritura* io_input = malloc(sizeof(t_io_memo_escritura));
     
     io_input->pid = *(uint32_t*)list_get(lista_paquete, 0);
     printf("Pid recibido: %d \n",io_input->pid);
@@ -614,24 +689,25 @@ t_io_input* deserializar_input(t_list*  lista_paquete ){
 // Kernel envía a io un stdin usando op_cod= IO_K_STDIN
 void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion){
 
-    t_paquete* paquete_espera = malloc(sizeof(t_paquete));    
+    t_paquete* paquete_df = malloc(sizeof(t_paquete));    
    
-    paquete_espera = crear_paquete(codigo_operacion); 
+    paquete_df = crear_paquete(codigo_operacion); 
     
-    agregar_a_paquete(paquete_espera, &io_df->pid, sizeof(io_df->pid)); 
+    agregar_a_paquete(paquete_df, &io_df->pid, sizeof(io_df->pid)); 
     
     uint32_t list_tamanio = list_size(io_df->direcciones_fisicas);
    
-    agregar_a_paquete(paquete_espera, &list_tamanio, sizeof(uint32_t));
+    agregar_a_paquete(paquete_df, &list_tamanio, sizeof(uint32_t));
 
     for (int i = 0; i < list_tamanio; i++) {
         uint32_t* direccion_fisica = (uint32_t*) list_get(io_df->direcciones_fisicas, i);
         
-        agregar_a_paquete(paquete_espera,  &direccion_fisica, sizeof(uint32_t));
+        agregar_a_paquete(paquete_df,  &direccion_fisica, sizeof(uint32_t));
         
     }   
-       
-    enviar_paquete(paquete_espera, socket);  
+     agregar_a_paquete(paquete_df, &io_df->tamanio_operacion, sizeof(uint32_t));    
+    enviar_paquete(paquete_df, socket);
+     free(paquete_df);  
   printf("Se envio io df\n");
 
 }
@@ -649,7 +725,8 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
         direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
         list_add(io_df->direcciones_fisicas, direccion_fisica);
     }
-
+    io_df->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,2+tamanio_lista);
+    printf("Tamanio operacion: %d \n",io_df->tamanio_operacion);
     return io_df;
 
 }
@@ -693,7 +770,7 @@ void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket, 
     enviar_paquete(paquete_archivo_nuevo, socket);    
 }
 
-void enviar_input(t_io_input* io_input ,int socket, uint32_t op_code ) {
+void enviar_input(t_io_memo_escritura* io_input ,int socket, uint32_t op_code ) {
     t_paquete* paquete_input;
  
     paquete_input = crear_paquete(op_code);
@@ -761,6 +838,15 @@ t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete ){
      printf("Puntero archivo %d \n",io_readwrite->puntero_archivo); // despues borrar print
     return io_readwrite; 
     free(io_readwrite);
+}
+
+t_io_output* armar_io_output(uint32_t pid, char* output){
+            t_io_output* io_output = malloc(sizeof(t_io_output));
+            uint32_t tamanio_output = string_length(output)+1;
+            io_output->pid = pid;
+            io_output->output_length = tamanio_output;
+            io_output->output = output;
+           return  io_output;    
 }
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)

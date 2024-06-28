@@ -16,7 +16,7 @@ void* memoria;
 t_list* lista_tablas_de_paginas;
 t_list* lista_miniPCBs;
 pthread_mutex_t mutex_memoria;
-uint32_t cantidad_frames;       //seria tam_memoria / tam_pagina
+uint32_t cantidad_frames_memoria;       //seria tam_memoria / tam_pagina
 uint32_t cantidad_page_fault;       
 t_bitarray *bitmap_frames;
 
@@ -85,8 +85,8 @@ int cargar_configuracion(char *path_config) {
     file_cfg_memoria = config_create(path_config);
 
     //Cargo en la variable tipo config las configuraciones iniciales
-    cfg_memoria->PUERTO_ESCUCHA = strdup(config_get_string_value(file_cfg_memoria, "PUERTO_ESCUCHA"));
-    log_info(logger_memoria, "PUERTO_ESCUCHA cargado correctamente: %s", cfg_memoria->PUERTO_ESCUCHA);
+    cfg_memoria->PUERTO_ESCUCHA = config_get_int_value(file_cfg_memoria, "PUERTO_ESCUCHA");
+    log_info(logger_memoria, "PUERTO_ESCUCHA cargado correctamente: %d", cfg_memoria->PUERTO_ESCUCHA);
 
     cfg_memoria->TAM_MEMORIA = config_get_int_value(file_cfg_memoria, "TAM_MEMORIA");
     log_info(logger_memoria, "TAM_MEMORIA cargado correctamente: %d", cfg_memoria->TAM_MEMORIA);
@@ -120,12 +120,12 @@ void inicializar_memoria(){
     instrucciones_de_procesos = dictionary_create();        //memoria de instrucciones
 	pthread_mutex_init(&mutex_memoria, NULL);
 	cantidad_page_fault = 0;
-	cantidad_frames = cfg_memoria->TAM_MEMORIA / cfg_memoria->TAM_PAGINA;
-	//bitmap_frames = crear_bitmap(cantidad_frames);   
+	cantidad_frames_memoria = cfg_memoria->TAM_MEMORIA / cfg_memoria->TAM_PAGINA;
+	bitmap_frames = crear_bitmap(cantidad_frames_memoria);   
 }
 
-/*
-//La bibliote bitarray no me la reconoce
+
+
 
 //Funcion que redondea el valor al multiplo cercano de base y retorna
 int redondear_a_multiplo_mas_cercano_de(int base, int valor){
@@ -141,7 +141,7 @@ t_bitarray *crear_bitmap(int entradas){
     // al multiplo mas cercano mayor que el valor. Entonces si son 4 entradas -> 8, 15 -> 16, etc.
     if (ent % 8 != 0){
         ent = redondear_a_multiplo_mas_cercano_de(8, ent); 
-        log_trace(logger, "tamanio inusual de memoria/pagina causo conflicto, redondeando al multiplo de 8 mas cercano: %i", ent);
+        log_trace(logger_memoria, "tamanio inusual de memoria/pagina causo conflicto, redondeando al multiplo de 8 mas cercano: %i", ent);
     }
 
     void *puntero = malloc(ent / 8);
@@ -154,7 +154,7 @@ t_bitarray *crear_bitmap(int entradas){
     return bitmap;
 }
 
-*/
+
 
 
 void cerrar_programa() {
