@@ -52,7 +52,7 @@ switch (cod_op) {
 		case FINALIZAR_PROCESO:
             valores = recibir_paquete(socket_cliente);
             uint32_t pid_proceso_a_finalizar = deserializar_finalizar_proceso(valores);
-            finalizar_preceso(pid_proceso_a_finalizar);
+            finalizar_proceso(pid_proceso_a_finalizar);
         //    usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_respuesta_finalizar_proceso(pid_proceso_a_finalizar, socket_cliente);
             break;
@@ -114,7 +114,7 @@ switch (cod_op) {
             copiar_valor = deserializar_solicitud_copy(valores);
             void* respuesta_copy = copiar_solicitud(copiar_valor->pid, copiar_valor->direccion_fisica, copiar_valor->valor);
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
-            enviar_resultado_copy(respuesta_copy, socket_cliente);
+            enviar_resultado_copiar(respuesta_copy, socket_cliente);
             break;
 		
 /*---------------------------- ENTRADASALIDA-------------------------*/  
