@@ -448,6 +448,7 @@ void generar_interrupcion_a_kernel(int conexion){
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.DI, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->estado, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->tiempo_ejecucion, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->quantum, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->tamanio_motivo_interrupcion, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, proceso_interrumpido_actual->motivo_interrupcion, proceso_interrumpido_actual->tamanio_motivo_interrupcion);
 
@@ -805,13 +806,13 @@ void wait_inst(char* recurso){
     // Esta instrucción solicita al Kernel que se asigne una instancia del recurso
     //indicado por parámetro.
 
-    solicitar_wait_kernel(proceso_actual,(strlen(recurso) + 1) * sizeof(char),recurso); 
+    solicitar_wait_kernel(proceso_actual->pcb->pid,(strlen(recurso) + 1) * sizeof(char),recurso); 
 }
 
 void signal_inst(char* recurso){
     //Esta instrucción solicita al Kernel que se libere una instancia del recurso
     //indicado por parámetro
-    solicitar_signal_kernel(proceso_actual,(strlen(recurso) + 1) * sizeof(char) ,recurso);
+    solicitar_signal_kernel(proceso_actual->pcb->pid,(strlen(recurso) + 1) * sizeof(char) ,recurso);
 }
 
 void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio, t_proceso* proceso, t_log* logger){
@@ -857,7 +858,7 @@ void exit_inst(){
     // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
     //Contexto de Ejecución actualizado al Kernel para su finalización.
 
-    solicitar_exit_a_kernel(proceso_actual);
+    solicitar_exit_a_kernel(proceso_actual->pcb);
 
 }
 
@@ -927,7 +928,7 @@ void envia_error_de_memoria_a_kernel(t_proceso* proceso){
     agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.DI, sizeof(uint32_t));
     agregar_a_paquete(paquete_error_memoria, &proceso->pcb->estado, sizeof(uint32_t));
     agregar_a_paquete(paquete_error_memoria, &proceso->pcb->tiempo_ejecucion, sizeof(uint32_t));
-    
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->quantum, sizeof(uint32_t));
        
     enviar_paquete(paquete_error_memoria, conexion_kernel); 
     free(paquete_error_memoria);
@@ -951,30 +952,14 @@ void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint3
 }
 
 
-void solicitar_wait_kernel(t_proceso* proceso,uint32_t recurso_tamanio ,char* recurso){
+void solicitar_wait_kernel(uint32_t pid,uint32_t recurso_tamanio ,char* recurso){
         printf("entro a solicitar_wait_kernel\n");
         
         t_paquete* paquete_wait_kernel;
    
         paquete_wait_kernel = crear_paquete(ENVIO_WAIT_A_KERNEL); 
         
-        agregar_a_paquete(paquete_wait_kernel,  &proceso->pcb->pid,  sizeof(uint32_t));         
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->program_counter, sizeof(uint32_t));  
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->path_length, sizeof(uint32_t)); 
-        agregar_a_paquete(paquete_wait_kernel, proceso->pcb->path, proceso->pcb->path_length);
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.PC, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.EAX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.EBX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.ECX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.EDX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.SI, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->registros_cpu.DI, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->estado, sizeof(uint32_t));
-        agregar_a_paquete(paquete_wait_kernel, &proceso->pcb->tiempo_ejecucion, sizeof(uint32_t));
+        agregar_a_paquete(paquete_wait_kernel,  &pid,  sizeof(uint32_t));         
         agregar_a_paquete(paquete_wait_kernel, &recurso_tamanio, sizeof(uint32_t));
         agregar_a_paquete(paquete_wait_kernel, recurso, recurso_tamanio);
         
@@ -983,29 +968,13 @@ void solicitar_wait_kernel(t_proceso* proceso,uint32_t recurso_tamanio ,char* re
 
 }
 
-void solicitar_signal_kernel(t_proceso* proceso,uint32_t recurso_tamanio,char* recurso){
+void solicitar_signal_kernel(uint32_t pid,uint32_t recurso_tamanio,char* recurso){
         printf("entro a solicitar_wait_kernel\n");
         t_paquete* paquete_signal_kernel;
    
         paquete_signal_kernel = crear_paquete(ENVIO_SIGNAL_A_KERNEL); 
         
-        agregar_a_paquete(paquete_signal_kernel,  &proceso->pcb->pid,  sizeof(uint32_t));         
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->program_counter, sizeof(uint32_t));  
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->path_length, sizeof(uint32_t)); 
-        agregar_a_paquete(paquete_signal_kernel, proceso->pcb->path, proceso->pcb->path_length);
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.PC, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.EAX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.EBX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.ECX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.EDX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.SI, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->registros_cpu.DI, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->estado, sizeof(uint32_t));
-        agregar_a_paquete(paquete_signal_kernel, &proceso->pcb->tiempo_ejecucion, sizeof(uint32_t));
+        agregar_a_paquete(paquete_signal_kernel,  &pid,  sizeof(uint32_t));         
         agregar_a_paquete(paquete_signal_kernel, &recurso_tamanio, sizeof(uint32_t));
         agregar_a_paquete(paquete_signal_kernel, recurso, recurso_tamanio);
         
@@ -1051,28 +1020,29 @@ void solicitar_io_stdout_write_a_kernel(uint32_t tamanio_nombre_interfaz, char* 
         free(paquete_io_stdout_write);
 }
 
-void solicitar_exit_a_kernel(t_proceso* proceso){
+void solicitar_exit_a_kernel(t_pcb* proceso){
         printf("entro a solicitar_io_stdout_write_a_kernel\n");
         t_paquete* paquete_exit_kernel;
         paquete_exit_kernel = crear_paquete(SOLICITUD_EXIT_KERNEL); 
         
-        agregar_a_paquete(paquete_exit_kernel,  &proceso->pcb->pid,  sizeof(uint32_t));         
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->program_counter, sizeof(uint32_t));  
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->path_length, sizeof(uint32_t)); 
-        agregar_a_paquete(paquete_exit_kernel, proceso->pcb->path, proceso->pcb->path_length);
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.PC, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.EAX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.EBX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.ECX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.EDX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.SI, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.DI, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->estado, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->tiempo_ejecucion, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel,  &proceso->pid,  sizeof(uint32_t));         
+        agregar_a_paquete(paquete_exit_kernel, &proceso->program_counter, sizeof(uint32_t));  
+        agregar_a_paquete(paquete_exit_kernel, &proceso->path_length, sizeof(uint32_t)); 
+        agregar_a_paquete(paquete_exit_kernel, proceso->path, proceso->path_length);
+        agregar_a_paquete(paquete_exit_kernel, &proceso->registros_cpu.PC, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->registros_cpu.EAX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->registros_cpu.EBX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->registros_cpu.ECX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->registros_cpu.EDX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->registros_cpu.SI, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->registros_cpu.DI, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->estado, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->tiempo_ejecucion, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->quantum, sizeof(uint32_t));
         
         enviar_paquete(paquete_exit_kernel, conexion_kernel); 
         free(paquete_exit_kernel);

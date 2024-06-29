@@ -67,12 +67,12 @@ void guardar_en_direccion_fisica(uint32_t dir_fisica_result,uint32_t tamanio_val
 void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio);
 void envia_error_de_memoria_a_kernel(t_proceso* proceso);
 void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint32_t direccion, uint32_t pid);
-void solicitar_wait_kernel(t_proceso* proceso,uint32_t recurso_tamanio ,char* recurso);
+void solicitar_wait_kernel(uint32_t pid,uint32_t recurso_tamanio ,char* recurso);
 uint32_t calcular_tamanio_proceso(t_proceso* proceso);
-void solicitar_signal_kernel(t_proceso* proceso,uint32_t recurso_tamanio,char* recurso);
+void solicitar_signal_kernel(uint32_t pid,uint32_t recurso_tamanio,char* recurso);
 void solicitar_io_stdin_read_a_kernel(uint32_t tamanio_nombre_interfaz,char* nombre_interfaz, uint32_t direccion, uint32_t tamanio);
 void solicitar_io_stdout_write_a_kernel(uint32_t tamanio_nombre_interfaz, char* nombre_interfaz, uint32_t direccion, uint32_t tamanio);
-void solicitar_exit_a_kernel(t_proceso* proceso);
+void solicitar_exit_a_kernel(t_pcb* proceso);
 void usar_algoritmo_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t nro_marco);
 uint32_t valor_repetido_tlb(uint32_t pid, uint32_t nro_pag);
 void obtenerTamanioPagina(int conexion);
