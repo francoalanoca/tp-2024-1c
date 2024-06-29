@@ -309,7 +309,8 @@ typedef struct {
 	uint32_t pid;
     uint32_t nombre_archivo_length; 
     char* nombre_archivo;
-    t_interfaz* interfaz; //AGREGADO   
+    uint32_t nombre_interfaz_length;
+    char* nombre_interfaz;   
 } t_io_crear_archivo;
 
 
@@ -317,7 +318,8 @@ typedef struct {
 	uint32_t pid;
     uint32_t nombre_archivo_length; 
     char* nombre_archivo;
-    t_interfaz* interfaz; //AGREGADO
+    uint32_t nombre_interfaz_length;
+    char* nombre_interfaz;  
     uint32_t tamanio;   
 } t_io_fs_truncate;
 
@@ -325,7 +327,8 @@ typedef struct {
 	uint32_t pid;
     uint32_t nombre_archivo_length; 
     char* nombre_archivo;
-    t_interfaz* interfaz; //AGREGADO
+    uint32_t nombre_interfaz_length;
+    char* nombre_interfaz;  
     uint32_t direccion; 
     uint32_t tamanio; 
     uint32_t puntero_archivo;   
@@ -335,14 +338,16 @@ typedef struct {
 
 typedef struct {
     uint32_t pid;
-    t_interfaz* interfaz;
+    uint32_t nombre_interfaz_length;
+    char * nombre_interfaz;
     uint32_t direccion; 
     uint32_t tamanio; 
 } t_io_stdin_stdout;
 
 typedef struct {
     uint32_t pid;
-    t_interfaz* interfaz;
+    uint32_t nombre_interfaz_length;
+    char* nombre_interfaz;
     uint32_t unidades_de_trabajo;
 } t_io_gen_sleep;
 

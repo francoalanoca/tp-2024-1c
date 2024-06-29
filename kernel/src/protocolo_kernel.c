@@ -58,10 +58,11 @@ while (control_key)
       io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
 
       //Verifico que la interfaz exista y este conectada
-      if(dictionary_has_key(interfaces,io_gen_sleep->interfaz->nombre)){
-         if(interfaz_permite_operacion(io_gen_sleep->interfaz->tipo,IO_GEN_SLEEP)){
-            t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
-            interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->interfaz->nombre);
+      if(dictionary_has_key(interfaces,io_gen_sleep->nombre_interfaz)){
+         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
+            interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->nombre_interfaz);
+         if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_GEN_SLEEP)){
+            
                //AHORA DEBO ENVIAR A IO LO NECESARIO
             enviar_io_gen_sleep(io_gen_sleep,interfaz_encontrada->conexion);
 
@@ -80,11 +81,14 @@ while (control_key)
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
+
          }
          
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
+         //ENVIAR PROCESO A EXIT?
+         mandar_proceso_a_exit(io_gen_sleep->pid);
       }
 
       
@@ -460,15 +464,6 @@ t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid) {
     return NULL;
 }
 
-uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb) {
-    for (int i = 0; i < list_size(lista_procesos); i++) {
-        t_pcb* proceso = list_get(lista_procesos, i);
-        if (proceso->pid == pcb->pid) {
-            return i;
-        }
-    }
-    return NULL;
-}
 
  t_recurso* deserializar_recurso(t_list*  lista_paquete ){
 
@@ -521,4 +516,10 @@ uint32_t buscar_indice_primer_valor_no_nulo(t_list* lista){
       }
    }
    
+}
+
+void mandar_proceso_a_exit(uint32_t pid){
+   t_pcb* pcb_a_procesar = malloc(sizeof(t_pcb));
+   pcb_a_procesar = encontrar_proceso_pid(planificador->cola_exec,pid);
+   eliminar_proceso(planificador,pcb_a_procesar);
 }

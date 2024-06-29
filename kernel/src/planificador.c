@@ -104,7 +104,9 @@ void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso) {
 
 // Finaliza un proceso y libera su memoria
 void finalizar_proceso(t_planificador* planificador, t_pcb* proceso) {
-    list_remove(planificador->cola_exec, proceso);
+    uint32_t indice_proceso_a_finalizar = malloc(sizeof(uint32_t));
+    indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
+    list_remove(planificador->cola_exec, indice_proceso_a_finalizar);
     list_add(planificador->cola_exit, proceso);
     free(proceso);
      planificador->grado_multiprogramacion_actual--;
@@ -183,4 +185,14 @@ void eliminar_proceso(t_planificador* planificador, t_pcb* proceso) {
 
     // Finalizar el proceso en el planificador
     finalizar_proceso(planificador, proceso);
+}
+
+uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb) {
+    for (int i = 0; i < list_size(lista_procesos); i++) {
+        t_pcb* proceso = list_get(lista_procesos, i);
+        if (proceso->pid == pcb->pid) {
+            return i;
+        }
+    }
+    return NULL;
 }

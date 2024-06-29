@@ -22,7 +22,6 @@ void Kernel_escuchar_memoria();
 void enviar_creacion_de_proceso_a_memoria(t_pcb* pcb, int socket_memoria);
 //void enviar_creacion_de_proceso_a_memoria(pcb, socket_memoria);  // Enviar a memoria
 t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid);
-uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb);
 t_recurso* deserializar_recurso(t_list*  lista_paquete );
 uint32_t buscar_indice_recurso(char* nombre_recurso);
 uint32_t buscar_indice_primer_valor_no_nulo(t_list* lista);

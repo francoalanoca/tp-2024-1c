@@ -44,5 +44,6 @@ void finalizar_proceso(t_planificador* planificador, t_pcb* proceso);
 void crear_proceso(t_planificador* planificador, char* path_pseudocodigo);
 void eliminar_proceso(t_planificador* planificador, t_pcb* proceso);
 void detener_planificacion(t_planificador* planificador);
+uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb);
 
 #endif /* PLANIFICADORES_H_ */
