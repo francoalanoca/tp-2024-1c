@@ -20,7 +20,7 @@ void crear_proceso(uint32_t proceso_pid){
 
 
 //Funcion que a partir de un pid devuelve una tabla de paginas
-t_tabla_de_paginas *crear_tabla_pagina(int pid){
+t_tabla_de_paginas *crear_tabla_pagina(uint32_t pid){
 
 
     //Inicializo una variable tabla de pagina de tipo struct y le asigno un tamaño

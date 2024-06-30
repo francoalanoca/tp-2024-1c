@@ -510,27 +510,18 @@ t_busqueda_marco* deserializar_solicitud_marco(t_list*  lista_paquete ){
 
 
 
-t_io_direcciones_fisicas* deserializar_peticion_valor(t_list*  lista_paquete ){
+t_escribir_leer* deserializar_peticion_valor(t_list*  lista_paquete ){
 
-    t_io_direcciones_fisicas* peticion_valor = malloc(sizeof(t_io_direcciones_fisicas));
+    t_escribir_leer* peticion_valor = malloc(sizeof(t_escribir_leer));
     
     peticion_valor->pid = *(uint32_t*)list_get(lista_paquete, 0);
     printf("Pid recibido: %d \n", peticion_valor->pid);
     
-    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
-    printf("tamanio lista: %d \n",tamanio_lista);
+    peticion_valor->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Direccion fisica: %d \n", peticion_valor->direccion_fisica);
 
-    // Deserializar cada elemento de la lista
-    peticion_valor->direcciones_fisicas = list_create();
-
-    for (int i = 0; i < tamanio_lista; i++) {
-
-        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
-        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
-        printf("Posicion %d, valor %ls \n",2 + i, direccion_fisica) ;
-        list_add(peticion_valor->direcciones_fisicas, direccion_fisica);
-        printf("Valor agregado %ls \n",direccion_fisica);
-    }
+    peticion_valor->tamanio = *(uint32_t*)list_get(lista_paquete, 2);
+    printf("Tamanio proceso: %d \n", peticion_valor->tamanio);
 
     
     return peticion_valor;

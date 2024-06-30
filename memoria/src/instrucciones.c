@@ -1,6 +1,6 @@
 #include "../include/instrucciones.h"
 
-//Instrucciones no esta corriendo nada
+
 
 
 
@@ -28,13 +28,13 @@ void leer_instrucciones(char* nombre_archivo) {
         exit(EXIT_FAILURE);
     }
 
-	char *linea, *tokens;
+	char *linea;
 	//instr_t *inst;
 	//t_list *instrucciones = list_create();
 	size_t len;
 
 	linea = string_new();
-	//tokens = string_array_new();
+	
 	len = 0;
 
     //mientras no sea el fin del archivo
