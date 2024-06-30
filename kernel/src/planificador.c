@@ -88,14 +88,19 @@ void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
 }
 
 //Bloquea un proceso y lo mueve a la cola de bloqueados
-void bloquear_proceso(t_planificador* planificador, t_pcb* proceso) {
+void bloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nombre_lista) {
     list_remove(planificador->cola_exec, proceso);
-    list_add(planificador->cola_blocked, proceso);//MODIFICAR
+    dictionary_put(planificador->cola_blocked,nombre_lista,proceso);
 }
 
 //  Desbloquea un proceso y lo mueve a la cola de listos
-void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso) {
-    list_remove(planificador->cola_blocked, proceso);
+void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nombre_lista) {
+    t_list* lista_a_desbloquear = malloc(sizeof(t_list));
+    lista_a_desbloquear = dictionary_remove(planificador->cola_blocked,nombre_lista);
+    uint32_t indice_a_desbloquear = malloc(sizeof(uint32_t));
+    indice_a_desbloquear = encontrar_indice_proceso_pid(lista_a_desbloquear,proceso);
+    list_remove_and_destroy_element(lista_a_desbloquear,indice_a_desbloquear,list_destroy);
+    dictionary_put(planificador->cola_blocked,nombre_lista,lista_a_desbloquear);
     if (!planificador->planificacion_detenida) {
         list_add(planificador->cola_ready, proceso);
     }

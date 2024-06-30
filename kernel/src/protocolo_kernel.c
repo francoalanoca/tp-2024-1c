@@ -70,7 +70,7 @@ while (control_key)
             t_pcb* pcb_a_bloquear_io_gen_sleep = malloc(sizeof(t_pcb));
             pcb_a_bloquear_io_gen_sleep = buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid);
             if(pcb_a_bloquear_io_gen_sleep != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_io_gen_sleep);
+               bloquear_proceso(planificador,pcb_a_bloquear_io_gen_sleep,interfaz_encontrada->nombre);
             }
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
@@ -105,7 +105,7 @@ while (control_key)
       proceso_recibido_error_memoria = deserializar_pcb(lista_paquete);
 
       if(proceso_recibido_error_memoria != NULL){
-         desalojar_proceso(planificador,proceso_recibido_error_memoria);//esta bien en este caso que pase de exec a ready?
+         mandar_proceso_a_exit(proceso_recibido_error_memoria->pid);
       }
       else{
          log_info(logger_kernel,"El proceso recibido es nulo");
@@ -128,18 +128,20 @@ while (control_key)
          }
          else{
             //NO HAY INSTANCIAS DISPONIBLES, AGREAGAR A COLA DE BLOQUEADOS DEL RECURSO
-            t_list* lista_bloqueados_correspondiente = dictionary_get(planificador->cola_blocked,recurso_recibido_wait->nombre_recurso);
-            //t_pcb pcb_a_agregar = encontrar_proceso_pid(planificador->cola_exec,recurso_recibido->pid);
             
-               list_add(lista_bloqueados_correspondiente,recurso_recibido_wait->pcb);
-               dictionary_remove_and_destroy(planificador->cola_blocked,recurso_recibido_wait->nombre_recurso,list_destroy);   
-               dictionary_put(planificador->cola_blocked ,recurso_recibido_wait->nombre_recurso,lista_bloqueados_correspondiente);
+            bloquear_proceso(planificador,recurso_recibido_wait->pcb,recurso_recibido_wait->nombre_recurso);
 
+            /*t_list* lista_bloqueados_correspondiente = dictionary_get(planificador->cola_blocked,recurso_recibido_wait->nombre_recurso);
+            list_add(lista_bloqueados_correspondiente,recurso_recibido_wait->pcb);
+            dictionary_remove_and_destroy(planificador->cola_blocked,recurso_recibido_wait->nombre_recurso,list_destroy);   
+            dictionary_put(planificador->cola_blocked ,recurso_recibido_wait->nombre_recurso,lista_bloqueados_correspondiente);
+            */
          }
          
       }
       else{
          //NO EXISTE RECURSO, MANDAR A EXIT
+         mandar_proceso_a_exit(recurso_recibido_wait->pcb->pid);
       }
       break;
    case ENVIO_SIGNAL_A_KERNEL:
@@ -165,12 +167,13 @@ while (control_key)
                pcb_desbloqueado = list_remove(lista_bloqueados_correspondiente,indice_primer_valor);
                dictionary_remove_and_destroy(planificador->cola_blocked,recurso_recibido_signal->nombre_recurso,list_destroy);   
                dictionary_put(planificador->cola_blocked ,recurso_recibido_signal->nombre_recurso,lista_bloqueados_correspondiente);
-           //poner el pcb_desbloqueado en cola ready?
+               //poner el pcb_desbloqueado en cola ready?
          }
           //mandar a cpu que continue la ejecucion del pcb que llega por parametro? 
       }
       else{
          //NO EXISTE RECURSO, MANDAR A EXIT
+         mandar_proceso_a_exit(recurso_recibido_signal->pcb->pid);
       }
       break;
    case SOLICITUD_IO_STDIN_READ:
@@ -193,7 +196,7 @@ while (control_key)
             t_pcb* pcb_a_bloquear_stdout_read = malloc(sizeof(t_pcb));
             pcb_a_bloquear_stdout_read = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
             if(pcb_a_bloquear_stdout_read != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_stdout_read);
+               bloquear_proceso(planificador,pcb_a_bloquear_stdout_read,interfaz_encontrada->nombre);
             }
          }
          else{
@@ -228,7 +231,7 @@ while (control_key)
             t_pcb* pcb_a_bloquear_stdout_write = malloc(sizeof(t_pcb));
             pcb_a_bloquear_stdout_write = buscar_pcb_en_lista(planificador->cola_exec,io_stdout_write->pid);
             if(pcb_a_bloquear_stdout_write != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_stdout_write);
+               bloquear_proceso(planificador,pcb_a_bloquear_stdout_write,interfaz_encontrada->nombre);
             }
          }
          else{
@@ -281,7 +284,7 @@ while (control_key)
             t_pcb* pcb_a_bloquear = malloc(sizeof(t_pcb));
             pcb_a_bloquear = buscar_pcb_en_lista(planificador->cola_exec,io_crear_archivo->pid);
             if(pcb_a_bloquear != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear);
+               bloquear_proceso(planificador,pcb_a_bloquear,interfaz_encontrada->nombre);
             }
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
@@ -321,7 +324,7 @@ while (control_key)
             t_pcb* pcb_a_bloquear_delete = malloc(sizeof(t_pcb));
             pcb_a_bloquear_delete = buscar_pcb_en_lista(planificador->cola_exec,io_delete_archivo->pid);
             if(pcb_a_bloquear_delete != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_delete);
+               bloquear_proceso(planificador,pcb_a_bloquear_delete,interfaz_encontrada->nombre);
             }
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
@@ -362,7 +365,7 @@ while (control_key)
             t_pcb* pcb_a_bloquear_truncate = malloc(sizeof(t_pcb));
             pcb_a_bloquear_truncate = buscar_pcb_en_lista(planificador->cola_exec,io_truncate_archivo->pid);
             if(pcb_a_bloquear_truncate != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_truncate);
+               bloquear_proceso(planificador,pcb_a_bloquear_truncate,interfaz_encontrada->nombre);
             }
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
@@ -402,7 +405,7 @@ while (control_key)
             t_pcb* pcb_a_bloquear_write = malloc(sizeof(t_pcb));
             pcb_a_bloquear_write = buscar_pcb_en_lista(planificador->cola_exec,io_write_archivo->pid);
             if(pcb_a_bloquear_write != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_write);
+               bloquear_proceso(planificador,pcb_a_bloquear_write,interfaz_encontrada->nombre);
             }
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
@@ -442,7 +445,7 @@ while (control_key)
             t_pcb* pcb_a_bloquear_read = malloc(sizeof(t_pcb));
             pcb_a_bloquear_read = buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid);
             if(pcb_a_bloquear_read != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_read);
+               bloquear_proceso(planificador,pcb_a_bloquear_read,interfaz_encontrada->nombre);
             }
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
