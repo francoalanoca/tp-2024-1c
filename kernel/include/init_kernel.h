@@ -18,6 +18,8 @@ t_pcb* buscar_pcb_en_lista(t_list* lista_de_pcb, uint32_t pid);
 
 bool interfaz_permite_operacion(t_tipo_interfaz_enum tipo_interfaz, tipo_instruccion instruccion);
 
+void crear_listas_recursos();
+
 
 // Variables Globales
 extern t_log *logger_kernel;

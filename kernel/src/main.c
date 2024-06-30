@@ -38,6 +38,8 @@ int main(char argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    crear_listas_recursos();
+
 //INICIAR SERVIDOR y CONSOLA
 
     crearServidor();

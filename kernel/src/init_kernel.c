@@ -71,11 +71,11 @@ int cargar_configuracion(char *path) {
     cfg_kernel->QUANTUM = config_get_int_value(file_cfg_kernel, "QUANTUM");
     log_info(logger_kernel, "QUANTUM cargado correctamente: %d", cfg_kernel->QUANTUM);
 
-    cfg_kernel->RECURSOS = strdup(config_get_string_value(file_cfg_kernel, "RECURSOS"));
+    cfg_kernel->RECURSOS = config_get_array_value(file_cfg_kernel, "RECURSOS");
     log_info(logger_kernel, "RECURSOS cargado correctamente: ");// por ahora no logueamos lo cargado
 
-    //cfg_kernel->INSTANCIAS_RECURSOS = strdup(config_get_string_value(file_cfg_kernel, "INSTANCIAS_RECURSOS"));
-    //log_info(logger_kernel, "INSTANCIAS_RECURSOS cargado correctamente: "); // por ahora no logueamos lo cargado
+    cfg_kernel->INSTANCIAS_RECURSOS =  config_get_array_value(file_cfg_kernel, "INSTANCIAS_RECURSOS");
+    log_info(logger_kernel, "INSTANCIAS_RECURSOS cargado correctamente: "); // por ahora no logueamos lo cargado
 
     cfg_kernel->GRADO_MULTIPROGRAMACION = config_get_int_value(file_cfg_kernel, "GRADO_MULTIPROGRAMACION");
     log_info(logger_kernel, "GRADO_MULTIPROGRAMACION cargado correctamente: %d", cfg_kernel->GRADO_MULTIPROGRAMACION);
@@ -120,5 +120,17 @@ void cerrar_programa() {
     log_info(logger_kernel,"TERMINADA_LA_CONFIG");
     log_info(logger_kernel, "TERMINANDO_EL_LOG");
     log_destroy(logger_kernel);
+}
+
+void crear_listas_recursos(){
+
+t_list* recursos = malloc(sizeof(t_list));
+recursos = cfg_kernel->RECURSOS;
+for (size_t i = 0; i < recursos->elements_count; i++)
+{
+    dictionary_put(planificador->cola_blocked ,list_get(recursos,i),list_create());
+    
+}
+
 }
 

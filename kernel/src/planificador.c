@@ -31,7 +31,6 @@ t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, in
     planificador->cola_ready = list_create();
     planificador->cola_exec = list_create();
     planificador->cola_blocked = dictionary_create();
-    dictionary_put(planificador->cola_blocked ,"RECURSO_1",list_create());//poner en funcion
     planificador->cola_exit = list_create();
     planificador->algoritmo = algoritmo;
     planificador->quantum = quantum;
@@ -196,3 +195,4 @@ uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb) {
     }
     return NULL;
 }
+

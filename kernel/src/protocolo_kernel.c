@@ -75,13 +75,13 @@ while (control_key)
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
-               
+               mandar_proceso_a_exit(io_gen_sleep->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
-
+            mandar_proceso_a_exit(io_gen_sleep->pid);
          }
          
       }
@@ -182,16 +182,32 @@ while (control_key)
       
       t_io_stdin_stdout* io_stdin_read = malloc(sizeof(t_io_stdin_stdout));
       io_stdin_read = deserializar_io_stdin_stdout(lista_paquete);
+      if(dictionary_has_key(interfaces,io_stdin_read->nombre_interfaz)){
+         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
+         interfaz_encontrada = dictionary_get(interfaces,io_stdin_read->nombre_interfaz);
+         if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDIN_READ)){
 
-      enviar_io_stdin_read(io_stdin_read,socket_servidor);
+            enviar_io_stdin_read(io_stdin_read,socket_servidor);
 
-      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
-      t_pcb* pcb_a_bloquear_stdout_read = malloc(sizeof(t_pcb));
-      pcb_a_bloquear_stdout_read = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
-      if(pcb_a_bloquear_stdout_read != NULL){
-         bloquear_proceso(planificador,pcb_a_bloquear_stdout_read);
+            //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+            t_pcb* pcb_a_bloquear_stdout_read = malloc(sizeof(t_pcb));
+            pcb_a_bloquear_stdout_read = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
+            if(pcb_a_bloquear_stdout_read != NULL){
+               bloquear_proceso(planificador,pcb_a_bloquear_stdout_read);
+            }
+         }
+         else{
+            log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
+            //ENVIAR PROCESO A EXIT
+            mandar_proceso_a_exit(io_stdin_read->pid);
+         }
+         
       }
-      break;
+      else{
+         log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
+         //ENVIAR PROCESO A EXIT?
+         mandar_proceso_a_exit(io_stdin_read->pid);
+      }
       break;
    case SOLICITUD_IO_STDOUT_WRITE:
       //TODO
@@ -202,14 +218,30 @@ while (control_key)
       
       t_io_stdin_stdout* io_stdout_write = malloc(sizeof(t_io_stdin_stdout));
       io_stdout_write = deserializar_io_stdin_stdout(lista_paquete);
+      if(dictionary_has_key(interfaces,io_stdout_write->nombre_interfaz)){
+         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
+            interfaz_encontrada = dictionary_get(interfaces,io_stdout_write->nombre_interfaz);
+         if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDOUT_WRITE)){
+            enviar_io_stdout_write(io_stdout_write,socket_servidor);
 
-      enviar_io_stdout_write(io_stdout_write,socket_servidor);
-
-      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
-      t_pcb* pcb_a_bloquear_stdout_write = malloc(sizeof(t_pcb));
-      pcb_a_bloquear_stdout_write = buscar_pcb_en_lista(planificador->cola_exec,io_stdout_write->pid);
-      if(pcb_a_bloquear_stdout_write != NULL){
-         bloquear_proceso(planificador,pcb_a_bloquear_stdout_write);
+            //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+            t_pcb* pcb_a_bloquear_stdout_write = malloc(sizeof(t_pcb));
+            pcb_a_bloquear_stdout_write = buscar_pcb_en_lista(planificador->cola_exec,io_stdout_write->pid);
+            if(pcb_a_bloquear_stdout_write != NULL){
+               bloquear_proceso(planificador,pcb_a_bloquear_stdout_write);
+            }
+         }
+         else{
+            log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
+            //ENVIAR PROCESO A EXIT
+            mandar_proceso_a_exit(io_stdout_write->pid);
+         }
+         
+      }
+      else{
+         log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
+         //ENVIAR PROCESO A EXIT?
+         mandar_proceso_a_exit(io_stdout_write->pid);
       }
       break;
    case SOLICITUD_EXIT_KERNEL:
@@ -238,20 +270,37 @@ while (control_key)
       
       t_io_crear_archivo* io_crear_archivo = malloc(sizeof(t_io_crear_archivo));
       io_crear_archivo = deserializar_io_crear_archivo(lista_paquete);
+      if(dictionary_has_key(interfaces,io_crear_archivo->nombre_interfaz)){
+         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
+            interfaz_encontrada = dictionary_get(interfaces,io_crear_archivo->nombre_interfaz);
+         if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_CREATE)){
+            //AHORA DEBO ENVIAR A IO LO NECESARIO
+            enviar_creacion_archivo(io_crear_archivo,socket_servidor);
 
-      //AHORA DEBO ENVIAR A IO LO NECESARIO
-      enviar_creacion_archivo(io_crear_archivo,socket_servidor);
-
-      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
-      t_pcb* pcb_a_bloquear = malloc(sizeof(t_pcb));
-      pcb_a_bloquear = buscar_pcb_en_lista(planificador->cola_exec,io_crear_archivo->pid);
-      if(pcb_a_bloquear != NULL){
-         bloquear_proceso(planificador,pcb_a_bloquear);
+            //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+            t_pcb* pcb_a_bloquear = malloc(sizeof(t_pcb));
+            pcb_a_bloquear = buscar_pcb_en_lista(planificador->cola_exec,io_crear_archivo->pid);
+            if(pcb_a_bloquear != NULL){
+               bloquear_proceso(planificador,pcb_a_bloquear);
+            }
+            else{
+               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+               //ENVIAR PROCESO A EXIT
+               mandar_proceso_a_exit(io_crear_archivo->pid);
+            }
+         }
+         else{
+            log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
+            //ENVIAR PROCESO A EXIT
+            mandar_proceso_a_exit(io_crear_archivo->pid);
+         }
+         
       }
       else{
-         log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+         log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
+         //ENVIAR PROCESO A EXIT?
+         mandar_proceso_a_exit(io_crear_archivo->pid);
       }
-      
       break;
    case SOLICITUD_IO_FS_DELETE_A_KERNEL:
       //TODO
@@ -261,18 +310,36 @@ while (control_key)
       
       t_io_crear_archivo* io_delete_archivo = malloc(sizeof(t_io_crear_archivo));
       io_delete_archivo = deserializar_io_crear_archivo(lista_paquete);
+      if(dictionary_has_key(interfaces,io_delete_archivo->nombre_interfaz)){
+         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
+            interfaz_encontrada = dictionary_get(interfaces,io_delete_archivo->nombre_interfaz);
+         if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_DELETE)){
+            //AHORA DEBO ENVIAR A IO LO NECESARIO
+            enviar_delete_archivo(io_delete_archivo,socket_servidor);
 
-      //AHORA DEBO ENVIAR A IO LO NECESARIO
-      enviar_delete_archivo(io_delete_archivo,socket_servidor);
-
-      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
-      t_pcb* pcb_a_bloquear_delete = malloc(sizeof(t_pcb));
-      pcb_a_bloquear_delete = buscar_pcb_en_lista(planificador->cola_exec,io_delete_archivo->pid);
-      if(pcb_a_bloquear_delete != NULL){
-         bloquear_proceso(planificador,pcb_a_bloquear_delete);
+            //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+            t_pcb* pcb_a_bloquear_delete = malloc(sizeof(t_pcb));
+            pcb_a_bloquear_delete = buscar_pcb_en_lista(planificador->cola_exec,io_delete_archivo->pid);
+            if(pcb_a_bloquear_delete != NULL){
+               bloquear_proceso(planificador,pcb_a_bloquear_delete);
+            }
+            else{
+               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+               //ENVIAR PROCESO A EXIT
+               mandar_proceso_a_exit(io_delete_archivo->pid);
+            }
+         }
+         else{
+            log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
+            //ENVIAR PROCESO A EXIT
+            mandar_proceso_a_exit(io_delete_archivo->pid);
+         }
+         
       }
       else{
-         log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+         log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
+         //ENVIAR PROCESO A EXIT?
+         mandar_proceso_a_exit(io_delete_archivo->pid);
       }
       break;
    case SOLICITUD_IO_FS_TRUNCATE_A_KERNEL:
@@ -284,17 +351,36 @@ while (control_key)
       t_io_fs_truncate* io_truncate_archivo = malloc(sizeof(t_io_fs_truncate));
       io_truncate_archivo = deserializar_io_truncate_archivo(lista_paquete);
 
-      //AHORA DEBO ENVIAR A IO LO NECESARIO
-      enviar_truncate_archivo(io_truncate_archivo,socket_servidor);
+      if(dictionary_has_key(interfaces,io_truncate_archivo->nombre_interfaz)){
+         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
+            interfaz_encontrada = dictionary_get(interfaces,io_truncate_archivo->nombre_interfaz);
+         if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_TRUNCATE)){
+            //AHORA DEBO ENVIAR A IO LO NECESARIO
+            enviar_truncate_archivo(io_truncate_archivo,socket_servidor);
 
-      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
-      t_pcb* pcb_a_bloquear_truncate = malloc(sizeof(t_pcb));
-      pcb_a_bloquear_truncate = buscar_pcb_en_lista(planificador->cola_exec,io_truncate_archivo->pid);
-      if(pcb_a_bloquear_truncate != NULL){
-         bloquear_proceso(planificador,pcb_a_bloquear_truncate);
+            //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+            t_pcb* pcb_a_bloquear_truncate = malloc(sizeof(t_pcb));
+            pcb_a_bloquear_truncate = buscar_pcb_en_lista(planificador->cola_exec,io_truncate_archivo->pid);
+            if(pcb_a_bloquear_truncate != NULL){
+               bloquear_proceso(planificador,pcb_a_bloquear_truncate);
+            }
+            else{
+               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+               //ENVIAR PROCESO A EXIT
+               mandar_proceso_a_exit(io_truncate_archivo->pid);
+            }
+         }
+         else{
+            log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
+            //ENVIAR PROCESO A EXIT
+            mandar_proceso_a_exit(io_truncate_archivo->pid);
+         }
+         
       }
       else{
-         log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+         log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
+         //ENVIAR PROCESO A EXIT?
+         mandar_proceso_a_exit(io_truncate_archivo->pid);
       }
       break;
    case SOLICITUD_IO_FS_WRITE_A_KERNEL:
@@ -305,18 +391,36 @@ while (control_key)
       
       t_io_fs_write* io_write_archivo = malloc(sizeof(t_io_fs_write));
       io_write_archivo = deserializar_io_write_archivo(lista_paquete);
+      if(dictionary_has_key(interfaces,io_write_archivo->nombre_interfaz)){
+         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
+            interfaz_encontrada = dictionary_get(interfaces,io_write_archivo->nombre_interfaz);
+         if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_WRITE)){
+            //AHORA DEBO ENVIAR A IO LO NECESARIO
+            enviar_write_archivo(io_write_archivo,socket_servidor);
 
-      //AHORA DEBO ENVIAR A IO LO NECESARIO
-      enviar_write_archivo(io_write_archivo,socket_servidor);
-
-      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
-      t_pcb* pcb_a_bloquear_write = malloc(sizeof(t_pcb));
-      pcb_a_bloquear_write = buscar_pcb_en_lista(planificador->cola_exec,io_write_archivo->pid);
-      if(pcb_a_bloquear_write != NULL){
-         bloquear_proceso(planificador,pcb_a_bloquear_write);
+            //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+            t_pcb* pcb_a_bloquear_write = malloc(sizeof(t_pcb));
+            pcb_a_bloquear_write = buscar_pcb_en_lista(planificador->cola_exec,io_write_archivo->pid);
+            if(pcb_a_bloquear_write != NULL){
+               bloquear_proceso(planificador,pcb_a_bloquear_write);
+            }
+            else{
+               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+               //ENVIAR PROCESO A EXIT
+               mandar_proceso_a_exit(io_write_archivo->pid);
+            }
+         }
+         else{
+            log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
+            //ENVIAR PROCESO A EXIT
+            mandar_proceso_a_exit(io_write_archivo->pid);
+         }
+         
       }
       else{
-         log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+         log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
+         //ENVIAR PROCESO A EXIT?
+         mandar_proceso_a_exit(io_write_archivo->pid);
       }
       break;
    case SOLICITUD_IO_FS_READ_A_KERNEL:
@@ -327,18 +431,36 @@ while (control_key)
       
       t_io_fs_write* io_read_archivo = malloc(sizeof(t_io_fs_write));
       io_read_archivo = deserializar_io_write_archivo(lista_paquete);
+      if(dictionary_has_key(interfaces,io_read_archivo->nombre_interfaz)){
+         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
+            interfaz_encontrada = dictionary_get(interfaces,io_read_archivo->nombre_interfaz);
+         if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_READ)){
+            //AHORA DEBO ENVIAR A IO LO NECESARIO
+            enviar_read_archivo(io_read_archivo,socket_servidor);
 
-      //AHORA DEBO ENVIAR A IO LO NECESARIO
-      enviar_read_archivo(io_read_archivo,socket_servidor);
-
-      //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
-      t_pcb* pcb_a_bloquear_read = malloc(sizeof(t_pcb));
-      pcb_a_bloquear_read = buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid);
-      if(pcb_a_bloquear_read != NULL){
-         bloquear_proceso(planificador,pcb_a_bloquear_read);
+            //TODO:MODIFICAR PCB PARA QUE EL ESTADO SEA "EN IO"(O AGREGAR A LISTA)?
+            t_pcb* pcb_a_bloquear_read = malloc(sizeof(t_pcb));
+            pcb_a_bloquear_read = buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid);
+            if(pcb_a_bloquear_read != NULL){
+               bloquear_proceso(planificador,pcb_a_bloquear_read);
+            }
+            else{
+               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+               //ENVIAR PROCESO A EXIT
+               mandar_proceso_a_exit(io_read_archivo->pid);
+            }
+         }
+         else{
+            log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
+            //ENVIAR PROCESO A EXIT
+            mandar_proceso_a_exit(io_read_archivo->pid);
+         }
+         
       }
       else{
-         log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
+         log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
+         //ENVIAR PROCESO A EXIT?
+         mandar_proceso_a_exit(io_read_archivo->pid);
       }
       break;
    case -1:
