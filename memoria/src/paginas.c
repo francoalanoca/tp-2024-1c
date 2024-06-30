@@ -97,33 +97,44 @@ t_pagina *busco_pagina_por_marco(t_list *lista_de_paginas, uint32_t marco){
 }
 
 
-
+//Funcion que escribe una valor con un tamaño, de un proceso con la df
 void* escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor, uint32_t tamanio){
 
     void* escrito = malloc(tamanio);
+
+    //Aca se almacenara lo que ya fue escrito como un contador
     uint32_t espacio_escrito = 0;
     //t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
 
     while (tamanio > 0){
     
+        //Creamos las variables necesarias para la algrebra de punteros (frame|offset)
         uint32_t marco = direccion_fisica / cfg_memoria->TAM_PAGINA;
         uint32_t offset = direccion_fisica % cfg_memoria->TAM_PAGINA;
-        uint32_t espacio_restante_marco = cfg_memoria->TAM_PAGINA - offset;
-        uint32_t espacio_a_escribir;
 
+        //El espacio disponible en el marco va ser el tamaño de este menos lo que se desplaza el proceso
+        uint32_t espacio_restante_marco = cfg_memoria->TAM_PAGINA - offset;
+
+        //Definimos el valor de lo que se va a escribir
+        uint32_t espacio_a_escribir;
+        //SI no es 0 y es < al espacio del frame(marco)
         if (tamanio < espacio_restante_marco){
             espacio_a_escribir = tamanio;
         }
+        //Si es >= ocupamos lo que quede y luego buscamos otro espacio
         else{
             espacio_a_escribir = espacio_restante_marco;
         }
 
-        memcpy(memoria + direccion_fisica, valor, tamanio);
+        //Procedemos a copiar (donde se va guardar, que se va guardar(desde donde), tamanio de lo que se va a guardar)
+        memcpy(memoria + direccion_fisica, valor + espacio_escrito, espacio_a_escribir);
 
         //t_pagina *pagina = busco_pagina_por_marco(tabla_de_paginas->lista_de_paginas, marco);
         //Actualizamos que fue modificado
+        //if(pagina->modificado == false)
         //pagina->modificado = true;
 
+        //Actualizamos para que avance luego de escribir
         espacio_escrito = espacio_escrito + espacio_a_escribir;
         tamanio = tamanio - espacio_a_escribir;
 
@@ -132,10 +143,11 @@ void* escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* va
 
             t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
 
-            t_pagina *pagina = busco_pagina_por_marco(tabla_de_paginas->lista_de_paginas, marco + 1);
+            //Busco la pagina sig
+            t_pagina *pagina_siguiente = busco_pagina_por_marco(tabla_de_paginas->lista_de_paginas, marco + 1);
             
             //Actualizamos la df para que empiece desde el sig frame
-            direccion_fisica = pagina->marco * cfg_memoria->TAM_PAGINA;
+            direccion_fisica = pagina_siguiente->marco * cfg_memoria->TAM_PAGINA;
         }
     }
     escrito = "OK";
@@ -146,12 +158,13 @@ void* escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* va
 
 
 
-
+//Funcion que lee algo de una tamaño en base a una df y un proceso(pid)
 void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tamanio){
 
     //Reservo espacio para la variable que voy a devolver
     void* leido = malloc(tamanio);
 
+    //Aca se almacenara lo que ya fue leido como un contador
     uint32_t espacio_leido = 0;
 
     t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
@@ -159,20 +172,29 @@ void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
     //Mientras haya algo para leer
     while (tamanio > 0){
         
+        //Creamos las variables necesarias para la algrebra de punteros (frame|offset)
         uint32_t marco = direccion_fisica / cfg_memoria->TAM_PAGINA;
         uint32_t offset = direccion_fisica % cfg_memoria->TAM_PAGINA;
-        uint32_t espacio_restante_marco = cfg_memoria->TAM_PAGINA - offset;
-        uint32_t espacio_a_leer;
 
+        //El espacio disponible en el marco va ser el tamaño de este menos lo que se desplaza el proceso
+        uint32_t espacio_restante_marco = cfg_memoria->TAM_PAGINA - offset;
+
+        //Definimos el valor de lo que se va a leer
+        uint32_t espacio_a_leer;
+        //SI no es 0 y < al espacio del frame(marco)
         if (tamanio < espacio_restante_marco){
             espacio_a_leer = tamanio;
         }
+        //Si es >= ocupamos lo que quede y luego buscamos otro espacio
         else{
             espacio_a_leer = espacio_restante_marco;
         }
 
+        //Procedemos a copiar (donde se va guardar, que se va guardar(desde donde), tamanio de lo que se va a guardar)
         memcpy(leido, memoria + direccion_fisica, tamanio);
+        //memcpy(leido + espacio_leido, memoria + direccion_fisica, espacio_a_leer);
 
+        //Actualizamos para que avance luego de leer
         espacio_leido = espacio_leido + espacio_a_leer;
         tamanio = tamanio - espacio_a_leer;
         direccion_fisica = direccion_fisica + espacio_a_leer;
@@ -181,10 +203,10 @@ void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
         if (tamanio > 0){
 
             //Busco la pagina sig
-            t_pagina *pagina = busco_pagina_por_marco(tabla_de_paginas->lista_de_paginas, marco + 1);
+            t_pagina *pagina_siguiente = busco_pagina_por_marco(tabla_de_paginas->lista_de_paginas, marco + 1);
 
             //Actualizamos la df para que empiece desde el sig frame
-            direccion_fisica = pagina->marco * cfg_memoria->TAM_PAGINA;
+            direccion_fisica = pagina_siguiente->marco * cfg_memoria->TAM_PAGINA;
         }
         
     }
