@@ -2,6 +2,7 @@
 #define PLANIFICADORES_H_
 
 #include <stdbool.h>
+#include <stdlib.h>
 #include <utils/utils.h>
 
 // Enumeración para los algoritmos de planificación
@@ -35,7 +36,7 @@ t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, in
 
 void destruir_planificador(t_planificador* planificador);
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso);
-t_algoritmo_planificacion obtener_algoritmo_planificador(const char* algoritmo_planificacion);
+t_algoritmo_planificacion obtener_algoritmo_planificador( char* algoritmo_planificacion);
 t_pcb* obtener_proximo_proceso(t_planificador* planificador);
 void desalojar_proceso(t_planificador* planificador, t_pcb* proceso);
 void bloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nombre_lista);

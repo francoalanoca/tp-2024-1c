@@ -156,7 +156,8 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 char* datos_escribir = malloc(archivo_escribir->tamanio_operacion * sizeof(char));
                 solicitud_datos_escribir->pid = archivo_escribir->pid;
                 solicitud_datos_escribir->direcciones_fisicas = list_create ();
-                list_add(solicitud_datos_escribir->direcciones_fisicas,archivo_escribir->direcciones_fisicas);
+                list_add_all(solicitud_datos_escribir->direcciones_fisicas,archivo_escribir->direcciones_fisicas);
+                solicitud_datos_escribir->tamanio_operacion = archivo_escribir->tamanio_operacion;
                //reenvio la solicitud a memoria
                 enviar_io_df(solicitud_datos_escribir, socket_memoria, IO_FS_WRITE);
                
@@ -587,7 +588,7 @@ void agrandar_archivo(uint32_t nuevo_tamanio, char* nombre_archivo) {
 
 void leer_archivo(t_io_readwrite_archivo* archivo, int socket){
     char* datos_leidos = malloc(archivo->tamanio_operacion * sizeof(char));
-    t_io_input* input = malloc (sizeof(t_io_input));
+    t_io_memo_escritura* input = malloc (sizeof(t_io_memo_escritura));
     t_FCB* fbc_leer = malloc (sizeof(t_FCB));
     fbc_leer = dictionary_get(fcb_dict,archivo->nombre_archivo);
     int primer_bloque =  fbc_leer->primer_bloque;  

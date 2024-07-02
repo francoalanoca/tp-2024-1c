@@ -1,5 +1,5 @@
 
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/protocolo_kernel.h>
+#include "../include/protocolo_kernel.h"
 //#include <protocolo_kernel.h>
 
 
@@ -512,10 +512,6 @@ while (control_key)
    int cod_op = recibir_operacion(conexion_memoria);
    switch (cod_op)
    {
-   case CREAR_PROCESO_KERNEL:
-      enviar_creacion_de_proceso_a_memoria(pcb,conexion_memoria);
-      break;
-
    case -1:
       log_error(logger_kernel, "Desconexion de memoria");
       control_key = 0;

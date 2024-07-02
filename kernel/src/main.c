@@ -7,8 +7,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/main.h>
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/planificador.h>
+#include "../include/main.h"
+#include "../include/planificador.h"
 //#include <main.h>
 //#include <planificador.h>
 
@@ -53,9 +53,7 @@ int main(char argc, char *argv[]) {
 //EMPEZAR PLANIFICACIONES
 
 
-    planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM,cfg_kernel->GRADO_MULTIPROGRAMACION);
-   // planificador = inicializar_planificador (obtener_algoritmo_planificador(cfg_kernel-> ALGORITMO_PLANIFICACION), cfg_kernel-> QUANTUM);
-
+   
 
 //CERRAR PROGRAMA
 

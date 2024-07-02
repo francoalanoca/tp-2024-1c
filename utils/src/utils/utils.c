@@ -424,11 +424,8 @@ t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete ){
     
     crear_proceso->pid = *(uint32_t*)list_get(lista_paquete, 0);
     printf("Pid recibido: %d \n", crear_proceso->pid);
-    
-    crear_proceso->tamanio = *(uint32_t*)list_get(lista_paquete, 1);
-    printf("Tamanio proceso: %d \n", crear_proceso->tamanio);
 
-    crear_proceso->archivo_pseudocodigo = list_get(lista_paquete, 2);
+    crear_proceso->archivo_pseudocodigo = list_get(lista_paquete, 1);
     printf("Nombre del proceso: %s \n", crear_proceso->archivo_pseudocodigo);
 
     return crear_proceso;
@@ -441,8 +438,7 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
  
     paquete_crear_proceso = crear_paquete(CREAR_PROCESO_KERNEL_FIN);
  
-    agregar_a_paquete(paquete_crear_proceso, &crear_proceso->pid,  sizeof(uint32_t));         
-    agregar_a_paquete(paquete_crear_proceso, &crear_proceso->tamanio, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_crear_proceso, &crear_proceso->pid,  sizeof(uint32_t));
     agregar_a_paquete(paquete_crear_proceso, crear_proceso->archivo_pseudocodigo, strlen(crear_proceso->archivo_pseudocodigo) + 1);  
     
     enviar_paquete(paquete_crear_proceso, socket_kernel);   
@@ -452,6 +448,31 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
 }
 
 
+
+uint32_t* deserializar_finalizar_proceso(t_list*  lista_paquete ){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    uint32_t* proceso_a_finalizar = malloc(sizeof(uint32_t));
+    
+    proceso_a_finalizar = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", proceso_a_finalizar);
+
+    return proceso_a_finalizar;
+}
+
+
+void enviar_respuesta_finalizar_proceso(uint32_t pid_proceso_a_finalizar ,int socket_kernel) {
+    t_paquete* paquete_finalizar_proceso;
+ 
+    paquete_finalizar_proceso = crear_paquete(FINALIZAR_PROCESO_FIN);
+ 
+    agregar_a_paquete(paquete_finalizar_proceso, &pid_proceso_a_finalizar,  sizeof(uint32_t));
+    
+    enviar_paquete(paquete_finalizar_proceso, socket_kernel);   
+    printf("Proceso enviado"); 
+    free(paquete_finalizar_proceso);
+    
+}
 
 
 //Mmoria deserializa lo enviado por Cpu
@@ -519,13 +540,73 @@ t_io_direcciones_fisicas* deserializar_peticion_valor(t_list*  lista_paquete ){
 
 
 
+t_escribir_leer* deserializar_peticion_guardar(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_escribir_leer* peticion_guardar = malloc(sizeof(t_escribir_leer));
+    
+    peticion_guardar->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", peticion_guardar->pid);
+    
+    peticion_guardar->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Direccion fisica: %d \n", peticion_guardar->direccion_fisica);
+
+    peticion_guardar->tamanio = *(uint32_t*)list_get(lista_paquete, 2);
+    printf("Tamanio proceso: %d \n", peticion_guardar->tamanio);
+
+    peticion_guardar->valor = list_get(lista_paquete, 3);
+    printf("Valor: %s \n", peticion_guardar->valor);
+
+    return peticion_guardar;
+
+}
+
+
+
+t_resize* deserializar_solicitud_resize(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_resize* solicitud_resize = malloc(sizeof(t_resize));
+    
+    solicitud_resize->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", solicitud_resize->pid);
+    
+    solicitud_resize->tamanio = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Tamanio proceso: %d \n", solicitud_resize->tamanio);
+
+    solicitud_resize->valor = list_get(lista_paquete, 2);
+    printf("Valor: %s \n", solicitud_resize->valor);
+
+    return solicitud_resize;
+
+}
+
+
+t_copy* deserializar_solicitud_copy(t_list*  lista_paquete){
+
+    //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
+    t_copy* solicitud_copy = malloc(sizeof(t_copy));
+    
+    solicitud_copy->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    printf("Pid recibido: %d \n", solicitud_copy->pid);
+    
+    solicitud_copy->direccion_fisica = *(uint32_t*)list_get(lista_paquete, 1);
+    printf("Direccion fisica: %d \n", solicitud_copy->direccion_fisica);
+
+    solicitud_copy->valor = list_get(lista_paquete, 2);
+    printf("Valor: %s \n", solicitud_copy->valor);
+
+    return solicitud_copy;
+
+}
+
+
 void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu) {
     t_paquete* paquete_instruccion;
  
     paquete_instruccion = crear_paquete(INSTRUCCION_RECIBIDA);
  
-    agregar_a_paquete(paquete_instruccion, &proxima_instruccion,  strlen(proxima_instruccion) + 1);         
-    //agregar_a_paquete(paquete_instruccion, &proxima_instruccion->program_counter, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_instruccion, &proxima_instruccion,  strlen(proxima_instruccion) + 1);          
     
     enviar_paquete(paquete_instruccion, socket_cpu);   
     printf("Instruccion enviada"); 
@@ -541,7 +622,6 @@ void enviar_solicitud_marco(int marco ,int socket_cpu) {
     paquete_marco = crear_paquete(MARCO_RECIBIDO);
  
     agregar_a_paquete(paquete_marco, &marco,  sizeof(int));         
-    //agregar_a_paquete(paquete_instruccion, &proxima_instruccion->program_counter, sizeof(uint32_t));  
     
     enviar_paquete(paquete_marco, socket_cpu);   
     printf("Marco enviado"); 
@@ -555,7 +635,6 @@ void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu) {
     paquete_tam_pagina = crear_paquete(SOLICITUD_TAMANIO_PAGINA_RTA);
  
     agregar_a_paquete(paquete_tam_pagina, &tamanio_pagina,  sizeof(uint32_t));         
-    //agregar_a_paquete(paquete_instruccion, &proxima_instruccion->program_counter, sizeof(uint32_t));  
     
     enviar_paquete(paquete_tam_pagina, socket_cpu);   
     printf("Tamaño de pagina enviada"); 
@@ -566,26 +645,65 @@ void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu) {
 
 
 
-void enviar_peticion_valor(void* valor ,int socket_cpu) {
+void enviar_peticion_valor(void* respuesta_leer ,int socket_cpu) {
     t_paquete* paquete_valor;
  
     paquete_valor = crear_paquete(PETICION_VALOR_MEMORIA_RTA);
  
-    agregar_a_paquete(paquete_valor, &valor,  sizeof(void*));         
-    //agregar_a_paquete(paquete_instruccion, &proxima_instruccion->program_counter, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_valor, &respuesta_leer,  sizeof(void*));          
     
     enviar_paquete(paquete_valor, socket_cpu);   
-    printf("Tamaño de pagina enviada"); 
+    printf("Se envio respuesta de lectura"); 
     free(paquete_valor);
     
 }
 
 
 
-// usar en memoria cuando recibe IO_M_STDIN
-t_io_input* deserializar_input(t_list*  lista_paquete ){
+void enviar_resultado_guardar(void* respuesta_escribir, int socket_cliente){
+    t_paquete* paquete_valor;
 
-    t_io_input* io_input = malloc(sizeof(t_io_input));
+    paquete_valor = crear_paquete(GUARDAR_EN_DIRECCION_FISICA_RTA);
+
+    agregar_a_paquete(paquete_valor, &respuesta_escribir,  sizeof(void*));
+
+    enviar_paquete(paquete_valor, socket_cliente);
+    printf("Se envio respuesta de guardado"); 
+    free(paquete_valor);
+}
+
+
+void enviar_respuesta_resize(op_code respuesta_resize, int socket_cliente){
+    t_paquete* paquete_valor;
+
+    paquete_valor = crear_paquete(SOLICITUD_RESIZE_RTA);
+
+    agregar_a_paquete(paquete_valor, &respuesta_resize,  sizeof(uint32_t));
+ printf("respuesta agregada"); 
+    enviar_paquete(paquete_valor, socket_cliente);
+    printf("Se envio respuesta de resize"); 
+    free(paquete_valor);
+}
+
+
+void enviar_resultado_copiar(void* respuesta_copy, int socket_cliente){
+    t_paquete* paquete_valor;
+
+    paquete_valor = crear_paquete(ENVIO_COPY_STRING_A_MEMORIA_RTA);
+
+    agregar_a_paquete(paquete_valor, &respuesta_copy,  sizeof(void*));
+
+    enviar_paquete(paquete_valor, socket_cliente);
+    printf("Se envio respuesta de copiado"); 
+    free(paquete_valor);
+}
+
+
+
+// usar en memoria cuando recibe IO_M_STDIN
+t_io_memo_escritura* deserializar_input(t_list*  lista_paquete ){
+
+    t_io_memo_escritura* io_input = malloc(sizeof(t_io_memo_escritura));
     
     io_input->pid = *(uint32_t*)list_get(lista_paquete, 0);
     printf("Pid recibido: %d \n",io_input->pid);
@@ -614,24 +732,25 @@ t_io_input* deserializar_input(t_list*  lista_paquete ){
 // Kernel envía a io un stdin usando op_cod= IO_K_STDIN
 void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion){
 
-    t_paquete* paquete_espera = malloc(sizeof(t_paquete));    
+    t_paquete* paquete_df = malloc(sizeof(t_paquete));    
    
-    paquete_espera = crear_paquete(codigo_operacion); 
+    paquete_df = crear_paquete(codigo_operacion); 
     
-    agregar_a_paquete(paquete_espera, &io_df->pid, sizeof(io_df->pid)); 
+    agregar_a_paquete(paquete_df, &io_df->pid, sizeof(io_df->pid)); 
     
     uint32_t list_tamanio = list_size(io_df->direcciones_fisicas);
    
-    agregar_a_paquete(paquete_espera, &list_tamanio, sizeof(uint32_t));
+    agregar_a_paquete(paquete_df, &list_tamanio, sizeof(uint32_t));
 
     for (int i = 0; i < list_tamanio; i++) {
         uint32_t* direccion_fisica = (uint32_t*) list_get(io_df->direcciones_fisicas, i);
         
-        agregar_a_paquete(paquete_espera,  &direccion_fisica, sizeof(uint32_t));
+        agregar_a_paquete(paquete_df,  &direccion_fisica, sizeof(uint32_t));
         
     }   
-       
-    enviar_paquete(paquete_espera, socket);  
+     agregar_a_paquete(paquete_df, &io_df->tamanio_operacion, sizeof(uint32_t));    
+    enviar_paquete(paquete_df, socket);
+     free(paquete_df);  
   printf("Se envio io df\n");
 
 }
@@ -649,7 +768,8 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
         direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
         list_add(io_df->direcciones_fisicas, direccion_fisica);
     }
-
+    io_df->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,2+tamanio_lista);
+    printf("Tamanio operacion: %d \n",io_df->tamanio_operacion);
     return io_df;
 
 }
@@ -693,7 +813,7 @@ void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket, 
     enviar_paquete(paquete_archivo_nuevo, socket);    
 }
 
-void enviar_input(t_io_input* io_input ,int socket, uint32_t op_code ) {
+void enviar_input(t_io_memo_escritura* io_input ,int socket, uint32_t op_code ) {
     t_paquete* paquete_input;
  
     paquete_input = crear_paquete(op_code);
@@ -761,6 +881,15 @@ t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete ){
      printf("Puntero archivo %d \n",io_readwrite->puntero_archivo); // despues borrar print
     return io_readwrite; 
     free(io_readwrite);
+}
+
+t_io_output* armar_io_output(uint32_t pid, char* output){
+            t_io_output* io_output = malloc(sizeof(t_io_output));
+            uint32_t tamanio_output = string_length(output)+1;
+            io_output->pid = pid;
+            io_output->output_length = tamanio_output;
+            io_output->output = output;
+           return  io_output;    
 }
 
 void terminar_programa(int conexion, t_log* logger, t_config* config)

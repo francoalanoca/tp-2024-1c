@@ -5,14 +5,14 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <readline/readline.h>
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/init_kernel.h>
+#include "../include/init_kernel.h"
 //#include <init_kernel.h>
 #include <utils/utils.h>
 #include <commons/log.h>
 #include <commons/config.h>
 #include <stdint.h>
 #include <string.h>
-#include </home/utnso/tp-2024-1c-Pasaron-cosas/kernel/include/planificador.h>
+#include "../include/planificador.h"
 //#include <planificador.h>
 
 
@@ -31,7 +31,7 @@ extern int process_id; // Declaración externa
 void iniciar_consola_interactiva(int conexion);
 bool validacion_de_instruccion_de_consola(char* leido);
 void atender_instruccion_validada(char* leido);
-
+void f_ejecutar_script(char* path);
 //t_planificador *inicializar_planificador(t_algoritmo_planificacion algoritmo, uint32_t quantum);
 void detener_planificacion(t_planificador* planificador);
 void mostrar_estado_proceso(pid_t pid);
@@ -44,6 +44,8 @@ void enviar_pcb_a_cpu_por_dispatch(t_pcb* pcb);
 void destruir_pcb(t_pcb* pcb);
 void cambiar_estado(t_pcb* un_pcb, estado_pcb prox_estado);
 bool encontrar_por_pid(void* elemento, void* pid_ptr);
+t_pcb* obtener_proximo_proceso(t_planificador* planificador);
+
 
 
 #endif
