@@ -9,7 +9,7 @@
 
 
 void crear_proceso(uint32_t proceso_pid);
-t_tabla_de_paginas *crear_tabla_pagina(int pid);
+t_tabla_de_paginas *crear_tabla_pagina(uint32_t pid);
 uint32_t calcular_marcos(uint32_t tamanio_proceso);
 t_tabla_de_paginas *busco_tabla_de_paginas_por_PID(uint32_t proceso_pid);
 t_pagina *busco_pagina_por_marco(t_list *lista_de_paginas, uint32_t marco);

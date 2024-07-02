@@ -405,7 +405,7 @@ uint32_t* deserializar_finalizar_proceso(t_list*  lista_paquete );
 void enviar_respuesta_finalizar_proceso(uint32_t pid_proceso_a_finalizar ,int socket_kernel);
 t_proceso_memoria* deserializar_proxima_instruccion(t_list*  lista_paquete );
 t_busqueda_marco* deserializar_solicitud_marco(t_list*  lista_paquete );
-t_io_direcciones_fisicas* deserializar_peticion_valor(t_list*  lista_paquete );
+t_escribir_leer* deserializar_peticion_valor(t_list*  lista_paquete );
 t_escribir_leer* deserializar_peticion_guardar(t_list*  lista_paquete);
 t_resize* deserializar_solicitud_resize(t_list*  lista_paquete);
 t_copy* deserializar_solicitud_copy(t_list*  lista_paquete);
