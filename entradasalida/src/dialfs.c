@@ -156,7 +156,7 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 char* datos_escribir = malloc(archivo_escribir->tamanio_operacion * sizeof(char));
                 solicitud_datos_escribir->pid = archivo_escribir->pid;
                 solicitud_datos_escribir->direcciones_fisicas = list_create ();
-                list_add(solicitud_datos_escribir->direcciones_fisicas,archivo_escribir->direcciones_fisicas);
+                list_add_all(solicitud_datos_escribir->direcciones_fisicas,archivo_escribir->direcciones_fisicas);
                 solicitud_datos_escribir->tamanio_operacion = archivo_escribir->tamanio_operacion;
                //reenvio la solicitud a memoria
                 enviar_io_df(solicitud_datos_escribir, socket_memoria, IO_FS_WRITE);

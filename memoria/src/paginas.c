@@ -231,6 +231,7 @@ uint32_t obtener_marco_libre(){
     for (uint32_t i = 0; i < cantidad_frames_memoria; i++){
         //Si la posicion del array esta disponible
         if (!bitarray_test_bit(bitmap_frames, i)){
+             log_info(logger_memoria, "marco libre : %d",i);
             return i;
         }
     }
@@ -248,7 +249,7 @@ op_code administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
     int ultima_pagina = list_size(tabla_de_paginas->lista_de_paginas);
     uint32_t marcos_a_reservar = calcular_marcos(tamanio_proceso);
 
-    log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, marcos_a_reservar);
+  
 
     if(tamanio_proceso == 0){
         return SOLICITUD_RESIZE_RTA;
@@ -257,16 +258,20 @@ op_code administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
             //Recorro mientras sea menor a la cantidad de frames
             for (int i = 0; i < marcos_a_reservar; i++){
                 t_pagina *pagina = malloc(sizeof(t_pagina));
-
-                pagina->marco = obtener_marco_libre();                 
+                int marco_libre = obtener_marco_libre();
+                pagina->marco = marco_libre;                 
                 pagina->posicion = ultima_pagina+i;             
                 pagina->presencia = false;          
                 pagina->modificado = false;        
-            
+                bitarray_set_bit(bitmap_frames, marco_libre);
                 list_add(tabla_de_paginas->lista_de_paginas, pagina);
+                
             }
+            log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, marcos_a_reservar);
             return SOLICITUD_RESIZE_RTA;
+            
         }else{
+            log_info(logger_memoria, "OUT OF MEMORY");
             return OUT_OF_MEMORY;
         }
     }  
@@ -282,6 +287,7 @@ int espacio_disponible(){
             frames_libres++ ;
         }
     }
+    log_info(logger_memoria, "Espacio disponible %d",frames_libres*cfg_memoria->TAM_PAGINA);
     return frames_libres*cfg_memoria->TAM_PAGINA;
 }
 

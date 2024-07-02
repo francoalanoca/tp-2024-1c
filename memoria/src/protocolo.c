@@ -102,6 +102,7 @@ switch (cod_op) {
             break;
 
         case SOLICITUD_RESIZE:
+            printf("SOLICITUD_RESIZE recibida \n");
             valores = recibir_paquete(socket_cliente);
             solicitud_resize = deserializar_solicitud_resize(valores);
             op_code respuesta_resize = administrar_resize(solicitud_resize->pid, solicitud_resize->tamanio);
@@ -130,8 +131,8 @@ switch (cod_op) {
                 printf("El paquete vino vacío\n");
                 break;
             }        
-
-            escribir_memoria(input->pid, input->direcciones_fisicas, input->input, input->input_length);    //ver
+             int dir = list_get(input->direcciones_fisicas,0);
+            escribir_memoria(input->pid, dir , input->input, input->input_length);    //ver
             response = IO_M_STDIN_FIN;
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             if (send(socket_cliente, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
@@ -182,10 +183,10 @@ switch (cod_op) {
             if (valores == NULL || list_size(valores) == 0) {
                 printf("El paquete vino vacío\n");
                 break;
-            }
+            } printf("direccionde posicion  %s\n",list_get(io_fs_write->direcciones_fisicas,0));
             char* escritura = leer_memoria(io_fs_write->pid, list_get(io_fs_write->direcciones_fisicas,0), io_fs_write->tamanio_operacion);     //ver
             
-            
+             printf("Lectura %s\n",escritura);
             uint32_t tamanio_escritura = string_length(escritura)+1;
             io_escritura->pid = io_fs_write->pid;
             io_escritura->output_length = tamanio_escritura;
@@ -202,7 +203,7 @@ switch (cod_op) {
             valores = recibir_paquete(socket_cliente);         
             input = deserializar_input(valores);        
              
-            escribir_memoria(input->pid, input->direcciones_fisicas, input->input, input->input_length);      
+            escribir_memoria(input->pid, list_get(input->direcciones_fisicas,0), input->input, input->input_length);      
             response = IO_FS_READ_M; // termina de escribir
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             if (send(socket_cliente, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {

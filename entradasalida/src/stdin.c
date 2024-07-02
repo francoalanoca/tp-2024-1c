@@ -59,6 +59,18 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
                 enviar_input(io_input, socket_memoria, IO_M_STDIN);                
                
                 free(io_input);
+                int resp_memo = recibir_operacion(socket_memoria);
+                if(resp_memo == IO_M_STDIN_FIN){
+                                        log_info(logger_entrada_salida, "Se guardo inpunt correctamente en memoria: \n");
+                                        response = IO_K_STDIN_FIN;        
+
+                                        if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                                            log_error(logger_entrada_salida, " Error al enviar respuesta de IO_K_STDIN_FIN a Kernel");
+                                            break;
+                                        }
+                                    
+               
+                }
                 break;
                 }
             case IO_M_STDIN_FIN:
