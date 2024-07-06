@@ -45,7 +45,7 @@ while (control_key)
       
       t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
       proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
-      //poner proceso recibido en lista de procesos_interrumpidos? y activar semaforo para que el planificador continue con la finalizacion del proceso  
+      //Detectar tipo de interrupcion y dependiendo de esta se decide que es lo que se hace 
       break;
    case ENVIO_INTERFAZ:
       //TODO
@@ -91,6 +91,9 @@ while (control_key)
          mandar_proceso_a_exit(io_gen_sleep->pid);
       }
 
+      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR
+      replanificar_y_ejecutar();
+      
       
       
       break;
@@ -110,6 +113,8 @@ while (control_key)
       else{
          log_info(logger_kernel,"El proceso recibido es nulo");
       }
+      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
+      replanificar_y_ejecutar();
       break;
    case ENVIO_WAIT_A_KERNEL:
       //TODO
@@ -130,6 +135,8 @@ while (control_key)
             //NO HAY INSTANCIAS DISPONIBLES, AGREAGAR A COLA DE BLOQUEADOS DEL RECURSO
             
             bloquear_proceso(planificador,recurso_recibido_wait->pcb,recurso_recibido_wait->nombre_recurso);
+            //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
+            replanificar_y_ejecutar();
 
             /*t_list* lista_bloqueados_correspondiente = dictionary_get(planificador->cola_blocked,recurso_recibido_wait->nombre_recurso);
             list_add(lista_bloqueados_correspondiente,recurso_recibido_wait->pcb);
@@ -142,6 +149,8 @@ while (control_key)
       else{
          //NO EXISTE RECURSO, MANDAR A EXIT
          mandar_proceso_a_exit(recurso_recibido_wait->pcb->pid);
+         //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
+         replanificar_y_ejecutar();
       }
       break;
    case ENVIO_SIGNAL_A_KERNEL:
@@ -164,12 +173,15 @@ while (control_key)
             uint32_t indice_primer_valor = malloc(sizeof(uint32_t));
             indice_primer_valor = buscar_indice_primer_valor_no_nulo(lista_bloqueados_correspondiente);
                t_pcb* pcb_desbloqueado = malloc(sizeof(t_pcb));
-               pcb_desbloqueado = list_remove(lista_bloqueados_correspondiente,indice_primer_valor);
-               dictionary_remove_and_destroy(planificador->cola_blocked,recurso_recibido_signal->nombre_recurso,list_destroy);   
-               dictionary_put(planificador->cola_blocked ,recurso_recibido_signal->nombre_recurso,lista_bloqueados_correspondiente);
-               //poner el pcb_desbloqueado en cola ready?
+               pcb_desbloqueado = list_get(lista_bloqueados_correspondiente,indice_primer_valor);
+               //pcb_desbloqueado = list_remove(lista_bloqueados_correspondiente,indice_primer_valor);
+               //dictionary_remove_and_destroy(planificador->cola_blocked,recurso_recibido_signal->nombre_recurso,list_destroy);   
+               //dictionary_put(planificador->cola_blocked ,recurso_recibido_signal->nombre_recurso,lista_bloqueados_correspondiente);
+               desbloquear_proceso(planificador,pcb_desbloqueado,recurso_recibido_signal->nombre_recurso);
+               
          }
           //mandar a cpu que continue la ejecucion del pcb que llega por parametro? 
+          enviar_proceso_a_cpu(recurso_recibido_signal->pcb,conexion_cpu_dispatch);
       }
       else{
          //NO EXISTE RECURSO, MANDAR A EXIT
@@ -211,6 +223,8 @@ while (control_key)
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_exit(io_stdin_read->pid);
       }
+      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
+      replanificar_y_ejecutar();
       break;
    case SOLICITUD_IO_STDOUT_WRITE:
       //TODO
@@ -246,6 +260,8 @@ while (control_key)
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_exit(io_stdout_write->pid);
       }
+      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
+      replanificar_y_ejecutar();
       break;
    case SOLICITUD_EXIT_KERNEL:
       //TODO
@@ -263,7 +279,8 @@ while (control_key)
       else{
          log_info(logger_kernel,"El proceso recibido es nulo");
       }
-
+      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
+      replanificar_y_ejecutar();
       break;
    case SOLICITUD_IO_FS_CREATE_A_KERNEL:
       //TODO
@@ -304,6 +321,8 @@ while (control_key)
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_exit(io_crear_archivo->pid);
       }
+      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
+      replanificar_y_ejecutar();
       break;
    case SOLICITUD_IO_FS_DELETE_A_KERNEL:
       //TODO
@@ -344,6 +363,8 @@ while (control_key)
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_exit(io_delete_archivo->pid);
       }
+      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
+      replanificar_y_ejecutar();
       break;
    case SOLICITUD_IO_FS_TRUNCATE_A_KERNEL:
       //TODO
@@ -385,6 +406,8 @@ while (control_key)
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_exit(io_truncate_archivo->pid);
       }
+      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
+      replanificar_y_ejecutar();
       break;
    case SOLICITUD_IO_FS_WRITE_A_KERNEL:
       //TODO
@@ -425,6 +448,8 @@ while (control_key)
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_exit(io_write_archivo->pid);
       }
+      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
+      replanificar_y_ejecutar();
       break;
    case SOLICITUD_IO_FS_READ_A_KERNEL:
       //TODO
@@ -465,6 +490,8 @@ while (control_key)
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_exit(io_read_archivo->pid);
       }
+      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
+      replanificar_y_ejecutar();
       break;
    case -1:
       log_error(logger_kernel, "Desconexion de cpu - Dispatch");
@@ -643,4 +670,42 @@ void mandar_proceso_a_exit(uint32_t pid){
    t_pcb* pcb_a_procesar = malloc(sizeof(t_pcb));
    pcb_a_procesar = encontrar_proceso_pid(planificador->cola_exec,pid);
    eliminar_proceso(planificador,pcb_a_procesar);
+}
+
+void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
+
+   t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
+    
+    paquete_archivo_nuevo = crear_paquete(NUEVO_PROCESO);
+    
+    agregar_a_paquete(paquete_archivo_nuevo, &(pcb->pid), sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, &(pcb->program_counter), sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, &(pcb->path_length), sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, (pcb->path), pcb->path_length);
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.PC, sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.EAX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.EBX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.ECX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.EDX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.SI, sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.DI, sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->estado, sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->tiempo_ejecucion, sizeof(uint32_t));
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->quantum, sizeof(uint32_t));
+
+    enviar_paquete(paquete_archivo_nuevo, conexion); 
+
+    free(paquete_archivo_nuevo);
+
+}
+
+void replanificar_y_ejecutar(){
+   t_pcb* proximo_proceso_a_ejecutar = malloc(sizeof(t_pcb));
+   proximo_proceso_a_ejecutar = obtener_proximo_proceso(planificador);
+   enviar_proceso_a_cpu(proximo_proceso_a_ejecutar,conexion_cpu_dispatch);
+   free(proximo_proceso_a_ejecutar);
 }

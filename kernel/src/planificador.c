@@ -77,6 +77,7 @@ t_pcb* obtener_proximo_proceso(t_planificador* planificador) {
             list_add(planificador->cola_ready, proceso);
         }
     }
+    //TODO:ENVIAR ANTES A CPU?
     list_add(planificador->cola_exec, proceso);
     return proceso;
 }
