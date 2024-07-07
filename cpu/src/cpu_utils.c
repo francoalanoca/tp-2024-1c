@@ -583,7 +583,7 @@ void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, ui
    
     paquete_interfaz_kernel = crear_paquete(ENVIO_INTERFAZ); 
     
-    agregar_a_paquete(paquete_interfaz_kernel, &proceso_actual->pcb->pid, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interfaz_kernel, &proceso_actual->pid, sizeof(uint32_t));
     agregar_a_paquete(paquete_interfaz_kernel, &tamanio_nombre, sizeof(uint32_t)); 
     agregar_a_paquete(paquete_interfaz_kernel, nombre_interfaz, tamanio_nombre);
     agregar_a_paquete(paquete_interfaz_kernel, &unidades_de_trabajo, sizeof(uint32_t));
@@ -610,7 +610,7 @@ uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion){
 
        	  for(uint32_t i = 0; i < tlb->elements_count; i++){	
 			//if(verificar_existencia_en_tlb(proceso_actual->pcb->pid, direccion_logica->nro_pag, i)){
-            if(verificar_existencia_en_tlb(proceso_actual->pcb->pid, nro_pagina, i)){
+            if(verificar_existencia_en_tlb(proceso_actual->pid, nro_pagina, i)){
                 encontro_en_tlb = true;
                 indice_encontrado = i;
             }
@@ -624,16 +624,16 @@ uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion){
         direccion_resultado = registro_tlb_encontrado->nro_marco * tamanio_pag;
       }
       else{//Si no esta, pedir a memoria el marco para esa pagina y proceso
-        pedir_marco_a_memoria(proceso_actual->pcb->pid,nro_pagina,conexion);
+        pedir_marco_a_memoria(proceso_actual->pid,nro_pagina,conexion);
         //al recibir marco de memoria guardarlo en la TLB, si no hay espacio usar algoritmo
         //WAIT SEMAFORO MARCO RECIBIDO
         sem_wait(&sem_marco_recibido);
     if(tlb->elements_count = cfg_cpu->CANTIDAD_ENTRADAS_TLB){
-        usar_algoritmo_tlb(proceso_actual->pcb->pid,nro_pagina,marco_recibido); //TODO:IMPLEMENTAR FUNCION
+        usar_algoritmo_tlb(proceso_actual->pid,nro_pagina,marco_recibido); //TODO:IMPLEMENTAR FUNCION
         direccion_resultado = marco_recibido * tamanio_pag;
     }
     else{
-        agregar_a_tlb(proceso_actual->pcb->pid,nro_pagina,marco_recibido);
+        agregar_a_tlb(proceso_actual->pid,nro_pagina,marco_recibido);
         direccion_resultado = marco_recibido * tamanio_pag;
     }
       }
@@ -767,11 +767,11 @@ void resize(uint32_t tamanio){
     //por parámetro. En caso de que la respuesta de la memoria sea Out of Memory, se deberá
     //devolver el contexto de ejecución al Kernel informando de esta situación.
 
-    solicitar_resize_a_memoria(proceso_actual->pcb->pid,tamanio);
+    solicitar_resize_a_memoria(proceso_actual->pid,tamanio);
     //WAIT SEMAFORO
     sem_wait(&sem_valor_resize_recibido);
     if(strcmp(rta_resize, "Out of memory") == 0){
-        proceso_interrumpido_actual->pcb = proceso_actual->pcb;
+        proceso_interrumpido_actual->pcb = proceso_actual;
         proceso_interrumpido_actual->motivo_interrupcion = OUT_OF_MEMORY;
         envia_error_de_memoria_a_kernel(proceso_interrumpido_actual);
     }
@@ -787,9 +787,9 @@ void copy_string(uint32_t tamanio){
     //uint32_t valor_registro_SI = obtenerValorActualRegistro(id_registro_SI,proceso, logger);
 
     uint32_t dir_fisica_SI = malloc(sizeof(uint32_t));
-    dir_fisica_SI = mmu(proceso_actual->pcb->registros_cpu.SI,tamanio_pagina,socket_memoria);
+    dir_fisica_SI = mmu(proceso_actual->registros_cpu.SI,tamanio_pagina,socket_memoria);
 
-    pedir_valor_a_memoria(dir_fisica_SI,proceso_actual->pcb->pid,socket_memoria);
+    pedir_valor_a_memoria(dir_fisica_SI,proceso_actual->pid,socket_memoria);
     wait(&sem_valor_registro_recibido);
 
 
@@ -797,22 +797,22 @@ void copy_string(uint32_t tamanio){
     valor_a_enviar = string_substring_until(valor_registro_obtenido,tamanio); //VER BIEN QUE HACE LA FUNCION
 
     uint32_t dir_fisica_DI = malloc(sizeof(uint32_t));
-    dir_fisica_DI = mmu(proceso_actual->pcb->registros_cpu.DI,tamanio_pagina,socket_memoria);
+    dir_fisica_DI = mmu(proceso_actual->registros_cpu.DI,tamanio_pagina,socket_memoria);
 
-    guardar_string_en_memoria(valor_a_enviar,tamanio,dir_fisica_DI,proceso_actual->pcb->pid);
+    guardar_string_en_memoria(valor_a_enviar,tamanio,dir_fisica_DI,proceso_actual->pid);
 }
 
 void wait_inst(char* recurso){
     // Esta instrucción solicita al Kernel que se asigne una instancia del recurso
     //indicado por parámetro.
 
-    solicitar_wait_kernel(proceso_actual->pcb,(strlen(recurso) + 1) * sizeof(char),recurso); 
+    solicitar_wait_kernel(proceso_actual,(strlen(recurso) + 1) * sizeof(char),recurso); 
 }
 
 void signal_inst(char* recurso){
     //Esta instrucción solicita al Kernel que se libere una instancia del recurso
     //indicado por parámetro
-    solicitar_signal_kernel(proceso_actual->pcb,(strlen(recurso) + 1) * sizeof(char) ,recurso);
+    solicitar_signal_kernel(proceso_actual,(strlen(recurso) + 1) * sizeof(char) ,recurso);
 }
 
 void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio, t_proceso* proceso, t_log* logger){
@@ -857,7 +857,7 @@ void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_ta
 void exit_inst(){
     // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
     //Contexto de Ejecución actualizado al Kernel para su finalización.
-    proceso_interrumpido_actual->pcb = proceso_actual->pcb;
+    proceso_interrumpido_actual->pcb = proceso_actual;
     proceso_interrumpido_actual->motivo_interrupcion = INSTRUCCION_EXIT;
     solicitar_exit_a_kernel(proceso_interrumpido_actual);
 
@@ -1026,7 +1026,7 @@ void solicitar_io_stdin_read_a_kernel(uint32_t tamanio_nombre_interfaz,char* nom
    
         paquete_io_stdin_read = crear_paquete(SOLICITUD_IO_STDIN_READ); 
         
-        agregar_a_paquete(paquete_io_stdin_read,  &proceso_actual->pcb->pid,  sizeof(uint32_t)); 
+        agregar_a_paquete(paquete_io_stdin_read,  &proceso_actual->pid,  sizeof(uint32_t)); 
         agregar_a_paquete(paquete_io_stdin_read,  &tamanio_nombre_interfaz,  sizeof(uint32_t));  
         agregar_a_paquete(paquete_io_stdin_read,  nombre_interfaz,  tamanio_nombre_interfaz);       
         agregar_a_paquete(paquete_io_stdin_read, &direccion, sizeof(uint32_t));  
@@ -1046,7 +1046,7 @@ void solicitar_io_stdout_write_a_kernel(uint32_t tamanio_nombre_interfaz, char* 
    
         paquete_io_stdout_write = crear_paquete(SOLICITUD_IO_STDOUT_WRITE); 
         
-        agregar_a_paquete(paquete_io_stdout_write,  &proceso_actual->pcb->pid,  sizeof(uint32_t)); 
+        agregar_a_paquete(paquete_io_stdout_write,  &proceso_actual->pid,  sizeof(uint32_t)); 
         agregar_a_paquete(paquete_io_stdout_write,  &tamanio_nombre_interfaz,  sizeof(uint32_t));  
         agregar_a_paquete(paquete_io_stdout_write,  nombre_interfaz,  tamanio_nombre_interfaz);       
         agregar_a_paquete(paquete_io_stdout_write, &direccion, sizeof(uint32_t));  
