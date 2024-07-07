@@ -262,8 +262,7 @@ t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete
     proceso_interrumpido_nuevo->pcb->estado = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 15);
     proceso_interrumpido_nuevo->pcb->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 16);
     proceso_interrumpido_nuevo->pcb->quantum = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 17);
-    proceso_interrumpido_nuevo->tamanio_motivo_interrupcion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 18);	
-    proceso_interrumpido_nuevo->motivo_interrupcion = list_get(lista_paquete_proceso_interrumpido, 19);
+    proceso_interrumpido_nuevo->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 18);	
     return proceso_interrumpido_nuevo;
 }
 
