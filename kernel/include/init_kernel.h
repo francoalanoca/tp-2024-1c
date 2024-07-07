@@ -7,6 +7,7 @@
 
 #include <utils/utils.h>
 #include "../include/planificador.h"
+#include <semaphore.h>
 
 int checkProperties(char *path_config);
 int cargar_configuracion(char *path);
@@ -30,6 +31,9 @@ extern int conexion_cpu_interrupt;
 extern int conexion_memoria;
 extern int socket_servidor;
 extern t_dictionary* interfaces;
+extern sem_t sem_contexto_ejecucion_recibido;
+extern sem_t sem_confirmacion_memoria;
+extern t_pcb* pcb_actualizado_interrupcion;
 typedef struct {
     char* PUERTO_ESCUCHA;
     char* IP_MEMORIA;

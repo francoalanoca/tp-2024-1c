@@ -45,6 +45,7 @@ typedef enum
     SOLICITUD_IO_FS_TRUNCATE_A_KERNEL =150, //CPU envia a kernel la solicitud de IO_FS_TRUNCATE
     SOLICITUD_IO_FS_WRITE_A_KERNEL =155, //CPU envia a kernel la solicitud de IO_FS_WRITE
     SOLICITUD_IO_FS_READ_A_KERNEL =160, //CPU envia a kernel la solicitud de IO_FS_READ
+    INTERRUPCION_KERNEL, //kernel manda interrupcion a CPU
 
  //---------------CPU-MEMORIA-------------------
     PROXIMA_INSTRUCCION = 40,   // Cpu le solicita a Memoria la proxima instruccion a ejecutar
@@ -86,6 +87,15 @@ typedef enum
     IO_FS_WRITE_M, // Memoria devuelve el valor a escribir en el archivo con un  t_io_output
     IO_FS_READ_M // Es el ok de que se guardo bien el valor en memoria, pero no sé si hace falta
 }op_code; 
+
+typedef enum {
+    INTERRUPCION_OUT_OF_MEMORY,
+    FIN_QUANTUM_RR,
+    FIN_QUANTUM_VRR,
+    INSTRUCCION_EXIT,
+    ELIMINAR_PROCESO
+}motivo_interrupcion;
+
 
 typedef struct {
     t_log *log;
@@ -211,8 +221,9 @@ typedef struct {
 
 typedef struct{
     t_pcb* pcb;
-    uint32_t tamanio_motivo_interrupcion;
-    char* motivo_interrupcion;
+    //uint32_t tamanio_motivo_interrupcion;
+    //char* motivo_interrupcion;
+    motivo_interrupcion motivo_interrupcion;
 }t_proceso_interrumpido;
 
 typedef struct{

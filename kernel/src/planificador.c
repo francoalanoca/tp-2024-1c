@@ -3,6 +3,9 @@
 //#include "../include/servidorCpu.c"
 //#include "../include/servidorCpu.h"
 
+sem_t sem_contexto_ejecucion_recibido;
+sem_t sem_confirmacion_memoria;
+
 // Devuelve un t_algoritmo a partir de la config cargada
 t_algoritmo_planificacion obtener_algoritmo_planificador(char* algoritmo_planificacion) {
     if (strcmp(algoritmo_planificacion, "FIFO") == 0) {
@@ -109,10 +112,10 @@ void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nom
 
 // Finaliza un proceso y libera su memoria
 void finalizar_proceso(t_planificador* planificador, t_pcb* proceso) {
-    uint32_t indice_proceso_a_finalizar = malloc(sizeof(uint32_t));
-    indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
-    list_remove(planificador->cola_exec, indice_proceso_a_finalizar);
-    list_add(planificador->cola_exit, proceso);
+    //uint32_t indice_proceso_a_finalizar = malloc(sizeof(uint32_t));
+    //indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
+    //list_remove(planificador->cola_exec, indice_proceso_a_finalizar);
+    //list_add(planificador->cola_exit, proceso);
     free(proceso);
      planificador->grado_multiprogramacion_actual--;
     if (!list_is_empty(planificador->cola_new) && !planificador->planificacion_detenida) {
@@ -131,62 +134,36 @@ void crear_proceso(t_planificador* planificador, char* path_pseudocodigo) {
 
 void eliminar_proceso(t_planificador* planificador, t_pcb* proceso) {
     //ESTA INCLUIDA LO DE LISTAS DE LAS COMMONS?
-    /*if (list_contains(planificador->cola_exec, proceso)) {
-        // Enviar señal de interrupción a la CPU
-        t_paquete* paquete = crear_paquete(INTERRUPCION_CPU);
-        t_buffer* buffer = crear_buffer();
-
-        // Serializar el proceso a interrumpir
-        t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
-        proceso_interrumpido->pcb = proceso;
-        proceso_interrumpido->tamanio_motivo_interrupcion = strlen("ELIMINAR_PROCESO") + 1;
-        proceso_interrumpido->motivo_interrupcion = strdup("ELIMINAR_PROCESO");
-
-        // Serializar el proceso interrumpido
-        //buffer = proceso_interrumpido_serializar(proceso_interrumpido);
+    if (list_contains(planificador->cola_exec, proceso->pid)) {
+        enviar_interrupcion_a_cpu(proceso,conexion_cpu_interrupt);
         
-        agregar_a_paquete(paquete, buffer->stream, buffer->size);
-
-        // Enviar el paquete a través del puerto de interrupción
-       // enviar_paquete(paquete, conexion_cpu_interrupt);
-
         // Esperar a que la CPU retorne el Contexto de Ejecución
-       // sem_wait(&sem_contexto_ejecucion_recibido);
+        sem_wait(&sem_contexto_ejecucion_recibido);
 
         // Obtener el contexto de ejecución actualizado
         //t_pcb* pcb_actualizado = recibir_pcb(conexion_cpu_dispatch);
 
         // Actualizar el proceso con el contexto de ejecución recibido
-       // actualizar_proceso(proceso, pcb_actualizado);
+        //actualizar_proceso(proceso, pcb_actualizado);
+        proceso = pcb_actualizado_interrupcion;
 
         // Liberar memoria
-        free(proceso_interrumpido->motivo_interrupcion);
-        free(proceso_interrumpido);
-        eliminar_paquete(paquete);
-        free(buffer->stream);
-        free(buffer);
+        
+        //eliminar_paquete(paquete);
+        //free(buffer->stream);
+        //free(buffer);
         //free(pcb_actualizado);
-    }*/
+    }
 
-    // Notificar a la memoria para liberar las estructuras del proceso
-    //t_paquete* paquete_memoria = crear_paquete(LIBERAR_PROCESO);
-    t_buffer* buffer_memoria = crear_buffer();
-
-    // Serializar el PID del proceso a liberar
-    //buffer_write_uint32(buffer_memoria, proceso->pid);
-
-   // agregar_a_paquete(paquete_memoria, buffer_memoria->stream, buffer_memoria->size);
-
-    // Enviar el paquete a la memoria
-   // enviar_paquete(paquete_memoria, conexion_memoria);
+   liberar_proceso_memoria(proceso->pid);
 
     // Esperar confirmación de la memoria
-   // sem_wait(&sem_confirmacion_memoria);
+    sem_wait(&sem_confirmacion_memoria);
 
     // Liberar memoria
    // eliminar_paquete(paquete_memoria);
-    free(buffer_memoria->stream);
-    free(buffer_memoria);
+    //free(buffer_memoria->stream);
+   // free(buffer_memoria);
 
     // Finalizar el proceso en el planificador
     finalizar_proceso(planificador, proceso);
@@ -200,5 +177,87 @@ uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb) {
         }
     }
     return NULL;
+}
+
+void enviar_interrupcion_a_cpu(t_pcb* proceso, int conexion){
+    // Enviar señal de interrupción a la CPU
+        t_paquete* paquete = crear_paquete(INTERRUPCION_KERNEL);
+       // t_buffer* buffer = crear_buffer();
+
+        // Serializar el proceso a interrumpir
+        t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
+        proceso_interrumpido->pcb = proceso;
+        //proceso_interrumpido->tamanio_motivo_interrupcion = strlen("ELIMINAR_PROCESO") + 1;
+        //proceso_interrumpido->motivo_interrupcion = strdup("ELIMINAR_PROCESO");
+        proceso_interrumpido->motivo_interrupcion = ELIMINAR_PROCESO;
+
+        // Serializar el proceso interrumpido
+        //buffer = proceso_interrumpido_serializar(proceso_interrumpido);
+        agregar_a_paquete(paquete, &(proceso_interrumpido->pcb->pid), sizeof(uint32_t));
+        agregar_a_paquete(paquete, &(proceso_interrumpido->pcb->program_counter), sizeof(uint32_t));
+        agregar_a_paquete(paquete, &(proceso_interrumpido->pcb->path_length), sizeof(uint32_t));
+        agregar_a_paquete(paquete, (proceso_interrumpido->pcb->path), proceso_interrumpido->pcb->path_length);
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.PC, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.EAX, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.EBX, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.ECX, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.EDX, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.SI, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.DI, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->estado, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->tiempo_ejecucion, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->quantum, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &proceso_interrumpido->motivo_interrupcion, sizeof(uint32_t));
+
+        enviar_paquete(paquete, conexion); 
+
+        free(paquete);
+        //free(proceso_interrumpido->motivo_interrupcion);
+        free(proceso_interrumpido);
+            //agregar_a_paquete(paquete, buffer->stream, buffer->size);
+
+            // Enviar el paquete a través del puerto de interrupción
+        // enviar_paquete(paquete, conexion_cpu_interrupt);
+
+}
+
+void liberar_proceso_memoria(uint32_t pid){
+     // Notificar a la memoria para liberar las estructuras del proceso
+    t_paquete* paquete_memoria = crear_paquete(FINALIZAR_PROCESO);
+    //t_buffer* buffer_memoria = crear_buffer();
+
+    // Serializar el PID del proceso a liberar
+    //buffer_write_uint32(buffer_memoria, proceso->pid);
+    agregar_a_paquete(paquete_memoria, &pid, sizeof(uint32_t));
+   // agregar_a_paquete(paquete_memoria, buffer_memoria->stream, buffer_memoria->size);
+
+    // Enviar el paquete a la memoria
+    enviar_paquete(paquete_memoria, conexion_memoria);
+}
+
+bool list_contains(t_list* lista_de_procesos, uint32_t pid){
+
+    t_pcb* pcb_a_recorrer = malloc(sizeof(t_pcb));
+
+    for (size_t i = 0; i < lista_de_procesos->elements_count; i++)
+    {
+        pcb_a_recorrer = list_get(lista_de_procesos,i);
+        if(pcb_a_recorrer->pid == pid){
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+void poner_en_cola_exit(t_pcb* proceso){
+    uint32_t indice_proceso_a_finalizar = malloc(sizeof(uint32_t));
+    indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
+    list_remove(planificador->cola_exec, indice_proceso_a_finalizar);
+    list_add(planificador->cola_exit, proceso);
 }
 

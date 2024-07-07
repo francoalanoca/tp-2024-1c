@@ -3,7 +3,7 @@
 //#include <protocolo_kernel.h>
 
 
-
+t_pcb* pcb_actualizado_interrupcion;
 
 //Funcion que crea hilos para cada modulo y los va atendiendo
 
@@ -46,6 +46,38 @@ while (control_key)
       t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
       proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
       //Detectar tipo de interrupcion y dependiendo de esta se decide que es lo que se hace 
+      switch (proceso_interrumpido->motivo_interrupcion)
+      {
+      case INTERRUPCION_OUT_OF_MEMORY:
+      case INSTRUCCION_EXIT:
+         if(proceso_interrumpido->pcb != NULL){
+            poner_en_cola_exit(proceso_interrumpido->pcb);
+            mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
+         }
+         else{
+            log_info(logger_kernel,"El proceso recibido es nulo");
+         }
+         break;
+      
+      case FIN_QUANTUM_RR:
+         /* code */
+         break;
+      
+      case FIN_QUANTUM_VRR:
+         /* code */
+         break;
+      
+      case ELIMINAR_PROCESO:
+         pcb_actualizado_interrupcion = proceso_interrumpido->pcb;
+         sem_post(&sem_contexto_ejecucion_recibido);
+         break;
+      
+      default:
+      printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
+      mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
+      
+         break;
+      }
       break;
    case ENVIO_INTERFAZ:
       //TODO
@@ -75,20 +107,20 @@ while (control_key)
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
-               mandar_proceso_a_exit(io_gen_sleep->pid);
+               mandar_proceso_a_finalizar(io_gen_sleep->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
-            mandar_proceso_a_exit(io_gen_sleep->pid);
+            mandar_proceso_a_finalizar(io_gen_sleep->pid);
          }
          
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
-         mandar_proceso_a_exit(io_gen_sleep->pid);
+         mandar_proceso_a_finalizar(io_gen_sleep->pid);
       }
 
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR
@@ -97,7 +129,8 @@ while (control_key)
       
       
       break;
-   case ENVIAR_ERROR_MEMORIA_A_KERNEL:
+      //TODO: El siguiente protocolo no iria mas, ahora iria por INTERRUPCION_CPU
+   /*case ENVIAR_ERROR_MEMORIA_A_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
       //Recibo t_proceso(ver si seria solo el pcb) desde cpu al recibir un error de out of memory en instruccion resize
@@ -113,9 +146,9 @@ while (control_key)
       else{
          log_info(logger_kernel,"El proceso recibido es nulo");
       }
-      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
-      replanificar_y_ejecutar();
-      break;
+      
+      
+      break;*/
    case ENVIO_WAIT_A_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
@@ -148,7 +181,7 @@ while (control_key)
       }
       else{
          //NO EXISTE RECURSO, MANDAR A EXIT
-         mandar_proceso_a_exit(recurso_recibido_wait->pcb->pid);
+         mandar_proceso_a_finalizar(recurso_recibido_wait->pcb->pid);
          //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
          replanificar_y_ejecutar();
       }
@@ -185,7 +218,7 @@ while (control_key)
       }
       else{
          //NO EXISTE RECURSO, MANDAR A EXIT
-         mandar_proceso_a_exit(recurso_recibido_signal->pcb->pid);
+         mandar_proceso_a_finalizar(recurso_recibido_signal->pcb->pid);
       }
       break;
    case SOLICITUD_IO_STDIN_READ:
@@ -214,14 +247,14 @@ while (control_key)
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
-            mandar_proceso_a_exit(io_stdin_read->pid);
+            mandar_proceso_a_finalizar(io_stdin_read->pid);
          }
          
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
-         mandar_proceso_a_exit(io_stdin_read->pid);
+         mandar_proceso_a_finalizar(io_stdin_read->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
@@ -251,19 +284,19 @@ while (control_key)
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
-            mandar_proceso_a_exit(io_stdout_write->pid);
+            mandar_proceso_a_finalizar(io_stdout_write->pid);
          }
          
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
-         mandar_proceso_a_exit(io_stdout_write->pid);
+         mandar_proceso_a_finalizar(io_stdout_write->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
       break;
-   case SOLICITUD_EXIT_KERNEL:
+   /*case SOLICITUD_EXIT_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
       //Recibo PCB desde cpu, se debe finalizar el proceso
@@ -279,9 +312,8 @@ while (control_key)
       else{
          log_info(logger_kernel,"El proceso recibido es nulo");
       }
-      //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
-      replanificar_y_ejecutar();
-      break;
+      
+      break;*/
    case SOLICITUD_IO_FS_CREATE_A_KERNEL:
       //TODO
       //EMPAQUETAR, DESEREALIZAR Y ENVIAR RTA SI APLICA
@@ -306,20 +338,20 @@ while (control_key)
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
-               mandar_proceso_a_exit(io_crear_archivo->pid);
+               mandar_proceso_a_finalizar(io_crear_archivo->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
-            mandar_proceso_a_exit(io_crear_archivo->pid);
+            mandar_proceso_a_finalizar(io_crear_archivo->pid);
          }
          
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
-         mandar_proceso_a_exit(io_crear_archivo->pid);
+         mandar_proceso_a_finalizar(io_crear_archivo->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
@@ -348,20 +380,20 @@ while (control_key)
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
-               mandar_proceso_a_exit(io_delete_archivo->pid);
+               mandar_proceso_a_finalizar(io_delete_archivo->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
-            mandar_proceso_a_exit(io_delete_archivo->pid);
+            mandar_proceso_a_finalizar(io_delete_archivo->pid);
          }
          
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
-         mandar_proceso_a_exit(io_delete_archivo->pid);
+         mandar_proceso_a_finalizar(io_delete_archivo->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
@@ -391,20 +423,20 @@ while (control_key)
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
-               mandar_proceso_a_exit(io_truncate_archivo->pid);
+               mandar_proceso_a_finalizar(io_truncate_archivo->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
-            mandar_proceso_a_exit(io_truncate_archivo->pid);
+            mandar_proceso_a_finalizar(io_truncate_archivo->pid);
          }
          
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
-         mandar_proceso_a_exit(io_truncate_archivo->pid);
+         mandar_proceso_a_finalizar(io_truncate_archivo->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
@@ -433,20 +465,20 @@ while (control_key)
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
-               mandar_proceso_a_exit(io_write_archivo->pid);
+               mandar_proceso_a_finalizar(io_write_archivo->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
-            mandar_proceso_a_exit(io_write_archivo->pid);
+            mandar_proceso_a_finalizar(io_write_archivo->pid);
          }
          
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
-         mandar_proceso_a_exit(io_write_archivo->pid);
+         mandar_proceso_a_finalizar(io_write_archivo->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
@@ -475,20 +507,20 @@ while (control_key)
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
-               mandar_proceso_a_exit(io_read_archivo->pid);
+               mandar_proceso_a_finalizar(io_read_archivo->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
-            mandar_proceso_a_exit(io_read_archivo->pid);
+            mandar_proceso_a_finalizar(io_read_archivo->pid);
          }
          
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
-         mandar_proceso_a_exit(io_read_archivo->pid);
+         mandar_proceso_a_finalizar(io_read_archivo->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
@@ -542,6 +574,9 @@ while (control_key)
    case -1:
       log_error(logger_kernel, "Desconexion de memoria");
       control_key = 0;
+      break;
+   case FINALIZAR_PROCESO_FIN:
+      sem_post(&sem_confirmacion_memoria);
       break;
    default:
       log_warning(logger_kernel, "Operacion desconocida de memoria");
@@ -666,7 +701,7 @@ uint32_t buscar_indice_primer_valor_no_nulo(t_list* lista){
    
 }
 
-void mandar_proceso_a_exit(uint32_t pid){
+void mandar_proceso_a_finalizar(uint32_t pid){
    t_pcb* pcb_a_procesar = malloc(sizeof(t_pcb));
    pcb_a_procesar = encontrar_proceso_pid(planificador->cola_exec,pid);
    eliminar_proceso(planificador,pcb_a_procesar);
