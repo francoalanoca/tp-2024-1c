@@ -372,6 +372,10 @@ typedef struct {
     uint32_t nombre_recurso_length;
     char* nombre_recurso;
 }t_recurso;
+typedef struct{
+    uint32_t tamanio_rta;
+    char *rta;
+} t_rta_resize;
 
 void* recibir_buffer(int*, int);
 int iniciar_servidor(t_log *logger, const char *name, char *ip, char *puerto);

@@ -194,33 +194,20 @@ t_proceso *proceso_deserializar(t_list*  lista_paquete_proceso ) {
     proceso_nuevo->pcb->program_counter = *(uint32_t*)list_get(lista_paquete_proceso, 1);
     proceso_nuevo->pcb->path_length = *(uint32_t*)list_get(lista_paquete_proceso, 2);
     proceso_nuevo->pcb->path = list_get(lista_paquete_proceso, 3);
-    //TODO: VER EL TEMA DEL CAMPO LISTA_RECURSOS_PCB
-    /*uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 4);
-
-     // Deserializar cada elemento de la lista
-    pcb->lista_recursos_pcb = list_create();
-    for (int i = 0; i < tamanio_lista; i++) {
-        uint32_t* recurso = malloc(sizeof(uint32_t)); //de que tipo son los objetos de la lista?
-        recurso = *(uint32_t*)list_get(lista_paquete, 4 + i);
-        list_add(pcb->lista_recursos_pcb, recurso);
-    }*/
-
-    
-
-    proceso_nuevo->pcb->mutex_lista_recursos = *(pthread_mutex_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+1); //Revisar tamanio
-    proceso_nuevo->pcb->registros_cpu->PC = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+2);
-    proceso_nuevo->pcb->registros_cpu->AX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+3);
-    proceso_nuevo->pcb->registros_cpu->BX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+4);
-    proceso_nuevo->pcb->registros_cpu->CX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+5);
-    proceso_nuevo->pcb->registros_cpu->DX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+6);
-    proceso_nuevo->pcb->registros_cpu->EAX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+7);
-    proceso_nuevo->pcb->registros_cpu->EBX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+8);
-    proceso_nuevo->pcb->registros_cpu->ECX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+9);
-    proceso_nuevo->pcb->registros_cpu->EDX = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+10);
-    proceso_nuevo->pcb->registros_cpu->SI = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+11);
-    proceso_nuevo->pcb->registros_cpu->DI = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+12);
-    proceso_nuevo->pcb->estado = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+13);
-    proceso_nuevo->pcb->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete_proceso, 4+tamanio_lista+14);
+    proceso_nuevo->pcb->registros_cpu.PC = *(uint32_t*)list_get(lista_paquete_proceso, 5);
+    proceso_nuevo->pcb->registros_cpu.AX = *(uint32_t*)list_get(lista_paquete_proceso, 6);
+    proceso_nuevo->pcb->registros_cpu.BX = *(uint32_t*)list_get(lista_paquete_proceso, 7);
+    proceso_nuevo->pcb->registros_cpu.CX = *(uint32_t*)list_get(lista_paquete_proceso, 8);
+    proceso_nuevo->pcb->registros_cpu.DX = *(uint32_t*)list_get(lista_paquete_proceso, 9);
+    proceso_nuevo->pcb->registros_cpu.EAX = *(uint32_t*)list_get(lista_paquete_proceso, 10);
+    proceso_nuevo->pcb->registros_cpu.EBX = *(uint32_t*)list_get(lista_paquete_proceso, 11);
+    proceso_nuevo->pcb->registros_cpu.ECX = *(uint32_t*)list_get(lista_paquete_proceso, 12);
+    proceso_nuevo->pcb->registros_cpu.EDX = *(uint32_t*)list_get(lista_paquete_proceso, 13);
+    proceso_nuevo->pcb->registros_cpu.SI = *(uint32_t*)list_get(lista_paquete_proceso, 14);
+    proceso_nuevo->pcb->registros_cpu.DI = *(uint32_t*)list_get(lista_paquete_proceso, 15);
+    proceso_nuevo->pcb->estado = *(uint32_t*)list_get(lista_paquete_proceso, 16);
+    proceso_nuevo->pcb->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete_proceso, 17);
+    proceso_nuevo->pcb->quantum = *(uint32_t*)list_get(lista_paquete_proceso, 18);
     //TODO: VER EL TEMA DEL CAMPO INTERFACES(lista en t_proceso)	
 	return proceso_nuevo;
 }
@@ -261,35 +248,22 @@ t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete
     proceso_interrumpido_nuevo->pcb->program_counter = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 1);
     proceso_interrumpido_nuevo->pcb->path_length = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 2);
     proceso_interrumpido_nuevo->pcb->path = list_get(lista_paquete_proceso_interrumpido, 3);
-    //TODO: VER EL TEMA DEL CAMPO LISTA_RECURSOS_PCB
-    /*uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 4);
-
-     // Deserializar cada elemento de la lista
-    pcb->lista_recursos_pcb = list_create();
-    for (int i = 0; i < tamanio_lista; i++) {
-        uint32_t* recurso = malloc(sizeof(uint32_t)); //de que tipo son los objetos de la lista?
-        recurso = *(uint32_t*)list_get(lista_paquete, 4 + i);
-        list_add(pcb->lista_recursos_pcb, recurso);
-    }*/
-
-    
-
-    proceso_interrumpido_nuevo->pcb->mutex_lista_recursos = *(pthread_mutex_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+1); //Revisar tamanio
-    proceso_interrumpido_nuevo->pcb->registros_cpu->PC = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+2);
-    proceso_interrumpido_nuevo->pcb->registros_cpu->AX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+3);
-    proceso_interrumpido_nuevo->pcb->registros_cpu->BX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+4);
-    proceso_interrumpido_nuevo->pcb->registros_cpu->CX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+5);
-    proceso_interrumpido_nuevo->pcb->registros_cpu->DX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+6);
-    proceso_interrumpido_nuevo->pcb->registros_cpu->EAX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+7);
-    proceso_interrumpido_nuevo->pcb->registros_cpu->EBX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+8);
-    proceso_interrumpido_nuevo->pcb->registros_cpu->ECX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+9);
-    proceso_interrumpido_nuevo->pcb->registros_cpu->EDX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+10);
-    proceso_interrumpido_nuevo->pcb->registros_cpu->SI = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+11);
-    proceso_interrumpido_nuevo->pcb->registros_cpu->DI = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+12);
-    proceso_interrumpido_nuevo->pcb->estado = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+13);
-    proceso_interrumpido_nuevo->pcb->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+14);
-    proceso_interrumpido_nuevo->tamanio_motivo_interrupcion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+15);	
-    proceso_interrumpido_nuevo->motivo_interrupcion = list_get(lista_paquete_proceso_interrumpido, 4+tamanio_lista+16);
+    proceso_interrumpido_nuevo->pcb->registros_cpu.PC = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4);
+    proceso_interrumpido_nuevo->pcb->registros_cpu.AX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 5);
+    proceso_interrumpido_nuevo->pcb->registros_cpu.BX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 6);
+    proceso_interrumpido_nuevo->pcb->registros_cpu.CX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 7);
+    proceso_interrumpido_nuevo->pcb->registros_cpu.DX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 8);
+    proceso_interrumpido_nuevo->pcb->registros_cpu.EAX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 9);
+    proceso_interrumpido_nuevo->pcb->registros_cpu.EBX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 10);
+    proceso_interrumpido_nuevo->pcb->registros_cpu.ECX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 11);
+    proceso_interrumpido_nuevo->pcb->registros_cpu.EDX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 12);
+    proceso_interrumpido_nuevo->pcb->registros_cpu.SI = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 13);
+    proceso_interrumpido_nuevo->pcb->registros_cpu.DI = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 14);
+    proceso_interrumpido_nuevo->pcb->estado = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 15);
+    proceso_interrumpido_nuevo->pcb->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 16);
+    proceso_interrumpido_nuevo->pcb->quantum = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 17);
+    proceso_interrumpido_nuevo->tamanio_motivo_interrupcion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 18);	
+    proceso_interrumpido_nuevo->motivo_interrupcion = list_get(lista_paquete_proceso_interrumpido, 19);
     return proceso_interrumpido_nuevo;
 }
 

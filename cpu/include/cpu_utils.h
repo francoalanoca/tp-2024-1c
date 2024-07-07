@@ -37,7 +37,7 @@ void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger);
 void sum(char* registro_destino, char* registro_origen, t_proceso* proceso, t_log *logger);
 void sub(char* registro_destino, char* registro_origen, t_proceso* proceso, t_log *logger);
 void jnz(char* registro, uint32_t inst, t_proceso* proceso, t_log* logger);
-void io_gen_sleep(char* interfaz, uint32_t unidades_de_trabajo, t_proceso* proceso);
+void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo, t_proceso* proceso);
 void generar_interrupcion_a_kernel(int conexion);
 t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso);
 void* crear_servidor_dispatch(char* ip_cpu);//
@@ -45,7 +45,7 @@ void* crear_servidor_interrupt(char* ip_cpu);//
 registros identificarRegistro(char* registro);
 uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso, t_log* logger);
 t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso);
-void enviar_interfaz_a_kernel(t_interfaz* interfaz_elegida,uint32_t unidades_de_trabajo, int conexion);
+void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, uint32_t unidades_de_trabajo, int conexion);
 uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion);
 bool verificar_existencia_en_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t indice);
 //char* uint32_to_string(uint32_t number);
@@ -67,12 +67,12 @@ void guardar_en_direccion_fisica(uint32_t dir_fisica_result,uint32_t tamanio_val
 void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio);
 void envia_error_de_memoria_a_kernel(t_proceso* proceso);
 void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint32_t direccion, uint32_t pid);
-void solicitar_wait_kernel(t_proceso* proceso,uint32_t recurso_tamanio ,char* recurso);
+void solicitar_wait_kernel(uint32_t pid,uint32_t recurso_tamanio ,char* recurso);
 uint32_t calcular_tamanio_proceso(t_proceso* proceso);
-void solicitar_signal_kernel(t_proceso* proceso,uint32_t recurso_tamanio,char* recurso);
+void solicitar_signal_kernel(uint32_t pid,uint32_t recurso_tamanio,char* recurso);
 void solicitar_io_stdin_read_a_kernel(uint32_t tamanio_nombre_interfaz,char* nombre_interfaz, uint32_t direccion, uint32_t tamanio);
 void solicitar_io_stdout_write_a_kernel(uint32_t tamanio_nombre_interfaz, char* nombre_interfaz, uint32_t direccion, uint32_t tamanio);
-void solicitar_exit_a_kernel(t_proceso* proceso);
+void solicitar_exit_a_kernel(t_pcb* proceso);
 void usar_algoritmo_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t nro_marco);
 uint32_t valor_repetido_tlb(uint32_t pid, uint32_t nro_pag);
 void obtenerTamanioPagina(int conexion);
