@@ -10,7 +10,7 @@
 char *path_config;
 char *ip_cpu;
 
-t_proceso* proceso_actual;
+t_pcb* proceso_actual;
 t_proceso_interrumpido* proceso_interrumpido_actual;
 bool interrupcion_kernel;
 instr_t *prox_inst;
@@ -193,7 +193,7 @@ void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pro
     //log_info(logger, "interrupcion_kernel: %s", interrupcion_kernel ? "true" : "false");
     check_interrupt();
     log_info(logger, "Sale de check_interrupt");
-    proceso_actual->pcb->program_counter += 1;
+    proceso_actual->program_counter += 1;
     log_info(logger, "Termino ciclo de instrucciones");
 
 }
