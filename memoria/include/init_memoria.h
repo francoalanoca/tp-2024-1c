@@ -42,8 +42,6 @@ typedef struct{
 typedef struct{
     uint32_t marco;
     uint32_t posicion;
-    bool presencia;
-    bool modificado;
 }t_pagina;
 
 

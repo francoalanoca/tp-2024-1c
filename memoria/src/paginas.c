@@ -40,7 +40,7 @@ t_tabla_de_paginas *crear_tabla_pagina(uint32_t pid){
 uint32_t calcular_marcos(uint32_t tamanio_proceso){
 
     //Calculamos la cantidad de marcos
-    uint32_t cantidad_de_marcos = tamanio_proceso / cfg_memoria->TAM_PAGINA;
+    uint32_t cantidad_de_marcos = floor(tamanio_proceso / cfg_memoria->TAM_PAGINA);
 
     //Si el resto es distinto a cero la cantidad de marcos la incrementamos en 1
     if (tamanio_proceso % cfg_memoria->TAM_PAGINA != 0)
@@ -97,60 +97,95 @@ t_pagina *busco_pagina_por_marco(t_list *lista_de_paginas, uint32_t marco){
 }
 
 
-//Funcion que escribe una valor con un tamaño, de un proceso con la df
-void* escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor, uint32_t tamanio){
 
-    void* escrito = malloc(tamanio);
+uint32_t funcion_magic(t_list* lista_de_paginas, uint32_t marco_buscado){
+
+    //FUncion auxiliar
+    bool condicion(void* pag){
+        
+        t_pagina* pagina = (t_pagina*) pag;
+        return pagina->marco == marco_buscado;
+    }
+
+    //Aqui recien empieza la magia
+    t_pagina* pagina_buscada = (t_pagina*) list_find(lista_de_paginas, &condicion);
+
+    return pagina_buscada->posicion;
+}
+
+
+
+//Funcion que escribe una valor con un tamaño, de un proceso con la df
+char* escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor, uint32_t tamanio_a_escribir){
+
+    char* escrito = malloc(3);
 
     //Aca se almacenara lo que ya fue escrito como un contador
     uint32_t espacio_escrito = 0;
-    //t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
+    t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
 
-    while (tamanio > 0){
+    //SI hay algo para escribir
+    if (tamanio_a_escribir > 0){   
     
         //Creamos las variables necesarias para la algrebra de punteros (frame|offset)
-        uint32_t marco = direccion_fisica / cfg_memoria->TAM_PAGINA;
+        uint32_t marco = floor(direccion_fisica / cfg_memoria->TAM_PAGINA);
         uint32_t offset = direccion_fisica % cfg_memoria->TAM_PAGINA;
+
+        //numero de pagina asociado a tal marco
+        uint32_t numero_pagina_actual = funcion_magic(tabla_de_paginas->lista_de_paginas, marco);
 
         //El espacio disponible en el marco va ser el tamaño de este menos lo que se desplaza el proceso
         uint32_t espacio_restante_marco = cfg_memoria->TAM_PAGINA - offset;
 
-        //Definimos el valor de lo que se va a escribir
-        uint32_t espacio_a_escribir;
-        //SI no es 0 y es < al espacio del frame(marco)
-        if (tamanio < espacio_restante_marco){
-            espacio_a_escribir = tamanio;
-        }
-        //Si es >= ocupamos lo que quede y luego buscamos otro espacio
-        else{
-            espacio_a_escribir = espacio_restante_marco;
-        }
-
-        //Procedemos a copiar (donde se va guardar, que se va guardar(desde donde), tamanio de lo que se va a guardar)
-        memcpy(memoria + direccion_fisica, valor + espacio_escrito, espacio_a_escribir);
-
-        //t_pagina *pagina = busco_pagina_por_marco(tabla_de_paginas->lista_de_paginas, marco);
-        //Actualizamos que fue modificado
-        //if(pagina->modificado == false)
-        //pagina->modificado = true;
-
-        //Actualizamos para que avance luego de escribir
-        espacio_escrito = espacio_escrito + espacio_a_escribir;
-        tamanio = tamanio - espacio_a_escribir;
-
-        //Si todavia hay espacio que tiene que ser escrito
-        if (tamanio > 0){
-
-            t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
-
-            //Busco la pagina sig
-            t_pagina *pagina_siguiente = busco_pagina_por_marco(tabla_de_paginas->lista_de_paginas, marco + 1);
+        
+        //SI no es 0 y es <= al espacio del frame(marco)
+        if (tamanio_a_escribir <= espacio_restante_marco){
             
-            //Actualizamos la df para que empiece desde el sig frame
-            direccion_fisica = pagina_siguiente->marco * cfg_memoria->TAM_PAGINA;
+            //Procedemos a copiar (donde se va guardar, que se va guardar(desde donde), tamanio de lo que se va a guardar)
+            memcpy(memoria + direccion_fisica, valor, tamanio_a_escribir);
+
+            escrito = "OK";
         }
+        //Si es > ocupamos lo que quede y luego buscamos otro espacio
+        else{
+        
+            //Este memcopy utiliza el restante del frame
+            memcpy(memoria + direccion_fisica, valor, espacio_restante_marco);  
+
+            espacio_escrito = espacio_restante_marco;
+            tamanio_a_escribir = tamanio_a_escribir - espacio_escrito;
+
+            
+            uint32_t cant_marcos_a_escribir = calcular_marcos(tamanio_a_escribir);
+
+            for (int i = 0; i < cant_marcos_a_escribir; i++){
+
+                numero_pagina_actual +=1;
+                t_pagina* pagina = list_get(tabla_de_paginas->lista_de_paginas, numero_pagina_actual);
+                direccion_fisica = pagina->marco * cfg_memoria->TAM_PAGINA;
+                
+                if(tamanio_a_escribir >= cfg_memoria->TAM_PAGINA){
+
+                    memcpy(memoria + direccion_fisica, valor + espacio_escrito, cfg_memoria->TAM_PAGINA);
+                    
+                    tamanio_a_escribir -= cfg_memoria->TAM_PAGINA;
+                    espacio_escrito += cfg_memoria->TAM_MEMORIA;
+                }
+                else{
+                    memcpy(memoria + direccion_fisica, valor + espacio_escrito, tamanio_a_escribir);
+                    espacio_escrito += tamanio_a_escribir;
+
+                    escrito = "OK";
+                }
+               
+            }
+            
+        }
+
+    
+        
     }
-    escrito = "OK";
+    
     return escrito;
 }
 
@@ -182,16 +217,18 @@ void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
         //Definimos el valor de lo que se va a leer
         uint32_t espacio_a_leer;
         //SI no es 0 y < al espacio del frame(marco)
-        if (tamanio < espacio_restante_marco){
+        if (tamanio <= espacio_restante_marco){
             espacio_a_leer = tamanio;
         }
-        //Si es >= ocupamos lo que quede y luego buscamos otro espacio
+        //Si es > ocupamos lo que quede y luego buscamos otro espacio
         else{
             espacio_a_leer = espacio_restante_marco;
         }
 
         //Procedemos a copiar (donde se va guardar, que se va guardar(desde donde), tamanio de lo que se va a guardar)
-        memcpy(leido, memoria + direccion_fisica, tamanio);
+        //marco es 5
+        //for( marco_reservados, i++)
+        memcpy(leido, memoria + 10, 100);
         //memcpy(leido + espacio_leido, memoria + direccion_fisica, espacio_a_leer);
 
         //Actualizamos para que avance luego de leer
@@ -276,20 +313,20 @@ op_code administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
     if(tamanio_proceso == 0){
         return SOLICITUD_RESIZE_RTA;
     }else{    
-        if(tamanio_proceso < espacio_disponible()){
+        if(tamanio_proceso <= espacio_disponible()){
             //Recorro mientras sea menor a la cantidad de frames
             for (int i = 0; i < marcos_a_reservar; i++){
                 t_pagina *pagina = malloc(sizeof(t_pagina));
                 int marco_libre = obtener_marco_libre();
                 pagina->marco = marco_libre;                 
-                pagina->posicion = ultima_pagina+i;             
-                pagina->presencia = false;          
-                pagina->modificado = false;        
+                pagina->posicion = ultima_pagina+i;                    
                 bitarray_set_bit(bitmap_frames, marco_libre);
                 list_add(tabla_de_paginas->lista_de_paginas, pagina);
+                //crear bitmap c/proceso donde seria: crear_bitmap(tamanio_proceso/cfg_memoria->TAM->PAGINA)
+                //a la struct pagina agregarle un atrivo mas, si fue escrito o no
                 
             }
-            log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, marcos_a_reservar);
+            log_info(logger_memoria, "PID: %d - Tamaño: %d - Cantidad Marcos: %d", proceso_pid, tamanio_proceso, marcos_a_reservar);
             return SOLICITUD_RESIZE_RTA;
             
         }else{
