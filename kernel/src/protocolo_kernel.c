@@ -158,11 +158,34 @@ while (control_key)
       
       t_recurso* recurso_recibido_wait = malloc(sizeof(t_recurso));
       recurso_recibido_wait = deserializar_recurso(lista_paquete);
-      uint32_t indice_recurso_wait = buscar_indice_recurso(recurso_recibido_wait->nombre_recurso);
+      uint32_t indice_recurso_wait = buscar_indice_recurso(cfg_kernel->RECURSOS,recurso_recibido_wait->nombre_recurso);
       if(indice_recurso_wait != NULL){
          uint32_t valor_indice_recurso = list_get(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_wait);
          if(valor_indice_recurso != 0){
             list_replace(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_wait,valor_indice_recurso - 1);
+            if(dictionary_has_key(procesos_recursos,recurso_recibido_wait->pcb->pid)){//El proceso ya tenia instancias de ese recurso
+               //en el id correspondiente sumar uno a la instancia del recurso correspondiente
+               t_proceso_recurso_diccionario* registro_actual_diccionario = malloc(sizeof(t_proceso_recurso_diccionario));
+               registro_actual_diccionario = dictionary_get(procesos_recursos,recurso_recibido_wait->pcb->pid);
+               uint32_t indice_recurso_buscado = buscar_indice_recurso(registro_actual_diccionario->nombres_recursos,recurso_recibido_wait->nombre_recurso);
+               uint32_t valor_instancias_actual = list_get(registro_actual_diccionario->instancias_recursos,indice_recurso_buscado);
+               list_replace(registro_actual_diccionario->instancias_recursos,indice_recurso_buscado,valor_instancias_actual + 1);
+               char* pid_string = malloc(sizeof(recurso_recibido_wait->pcb->pid));
+               pid_string = sprintf(pid_string, "%u", recurso_recibido_wait->pcb->pid);
+               dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
+               dictionary_put(procesos_recursos,pid_string,registro_actual_diccionario);
+            }
+            else{//El proceso no tenia instancias de ese recurso
+               //crear id nuevo y agregar a lista el recurso con instancia en 1
+               t_proceso_recurso_diccionario* registro_actual_diccionario = malloc(sizeof(t_proceso_recurso_diccionario));
+               registro_actual_diccionario = dictionary_get(procesos_recursos,recurso_recibido_wait->pcb->pid);
+               char* pid_string = malloc(sizeof(recurso_recibido_wait->pcb->pid));
+               pid_string = sprintf(pid_string, "%u", recurso_recibido_wait->pcb->pid);
+               list_add(registro_actual_diccionario->nombres_recursos,pid_string);
+               list_add(registro_actual_diccionario->instancias_recursos,1);
+               dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
+               dictionary_put(procesos_recursos,pid_string,registro_actual_diccionario);
+            }
          }
          else{
             //NO HAY INSTANCIAS DISPONIBLES, AGREAGAR A COLA DE BLOQUEADOS DEL RECURSO
@@ -195,10 +218,37 @@ while (control_key)
       
       t_recurso* recurso_recibido_signal = malloc(sizeof(t_recurso));
       recurso_recibido_signal = deserializar_recurso(lista_paquete);
-      uint32_t indice_recurso_signal = buscar_indice_recurso(recurso_recibido_signal->nombre_recurso);
+      uint32_t indice_recurso_signal = buscar_indice_recurso(cfg_kernel->RECURSOS,recurso_recibido_signal->nombre_recurso);
       if(indice_recurso_signal != NULL){
          uint32_t valor_indice_recurso = list_get(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_signal);
          list_replace(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_signal,valor_indice_recurso + 1);
+
+         
+            
+            if(dictionary_has_key(procesos_recursos,recurso_recibido_signal->pcb->pid)){//El proceso ya tenia instancias de ese recurso
+               //en el id correspondiente sumar uno a la instancia del recurso correspondiente
+               t_proceso_recurso_diccionario* registro_actual_diccionario = malloc(sizeof(t_proceso_recurso_diccionario));
+               registro_actual_diccionario = dictionary_get(procesos_recursos,recurso_recibido_signal->pcb->pid);
+               uint32_t indice_recurso_buscado = buscar_indice_recurso(registro_actual_diccionario->nombres_recursos,recurso_recibido_signal->nombre_recurso);
+               uint32_t valor_instancias_actual = list_get(registro_actual_diccionario->instancias_recursos,indice_recurso_buscado);
+               list_replace(registro_actual_diccionario->instancias_recursos,indice_recurso_buscado,valor_instancias_actual - 1);
+               char* pid_string = malloc(sizeof(recurso_recibido_signal->pcb->pid));
+               pid_string = sprintf(pid_string, "%u", recurso_recibido_signal->pcb->pid);
+               dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
+               dictionary_put(procesos_recursos,pid_string,registro_actual_diccionario);
+            }
+            else{//El proceso no tenia instancias de ese recurso
+               //crear id nuevo y agregar a lista el recurso con instancia en 1
+               t_proceso_recurso_diccionario* registro_actual_diccionario = malloc(sizeof(t_proceso_recurso_diccionario));
+               registro_actual_diccionario = dictionary_get(procesos_recursos,recurso_recibido_signal->pcb->pid);
+               char* pid_string = malloc(sizeof(recurso_recibido_signal->pcb->pid));
+               pid_string = sprintf(pid_string, "%u", recurso_recibido_signal->pcb->pid);
+               list_add(registro_actual_diccionario->nombres_recursos,pid_string);
+               list_add(registro_actual_diccionario->instancias_recursos,0);
+               dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
+               dictionary_put(procesos_recursos,pid_string,registro_actual_diccionario);
+            }
+         
 
          t_list* lista_bloqueados_correspondiente = dictionary_get(planificador->cola_blocked,recurso_recibido_signal->nombre_recurso);
          if(lista_bloqueados_correspondiente->elements_count > 0){
@@ -676,9 +726,7 @@ t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid) {
 }
 
 
-uint32_t buscar_indice_recurso(char* nombre_recurso){
-   t_list* lista_recursos = malloc(sizeof(t_list));
-   lista_recursos = cfg_kernel->RECURSOS;
+uint32_t buscar_indice_recurso(t_list* lista_recursos,char* nombre_recurso){
    uint32_t indice_encontrado = malloc(sizeof(uint32_t));
    indice_encontrado = NULL;
 

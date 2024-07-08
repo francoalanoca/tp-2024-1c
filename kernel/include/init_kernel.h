@@ -34,6 +34,7 @@ extern t_dictionary* interfaces;
 extern sem_t sem_contexto_ejecucion_recibido;
 extern sem_t sem_confirmacion_memoria;
 extern t_pcb* pcb_actualizado_interrupcion;
+extern t_dictionary* procesos_recursos;
 typedef struct {
     char* PUERTO_ESCUCHA;
     char* IP_MEMORIA;
@@ -62,5 +63,11 @@ typedef struct{
     uint32_t conexion;
 
 }t_interfaz_diccionario;
+
+typedef struct{
+    t_list* nombres_recursos;
+    t_list* instancias_recursos;
+
+}t_proceso_recurso_diccionario;
 
 #endif /* INIT_KERNEL_H_ */

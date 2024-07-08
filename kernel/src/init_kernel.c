@@ -9,7 +9,7 @@ int conexion_cpu_interrupt;
 int conexion_memoria;
 int socket_servidor;
 t_dictionary* interfaces; //Diccionario donde se encuentran las interfaces que van llegando de IO
-
+t_dictionary* procesos_recursos; //Diccionario donde se vinculan los procesos con sus recursos asignados
 int checkProperties(char *path_config) {
     // config valida
     t_config *config = config_create(path_config); //"/Documents/tp_operativos/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config"
@@ -100,6 +100,8 @@ int init(char *path_config) {
     file_cfg_kernel = iniciar_config(path_config,logger_kernel); //"/Documents/tp_operativos/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config"
 
     interfaces = dictionary_create();
+
+    procesos_recursos = dictionary_create();
 
     return checkProperties(path_config);
 }
