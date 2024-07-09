@@ -1142,3 +1142,32 @@ void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket ){
 
 	return proceso_interrumpido;
 }
+
+void enviar_crear_proceso_memoria(t_m_crear_proceso* proceso_nuevo, int socket){
+ t_paquete* paquete_crear_proceso;
+ 
+    paquete_crear_proceso = crear_paquete(CREAR_PROCESO_KERNEL);
+ 
+    agregar_a_paquete(paquete_crear_proceso, &proceso_nuevo->pid,  sizeof(uint32_t));
+    agregar_a_paquete(paquete_crear_proceso, proceso_nuevo->archivo_pseudocodigo, strlen(proceso_nuevo->archivo_pseudocodigo) + 1);  
+    
+    enviar_paquete(paquete_crear_proceso, socket);   
+    printf("Proceso enviado: %s\n", proceso_nuevo->archivo_pseudocodigo); 
+    free(paquete_crear_proceso);
+
+}
+
+void enviar_resize_memoria(t_resize* proceso_resize, int socket){
+ t_paquete* paquete_resize;
+ 
+    paquete_resize = crear_paquete(SOLICITUD_RESIZE);
+ 
+    agregar_a_paquete(paquete_resize, &proceso_resize->pid,  sizeof(uint32_t));
+    agregar_a_paquete(paquete_resize, &proceso_resize->tamanio,  sizeof(uint32_t));
+    agregar_a_paquete(paquete_resize, proceso_resize->valor, strlen(proceso_resize->valor) + 1);  
+    
+    enviar_paquete(paquete_resize, socket);   
+    printf("Tamaño resize solicitado: %d\n", proceso_resize->tamanio); 
+    free(paquete_resize);
+
+}
