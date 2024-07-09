@@ -13,7 +13,7 @@ extern t_proceso_interrumpido* proceso_interrumpido_actual;
 extern bool interrupcion_kernel;
 extern int conexion_kernel;
 extern instr_t *prox_inst;
-extern sem_t sem_conexion_lista;
+extern sem_t sem_valor_instruccion;
 extern t_list* tlb;
 extern uint32_t marco_recibido;
 extern sem_t sem_marco_recibido;

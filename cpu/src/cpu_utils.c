@@ -3,36 +3,11 @@
 int tamanioParams;
 int tamanioInterfaces;
 
-instr_t* fetch(int conexion, t_log* logger, t_config* config, t_proceso* proceso){
-       // instr_t *prox_inst = malloc(sizeof(instr_t));
+instr_t* fetch(int conexion, t_log* logger, t_config* config, t_pcb* proceso){
        log_info(logger, "Voy a entrar a pedir_instruccion");
        pedir_instruccion(proceso, conexion,logger); //TODO:VER COMO RECIBIR LA INSTRUCCION
-       //SEMAFORO QUE ESPERE A RECIBIR LA PROX INSTRUCCION
-       //PARA PROBAR:
-       //INSTRUCCION DE PRUEBA 1 (SET)
-       /*prox_inst->idLength = 4;
-                prox_inst->id = SET;
-                
-                prox_inst->param1Length = (strlen("AX") + 1) * sizeof(char*);
-                prox_inst->param1 = malloc(prox_inst->param1Length);
-                strcpy(prox_inst->param1, "AX");
-                
-                prox_inst->param2Length = (strlen("1")+1) * sizeof(char*);
-                prox_inst->param2 = malloc(prox_inst->param2Length);
-                strcpy(prox_inst->param2, "1");
-        //INSTRUCCION DE PRUEBA 2 (IO_GEN_SLEEP)
-              prox_inst->idLength = 4;
-                prox_inst->id = IO_GEN_SLEEP;  
-                prox_inst->param1Length = (strlen("Int1") + 1) * sizeof(char*);
-                prox_inst->param1 = malloc(prox_inst->param1Length);
-                strcpy(prox_inst->param1, "Int1");
-                
-                prox_inst->param2Length = (strlen("10")+1) * sizeof(char*);
-                prox_inst->param2 = malloc(prox_inst->param2Length);
-                strcpy(prox_inst->param2, "10");*/
-       // log_info(logger_cpu, "WAIT SEMAFORO");
-       // sem_wait(&sem_conexion_lista);
-        
+        //TODO:WAIT semaforo
+        sem_wait(&sem_valor_instruccion);
        return prox_inst;
 }
 
@@ -42,7 +17,7 @@ tipo_instruccion decode(instr_t* instr){
 }
 
 
-void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_proceso* proceso){
+void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso){
 
     switch(tipo_inst){
         case SET:
@@ -179,75 +154,77 @@ void check_interrupt(){
     }
 }
 
-void pedir_instruccion(t_proceso* proceso,int conexion, t_log* logger){
+void pedir_instruccion(t_pcb* proceso,int conexion, t_log* logger){
     printf("entro a pedir_instruccion\n");
     t_paquete* paquete_pedido_instruccion;
     paquete_pedido_instruccion = crear_paquete(PROXIMA_INSTRUCCION); 
         
-    agregar_a_paquete(paquete_pedido_instruccion,  &proceso->pcb->pid,  sizeof(uint32_t)); 
-    agregar_a_paquete(paquete_pedido_instruccion,  &proceso->pcb->program_counter,  sizeof(uint32_t));  
+    agregar_a_paquete(paquete_pedido_instruccion,  &proceso->pid,  sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_pedido_instruccion,  &proceso->program_counter,  sizeof(uint32_t));  
         
     enviar_paquete(paquete_pedido_instruccion, conexion); 
+    free(paquete_pedido_instruccion->buffer->stream);
+    free(paquete_pedido_instruccion->buffer);
     free(paquete_pedido_instruccion);
 }
 
-void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger){
+void set(char* registro, uint32_t valor, t_pcb* proceso, t_log *logger){
     //printf("El valor del set es : %d ", valor);
     registros registro_elegido = identificarRegistro(registro);
     switch(registro_elegido){
         case PC:
         {
-           proceso->pcb->registros_cpu.PC = valor;
+           proceso->registros_cpu.PC = valor;
             break;
         }
         case AX:
         {
-           proceso->pcb->registros_cpu.AX = valor;
+           proceso->registros_cpu.AX = valor;
             break;
         }
         case BX:
         {
-           proceso->pcb->registros_cpu.BX = valor;
+           proceso->registros_cpu.BX = valor;
             break;
         }
         case CX:
         {
-           proceso->pcb->registros_cpu.CX = valor;
+           proceso->registros_cpu.CX = valor;
             break;
         }
         case DX:
         {
-           proceso->pcb->registros_cpu.DX = valor;
+           proceso->registros_cpu.DX = valor;
             break;
         }
         case EAX:
         {
-           proceso->pcb->registros_cpu.EAX = valor;
+           proceso->registros_cpu.EAX = valor;
             break;
         }
         case EBX:
         {
-           proceso->pcb->registros_cpu.EBX = valor;
+           proceso->registros_cpu.EBX = valor;
             break;
         }
         case ECX:
         {
-           proceso->pcb->registros_cpu.ECX = valor;
+           proceso->registros_cpu.ECX = valor;
             break;
         }
         case EDX:
         {
-           proceso->pcb->registros_cpu.EDX = valor;
+           proceso->registros_cpu.EDX = valor;
             break;
         }
         case SI:
         {
-           proceso->pcb->registros_cpu.SI = valor;
+           proceso->registros_cpu.SI = valor;
             break;
         }
         case DI:
         {
-           proceso->pcb->registros_cpu.DI = valor;
+           proceso->registros_cpu.DI = valor;
             break;
         }
         default:
@@ -258,7 +235,7 @@ void set(char* registro, uint32_t valor, t_proceso* proceso, t_log *logger){
    // registro = valor;
 }
 
-void sum(char* registro_destino, char* registro_origen, t_proceso* proceso, t_log *logger){
+void sum(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *logger){
     registros id_registro_destino = identificarRegistro(registro_destino);
     registros id_registro_origen = identificarRegistro(registro_origen);
 
@@ -268,57 +245,57 @@ void sum(char* registro_destino, char* registro_origen, t_proceso* proceso, t_lo
     switch(id_registro_destino){
         case PC:
         {
-           proceso->pcb->registros_cpu.PC = valor_reg_destino + valor_reg_origen;
+           proceso->registros_cpu.PC = valor_reg_destino + valor_reg_origen;
             break;
         }
         case AX:
         {
-           proceso->pcb->registros_cpu.AX = valor_reg_destino + valor_reg_origen;
+           proceso->registros_cpu.AX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case BX:
         {
-           proceso->pcb->registros_cpu.BX = valor_reg_destino + valor_reg_origen;
+           proceso->registros_cpu.BX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case CX:
         {
-           proceso->pcb->registros_cpu.CX = valor_reg_destino + valor_reg_origen;
+           proceso->registros_cpu.CX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case DX:
         {
-           proceso->pcb->registros_cpu.DX = valor_reg_destino + valor_reg_origen;
+           proceso->registros_cpu.DX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case EAX:
         {
-           proceso->pcb->registros_cpu.EAX = valor_reg_destino + valor_reg_origen;
+           proceso->registros_cpu.EAX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case EBX:
         {
-           proceso->pcb->registros_cpu.EBX = valor_reg_destino + valor_reg_origen;
+           proceso->registros_cpu.EBX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case ECX:
         {
-           proceso->pcb->registros_cpu.ECX = valor_reg_destino + valor_reg_origen;
+           proceso->registros_cpu.ECX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case EDX:
         {
-           proceso->pcb->registros_cpu.EDX = valor_reg_destino + valor_reg_origen;
+           proceso->registros_cpu.EDX = valor_reg_destino + valor_reg_origen;
             break;
         }
         case SI:
         {
-           proceso->pcb->registros_cpu.SI = valor_reg_destino + valor_reg_origen;
+           proceso->registros_cpu.SI = valor_reg_destino + valor_reg_origen;
             break;
         }
         case DI:
         {
-           proceso->pcb->registros_cpu.DI = valor_reg_destino + valor_reg_origen;
+           proceso->registros_cpu.DI = valor_reg_destino + valor_reg_origen;
             break;
         }
         default:
@@ -329,7 +306,7 @@ void sum(char* registro_destino, char* registro_origen, t_proceso* proceso, t_lo
     //registro_destino = registro_destino + registro_origen;
 }
 
-void sub(char* registro_destino, char* registro_origen, t_proceso* proceso, t_log *logger){
+void sub(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *logger){
     registros id_registro_destino = identificarRegistro(registro_destino);
     registros id_registro_origen = identificarRegistro(registro_origen);
 
@@ -339,57 +316,57 @@ void sub(char* registro_destino, char* registro_origen, t_proceso* proceso, t_lo
     switch(id_registro_destino){
         case PC:
         {
-           proceso->pcb->registros_cpu.PC = valor_reg_destino - valor_reg_origen;
+           proceso->registros_cpu.PC = valor_reg_destino - valor_reg_origen;
             break;
         }
         case AX:
         {
-           proceso->pcb->registros_cpu.AX = valor_reg_destino - valor_reg_origen;
+           proceso->registros_cpu.AX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case BX:
         {
-           proceso->pcb->registros_cpu.BX = valor_reg_destino - valor_reg_origen;
+           proceso->registros_cpu.BX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case CX:
         {
-           proceso->pcb->registros_cpu.CX = valor_reg_destino - valor_reg_origen;
+           proceso->registros_cpu.CX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case DX:
         {
-           proceso->pcb->registros_cpu.DX = valor_reg_destino - valor_reg_origen;
+           proceso->registros_cpu.DX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case EAX:
         {
-           proceso->pcb->registros_cpu.EAX = valor_reg_destino - valor_reg_origen;
+           proceso->registros_cpu.EAX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case EBX:
         {
-           proceso->pcb->registros_cpu.EBX = valor_reg_destino - valor_reg_origen;
+           proceso->registros_cpu.EBX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case ECX:
         {
-           proceso->pcb->registros_cpu.ECX = valor_reg_destino - valor_reg_origen;
+           proceso->registros_cpu.ECX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case EDX:
         {
-           proceso->pcb->registros_cpu.EDX = valor_reg_destino - valor_reg_origen;
+           proceso->registros_cpu.EDX = valor_reg_destino - valor_reg_origen;
             break;
         }
         case SI:
         {
-           proceso->pcb->registros_cpu.SI = valor_reg_destino - valor_reg_origen;
+           proceso->registros_cpu.SI = valor_reg_destino - valor_reg_origen;
             break;
         }
         case DI:
         {
-           proceso->pcb->registros_cpu.DI = valor_reg_destino - valor_reg_origen;
+           proceso->registros_cpu.DI = valor_reg_destino - valor_reg_origen;
             break;
         }
         default:
@@ -398,18 +375,15 @@ void sub(char* registro_destino, char* registro_origen, t_proceso* proceso, t_lo
     //registro_destino = registro_destino - registro_origen;
 }
 
-void jnz(char* registro, uint32_t inst, t_proceso* proceso, t_log* logger){
+void jnz(char* registro, uint32_t inst, t_pcb* proceso, t_log* logger){
     registros id_registro = identificarRegistro(registro);
     uint32_t valor_registro = obtenerValorActualRegistro(id_registro,proceso, logger);
     if(valor_registro != 0){
-        proceso->pcb->program_counter = inst;
+        proceso->program_counter = inst;
     }
 }
 //void io_gen_sleep(Interfaz interfaz, int unidades_de_trabajo){ //TODO: VER PARAMETROS
-void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo, t_proceso* proceso){
-   // t_interfaz interfaz_elegida = malloc(sizeof(t_interfaz));//REVISAR
-   //t_interfaz* interfaz_elegida;
-    //interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
+void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo, t_pcb* proceso){
     printf("Entra a io_gen_sleep");
     uint32_t tamanio_nombre_interfaz = malloc(sizeof(uint32_t));
     tamanio_nombre_interfaz = string_length(nombre_interfaz) * sizeof(char);
@@ -452,17 +426,19 @@ void generar_interrupcion_a_kernel(int conexion){
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->motivo_interrupcion, sizeof(uint32_t));
 
     enviar_paquete(paquete_interrupcion_kernel, conexion);   
+    free(paquete_interrupcion_kernel->buffer->stream);
+    free(paquete_interrupcion_kernel->buffer);
     free(paquete_interrupcion_kernel);
     
 }
 
-t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso){
+/*t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso){
     t_proceso_memoria* nuevo_proceso = malloc(sizeof(t_proceso_memoria));
     nuevo_proceso->pid = proceso->pcb->pid;
     nuevo_proceso->program_counter = proceso->pcb->program_counter;
     printf("Nuevo proceso memora: pid: %d,program counter: %d", nuevo_proceso->pid, nuevo_proceso->program_counter);
     return nuevo_proceso;
-}
+}*/
 
 
 registros identificarRegistro(char* registro){
@@ -504,61 +480,61 @@ registros identificarRegistro(char* registro){
     }
 }
 
-uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso, t_log* logger){
+uint32_t obtenerValorActualRegistro(registros id_registro, t_pcb* proceso, t_log* logger){
     switch(id_registro){
         case PC:
         {
-           return proceso->pcb->registros_cpu.PC;
+           return proceso->registros_cpu.PC;
             break;
         }
         case AX:
         {
-           return proceso->pcb->registros_cpu.AX;
+           return proceso->registros_cpu.AX;
             break;
         }
         case BX:
         {
-           return proceso->pcb->registros_cpu.BX;
+           return proceso->registros_cpu.BX;
             break;
         }
         case CX:
         {
-           return proceso->pcb->registros_cpu.CX;
+           return proceso->registros_cpu.CX;
             break;
         }
         case DX:
         {
-           return proceso->pcb->registros_cpu.DX;
+           return proceso->registros_cpu.DX;
             break;
         }
         case EAX:
         {
-           return proceso->pcb->registros_cpu.EAX;
+           return proceso->registros_cpu.EAX;
             break;
         }
         case EBX:
         {
-           return proceso->pcb->registros_cpu.EBX;
+           return proceso->registros_cpu.EBX;
             break;
         }
         case ECX:
         {
-           return proceso->pcb->registros_cpu.ECX;
+           return proceso->registros_cpu.ECX;
             break;
         }
         case EDX:
         {
-           return proceso->pcb->registros_cpu.EDX;
+           return proceso->registros_cpu.EDX;
             break;
         }
         case SI:
         {
-           return proceso->pcb->registros_cpu.SI;
+           return proceso->registros_cpu.SI;
             break;
         }
         case DI:
         {
-           return proceso->pcb->registros_cpu.DI;
+           return proceso->registros_cpu.DI;
             break;
         }
         default:
@@ -566,8 +542,8 @@ uint32_t obtenerValorActualRegistro(registros id_registro, t_proceso* proceso, t
     }
 }
 
-t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso){
-    t_interfaz* interfaz_actual; //malloc?
+/*t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso){
+    t_interfaz* interfaz_actual = malloc(sizeof(t_interfaz)); 
     for(int i = 0; i < proceso->interfaces->elements_count; i++){	 //REVISAR ELEMENTS_COUNT
 			interfaz_actual = list_get(proceso->interfaces,i);
             if(strcmp(interfaz_actual->nombre, interfaz) == 0){
@@ -575,7 +551,7 @@ t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso){
             }
 	  }
       return NULL;
-}
+}*/
 
 void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, uint32_t unidades_de_trabajo, int conexion){
     printf("entro a enviar_interfaz_a_kernel\n");
@@ -724,7 +700,7 @@ void agregar_a_tlb(uint32_t pid, uint32_t nro_pag, uint32_t marco){
     list_add(tlb,nuevo_registro);
 }
 
-void mov_in(char* registro_datos, char* registro_direccion, t_proceso* proceso, t_log* logger){
+void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_log* logger){
     // Lee el valor de memoria correspondiente a la Dirección Lógica que se encuentra en el 
     //Registro Dirección y lo almacena en el Registro Datos
     registros id_registro_direccion = identificarRegistro(registro_direccion);
@@ -735,14 +711,14 @@ void mov_in(char* registro_datos, char* registro_direccion, t_proceso* proceso, 
     uint32_t dir_fisica_result = malloc(sizeof(uint32_t));
     dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria);
 
-    pedir_valor_a_memoria(dir_fisica_result,proceso->pcb->pid,socket_memoria);
+    pedir_valor_a_memoria(dir_fisica_result,proceso->pid,socket_memoria);
     wait(&sem_valor_registro_recibido);
     
     set(registro_datos,valor_registro_obtenido,proceso,logger);
 
 }
 
-void mov_out(char* registro_direccion, char* registro_datos, t_proceso* proceso, t_log* logger){
+void mov_out(char* registro_direccion, char* registro_datos, t_pcb* proceso, t_log* logger){
     // Lee el valor del Registro Datos y lo escribe en la dirección física de
     // memoria obtenida a partir de la Dirección Lógica almacenada en el Registro Dirección.
     registros id_registro_datos = identificarRegistro(registro_datos);
@@ -758,7 +734,7 @@ void mov_out(char* registro_direccion, char* registro_datos, t_proceso* proceso,
     //por cada pedacito de intfo llamar a mmu y agregar dir fisca obtenida en lista 
 
 
-    guardar_en_direccion_fisica(dir_fisica_result,sizeof(uint32_t),valor_registro_datos,proceso->pcb->pid,socket_memoria);//TODO
+    guardar_en_direccion_fisica(dir_fisica_result,sizeof(uint32_t),valor_registro_datos,proceso->pid,socket_memoria);//TODO
 
 }
 
@@ -815,7 +791,7 @@ void signal_inst(char* recurso){
     solicitar_signal_kernel(proceso_actual,(strlen(recurso) + 1) * sizeof(char) ,recurso);
 }
 
-void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio, t_proceso* proceso, t_log* logger){
+void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio, t_pcb* proceso, t_log* logger){
     //Esta instrucción solicita al Kernel que mediante la interfaz ingresada 
     //se lea desde el STDIN (Teclado) un valor cuyo tamaño está delimitado 
     //por el valor del Registro Tamaño y el mismo se guarde a partir de la
@@ -835,7 +811,7 @@ void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tama
     solicitar_io_stdin_read_a_kernel((strlen(interfaz) + 1) * sizeof(char) ,interfaz,dir_fisica,valor_registro_tamanio);
 }
 
-void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio, t_proceso* proceso, t_log* logger){
+void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio, t_pcb* proceso, t_log* logger){
     //Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se lea 
     //desde la posición de memoria indicada por la Dirección Lógica almacenada
     // en el Registro Dirección, un tamaño indicadopor el Registro Tamaño y se imprima por pantalla.
@@ -872,6 +848,8 @@ void pedir_valor_a_memoria(uint32_t dir_fisica, uint32_t pid, int conexion){
         agregar_a_paquete(paquete_pedido_valor_memoria,  &pid,  sizeof(uint32_t));  
             
         enviar_paquete(paquete_pedido_valor_memoria, conexion); 
+        free(paquete_pedido_valor_memoria->buffer->stream);
+        free(paquete_pedido_valor_memoria->buffer);
         free(paquete_pedido_valor_memoria);
 
 }
@@ -888,7 +866,10 @@ void guardar_en_direccion_fisica(uint32_t dir_fisica_result,uint32_t tamanio_val
         agregar_a_paquete(paquete_guardar_df,  &pid,  sizeof(uint32_t));   
             
         enviar_paquete(paquete_guardar_df, conexion); 
+        free(paquete_guardar_df->buffer->stream);
+        free(paquete_guardar_df->buffer);
         free(paquete_guardar_df);
+        
     
 }
 
@@ -902,7 +883,10 @@ void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio){
     agregar_a_paquete(paquete_pedido_resize,  &tamanio,  sizeof(uint32_t));  
         
     enviar_paquete(paquete_pedido_resize, socket_memoria); 
+    free(paquete_pedido_resize->buffer->stream);
+    free(paquete_pedido_resize->buffer);
     free(paquete_pedido_resize);
+    
 }
 
 
@@ -933,6 +917,8 @@ void envia_error_de_memoria_a_kernel(t_proceso_interrumpido* proceso){
     agregar_a_paquete(paquete_error_memoria, &proceso->motivo_interrupcion, sizeof(uint32_t));
        
     enviar_paquete(paquete_error_memoria, conexion_kernel); 
+    free(paquete_error_memoria->buffer->stream);
+    free(paquete_error_memoria->buffer);
     free(paquete_error_memoria);
    
 }
@@ -949,6 +935,8 @@ void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint3
         agregar_a_paquete(paquete_copy_string,  &direccion,  sizeof(uint32_t));  
             
         enviar_paquete(paquete_copy_string, socket_memoria); 
+        free(paquete_copy_string->buffer->stream);
+        free(paquete_copy_string->buffer);
         free(paquete_copy_string);
     
 }
@@ -983,6 +971,8 @@ void solicitar_wait_kernel(t_pcb* pcb,uint32_t recurso_tamanio ,char* recurso){
         agregar_a_paquete(paquete_wait_kernel, recurso, recurso_tamanio);
         
         enviar_paquete(paquete_wait_kernel, conexion_kernel); 
+        free(paquete_wait_kernel->buffer->stream);
+        free(paquete_wait_kernel->buffer);
         free(paquete_wait_kernel);
 
 }
@@ -1015,6 +1005,8 @@ void solicitar_signal_kernel(t_pcb* pcb,uint32_t recurso_tamanio,char* recurso){
         agregar_a_paquete(paquete_signal_kernel, recurso, recurso_tamanio);
         
         enviar_paquete(paquete_signal_kernel, conexion_kernel); 
+        free(paquete_signal_kernel->buffer->stream);
+        free(paquete_signal_kernel->buffer);
         free(paquete_signal_kernel);
 }
 
@@ -1033,6 +1025,8 @@ void solicitar_io_stdin_read_a_kernel(uint32_t tamanio_nombre_interfaz,char* nom
         agregar_a_paquete(paquete_io_stdin_read, &tamanio, sizeof(uint32_t)); 
         
         enviar_paquete(paquete_io_stdin_read, conexion_kernel); 
+        free(paquete_io_stdin_read->buffer->stream);
+        free(paquete_io_stdin_read->buffer);
         free(paquete_io_stdin_read);
         
 }
@@ -1053,6 +1047,8 @@ void solicitar_io_stdout_write_a_kernel(uint32_t tamanio_nombre_interfaz, char* 
         agregar_a_paquete(paquete_io_stdout_write, &tamanio, sizeof(uint32_t)); 
         
         enviar_paquete(paquete_io_stdout_write, conexion_kernel); 
+        free(paquete_io_stdout_write->buffer->stream);
+        free(paquete_io_stdout_write->buffer);
         free(paquete_io_stdout_write);
 }
 
@@ -1082,6 +1078,8 @@ void solicitar_exit_a_kernel(t_proceso_interrumpido* proceso){
         agregar_a_paquete(paquete_exit_kernel, &proceso->motivo_interrupcion, sizeof(uint32_t));
         
         enviar_paquete(paquete_exit_kernel, conexion_kernel); 
+        free(paquete_exit_kernel->buffer->stream);
+        free(paquete_exit_kernel->buffer);
         free(paquete_exit_kernel);
     
 }
@@ -1142,65 +1140,56 @@ void obtenerTamanioPagina(int conexion){
 
 }
 
-void io_fs_create(char* interfaz, char* nombre_archivo, t_proceso* proceso, t_log* logger){
+void io_fs_create(char* interfaz, char* nombre_archivo, t_pcb* proceso, t_log* logger){
     //Esta instrucción solicita al Kernel que mediante la
     //interfaz seleccionada, se cree un archivo en el FS montado en dicha interfaz
     
-    t_interfaz* interfaz_elegida;
-    interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
-    if(interfaz_elegida != NULL){
-    enviar_io_fs_create_a_kernel(interfaz_elegida->nombre_length,interfaz_elegida->nombre,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,proceso->pcb->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_CREATE_A_KERNEL
-    }
-    else{
-        printf("La interfaz no se encuentra en el proceso");
-    }
-    
+    //t_interfaz* interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
+
+    enviar_io_fs_create_a_kernel((strlen(interfaz) + 1) * sizeof(char),interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,proceso->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_CREATE_A_KERNEL
+   
+    //free(interfaz_elegida->nombre);
+    //free(interfaz_elegida);
     printf("Sale de io_fs_create");
 }
 
-void io_fs_delete(char* interfaz, char* nombre_archivo, t_proceso* proceso, t_log* logger){
+void io_fs_delete(char* interfaz, char* nombre_archivo, t_pcb* proceso, t_log* logger){
     //Esta instrucción solicita al Kernel que mediante la
     //interfaz seleccionada, se elimine un archivo en el FS montado en dicha interfaz
 
-    t_interfaz* interfaz_elegida;
-    interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
-    if(interfaz_elegida != NULL){
-    enviar_io_fs_delete_a_kernel(interfaz_elegida->nombre_length,interfaz_elegida->nombre,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,proceso->pcb->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_DELETE_A_KERNEL
-    }
-    else{
-        printf("La interfaz no se encuentra en el proceso");
-    }
-    
+    //t_interfaz* interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
+
+    enviar_io_fs_delete_a_kernel((strlen(interfaz) + 1) * sizeof(char) ,interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,proceso->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_DELETE_A_KERNEL
+   
+    //free(interfaz_elegida->nombre);
+    //free(interfaz_elegida);
     printf("Sale de io_fs_delete");
 }
 
-void io_fs_truncate(char* interfaz, char* nombre_archivo, char* registro_tamanio, t_proceso* proceso, t_log* logger){
+void io_fs_truncate(char* interfaz, char* nombre_archivo, char* registro_tamanio, t_pcb* proceso, t_log* logger){
     //Esta instrucción solicita al
     //Kernel que mediante la interfaz seleccionada, se modifique el tamaño del archivo en el FS
     //montado en dicha interfaz, actualizando al valor que se encuentra en el registro indicado por
     //Registro Tamaño.
 
-    t_interfaz* interfaz_elegida;
-    interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
-    if(interfaz_elegida != NULL){
+   // t_interfaz* interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
+
         registros id_registro_tamanio = identificarRegistro(registro_tamanio);
         uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
-        enviar_io_fs_truncate_a_kernel(interfaz_elegida->nombre_length,interfaz_elegida->nombre,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,proceso->pcb->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_TRUNCATE_A_KERNEL
-    }
-    else{
-        printf("La interfaz no se encuentra en el proceso");
-    }
+        enviar_io_fs_truncate_a_kernel((strlen(interfaz) + 1) * sizeof(char),interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,proceso->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_TRUNCATE_A_KERNEL
+  
+    //free(interfaz_elegida->nombre);
+    //free(interfaz_elegida);
 }
 
-void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_proceso* proceso, t_log* logger){
+void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_pcb* proceso, t_log* logger){
     //Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se
     //lea desde Memoria la cantidad de bytes indicadas por el Registro Tamaño a partir de la
     //dirección lógica que se encuentra en el Registro Dirección y se escriban en el archivo a partir
     //del valor del Registro Puntero Archivo.
 
-    t_interfaz* interfaz_elegida;
-    interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
-    if(interfaz_elegida != NULL){
+    //t_interfaz* interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
+
         registros id_registro_direccion = identificarRegistro(registro_direccion);
         uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
         uint32_t dir_fisica = malloc(sizeof(uint32_t));
@@ -1211,22 +1200,19 @@ void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion,
         registros id_registro_puntero_archivo = identificarRegistro(registro_puntero_archivo);
         uint32_t valor_registro_puntero_archivo = obtenerValorActualRegistro(id_registro_puntero_archivo,proceso, logger);
 
-        enviar_io_fs_write_a_kernel(interfaz_elegida->nombre_length,interfaz_elegida->nombre,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,dir_fisica,valor_registro_puntero_archivo, proceso->pcb->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_WRITE_A_KERNEL
-    }
-    else{
-        printf("La interfaz no se encuentra en el proceso");
-    }
+        enviar_io_fs_write_a_kernel((strlen(interfaz) + 1) * sizeof(char) ,interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,dir_fisica,valor_registro_puntero_archivo, proceso->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_WRITE_A_KERNEL
+   
+    //free(interfaz_elegida->nombre);
+    //free(interfaz_elegida);
 }
 
-void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_proceso* proceso, t_log* logger){
+void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_pcb* proceso, t_log* logger){
     //Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se
     //lea desde el archivo a partir del valor del Registro Puntero Archivo la cantidad de bytes
     //indicada por Registro Tamaño y se escriban en la Memoria a partir de la dirección lógica
     //indicada en el Registro Dirección
 
-    t_interfaz* interfaz_elegida;
-    interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
-    if(interfaz_elegida != NULL){
+  
         registros id_registro_direccion = identificarRegistro(registro_direccion);
         uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
         uint32_t dir_fisica = malloc(sizeof(uint32_t));
@@ -1237,11 +1223,10 @@ void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, 
         registros id_registro_puntero_archivo = identificarRegistro(registro_puntero_archivo);
         uint32_t valor_registro_puntero_archivo = obtenerValorActualRegistro(id_registro_puntero_archivo,proceso, logger);
 
-        enviar_io_fs_read_a_kernel(interfaz_elegida->nombre_length,interfaz_elegida->nombre,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,dir_fisica,valor_registro_puntero_archivo, proceso->pcb->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_READ_A_KERNEL
-    }
-    else{
-        printf("La interfaz no se encuentra en el proceso");
-    }
+        enviar_io_fs_read_a_kernel((strlen(interfaz) + 1) * sizeof(char),interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,dir_fisica,valor_registro_puntero_archivo, proceso->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_READ_A_KERNEL
+
+    //free(interfaz_elegida->nombre);
+    //free(interfaz_elegida);
 }
 
 void enviar_io_fs_create_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t pid){
@@ -1258,6 +1243,8 @@ void enviar_io_fs_create_a_kernel(uint32_t tamanio_interfaz_elegida,char* interf
         agregar_a_paquete(paquete_io_fs_create,  interfaz_elegida,  tamanio_interfaz_elegida); 
         
         enviar_paquete(paquete_io_fs_create, conexion_kernel); 
+        free(paquete_io_fs_create->buffer->stream);
+        free(paquete_io_fs_create->buffer);
         free(paquete_io_fs_create);
 }
 
@@ -1275,6 +1262,8 @@ void enviar_io_fs_delete_a_kernel(uint32_t tamanio_interfaz_elegida,char* interf
         agregar_a_paquete(paquete_io_fs_delete,  interfaz_elegida,  tamanio_interfaz_elegida); 
         
         enviar_paquete(paquete_io_fs_delete, conexion_kernel); 
+        free(paquete_io_fs_delete->buffer->stream);
+        free(paquete_io_fs_delete->buffer);
         free(paquete_io_fs_delete);
 }
 
@@ -1293,6 +1282,8 @@ void enviar_io_fs_truncate_a_kernel(uint32_t tamanio_interfaz_elegida,char* inte
         agregar_a_paquete(paquete_io_fs_truncate,  &tamanio,  sizeof(uint32_t));
         
         enviar_paquete(paquete_io_fs_truncate, conexion_kernel); 
+        free(paquete_io_fs_truncate->buffer->stream);
+        free(paquete_io_fs_truncate->buffer);
         free(paquete_io_fs_truncate);
 }
 
@@ -1313,6 +1304,8 @@ void enviar_io_fs_write_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfa
         agregar_a_paquete(paquete_io_fs_write,  &puntero_archivo,  sizeof(uint32_t));
         
         enviar_paquete(paquete_io_fs_write, conexion_kernel); 
+        free(paquete_io_fs_write->buffer->stream);
+        free(paquete_io_fs_write->buffer);
         free(paquete_io_fs_write);
    
 }
@@ -1335,5 +1328,7 @@ void enviar_io_fs_read_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz
         agregar_a_paquete(paquete_io_fs_read,  &puntero_archivo,  sizeof(uint32_t));
         
         enviar_paquete(paquete_io_fs_read, conexion_kernel); 
+        free(paquete_io_fs_read->buffer->stream);
+        free(paquete_io_fs_read->buffer);
         free(paquete_io_fs_read);
 }

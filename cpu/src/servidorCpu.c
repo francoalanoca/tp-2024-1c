@@ -29,7 +29,7 @@ else{
     conexion_kernel = fd_mod2;
 log_info(logger_cpu, "va a escuchar");
 //log_info(logger_cpu, "POST SEMAFORO");
-  //     sem_post(&sem_conexion_lista);
+  //     sem_post(&sem_valor_instruccion);
     while (server_escuchar(logger_cpu, "SERVER CPU", (uint32_t)fd_mod2));
 }
 
@@ -59,9 +59,10 @@ void procesar_conexion(int cliente_socket){
 
 void procesar_conexion(void *v_args){
      t_procesar_conexion_args *args = (t_procesar_conexion_args *) v_args;
-    t_log *logger = args->log;
+    t_log *logger = malloc(sizeof(t_log));
+    logger = args->log;
     int cliente_socket = args->fd;
-    char *server_name = args->server_name;
+    //char *server_name = args->server_name;
     free(args);
 
      op_code cop;
@@ -81,6 +82,7 @@ void procesar_conexion(void *v_args){
        // if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
         if (cop != sizeof(op_code)) {
             log_info(logger, "DISCONNECT!");
+            free(logger);
             return;
         }
 
@@ -92,6 +94,8 @@ void procesar_conexion(void *v_args){
                 t_pcb* proceso = malloc(sizeof(t_pcb));
                 proceso = proceso_deserializar(lista_paquete_nuevo_proceso); 
                 proceso_actual = proceso; //Agregar a lista de procesos?
+                list_destroy_and_destroy_elements(lista_paquete_nuevo_proceso,free);
+                free(proceso->path);
                 free(proceso);
                 break;
             }
@@ -106,7 +110,8 @@ void procesar_conexion(void *v_args){
                     interrupcion_kernel = true;
                    
                 }
-            
+                list_destroy_and_destroy_elements(lista_paquete_proceso_interrumpido,free);
+                free(proceso_interrumpido->pcb->path);
                 free(proceso_interrumpido);
                 break;
             }
@@ -121,12 +126,24 @@ void procesar_conexion(void *v_args){
                 if(instruccion_recibida != NULL){
                     prox_inst = instruccion_recibida;
                     //SEMAFORO QUE ACTIVA EL SEGUIMIENTO DEL FLUJO EN FETCH
+                    list_destroy_and_destroy_elements(lista_paquete_instruccion_rec,free);
+                    free(instruccion_recibida->param1);
+                    free(instruccion_recibida->param2);
+                    free(instruccion_recibida->param3);
+                    free(instruccion_recibida->param4);
+                    free(instruccion_recibida->param5);
                     free(instruccion_recibida);
-                    //  log_info(logger_cpu, "POST SEMAFORO");
-                    // sem_post(&sem_conexion_lista);
+                      log_info(logger_cpu, "POST SEMAFORO");
+                     sem_post(&sem_valor_instruccion);
                 }
                 else{
                     log_info(logger_cpu, "ERROR AL  RECIBIR INSTRUCCION DE MEMORIA");
+                    list_destroy_and_destroy_elements(lista_paquete_instruccion_rec,free);
+                    free(instruccion_recibida->param1);
+                    free(instruccion_recibida->param2);
+                    free(instruccion_recibida->param3);
+                    free(instruccion_recibida->param4);
+                    free(instruccion_recibida->param5);
                     free(instruccion_recibida);
                 }
                 break;
@@ -136,7 +153,8 @@ void procesar_conexion(void *v_args){
                 log_info(logger_cpu, "MARCO RECIBIDO");
                 t_list* lista_paquete_marco_rec = recibir_paquete(cliente_socket);
                 uint32_t marco_rec = deserealizar_marco(lista_paquete_marco_rec);
-                marco_recibido = marco_rec; 
+                marco_recibido = marco_rec;
+                list_destroy_and_destroy_elements(lista_paquete_marco_rec,free);
                 sem_post(&sem_marco_recibido);
                 break;
             }
@@ -147,6 +165,8 @@ void procesar_conexion(void *v_args){
                 uint32_t valor_rec = deserealizar_valor_memoria(lista_paquete_valor_memoria_rec);
                
                 valor_registro_obtenido = valor_rec; 
+
+                list_destroy_and_destroy_elements(lista_paquete_valor_memoria_rec,free);
                 sem_post(&sem_valor_registro_recibido);
                 break;
             }
@@ -156,6 +176,10 @@ void procesar_conexion(void *v_args){
                 t_list* lista_paquete_rta_resize = recibir_paquete(cliente_socket);
                 t_rta_resize* valor_rta_resize = deserealizar_rta_resize(lista_paquete_rta_resize);
                 strcpy(rta_resize, valor_rta_resize->rta); 
+
+                list_destroy_and_destroy_elements(lista_paquete_rta_resize,free);
+                free(valor_rta_resize->rta);
+                free(valor_rta_resize);
                 sem_post(&sem_valor_resize_recibido);
                 break;
             }
@@ -165,6 +189,8 @@ void procesar_conexion(void *v_args){
                 t_list* lista_paquete_tamanio_pag = recibir_paquete(cliente_socket);
                 uint32_t valor_tamanio_pag = deserealizar_tamanio_pag(lista_paquete_tamanio_pag); 
                 tamanio_pagina = valor_tamanio_pag; 
+
+                list_destroy_and_destroy_elements(lista_paquete_tamanio_pag,free);
                 sem_post(&sem_valor_tamanio_pagina);
             }
             
