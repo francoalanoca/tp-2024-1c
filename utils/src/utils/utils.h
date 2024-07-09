@@ -47,6 +47,7 @@ typedef enum
     SOLICITUD_IO_FS_READ_A_KERNEL =160, //CPU envia a kernel la solicitud de IO_FS_READ
     INTERRUPCION_KERNEL, //kernel manda interrupcion a CPU
 
+
  //---------------CPU-MEMORIA-------------------
     PROXIMA_INSTRUCCION = 40,   // Cpu le solicita a Memoria la proxima instruccion a ejecutar
     INSTRUCCION_RECIBIDA = 55,  // Memoria envia a Cpu la instruccion solicitada
@@ -74,6 +75,12 @@ typedef enum
     IO_K_STDIN_FIN,
     IO_K_STDOUT,
     IO_K_STDOUT_FIN,
+    IO_K_FS_CREATE_FIN,
+    IO_K_FS_DELETE_FIN,
+    IO_K_FS_TRUNCATE_FIN,
+    IO_K_FS_READ_FIN,
+    IO_K_FS_WRITE_FIN,
+    
 //----------------KERNEL-MEMORIA
     CREAR_PROCESO_KERNEL,       // Kerner le solicita a Memoria crear las estructuras necesarias
     CREAR_PROCESO_KERNEL_FIN,

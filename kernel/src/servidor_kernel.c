@@ -60,10 +60,6 @@ void procesar_conexion(void *void_args) {
                 
 
             break;
-            default:
-                log_error(logger, "Algo anduvo mal en el server de %s", server_name);
-                log_info(logger, "Cop: %d", cop);
-                return;
             case INTERFAZ_ENVIAR:
                 printf("Received INTERFAZ_ENVIAR request\n");
 
@@ -92,7 +88,42 @@ void procesar_conexion(void *void_args) {
 
                 free(interfaz_nueva);   
                 free(lista_paquete_interfaz);
-                break;
+            break;
+            case IO_K_FS_CREATE_FIN:
+                printf("Received IO_K_FS_CREATE_FIN request\n");
+                
+                replanificar_y_ejecutar();
+
+            break;
+            case IO_K_FS_DELETE_FIN:
+                printf("Received IO_K_FS_DELETE_FIN request\n");
+                
+                replanificar_y_ejecutar();
+
+            break;
+            case IO_K_FS_TRUNCATE_FIN:
+                printf("Received IO_K_FS_TRUNCATE_FIN request\n");
+                
+                replanificar_y_ejecutar();
+
+            break;
+            case IO_K_FS_READ_FIN:
+                printf("Received IO_K_FS_READ_FIN request\n");
+                
+                replanificar_y_ejecutar();
+
+            break;
+            case IO_K_FS_WRITE_FIN:
+                printf("Received IO_K_FS_WRITE_FIN request\n");
+                
+                replanificar_y_ejecutar();
+
+            break;
+            default:
+                log_error(logger, "Algo anduvo mal en el server de %s", server_name);
+                log_info(logger, "Cop: %d", cop);
+                return;
+            
             }
     }
 

@@ -1,7 +1,8 @@
 #ifndef SERVIDOR_KERNEL_H_
 #define SERVIDOR_KERNEL_H_
 
-#include "../include/init_kernel.h"
+//#include "../include/init_kernel.h"
+#include "../include/planificador.h"
 #include <utils/utils.h>
 #include <pthread.h>
 

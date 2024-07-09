@@ -51,5 +51,7 @@ void enviar_interrupcion_a_cpu(t_pcb* proceso, int conexion);
 void liberar_proceso_memoria(uint32_t pid);
 bool list_contains(t_list* lista_de_procesos, uint32_t pid);
 void poner_en_cola_exit(t_pcb* proceso);
+void enviar_proceso_a_cpu(t_pcb* pcb, int conexion);
+void replanificar_y_ejecutar();
 
 #endif /* PLANIFICADORES_H_ */
