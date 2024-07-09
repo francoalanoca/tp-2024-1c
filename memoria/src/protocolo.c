@@ -94,7 +94,7 @@ switch (cod_op) {
         case GUARDAR_EN_DIRECCION_FISICA:
             valores = recibir_paquete(socket_cliente);
             peticion_escribir = deserializar_peticion_guardar(valores);   
-            void* respuesta_escribir = escribir_memoria(peticion_escribir->pid, peticion_escribir->direccion_fisica, peticion_escribir->valor, peticion_escribir->tamanio);
+            char* respuesta_escribir = escribir_memoria(peticion_escribir->pid, peticion_escribir->direccion_fisica, peticion_escribir->valor, peticion_escribir->tamanio);
             log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Direccion fisica: %d - Tamaño: %d", peticion_escribir->pid, peticion_escribir->direccion_fisica), peticion_escribir->tamanio;
             free(peticion_escribir);
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);

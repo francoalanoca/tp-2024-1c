@@ -54,7 +54,7 @@ typedef struct{
 extern void* memoria;
 extern t_list* lista_tablas_de_paginas;     
 extern t_list* lista_miniPCBs;
-extern pthread_mutex_t mutex_memoria;
+//extern pthread_mutex_t mutex_memoria;
 extern uint32_t cantidad_frames_memoria;
 extern uint32_t cantidad_page_fault;  
 extern t_bitarray *bitmap_frames;
