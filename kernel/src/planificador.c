@@ -116,6 +116,26 @@ void finalizar_proceso(t_planificador* planificador, t_pcb* proceso) {
     //indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
     //list_remove(planificador->cola_exec, indice_proceso_a_finalizar);
     //list_add(planificador->cola_exit, proceso);
+    //Liberar los recursos del proceso
+    char* pid_string = malloc(sizeof(proceso->pid));
+    pid_string = sprintf(pid_string, "%u", proceso->pid);
+    t_proceso_recurso_diccionario* proceso_recurso = malloc(sizeof(t_proceso_recurso_diccionario));
+    proceso_recurso = dictionary_get(procesos_recursos,pid_string);
+    for (size_t i = 0; i < proceso_recurso->nombres_recursos->elements_count; i++)
+    {
+        //buscar en que indice de la tabla general de recursos esta
+        uint32_t indice_recurso_buscado = buscar_indice_recurso(cfg_kernel->RECURSOS,list_get(proceso_recurso->nombres_recursos,i)); 
+        
+        //sumo cant instancias correspondientes a lista de instancias global del recurso correspondiente
+        uint32_t instancias_generales_actuales = malloc(sizeof(uint32_t));
+        uint32_t instancias_proceso = malloc(sizeof(uint32_t));
+        instancias_generales_actuales = list_get(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_buscado);
+        instancias_proceso = list_get(proceso_recurso->instancias_recursos,i);
+        list_replace(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_buscado,instancias_generales_actuales + instancias_proceso);
+    }
+    
+    //borrar valor del diccionario para pid correspondiente
+    dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
     free(proceso);
      planificador->grado_multiprogramacion_actual--;
     if (!list_is_empty(planificador->cola_new) && !planificador->planificacion_detenida) {

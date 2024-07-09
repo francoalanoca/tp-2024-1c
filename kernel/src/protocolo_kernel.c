@@ -165,22 +165,22 @@ while (control_key)
             list_replace(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_wait,valor_indice_recurso - 1);
             if(dictionary_has_key(procesos_recursos,recurso_recibido_wait->pcb->pid)){//El proceso ya tenia instancias de ese recurso
                //en el id correspondiente sumar uno a la instancia del recurso correspondiente
+               char* pid_string = malloc(sizeof(recurso_recibido_wait->pcb->pid));
+               pid_string = sprintf(pid_string, "%u", recurso_recibido_wait->pcb->pid);
                t_proceso_recurso_diccionario* registro_actual_diccionario = malloc(sizeof(t_proceso_recurso_diccionario));
-               registro_actual_diccionario = dictionary_get(procesos_recursos,recurso_recibido_wait->pcb->pid);
+               registro_actual_diccionario = dictionary_get(procesos_recursos,pid_string);
                uint32_t indice_recurso_buscado = buscar_indice_recurso(registro_actual_diccionario->nombres_recursos,recurso_recibido_wait->nombre_recurso);
                uint32_t valor_instancias_actual = list_get(registro_actual_diccionario->instancias_recursos,indice_recurso_buscado);
                list_replace(registro_actual_diccionario->instancias_recursos,indice_recurso_buscado,valor_instancias_actual + 1);
-               char* pid_string = malloc(sizeof(recurso_recibido_wait->pcb->pid));
-               pid_string = sprintf(pid_string, "%u", recurso_recibido_wait->pcb->pid);
                dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
                dictionary_put(procesos_recursos,pid_string,registro_actual_diccionario);
             }
             else{//El proceso no tenia instancias de ese recurso
                //crear id nuevo y agregar a lista el recurso con instancia en 1
-               t_proceso_recurso_diccionario* registro_actual_diccionario = malloc(sizeof(t_proceso_recurso_diccionario));
-               registro_actual_diccionario = dictionary_get(procesos_recursos,recurso_recibido_wait->pcb->pid);
                char* pid_string = malloc(sizeof(recurso_recibido_wait->pcb->pid));
                pid_string = sprintf(pid_string, "%u", recurso_recibido_wait->pcb->pid);
+               t_proceso_recurso_diccionario* registro_actual_diccionario = malloc(sizeof(t_proceso_recurso_diccionario));
+               registro_actual_diccionario = dictionary_get(procesos_recursos,pid_string);
                list_add(registro_actual_diccionario->nombres_recursos,pid_string);
                list_add(registro_actual_diccionario->instancias_recursos,1);
                dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
