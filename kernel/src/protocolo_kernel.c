@@ -792,3 +792,70 @@ void replanificar_y_ejecutar(){
    enviar_proceso_a_cpu(proximo_proceso_a_ejecutar,conexion_cpu_dispatch);
    free(proximo_proceso_a_ejecutar);
 }
+
+/* void replanificar_y_ejecutar() {
+    t_pcb* proceso_actual = NULL;
+    t_pcb* proximo_proceso = NULL;
+    int motivo_desalojo;
+
+    while (1) {
+        // Obtener el próximo proceso a ejecutar
+        proximo_proceso = obtener_proximo_proceso(planificador);
+
+        if (proximo_proceso == NULL) {
+            // No hay procesos para ejecutar, esperar un tiempo y volver a intentar
+            usleep(100000); // equivale a 100ms
+            continue;
+        }
+
+        // cambio de estado al estado EXEC
+        cambiar_estado(proximo_proceso, ESTADO_RUNNING);
+
+        // Enviar el Contexto de Ejecución al CPU
+        enviar_pcb_a_cpu_por_dispatch(proximo_proceso);
+
+        // Esperar la respuesta del CPU
+        t_paquete* paquete_respuesta = recibir_paquete(conexion_cpu_dispatch);
+        t_pcb* pcb_actualizado = deserializar_pcb(paquete_respuesta->buffer);
+        motivo_desalojo = paquete_respuesta->codigo_operacion;
+
+        // Actualizar el PCB con la información recibida
+        actualizar_pcb(proximo_proceso, pcb_actualizado);
+
+        // motivos de desalojo
+        switch (motivo_desalojo) {
+            case DESALOJO_QUANTUM:
+                if (planificador->algoritmo == ROUND_ROBIN || planificador->algoritmo == VIRTUAL_ROUND_ROBIN) {
+                    // Enviar interrupción para forzar el desalojo
+                    enviar_interrupcion_a_cpu(proximo_proceso, conexion_cpu_interrupt);
+                    cambiar_estado(proximo_proceso, ESTADO_READY);
+                    list_add(planificador->cola_ready, proximo_proceso);
+                }
+                break;
+            case DESALOJO_IO:
+                cambiar_estado(proximo_proceso, ESTADO_BLOCKED);
+                // Agregar a la cola de bloqueados correspondiente
+                // Esto dependerá de cómo manejes los recursos de I/O
+                break;
+            case DESALOJO_EXIT:
+                cambiar_estado(proximo_proceso, ESTADO_EXIT);
+                finalizar_proceso(planificador, proximo_proceso);
+                break;
+            // ver si hay mas casos de desalojo
+        }
+
+        // Liberar memoria
+        eliminar_paquete(paquete_respuesta);
+        free(pcb_actualizado);
+
+        // Si el motivo de desalojo implica replanificar, continuamos con el ciclo
+        if (motivo_desalojo == DESALOJO_QUANTUM || motivo_desalojo == DESALOJO_EXIT) {
+            continue;
+        }
+
+        // Si se llega aca, el proceso actual está bloqueado o ha finalizado
+        // Esperamos un corto tiempo antes de intentar planificar el siguiente proceso
+        usleep(10000); // 10ms
+    }
+}
+*/
