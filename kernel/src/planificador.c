@@ -5,6 +5,7 @@
 
 sem_t sem_contexto_ejecucion_recibido;
 sem_t sem_confirmacion_memoria;
+t_temporal* cronometro;
 
 // Devuelve un t_algoritmo a partir de la config cargada
 t_algoritmo_planificacion obtener_algoritmo_planificador(char* algoritmo_planificacion) {
@@ -312,12 +313,75 @@ void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
 
 }
 
-void replanificar_y_ejecutar(){
-   t_pcb* proximo_proceso_a_ejecutar = malloc(sizeof(t_pcb));
-   proximo_proceso_a_ejecutar = obtener_proximo_proceso(planificador);
-   enviar_proceso_a_cpu(proximo_proceso_a_ejecutar,conexion_cpu_dispatch);
-   free(proximo_proceso_a_ejecutar);
+void replanificar_y_ejecutar(t_pcb* proceso_ejecutando){
+   t_pcb* siguiente_proceso = malloc(sizeof(t_pcb));
+     
+   if (planificador->algoritmo = FIFO) { // en este caso obtiene el siguiente proceso en la lista y lo manda a ejecutar.
+		siguiente_proceso = obtener_proximo_proceso(planificador);
+        enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);
+        free(siguiente_proceso); 
+	}else {
+		 if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+            
+            desalojar_proceso_vrr(proceso_ejecutando); // finalizo la ejecucion del proceso actual y lo mando a alguna cola ready segun corresponda
+            siguiente_proceso = obtener_proximo_proceso(planificador);
+            ejecutar_modo_round_robin(siguiente_proceso);
+        }else {
+            siguiente_proceso = obtener_proximo_proceso(planificador);
+            ejecutar_modo_round_robin(siguiente_proceso);
+         }
+    }
+
 }
+ 
+void  ejecutar_modo_round_robin( t_pcb* proceso){
+    int quatum_restante;
+    pthread_t hilo_cronometro;
+    
+    if (planificador->algoritmo == ROUND_ROBIN) {
+		 quatum_restante = cfg_kernel->QUANTUM;
+	}else {
+		quatum_restante = proceso->quantum; // si ejecuta sin interrupciones entonces  proceso->quantum = cfg_kernel->QUANTUM
+	}
+	enviar_proceso_a_cpu(proceso,conexion_cpu_dispatch);
+	cronometro = temporal_create();	
+    //creamos hilo para no tener espera activa del cronometro      
+    if (pthread_create(&hilo_cronometro, NULL, lanzar_interrupcion_fin_quantum, (int*)quatum_restante ) != 0) {
+        perror("pthread_create_hilo_cronometro");
+        free(hilo_cronometro);       
+        
+    }
+     pthread_detach(hilo_cronometro);
+	
+	
+}
+
+void lanzar_interrupcion_fin_quantum (int quantum){
+    uint32_t motivo  = FIN_QUANTUM;
+    sleep(quantum);
+    send(conexion_cpu_interrupt, &motivo, sizeof(uint32_t), NULL);
+    log_info(logger_kernel, "Enviando interrupcion FIN de QUANTUM\n");
+}
+
+void desalojar_proceso_vrr(t_pcb* proceso){ // recibo contexto actualizado desde cpu
+    
+    temporal_stop(cronometro);
+    
+    list_remove(planificador->cola_exec, 0); // debería ser el único ejecutando}
+    
+    proceso->tiempo_ejecucion = get_time_temporal(cronometro);
+	
+	proceso->quantum = cfg_kernel->QUANTUM - proceso->tiempo_ejecucion; // actualizo el nuevo quantum restante
+
+	if  (proceso->tiempo_ejecucion !=cfg_kernel->QUANTUM) {
+		 list_add(planificador->cola_ready_prioridad, proceso); // como todavia le queda por ejecutar se asigna a la cola de prioridad
+	}else {
+		list_add(planificador->cola_ready, proceso);
+	}	 
+
+}
+
+
 
 /* void replanificar_y_ejecutar() {
     t_pcb* proceso_actual = NULL;

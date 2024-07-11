@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <utils/utils.h>
 #include "../include/init_kernel.h"
-
+#include <commons/temporal.h>
+#include <commons/collections/list.h>
+#include <pthread.h>
 // Enumeración para los algoritmos de planificación
 typedef enum {
     FIFO,
@@ -15,7 +17,8 @@ typedef enum {
 
 typedef struct {
     t_list* cola_new;      
-    t_list* cola_ready;    
+    t_list* cola_ready;   
+    t_list* cola_ready_prioridad; 
     t_list* cola_exec;     
     t_dictionary* cola_blocked;  
     t_list* cola_exit;     
@@ -27,7 +30,7 @@ typedef struct {
 } t_planificador;
 
 
-
+t_temporal* cronometro;
 // ver si falta poner alguna libreria
 extern t_planificador* planificador;
 

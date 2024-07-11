@@ -59,13 +59,10 @@ while (control_key)
          }
          break;
       
-      case FIN_QUANTUM_RR:
+      case FIN_QUANTUM:
          /* code */
          break;
-      
-      case FIN_QUANTUM_VRR:
-         /* code */
-         break;
+
       
       case ELIMINAR_PROCESO:
          pcb_actualizado_interrupcion = proceso_interrumpido->pcb;
@@ -748,6 +745,8 @@ uint32_t buscar_indice_primer_valor_no_nulo(t_list* lista){
    }
    
 }
+
+
 
 void mandar_proceso_a_finalizar(uint32_t pid){
    t_pcb* pcb_a_procesar = malloc(sizeof(t_pcb));
