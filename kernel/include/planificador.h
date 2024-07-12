@@ -50,7 +50,7 @@ void crear_proceso(t_planificador* planificador, char* path_pseudocodigo);
 void eliminar_proceso(t_planificador* planificador, t_pcb* proceso);
 void detener_planificacion(t_planificador* planificador);
 uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb);
-void enviar_interrupcion_a_cpu(t_pcb* proceso, int conexion);
+void enviar_interrupcion_a_cpu(t_pcb* proceso,motivo_interrupcion motivo_interrupcion, int conexion);
 void liberar_proceso_memoria(uint32_t pid);
 bool list_contains(t_list* lista_de_procesos, uint32_t pid);
 void poner_en_cola_exit(t_pcb* proceso);

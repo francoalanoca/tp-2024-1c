@@ -22,6 +22,8 @@ bool interfaz_permite_operacion(t_tipo_interfaz_enum tipo_interfaz, tipo_instruc
 void crear_listas_recursos();
 
 
+
+
 // Variables Globales
 extern t_log *logger_kernel;
 extern t_config* file_cfg_kernel;
@@ -69,5 +71,13 @@ typedef struct{
     t_list* instancias_recursos;
 
 }t_proceso_recurso_diccionario;
+
+void liberar_cfg_kernel(t_config_kernel *cfg);
+
+void destruir_diccionario(t_dictionary *dict);
+
+void liberar_memoria_paquete(t_paquete* paquete);
+
+void liberar_memoria_pcb(t_pcb* pcb);
 
 #endif /* INIT_KERNEL_H_ */

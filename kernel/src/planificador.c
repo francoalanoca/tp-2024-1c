@@ -156,7 +156,7 @@ void crear_proceso(t_planificador* planificador, char* path_pseudocodigo) {
 void eliminar_proceso(t_planificador* planificador, t_pcb* proceso) {
     //ESTA INCLUIDA LO DE LISTAS DE LAS COMMONS?
     if (list_contains(planificador->cola_exec, proceso->pid)) {
-        enviar_interrupcion_a_cpu(proceso,conexion_cpu_interrupt);
+        enviar_interrupcion_a_cpu(proceso,ELIMINAR_PROCESO,conexion_cpu_interrupt);
         
         // Esperar a que la CPU retorne el Contexto de Ejecución
         sem_wait(&sem_contexto_ejecucion_recibido);
@@ -200,49 +200,18 @@ uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb) {
     return NULL;
 }
 
-void enviar_interrupcion_a_cpu(t_pcb* proceso, int conexion){
+void enviar_interrupcion_a_cpu(t_pcb* proceso,motivo_interrupcion motivo_interrupcion, int conexion){
     // Enviar señal de interrupción a la CPU
         t_paquete* paquete = crear_paquete(INTERRUPCION_KERNEL);
-       // t_buffer* buffer = crear_buffer();
-
-        // Serializar el proceso a interrumpir
-        t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
-        proceso_interrumpido->pcb = proceso;
-        //proceso_interrumpido->tamanio_motivo_interrupcion = strlen("ELIMINAR_PROCESO") + 1;
-        //proceso_interrumpido->motivo_interrupcion = strdup("ELIMINAR_PROCESO");
-        proceso_interrumpido->motivo_interrupcion = ELIMINAR_PROCESO;
 
         // Serializar el proceso interrumpido
         //buffer = proceso_interrumpido_serializar(proceso_interrumpido);
-        agregar_a_paquete(paquete, &(proceso_interrumpido->pcb->pid), sizeof(uint32_t));
-        agregar_a_paquete(paquete, &(proceso_interrumpido->pcb->program_counter), sizeof(uint32_t));
-        agregar_a_paquete(paquete, &(proceso_interrumpido->pcb->path_length), sizeof(uint32_t));
-        agregar_a_paquete(paquete, (proceso_interrumpido->pcb->path), proceso_interrumpido->pcb->path_length);
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.PC, sizeof(uint32_t));
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.EAX, sizeof(uint32_t));
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.EBX, sizeof(uint32_t));
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.ECX, sizeof(uint32_t));
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.EDX, sizeof(uint32_t));
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.SI, sizeof(uint32_t));
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->registros_cpu.DI, sizeof(uint32_t));
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->estado, sizeof(uint32_t));
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->tiempo_ejecucion, sizeof(uint32_t));
-        agregar_a_paquete(paquete, &proceso_interrumpido->pcb->quantum, sizeof(uint32_t));
-        agregar_a_paquete(paquete, &proceso_interrumpido->motivo_interrupcion, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &(proceso->pid), sizeof(uint32_t));
+        agregar_a_paquete(paquete, &motivo_interrupcion, sizeof(uint32_t));
 
         enviar_paquete(paquete, conexion); 
 
-        free(paquete);
-        //free(proceso_interrumpido->motivo_interrupcion);
-        free(proceso_interrumpido);
-            //agregar_a_paquete(paquete, buffer->stream, buffer->size);
-
-            // Enviar el paquete a través del puerto de interrupción
-        // enviar_paquete(paquete, conexion_cpu_interrupt);
+        free(paquete); 
 
 }
 

@@ -10,6 +10,7 @@ int conexion_memoria;
 int socket_servidor;
 t_dictionary* interfaces; //Diccionario donde se encuentran las interfaces que van llegando de IO
 t_dictionary* procesos_recursos; //Diccionario donde se vinculan los procesos con sus recursos asignados
+
 int checkProperties(char *path_config) {
     // config valida
     t_config *config = config_create(path_config); //"/Documents/tp_operativos/tp-2024-1c-Pasaron-cosas/kernel/config/kernel.config"
@@ -114,7 +115,7 @@ int hacer_handshake (int socket_cliente){
 }
 
 
-void cerrar_programa() {
+/*void cerrar_programa() {
 
     //cortar_conexiones();
     //cerrar_servers();  
@@ -122,7 +123,7 @@ void cerrar_programa() {
     log_info(logger_kernel,"TERMINADA_LA_CONFIG");
     log_info(logger_kernel, "TERMINANDO_EL_LOG");
     log_destroy(logger_kernel);
-}
+}*/
 
 void crear_listas_recursos(){
 
@@ -134,5 +135,60 @@ for (size_t i = 0; i < recursos->elements_count; i++)
     
 }
 
+list_destroy_and_destroy_elements(recursos,free);
+
+}
+
+
+void liberar_cfg_kernel(t_config_kernel *cfg) {
+    free(cfg->PUERTO_ESCUCHA);
+    free(cfg->IP_MEMORIA);
+    free(cfg->IP_CPU);
+    free(cfg->ALGORITMO_PLANIFICACION);
+
+    for (int i = 0; cfg->RECURSOS[i] != NULL; i++) {
+        free(cfg->RECURSOS[i]);
+    }
+    free(cfg->RECURSOS);
+
+    for (int i = 0; cfg->INSTANCIAS_RECURSOS[i] != NULL; i++) {
+        free(cfg->INSTANCIAS_RECURSOS[i]);
+    }
+    free(cfg->INSTANCIAS_RECURSOS);
+
+    free(cfg);
+}
+
+void destruir_diccionario(t_dictionary *dict) {
+    void destruir_elemento(void *elemento) {
+        list_destroy_and_destroy_elements((t_list *)elemento, free);
+    }
+    dictionary_destroy_and_destroy_elements(dict, destruir_elemento);
+}
+
+void cerrar_programa() {
+    // Liberar memoria de la configuración
+    liberar_cfg_kernel(cfg_kernel);
+
+    // Liberar diccionarios
+    destruir_diccionario(interfaces);
+    destruir_diccionario(procesos_recursos);
+
+    // Destruir el archivo de configuración y el logger
+    config_destroy(file_cfg_kernel);
+    log_info(logger_kernel, "TERMINADA_LA_CONFIG");
+    log_info(logger_kernel, "TERMINANDO_EL_LOG");
+    log_destroy(logger_kernel);
+}
+
+void liberar_memoria_paquete(t_paquete* paquete){
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+void liberar_memoria_pcb(t_pcb* pcb){
+    free(pcb->path);
+    free(pcb);
 }
 
