@@ -141,15 +141,7 @@ void liberar_memoria() {
     }
 
     if (proceso_interrumpido_actual) {
-        if (proceso_interrumpido_actual->pcb) {
-            if (proceso_interrumpido_actual->pcb->path) {
-                
-                free(proceso_interrumpido_actual->pcb->path);
-            }
-            
-            free(proceso_interrumpido_actual->pcb);
-        }
-       
+        
         free(proceso_interrumpido_actual);
     }
 

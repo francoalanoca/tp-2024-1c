@@ -99,19 +99,18 @@ void procesar_conexion(void *v_args){
                 free(proceso);
                 break;
             }
-             case INTERRUPCION_CPU:
+             case INTERRUPCION_KERNEL:
             {
                 t_list* lista_paquete_proceso_interrumpido = recibir_paquete(cliente_socket);
                 t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido)); //REVISAR
                 log_info(logger_cpu, "SE RECIBE INTERRUPCION DE KERNEL");
                 proceso_interrumpido = proceso_interrumpido_deserializar(lista_paquete_proceso_interrumpido); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
-                if(proceso_interrumpido->pcb->pid == proceso_actual->pid){
+                if(proceso_interrumpido->pid == proceso_actual->pid){
                     proceso_interrumpido_actual = proceso_interrumpido;
                     interrupcion_kernel = true;
                    
                 }
                 list_destroy_and_destroy_elements(lista_paquete_proceso_interrumpido,free);
-                free(proceso_interrumpido->pcb->path);
                 free(proceso_interrumpido);
                 break;
             }
@@ -266,27 +265,9 @@ log_info(logger_cpu, "va a escuchar");
 
 t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete_proceso_interrumpido) {
     t_proceso_interrumpido *proceso_interrumpido_nuevo = malloc(sizeof(t_proceso_interrumpido));
-	uint32_t tamanio_lista = malloc(sizeof(uint32_t));
 
-    proceso_interrumpido_nuevo->pcb->pid = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 0);
-    proceso_interrumpido_nuevo->pcb->program_counter = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 1);
-    proceso_interrumpido_nuevo->pcb->path_length = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 2);
-    proceso_interrumpido_nuevo->pcb->path = list_get(lista_paquete_proceso_interrumpido, 3);
-    proceso_interrumpido_nuevo->pcb->registros_cpu.PC = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 4);
-    proceso_interrumpido_nuevo->pcb->registros_cpu.AX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 5);
-    proceso_interrumpido_nuevo->pcb->registros_cpu.BX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 6);
-    proceso_interrumpido_nuevo->pcb->registros_cpu.CX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 7);
-    proceso_interrumpido_nuevo->pcb->registros_cpu.DX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 8);
-    proceso_interrumpido_nuevo->pcb->registros_cpu.EAX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 9);
-    proceso_interrumpido_nuevo->pcb->registros_cpu.EBX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 10);
-    proceso_interrumpido_nuevo->pcb->registros_cpu.ECX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 11);
-    proceso_interrumpido_nuevo->pcb->registros_cpu.EDX = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 12);
-    proceso_interrumpido_nuevo->pcb->registros_cpu.SI = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 13);
-    proceso_interrumpido_nuevo->pcb->registros_cpu.DI = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 14);
-    proceso_interrumpido_nuevo->pcb->estado = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 15);
-    proceso_interrumpido_nuevo->pcb->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 16);
-    proceso_interrumpido_nuevo->pcb->quantum = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 17);
-    proceso_interrumpido_nuevo->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 18);	
+    proceso_interrumpido_nuevo->pid = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 0);
+    proceso_interrumpido_nuevo->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 1);	
     return proceso_interrumpido_nuevo;
 }
 

@@ -220,7 +220,7 @@ typedef struct {
 }t_proceso;
 
 typedef struct{
-    t_pcb* pcb;
+    uint32_t* pid;
     //uint32_t tamanio_motivo_interrupcion;
     //char* motivo_interrupcion;
     motivo_interrupcion motivo_interrupcion;

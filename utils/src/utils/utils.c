@@ -1103,9 +1103,8 @@ void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket ){
  t_proceso_interrumpido* deserializar_proceso_interrumpido(t_list*  lista_paquete ){
 
     t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
-    proceso_interrumpido->pcb = deserializar_pcb(lista_paquete);
-    //proceso_interrumpido->tamanio_motivo_interrupcion = *(uint32_t*)list_get(lista_paquete, 18); //ver posicion en la lista
-    proceso_interrumpido->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete, 18); //ver posicion en la lista
+    proceso_interrumpido->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    proceso_interrumpido->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete, 1); //ver posicion en la lista
 
 	return proceso_interrumpido;
 }
