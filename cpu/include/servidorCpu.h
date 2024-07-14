@@ -19,7 +19,7 @@ void* crear_servidor_interrupt(char* ip_cpu);
 t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete_proceso_interrumpido);
 instr_t* instruccion_deserializar(t_list* lista_paquete_inst);
 uint32_t deserealizar_marco(t_list*  lista_paquete );
-uint32_t deserealizar_valor_memoria(t_list*  lista_paquete );
+char* deserealizar_valor_memoria(t_list*  lista_paquete );
 uint32_t deserealizar_tamanio_pag(t_list*  lista_paquete );
 t_rta_resize* deserealizar_rta_resize(t_list*  lista_paquete );
 

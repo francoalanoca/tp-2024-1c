@@ -2,6 +2,7 @@
 char* puerto_dispatch;
 char * puerto_interrupt;
 int fd_mod2 = -1;
+int fd_mod3 = -1;
 //pcb *pcb_actual;
 
 void* crear_servidor_dispatch(char* ip_cpu){
@@ -69,12 +70,12 @@ void procesar_conexion(void *v_args){
 
      ///
    
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    cop = recv(cliente_socket, &(paquete->codigo_operacion), sizeof(op_code), 0);
-    paquete->buffer = malloc(sizeof(t_buffer));
-    recv(cliente_socket, &(paquete->buffer->size), sizeof(uint32_t), 0);
-    paquete->buffer->stream = malloc(paquete->buffer->size);
-    recv(cliente_socket, paquete->buffer->stream, paquete->buffer->size, 0); //agregar &?
+    //t_paquete* paquete = malloc(sizeof(t_paquete));
+    recv(cliente_socket, &cop, sizeof(op_code), 0);
+    //paquete->buffer = malloc(sizeof(t_buffer));
+    //recv(cliente_socket, &(paquete->buffer->size), sizeof(uint32_t), 0);
+    //paquete->buffer->stream = malloc(paquete->buffer->size);
+    //recv(cliente_socket, paquete->buffer->stream, paquete->buffer->size, 0); //agregar &?
      ///
 
     while (cliente_socket != -1) {
@@ -93,7 +94,9 @@ void procesar_conexion(void *v_args){
                 t_list* lista_paquete_nuevo_proceso = recibir_paquete(cliente_socket);
                 t_pcb* proceso = malloc(sizeof(t_pcb));
                 proceso = proceso_deserializar(lista_paquete_nuevo_proceso); 
+                pthread_mutex_lock(&mutex_proceso_actual);
                 proceso_actual = proceso; //Agregar a lista de procesos?
+                pthread_mutex_unlock(&mutex_proceso_actual);
                 list_destroy_and_destroy_elements(lista_paquete_nuevo_proceso,free);
                 free(proceso->path);
                 free(proceso);
@@ -106,9 +109,12 @@ void procesar_conexion(void *v_args){
                 log_info(logger_cpu, "SE RECIBE INTERRUPCION DE KERNEL");
                 proceso_interrumpido = proceso_interrumpido_deserializar(lista_paquete_proceso_interrumpido); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
                 if(proceso_interrumpido->pid == proceso_actual->pid){
+                    pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
                     proceso_interrumpido_actual = proceso_interrumpido;
+                    pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
+                    pthread_mutex_lock(&mutex_interrupcion_kernel);
                     interrupcion_kernel = true;
-                   
+                    pthread_mutex_unlock(&mutex_interrupcion_kernel);
                 }
                 list_destroy_and_destroy_elements(lista_paquete_proceso_interrumpido,free);
                 free(proceso_interrumpido);
@@ -161,7 +167,7 @@ void procesar_conexion(void *v_args){
             {
                 log_info(logger_cpu, "PETICION_VALOR_MEMORIA_RTA");
                 t_list* lista_paquete_valor_memoria_rec = recibir_paquete(cliente_socket);
-                uint32_t valor_rec = deserealizar_valor_memoria(lista_paquete_valor_memoria_rec);
+                char* valor_rec = deserealizar_valor_memoria(lista_paquete_valor_memoria_rec);
                
                 valor_registro_obtenido = valor_rec; 
 
@@ -195,9 +201,9 @@ void procesar_conexion(void *v_args){
             
            
     }   
-free(paquete->buffer->stream);
-free(paquete->buffer);
-free(paquete);
+//free(paquete->buffer->stream);
+//free(paquete->buffer);
+//free(paquete);
 }
 }
 
@@ -253,14 +259,14 @@ else{
     //strcpy(puerto_interrupt, cfg_cpu->PUERTO_ESCUCHA_INTERRUPT);
     log_info(logger_cpu, "crea puerto_interrupt");
     printf("El puerto_interrupt es: %s", puerto_interrupt);
-    fd_mod2 = iniciar_servidor(logger_cpu, "SERVER CPU INTERRUPT", ip_cpu,  puerto_interrupt);
+    fd_mod3 = iniciar_servidor(logger_cpu, "SERVER CPU INTERRUPT", ip_cpu,  puerto_interrupt);
     log_info(logger_cpu, "inicio servidor");
-    if (fd_mod2 == 0) {
+    if (fd_mod3 == 0) {
         log_error(logger_cpu, "Fallo al crear el servidor, cerrando cpu");
         return EXIT_FAILURE;
     }
 log_info(logger_cpu, "va a escuchar");
-    while (server_escuchar(logger_cpu, "SERVER CPU INTERRUPT", (uint32_t)fd_mod2));
+    while (server_escuchar(logger_cpu, "SERVER CPU INTERRUPT", (uint32_t)fd_mod3));
 }
 
 t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete_proceso_interrumpido) {
@@ -291,15 +297,16 @@ instr_t* instruccion_deserializar(t_list* lista_paquete_inst){
 }
 
  uint32_t deserealizar_marco(t_list*  lista_paquete ){
-    uint32_t marco_recibido = malloc(sizeof(uint32_t));
-    marco_recibido = *(uint32_t*)list_get(lista_paquete, 0);
+    uint32_t marco_rec = malloc(sizeof(uint32_t));
+    marco_rec = *(uint32_t*)list_get(lista_paquete, 0);
 
-	return marco_recibido;
+	return marco_rec;
 }
 
-uint32_t deserealizar_valor_memoria(t_list*  lista_paquete ){
-    uint32_t valor_recibido = malloc(sizeof(uint32_t));
-    valor_recibido = *(uint32_t*)list_get(lista_paquete, 0);
+char* deserealizar_valor_memoria(t_list*  lista_paquete ){
+    uint32_t tamanio_valor_recibido = *(uint32_t*)list_get(lista_paquete, 0);
+    char* valor_recibido = malloc(tamanio_valor_recibido);
+    valor_recibido = list_get(lista_paquete, 1);
 
 	return valor_recibido;
 }

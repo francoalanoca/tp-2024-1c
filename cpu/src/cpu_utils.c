@@ -4,11 +4,12 @@ int tamanioParams;
 int tamanioInterfaces;
 
 instr_t* fetch(int conexion, t_log* logger, t_config* config, t_pcb* proceso){
-       log_info(logger, "Voy a entrar a pedir_instruccion");
-       pedir_instruccion(proceso, conexion,logger); //TODO:VER COMO RECIBIR LA INSTRUCCION
-        //TODO:WAIT semaforo
-        sem_wait(&sem_valor_instruccion);
-       return prox_inst;
+    log_info(logger, "PID: %u- FETCH- Program Counter: %u", proceso->pid,proceso->program_counter); //LOG OBLIGATORIO
+    log_info(logger, "Voy a entrar a pedir_instruccion");
+    pedir_instruccion(proceso, conexion,logger); //TODO:VER COMO RECIBIR LA INSTRUCCION
+    //TODO:WAIT semaforo
+    sem_wait(&sem_valor_instruccion);
+    return prox_inst;
 }
 
 tipo_instruccion decode(instr_t* instr){
@@ -18,10 +19,11 @@ tipo_instruccion decode(instr_t* instr){
 
 
 void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso){
-
+    
     switch(tipo_inst){
         case SET:
         {
+            log_info(logger, "PID: %u - Ejecutando: SET - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             char *endptr;
             uint32_t param2_num = (uint32_t)strtoul(inst->param2, &endptr, 10);// Convertir la cadena a uint32_t
             set(inst->param1, param2_num, proceso, logger);
@@ -29,21 +31,25 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
         }
         case SUM:
         {
+            log_info(logger, "PID: %u - Ejecutando: SUM - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             sum(inst->param1, inst->param2,proceso,logger);
             break;
         }
         case SUB:
         {
+            log_info(logger, "PID: %u - Ejecutando: SUB - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             sub(inst->param1, inst->param2,proceso,logger);
             break;
         }
         case JNZ:
         {
+            log_info(logger, "PID: %u - Ejecutando: JNZ - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             jnz(inst->param1, inst->param2,proceso,logger);
             break;
         }
         case IO_GEN_SLEEP:
         {
+            log_info(logger, "PID: %u - Ejecutando: IO_GEN_SLEEP - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             char *endptr;
             uint32_t param2_num = (uint32_t)strtoul(inst->param2, &endptr, 10);// Convertir la cadena a uint32_t
             
@@ -53,21 +59,22 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
 
         case MOV_IN:
         {
-          
+            log_info(logger, "PID: %u - Ejecutando: MOV_IN - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             mov_in(inst->param1, inst->param2,proceso,logger);
             break;
         }
         
         case MOV_OUT:
         {
-          
+            log_info(logger, "PID: %u - Ejecutando: MOV_OUT - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             mov_out(inst->param1, inst->param2,proceso,logger);
             break;
         }
 
         case RESIZE:
         {
-             char *endptr;
+            log_info(logger, "PID: %u - Ejecutando: RESIZE - %s", proceso->pid,inst->param1); //LOG OBLIGATORIO
+            char *endptr;
             uint32_t param1_num = (uint32_t)strtoul(inst->param1, &endptr, 10);// Convertir la cadena a uint32_t
             
             resize(param1_num);
@@ -76,69 +83,80 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
 
         case COPY_STRING:
         {
-             char *endptr;
+            log_info(logger, "PID: %u - Ejecutando: COPY_STRING - %s ", proceso->pid,inst->param1); //LOG OBLIGATORIO
+            char *endptr;
             uint32_t param1_num = (uint32_t)strtoul(inst->param1, &endptr, 10);// Convertir la cadena a uint32_t
             
-            copy_string(param1_num);
+            copy_string(param1_num,logger);
             break;
         }
 
         case WAIT:
         {
+            log_info(logger, "PID: %u - Ejecutando: WAIT - %s ", proceso->pid,inst->param1); //LOG OBLIGATORIO
             wait_inst(inst->param1);
             break;
         }
 
         case SIGNAL:
         {
+            log_info(logger, "PID: %u - Ejecutando: SIGNAL - %s ", proceso->pid,inst->param1); //LOG OBLIGATORIO
             signal_inst(inst->param1);
             break;
         }
 
         case IO_STDIN_READ:
         {
+            log_info(logger, "PID: %u - Ejecutando: IO_STDIN_READ - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
             io_stdin_read(inst->param1,inst->param2,inst->param3,proceso,logger);
             break;
         }
 
         case IO_STDOUT_WRITE:
         {
+            log_info(logger, "PID: %u - Ejecutando: IO_STDOUT_WRITE - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
             io_stdout_write(inst->param1,inst->param2,inst->param3,proceso,logger);
             break;
         }
 
         case EXIT:
         {
+            log_info(logger, "PID: %u - Ejecutando: EXIT", proceso->pid); //LOG OBLIGATORIO
             exit_inst();
             break;
         }
 
         case IO_FS_CREATE:
         {
+            log_info(logger, "PID: %u - Ejecutando: IO_FS_CREATE - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             io_fs_create(inst->param1,inst->param2,proceso,logger);
             break;
         }
 
         case IO_FS_DELETE:
         {
+            log_info(logger, "PID: %u - Ejecutando: IO_FS_DELETE - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             io_fs_delete(inst->param1,inst->param2,proceso,logger);
             break;
         }
 
         case IO_FS_TRUNCATE:
         {
+            log_info(logger, "PID: %u - Ejecutando: IO_FS_TRUNCATE - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
             io_fs_truncate(inst->param1,inst->param2,inst->param3,proceso,logger);
             break;
         }
 
         case IO_FS_WRITE:
         {
+            log_info(logger, "PID: %u - Ejecutando: IO_FS_WRITE - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
             io_fs_write(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger);
             break;
         }
 
         case IO_FS_READ:
         {
+            log_info(logger, "PID: %u - Ejecutando: IO_FS_READ - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
             io_fs_read(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger);
             break;
         }
@@ -171,6 +189,7 @@ void pedir_instruccion(t_pcb* proceso,int conexion, t_log* logger){
 void set(char* registro, uint32_t valor, t_pcb* proceso, t_log *logger){
     //printf("El valor del set es : %d ", valor);
     registros registro_elegido = identificarRegistro(registro);
+    pthread_mutex_lock(&mutex_proceso_actual);
     switch(registro_elegido){
         case PC:
         {
@@ -230,6 +249,7 @@ void set(char* registro, uint32_t valor, t_pcb* proceso, t_log *logger){
         default:
         log_info(logger, "El registro no existe");
     }
+    pthread_mutex_unlock(&mutex_proceso_actual);
 
     //proceso->pcb->registros_cpu.AX;
    // registro = valor;
@@ -241,7 +261,7 @@ void sum(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *l
 
     uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso,logger);
     uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso,logger);
-
+    pthread_mutex_lock(&mutex_proceso_actual);
     switch(id_registro_destino){
         case PC:
         {
@@ -301,6 +321,7 @@ void sum(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *l
         default:
         log_info(logger, "El registro no existe");
     }
+    pthread_mutex_unlock(&mutex_proceso_actual);
 
 
     //registro_destino = registro_destino + registro_origen;
@@ -312,7 +333,7 @@ void sub(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *l
 
     uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso,logger);
     uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso,logger);
-
+    pthread_mutex_lock(&mutex_proceso_actual);
     switch(id_registro_destino){
         case PC:
         {
@@ -372,6 +393,7 @@ void sub(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *l
         default:
         log_info(logger, "El registro no existe");
     }
+    pthread_mutex_unlock(&mutex_proceso_actual);
     //registro_destino = registro_destino - registro_origen;
 }
 
@@ -379,7 +401,9 @@ void jnz(char* registro, uint32_t inst, t_pcb* proceso, t_log* logger){
     registros id_registro = identificarRegistro(registro);
     uint32_t valor_registro = obtenerValorActualRegistro(id_registro,proceso, logger);
     if(valor_registro != 0){
+        pthread_mutex_lock(&mutex_proceso_actual);
         proceso->program_counter = inst;
+        pthread_mutex_unlock(&mutex_proceso_actual);
     }
 }
 //void io_gen_sleep(Interfaz interfaz, int unidades_de_trabajo){ //TODO: VER PARAMETROS
@@ -570,7 +594,7 @@ void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, ui
 }
 
 
-uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion){
+uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion, t_log* logger){
     uint32_t direccion_resultado = malloc(sizeof(uint32_t));
     bool encontro_en_tlb = false;
     uint32_t indice_encontrado = malloc(sizeof(uint32_t));
@@ -589,6 +613,7 @@ uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion){
             if(verificar_existencia_en_tlb(proceso_actual->pid, nro_pagina, i)){
                 encontro_en_tlb = true;
                 indice_encontrado = i;
+                log_info(logger, "PID: %u - TLB HIT- Pagina: %u", proceso_actual->pid,nro_pagina); //LOG OBLIGATORIO
             }
 	  }
 
@@ -600,10 +625,12 @@ uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion){
         direccion_resultado = registro_tlb_encontrado->nro_marco * tamanio_pag;
       }
       else{//Si no esta, pedir a memoria el marco para esa pagina y proceso
+        log_info(logger, "PID: %u - TLB MISS- Pagina: %u", proceso_actual->pid,nro_pagina); //LOG OBLIGATORIO
         pedir_marco_a_memoria(proceso_actual->pid,nro_pagina,conexion);
         //al recibir marco de memoria guardarlo en la TLB, si no hay espacio usar algoritmo
         //WAIT SEMAFORO MARCO RECIBIDO
         sem_wait(&sem_marco_recibido);
+        log_info(logger, "PID: %u - OBTENER MARCO- Página: %u - Marco: %u", proceso_actual->pid,nro_pagina,marco_recibido); //LOG OBLIGATORIO
     if(tlb->elements_count = cfg_cpu->CANTIDAD_ENTRADAS_TLB){
         usar_algoritmo_tlb(proceso_actual->pid,nro_pagina,marco_recibido); //TODO:IMPLEMENTAR FUNCION
         direccion_resultado = marco_recibido * tamanio_pag;
@@ -709,12 +736,18 @@ void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_lo
     uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
 
     uint32_t dir_fisica_result = malloc(sizeof(uint32_t));
-    dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria);
+    dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
 
     pedir_valor_a_memoria(dir_fisica_result,proceso->pid,socket_memoria);
-    wait(&sem_valor_registro_recibido);
     
-    set(registro_datos,valor_registro_obtenido,proceso,logger);
+    wait(&sem_valor_registro_recibido);
+
+    log_info(logger, "PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", proceso_actual->pid,dir_fisica_result,valor_registro_obtenido); //LOG OBLIGATORIO
+    
+    char *endptr;
+    uint32_t valor_dir_fisica = (uint32_t)strtoul(valor_registro_obtenido, &endptr, 10);// Convertir la cadena a uint32_t
+
+    set(registro_datos,valor_dir_fisica,proceso,logger);
 
 }
 
@@ -728,13 +761,14 @@ void mov_out(char* registro_direccion, char* registro_datos, t_pcb* proceso, t_l
     uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
 
     uint32_t dir_fisica_result = malloc(sizeof(uint32_t));
-    dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria);
+    dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
     //TODO: Si el tamanio de valor_registro_datos(es un int de 32 siempre?) es mayor a tamanio_pagina hay
     //que dividir ambos y tomar el floor para obtener cant de paginas, con eso dividir datos a enviar en *cant de paginas*, y
     //por cada pedacito de intfo llamar a mmu y agregar dir fisca obtenida en lista 
 
 
     guardar_en_direccion_fisica(dir_fisica_result,sizeof(uint32_t),valor_registro_datos,proceso->pid,socket_memoria);//TODO
+    log_info(logger, "PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %u", proceso_actual->pid,dir_fisica_result,valor_registro_datos); //LOG OBLIGATORIO
 
 }
 
@@ -747,13 +781,21 @@ void resize(uint32_t tamanio){
     //WAIT SEMAFORO
     sem_wait(&sem_valor_resize_recibido);
     if(strcmp(rta_resize, "Out of memory") == 0){
+        pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
         proceso_interrumpido_actual->pid = proceso_actual->pid;
         proceso_interrumpido_actual->motivo_interrupcion = INTERRUPCION_OUT_OF_MEMORY;
+        pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
         envia_error_de_memoria_a_kernel(proceso_interrumpido_actual);
+        pthread_mutex_lock(&mutex_proceso_actual);
+        proceso_actual = NULL;
+        pthread_mutex_unlock(&mutex_proceso_actual);
+        pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
+        proceso_interrumpido_actual = NULL;
+        pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
     }
 }
 
-void copy_string(uint32_t tamanio){
+void copy_string(uint32_t tamanio, t_log* logger){
     //Toma del string apuntado por el registro SI y copia la cantidad de bytes indicadas
     // en el parámetro tamaño a la posición de memoria apuntada por el registro DI
 
@@ -763,17 +805,19 @@ void copy_string(uint32_t tamanio){
     //uint32_t valor_registro_SI = obtenerValorActualRegistro(id_registro_SI,proceso, logger);
 
     uint32_t dir_fisica_SI = malloc(sizeof(uint32_t));
-    dir_fisica_SI = mmu(proceso_actual->registros_cpu.SI,tamanio_pagina,socket_memoria);
+    dir_fisica_SI = mmu(proceso_actual->registros_cpu.SI,tamanio_pagina,socket_memoria,logger);
 
     pedir_valor_a_memoria(dir_fisica_SI,proceso_actual->pid,socket_memoria);
     wait(&sem_valor_registro_recibido);
+
+    log_info(logger, "PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", proceso_actual->pid,dir_fisica_SI,valor_registro_obtenido); //LOG OBLIGATORIO
 
 
     char* valor_a_enviar = malloc(tamanio);
     valor_a_enviar = string_substring_until(valor_registro_obtenido,tamanio); //VER BIEN QUE HACE LA FUNCION
 
     uint32_t dir_fisica_DI = malloc(sizeof(uint32_t));
-    dir_fisica_DI = mmu(proceso_actual->registros_cpu.DI,tamanio_pagina,socket_memoria);
+    dir_fisica_DI = mmu(proceso_actual->registros_cpu.DI,tamanio_pagina,socket_memoria,logger);
 
     guardar_string_en_memoria(valor_a_enviar,tamanio,dir_fisica_DI,proceso_actual->pid);
 }
@@ -803,7 +847,7 @@ void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tama
     uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
     //TRADUCIR DIR LOGICA A FISICA?
     uint32_t dir_fisica = malloc(sizeof(uint32_t));
-    dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria);
+    dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
 
     registros id_registro_tamanio = identificarRegistro(registro_tamanio);
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
@@ -822,7 +866,7 @@ void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_ta
     uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
     //TRADUCIR DIR LOGICA A FISICA?
     uint32_t dir_fisica = malloc(sizeof(uint32_t));
-    dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria);
+    dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
 
     registros id_registro_tamanio = identificarRegistro(registro_tamanio);
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
@@ -833,10 +877,17 @@ void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_ta
 void exit_inst(){
     // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
     //Contexto de Ejecución actualizado al Kernel para su finalización.
+    pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
     proceso_interrumpido_actual->pid = proceso_actual->pid;
     proceso_interrumpido_actual->motivo_interrupcion = INSTRUCCION_EXIT;
+    pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
     solicitar_exit_a_kernel(proceso_interrumpido_actual);
-
+    pthread_mutex_lock(&mutex_proceso_actual);
+    proceso_actual = NULL;
+    pthread_mutex_unlock(&mutex_proceso_actual);
+    pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
+    proceso_interrumpido_actual = NULL;
+    pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
 }
 
 void pedir_valor_a_memoria(uint32_t dir_fisica, uint32_t pid, int conexion){
@@ -1193,7 +1244,7 @@ void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion,
         registros id_registro_direccion = identificarRegistro(registro_direccion);
         uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
         uint32_t dir_fisica = malloc(sizeof(uint32_t));
-        dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria);
+        dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
         //OBTENER VALOR DE LA DIR FISICA OBTENIDA? O PASO DIRECTAMENTE LA DIR FISICA?
         registros id_registro_tamanio = identificarRegistro(registro_tamanio);
         uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
@@ -1216,7 +1267,7 @@ void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, 
         registros id_registro_direccion = identificarRegistro(registro_direccion);
         uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
         uint32_t dir_fisica = malloc(sizeof(uint32_t));
-        dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria);
+        dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
         //OBTENER VALOR DE LA DIR FISICA OBTENIDA? O PASO DIRECTAMENTE LA DIR FISICA?
         registros id_registro_tamanio = identificarRegistro(registro_tamanio);
         uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);

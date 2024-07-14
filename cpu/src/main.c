@@ -24,6 +24,9 @@ sem_t sem_valor_registro_recibido;
 sem_t sem_valor_resize_recibido;
 sem_t sem_valor_tamanio_pagina;
 uint32_t tamanio_pagina;
+pthread_mutex_t mutex_proceso_actual;
+pthread_mutex_t mutex_proceso_interrumpido_actual;
+pthread_mutex_t mutex_interrupcion_kernel;
 
 int socket_memoria;
 
@@ -45,6 +48,9 @@ int main(int argc, char* argv[]) {
     sem_init(&sem_valor_registro_recibido, 0, 0);
     sem_init(&sem_valor_resize_recibido, 0, 0);
     sem_init(&sem_valor_tamanio_pagina, 0, 0);
+    pthread_mutex_init(&mutex_proceso_actual, NULL);
+    pthread_mutex_init(&mutex_proceso_interrumpido_actual, NULL);
+    pthread_mutex_init(&mutex_interrupcion_kernel, NULL);
 
     tlb = list_create();
 
@@ -85,7 +91,11 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    ciclo_de_instrucciones(socket_memoria, logger_cpu, cfg_cpu, proceso_actual);
+    while(1){
+        if(proceso_actual != NULL){
+            ciclo_de_instrucciones(socket_memoria, logger_cpu, cfg_cpu, proceso_actual);
+        }
+    }
 
     liberar_memoria();
 
@@ -102,12 +112,20 @@ void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pcb
     tipo_inst = decode(inst);
     log_info(logger, "Voy a entrar a execute");
     execute(logger, config, inst, tipo_inst, proceso);
-    proceso_actual->program_counter += 1;
-    log_info(logger, "Voy a entrar a check_interrupt");
-    check_interrupt();
-    log_info(logger, "Sale de check_interrupt");
+    if(proceso_actual != NULL){// Si la instruccion que acaba de ejecutar no es EXIT
+        pthread_mutex_lock(&mutex_proceso_actual);
+        proceso_actual->program_counter += 1;
+        pthread_mutex_unlock(&mutex_proceso_actual);
+        log_info(logger, "Voy a entrar a check_interrupt");
+        check_interrupt();
+        log_info(logger, "Sale de check_interrupt");
+    }
+    
     
     log_info(logger, "Termino ciclo de instrucciones");
+    pthread_mutex_lock(&mutex_interrupcion_kernel);
+    interrupcion_kernel = false;
+    pthread_mutex_unlock(&mutex_interrupcion_kernel);
     free(inst->param1);
     free(inst->param2);
     free(inst->param3);
