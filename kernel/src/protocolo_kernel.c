@@ -46,13 +46,23 @@ while (control_key)
       t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
       proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
       //Detectar tipo de interrupcion y dependiendo de esta se decide que es lo que se hace 
+      
       switch (proceso_interrumpido->motivo_interrupcion)
       {
       case INTERRUPCION_OUT_OF_MEMORY:
+         if(proceso_interrumpido->pcb != NULL){
+            poner_en_cola_exit(proceso_interrumpido->pcb);                     
+            mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
+            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: OUT_OF_MEMORY ", proceso_interrumpido->pcb->pid);
+         }
+         else{
+            log_info(logger_kernel,"El proceso recibido es nulo");
+         }
       case INSTRUCCION_EXIT:
          if(proceso_interrumpido->pcb != NULL){
-            poner_en_cola_exit(proceso_interrumpido->pcb);
+            poner_en_cola_exit(proceso_interrumpido->pcb);                     
             mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
+            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCCESS", proceso_interrumpido->pcb->pid);
          }
          else{
             log_info(logger_kernel,"El proceso recibido es nulo");
@@ -60,7 +70,13 @@ while (control_key)
          break;
       
       case FIN_QUANTUM:
-         /* code */
+         printf("Se recibió una interrupción de FIN DE QUANTUM");              
+         lista_paquete = recibir_paquete(conexion_cpu_dispatch);       
+         proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete); //motivo y pcb 
+         log_info(logger_kernel, "PID: %U - Desalojado por fin de Quantum", proceso_interrumpido->pcb->pid); 
+         log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
+         replanificar_y_ejecutar(proceso_interrumpido);
+         free(proceso_interrumpido);// crear funcion para liberar pcb
          break;
 
       
@@ -68,6 +84,13 @@ while (control_key)
          pcb_actualizado_interrupcion = proceso_interrumpido->pcb;
          sem_post(&sem_contexto_ejecucion_recibido);
          break;
+      case INTERRUPCION_IO:
+         printf("Se recibió una interrupción de IO");              
+         lista_paquete = recibir_paquete(conexion_cpu_dispatch);       
+         proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete); //motivo y pcb 
+         log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_interrumpido->pcb->pid);
+         replanificar_y_ejecutar(proceso_interrumpido);
+         free(proceso_interrumpido);// crear funcion para liberar pcb
       
       default:
       printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
@@ -105,12 +128,14 @@ while (control_key)
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
                mandar_proceso_a_finalizar(io_gen_sleep->pid);
+               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCUENTRA PROCESO ", io_gen_sleep->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
             mandar_proceso_a_finalizar(io_gen_sleep->pid);
+            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_gen_sleep->pid);
          }
          
       }
@@ -118,6 +143,7 @@ while (control_key)
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_finalizar(io_gen_sleep->pid);
+         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_gen_sleep->pid);
       }
 
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR
@@ -201,9 +227,11 @@ while (control_key)
       }
       else{
          //NO EXISTE RECURSO, MANDAR A EXIT
+        
          mandar_proceso_a_finalizar(recurso_recibido_wait->pcb->pid);
+         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_RESOURCE  ", recurso_recibido_wait->pcb->pid);
          //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
-         replanificar_y_ejecutar();
+         replanificar_y_ejecutar(recurso_recibido_wait->pcb);
       }
       break;
    case ENVIO_SIGNAL_A_KERNEL:
@@ -295,6 +323,7 @@ while (control_key)
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
             mandar_proceso_a_finalizar(io_stdin_read->pid);
+            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdin_read->pid);
          }
          
       }
@@ -302,6 +331,7 @@ while (control_key)
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_finalizar(io_stdin_read->pid);
+         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdin_read->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
@@ -332,6 +362,7 @@ while (control_key)
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
             mandar_proceso_a_finalizar(io_stdout_write->pid);
+            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdout_write->pid);
          }
          
       }
@@ -339,9 +370,10 @@ while (control_key)
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_finalizar(io_stdout_write->pid);
+         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdout_write->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
-      replanificar_y_ejecutar();
+      mandar_interrupcion_a_cpu();
       break;
    /*case SOLICITUD_EXIT_KERNEL:
       //TODO
@@ -386,12 +418,14 @@ while (control_key)
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
                mandar_proceso_a_finalizar(io_crear_archivo->pid);
+               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCONTRO EL PROCESO ", io_crear_archivo->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
             mandar_proceso_a_finalizar(io_crear_archivo->pid);
+            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_crear_archivo->pid);
          }
          
       }
@@ -399,6 +433,7 @@ while (control_key)
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_finalizar(io_crear_archivo->pid);
+         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_crear_archivo->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
@@ -428,12 +463,14 @@ while (control_key)
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
                mandar_proceso_a_finalizar(io_delete_archivo->pid);
+               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCONTRO PROCESO ", io_delete_archivo->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
             mandar_proceso_a_finalizar(io_delete_archivo->pid);
+            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_delete_archivo->pid);
          }
          
       }
@@ -441,6 +478,7 @@ while (control_key)
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_finalizar(io_delete_archivo->pid);
+         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_delete_archivo->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
@@ -471,12 +509,14 @@ while (control_key)
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
                mandar_proceso_a_finalizar(io_truncate_archivo->pid);
+               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCONTRO PROCESO ", io_truncate_archivo->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
             mandar_proceso_a_finalizar(io_truncate_archivo->pid);
+            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_truncate_archivo->pid);
          }
          
       }
@@ -484,6 +524,7 @@ while (control_key)
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_finalizar(io_truncate_archivo->pid);
+         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_truncate_archivo->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
@@ -513,12 +554,14 @@ while (control_key)
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
                mandar_proceso_a_finalizar(io_write_archivo->pid);
+               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCONTRO PROCESO ", io_write_archivo->pid);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
             mandar_proceso_a_finalizar(io_write_archivo->pid);
+            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_write_archivo->pid);
          }
          
       }
@@ -526,6 +569,7 @@ while (control_key)
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
          mandar_proceso_a_finalizar(io_write_archivo->pid);
+         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_write_archivo->pid);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();
@@ -556,6 +600,7 @@ while (control_key)
                //ENVIAR PROCESO A EXIT
                sem_wait(sem_planificar);
                mandar_proceso_a_finalizar(io_read_archivo->pid);
+               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCONTRO PROCESO ", io_read_archivo->pid);
                sem_post(sem_planificar);
             }
          }
@@ -564,6 +609,7 @@ while (control_key)
             //ENVIAR PROCESO A EXIT
             sem_wait(sem_planificar);
             mandar_proceso_a_finalizar(io_read_archivo->pid);
+            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_read_archivo->pid);
             sem_post(sem_planificar);
          }
          
@@ -573,6 +619,7 @@ while (control_key)
          //ENVIAR PROCESO A EXIT?
          sem_wait(sem_planificar);
          mandar_proceso_a_finalizar(io_read_archivo->pid);
+         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_read_archivo->pid);
          sem_post(sem_planificar);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 

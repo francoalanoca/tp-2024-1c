@@ -59,7 +59,7 @@ void destruir_planificador(t_planificador* planificador) {
 // Agrega un nuevo proceso al planificador
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_add(planificador->cola_new, proceso);
-    if (planificador->grado_multiprogramacion_actual < planificador->grado_multiprogramacion) {
+    if (planificador->grado_multiprogramacion_actual <= planificador->grado_multiprogramacion) {
         t_pcb* proceso_nuevo = list_remove(planificador->cola_new, 0);
         list_add(planificador->cola_ready, proceso_nuevo);
         planificador->grado_multiprogramacion_actual++;
@@ -185,6 +185,7 @@ void eliminar_proceso(t_planificador* planificador, t_pcb* proceso) {
 
     // Finalizar el proceso en el planificador
     finalizar_proceso(planificador, proceso);
+    log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: EXIT", proceso->pid);
 }
 
 uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb) {
@@ -287,12 +288,11 @@ void planificar_y_ejecutar(){
         if (planificador->algoritmo = FIFO) { 
             siguiente_proceso = obtener_proximo_proceso(planificador);
             enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);
-            planificador->grado_multiprogramacion_actual --; // creo que necesita mutex
+            list_add(planificador->cola_exec,siguiente_proceso);           
             free(siguiente_proceso); 
         }else {
             siguiente_proceso = obtener_proximo_proceso(planificador);
             ejecutar_modo_round_robin(siguiente_proceso); 
-            planificador->grado_multiprogramacion_actual --;  // creo que necesita mutex
             free(siguiente_proceso); 
 
         }
@@ -302,21 +302,22 @@ void planificar_y_ejecutar(){
 void replanificar_y_ejecutar(t_pcb* proceso_ejecutando){
    t_pcb* siguiente_proceso = malloc(sizeof(t_pcb));
      
-   if (planificador->algoritmo = FIFO) { // en este caso obtiene el siguiente proceso en la lista y lo manda a ejecutar.
-		siguiente_proceso = obtener_proximo_proceso(planificador);
-        enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);
+   if (planificador->algoritmo = FIFO) { // en este caso obtiene el siguiente proceso en la lista y lo manda a ejecutar.		
+        siguiente_proceso = obtener_proximo_proceso(planificador);        
+        enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);        
         free(siguiente_proceso); 
 	}else {
 		 if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
             
             desalojar_proceso_vrr(proceso_ejecutando); // finalizo la ejecucion del proceso actual y lo mando a alguna cola ready segun corresponda
             siguiente_proceso = obtener_proximo_proceso(planificador);
-            ejecutar_modo_round_robin(siguiente_proceso);
+            ejecutar_modo_round_robin(siguiente_proceso);            
         }else {
             siguiente_proceso = obtener_proximo_proceso(planificador);
             ejecutar_modo_round_robin(siguiente_proceso);
          }
     }
+    log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EJECUTANDO", siguiente_proceso->pid);
 
 }
 
@@ -346,7 +347,7 @@ void  ejecutar_modo_round_robin( t_pcb* proceso){
 void lanzar_interrupcion_fin_quantum (int quantum){
     uint32_t motivo  = FIN_QUANTUM;
     sleep(quantum);
-    send(conexion_cpu_interrupt, &motivo, sizeof(uint32_t), NULL);
+    send(conexion_cpu_interrupt, &motivo, sizeof(uint32_t), NULL); // hacer un paquete y enviar motivo y pid
     log_info(logger_kernel, "Enviando interrupcion FIN de QUANTUM\n");
 }
 

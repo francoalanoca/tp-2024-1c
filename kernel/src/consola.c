@@ -106,17 +106,10 @@ void atender_instruccion_validada(char* leido){
     }else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0){    //FINALIZAR_PROCESO [PID]
        
         int pid = atoi(comando_consola[1]);
-        if (kill(pid, SIGTERM) == 0) {
-            printf("Proceso con PID %d finalizado exitosamente.\n", pid);
-        } else {
-            if (errno == ESRCH) {
-                printf("No se encontró un proceso con PID %d.\n", pid);
-            } else if (errno == EPERM) {
-                printf("No tienes permiso para finalizar el proceso con PID %d.\n", pid);
-            } else {
-                printf("Ocurrió un error al finalizar el proceso con PID %d: %s\n", pid, strerror(errno));
-            }
-        }
+        // agregar logica de
+        mandar_proceso_a_finalizar(pid);
+        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INTERRUPTED_BY_USER ", pid);
+
        
     }else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0){    //DETENER_PLANIFICACION
         
@@ -130,7 +123,7 @@ void atender_instruccion_validada(char* leido){
         algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
         planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
         sem_post(sem_planificar);
-        void planificar();
+        // meter en un hilo void planificar();
 
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         

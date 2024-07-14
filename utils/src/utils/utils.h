@@ -99,7 +99,8 @@ typedef enum {
     INTERRUPCION_OUT_OF_MEMORY,
     FIN_QUANTUM,
     INSTRUCCION_EXIT,
-    ELIMINAR_PROCESO
+    ELIMINAR_PROCESO,
+    INTERRUPCION_IO
 }motivo_interrupcion;
 
 
