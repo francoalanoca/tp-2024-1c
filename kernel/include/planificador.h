@@ -34,6 +34,7 @@ t_temporal* cronometro;
 // ver si falta poner alguna libreria
 extern t_planificador* planificador;
 
+sem_t* sem_planificar;
 // Inicializa un nuevo planificador
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum, int grado_multiprogramacion);
 // Destruye el planificador y libera la memoria

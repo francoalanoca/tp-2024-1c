@@ -554,20 +554,26 @@ while (control_key)
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
                //ENVIAR PROCESO A EXIT
+               sem_wait(sem_planificar);
                mandar_proceso_a_finalizar(io_read_archivo->pid);
+               sem_post(sem_planificar);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
+            sem_wait(sem_planificar);
             mandar_proceso_a_finalizar(io_read_archivo->pid);
+            sem_post(sem_planificar);
          }
          
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
+         sem_wait(sem_planificar);
          mandar_proceso_a_finalizar(io_read_archivo->pid);
+         sem_post(sem_planificar);
       }
       //TODO:REPLANIFICAR Y MANDAR A EJECUTAR 
       replanificar_y_ejecutar();

@@ -5,6 +5,7 @@
 
 sem_t sem_contexto_ejecucion_recibido;
 sem_t sem_confirmacion_memoria;
+sem_t* sem_planificar;
 t_temporal* cronometro;
 
 // Devuelve un t_algoritmo a partir de la config cargada
@@ -23,6 +24,7 @@ t_algoritmo_planificacion obtener_algoritmo_planificador(char* algoritmo_planifi
 
 // detiene tanto el planificador de corto plazo como el de largo plazo
 void detener_planificacion(t_planificador* planificador) {
+    sem_wait(sem_planificar);
     planificador->planificacion_detenida = true;
 }
 
@@ -68,21 +70,16 @@ bool agregar_proceso(t_planificador* planificador, t_pcb* proceso) {
 // Obtiene el próximo proceso a ejecutar
 t_pcb* obtener_proximo_proceso(t_planificador* planificador) {
     t_pcb* proceso;
-    if (planificador->algoritmo == FIFO) {
-        proceso = list_remove(planificador->cola_ready, 0);
-    } else if (planificador->algoritmo == ROUND_ROBIN) {
-        proceso = list_get(planificador->cola_ready, 0);
-        list_remove(planificador->cola_ready, 0);
-        list_add(planificador->cola_ready, proceso);
+    if (planificador->algoritmo != VIRTUAL_ROUND_ROBIN) {
+        proceso = list_remove(planificador->cola_ready, 0);        
     } else { // Virtual Round Robin
-        proceso = list_remove(planificador->cola_ready, 0);
-        if (proceso->tiempo_ejecucion >= planificador->quantum) {
-            proceso->tiempo_ejecucion -= planificador->quantum;
-            list_add(planificador->cola_ready, proceso);
-        }
-    }
-    //TODO:ENVIAR ANTES A CPU?
-    list_add(planificador->cola_exec, proceso);
+       if (list_size(planificador->cola_ready_prioridad) > 0) {
+            proceso = list_remove(planificador->cola_ready_prioridad, 0); 
+        }else {
+            proceso = list_remove(planificador->cola_ready, 0); 
+        } 
+    }   
+
     return proceso;
 }
 
@@ -282,6 +279,26 @@ void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
 
 }
 
+void planificar_y_ejecutar(){
+  
+    while (1){
+        t_pcb* siguiente_proceso = malloc(sizeof(t_pcb));
+              
+        if (planificador->algoritmo = FIFO) { 
+            siguiente_proceso = obtener_proximo_proceso(planificador);
+            enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);
+            planificador->grado_multiprogramacion_actual --; // creo que necesita mutex
+            free(siguiente_proceso); 
+        }else {
+            siguiente_proceso = obtener_proximo_proceso(planificador);
+            ejecutar_modo_round_robin(siguiente_proceso); 
+            planificador->grado_multiprogramacion_actual --;  // creo que necesita mutex
+            free(siguiente_proceso); 
+
+        }
+    }
+}
+ 
 void replanificar_y_ejecutar(t_pcb* proceso_ejecutando){
    t_pcb* siguiente_proceso = malloc(sizeof(t_pcb));
      
@@ -302,7 +319,7 @@ void replanificar_y_ejecutar(t_pcb* proceso_ejecutando){
     }
 
 }
- 
+
 void  ejecutar_modo_round_robin( t_pcb* proceso){
     int quatum_restante;
     pthread_t hilo_cronometro;
@@ -324,6 +341,7 @@ void  ejecutar_modo_round_robin( t_pcb* proceso){
 	
 	
 }
+
 
 void lanzar_interrupcion_fin_quantum (int quantum){
     uint32_t motivo  = FIN_QUANTUM;
@@ -350,6 +368,18 @@ void desalojar_proceso_vrr(t_pcb* proceso){ // recibo contexto actualizado desde
 
 }
 
+void largo_plazo_nuevo_ready() {
+   t_pcb* proceso_nuevo = malloc(sizeof(t_pcb));
+    while (1) {
+        if (planificador->grado_multiprogramacion_actual < planificador->grado_multiprogramacion) {
+            proceso_nuevo = list_remove(planificador->cola_new, 0);
+            list_add(planificador->cola_ready, proceso_nuevo);
+            planificador->grado_multiprogramacion_actual++;
+            log_info(logger_kernel, "PID: %d - Estado Anterior: NEW - Estado Actual: READY",pcb->pid);
+        }
+        
+    }
+}
 
 
 /* void replanificar_y_ejecutar() {

@@ -126,8 +126,11 @@ void atender_instruccion_validada(char* leido){
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
         
         //inicializar_planificador(); //algoritmno, quantum?? ---> quiero preguntar.
+        
         algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
         planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
+        sem_post(sem_planificar);
+        void planificar();
 
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         
