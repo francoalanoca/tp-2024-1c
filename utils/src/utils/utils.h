@@ -428,7 +428,7 @@ void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu);
 void enviar_solicitud_marco(int marco ,int socket_cpu);
 void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu);
 void enviar_peticion_valor(void* respuesta_leer ,int socket_cpu);
-void enviar_resultado_guardar(void* respuesta_escribir, int socket_cliente);
+void enviar_resultado_guardar(char* respuesta_escribir, int socket_cliente);
 void enviar_respuesta_resize(op_code respuesta_resize, int socket_cliente);
 void enviar_resultado_copiar(void* respuesta_copy, int socket_cliente);
 t_io_memo_escritura* deserializar_input(t_list*  lista_paquete );
@@ -447,7 +447,7 @@ void  enviar_io_stdout_write(t_io_stdin_stdout* io_stdout_write, int socket );
 t_io_gen_sleep* deserializar_io_gen_sleep(t_list*  lista_paquete );
 void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket );
 t_proceso_interrumpido* deserializar_proceso_interrumpido(t_list*  lista_paquete );
-void enviar_resultado_guardar(void* valor, int socket_cliente);
+
 //Memoria recibe para escribir desde io
 t_io_memo_escritura* deserializar_input(t_list*  lista_paquete );
 // Kernel envía a IO Crear/Borrar/Truncar Archivo

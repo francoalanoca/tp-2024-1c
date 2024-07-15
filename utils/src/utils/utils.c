@@ -651,7 +651,7 @@ void enviar_peticion_valor(void* respuesta_leer ,int socket_cpu) {
 
 
 
-void enviar_resultado_guardar(void* respuesta_escribir, int socket_cliente){
+void enviar_resultado_guardar(char* respuesta_escribir, int socket_cliente){
     t_paquete* paquete_valor;
 
     paquete_valor = crear_paquete(GUARDAR_EN_DIRECCION_FISICA_RTA);
