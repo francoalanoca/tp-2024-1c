@@ -3,6 +3,7 @@
  int identificador_pid;
  pthread_mutex_t mutex_pid;
  pthread_mutex_t mutex_process_id = PTHREAD_MUTEX_INITIALIZER; // Definición
+ pthread_t* planificacion;
 int process_id = 0; // Definición
  t_pcb* pcb2;
 t_algoritmo_planificacion algortimo ;
@@ -106,7 +107,7 @@ void atender_instruccion_validada(char* leido){
     }else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0){    //FINALIZAR_PROCESO [PID]
        
         int pid = atoi(comando_consola[1]);
-        // agregar logica de
+       
         mandar_proceso_a_finalizar(pid);
         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INTERRUPTED_BY_USER ", pid);
 
@@ -123,7 +124,12 @@ void atender_instruccion_validada(char* leido){
         algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
         planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
         sem_post(sem_planificar);
-        // meter en un hilo void planificar();
+        // Hilo para mantener la ejecución andando y no deneter la consola
+        if (pthread_create(&planificacion, NULL, planificar_y_ejecutar,NULL) != 0) {
+            perror("pthread_create");            
+            
+        }
+        pthread_detach(planificacion);
 
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         
