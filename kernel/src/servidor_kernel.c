@@ -92,31 +92,31 @@ void procesar_conexion(void *void_args) {
             case IO_K_FS_CREATE_FIN:
                 printf("Received IO_K_FS_CREATE_FIN request\n");
                 
-                replanificar_y_ejecutar();
+                replanificar_y_ejecutar(list_get(planificador->cola_exec,0));
 
             break;
             case IO_K_FS_DELETE_FIN:
                 printf("Received IO_K_FS_DELETE_FIN request\n");
                 
-                replanificar_y_ejecutar();
+                replanificar_y_ejecutar(list_get(planificador->cola_exec,0));
 
             break;
             case IO_K_FS_TRUNCATE_FIN:
                 printf("Received IO_K_FS_TRUNCATE_FIN request\n");
                 
-                replanificar_y_ejecutar();
+                replanificar_y_ejecutar(list_get(planificador->cola_exec,0));
 
             break;
             case IO_K_FS_READ_FIN:
                 printf("Received IO_K_FS_READ_FIN request\n");
                 
-                replanificar_y_ejecutar();
+                replanificar_y_ejecutar(list_get(planificador->cola_exec,0));
 
             break;
             case IO_K_FS_WRITE_FIN:
                 printf("Received IO_K_FS_WRITE_FIN request\n");
                 
-                replanificar_y_ejecutar();
+                replanificar_y_ejecutar(list_get(planificador->cola_exec,0));
 
             break;
             default:

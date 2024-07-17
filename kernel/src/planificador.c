@@ -110,10 +110,6 @@ void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nom
 
 // Finaliza un proceso y libera su memoria
 void finalizar_proceso(t_planificador* planificador, t_pcb* proceso) {
-    //uint32_t indice_proceso_a_finalizar = malloc(sizeof(uint32_t));
-    //indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
-    //list_remove(planificador->cola_exec, indice_proceso_a_finalizar);
-    //list_add(planificador->cola_exit, proceso);
     //Liberar los recursos del proceso
     char* pid_string = malloc(sizeof(proceso->pid));
     pid_string = sprintf(pid_string, "%u", proceso->pid);
@@ -151,37 +147,19 @@ void crear_proceso(t_planificador* planificador, char* path_pseudocodigo) {
 }
 
 void eliminar_proceso(t_planificador* planificador, t_pcb* proceso) {
-    //ESTA INCLUIDA LO DE LISTAS DE LAS COMMONS?
     if (list_contains(planificador->cola_exec, proceso->pid)) {
         enviar_interrupcion_a_cpu(proceso,ELIMINAR_PROCESO,conexion_cpu_interrupt);
         
         // Esperar a que la CPU retorne el Contexto de Ejecución
         sem_wait(&sem_contexto_ejecucion_recibido);
 
-        // Obtener el contexto de ejecución actualizado
-        //t_pcb* pcb_actualizado = recibir_pcb(conexion_cpu_dispatch);
-
-        // Actualizar el proceso con el contexto de ejecución recibido
-        //actualizar_proceso(proceso, pcb_actualizado);
         proceso = pcb_actualizado_interrupcion;
-
-        // Liberar memoria
-        
-        //eliminar_paquete(paquete);
-        //free(buffer->stream);
-        //free(buffer);
-        //free(pcb_actualizado);
     }
 
    liberar_proceso_memoria(proceso->pid);
 
     // Esperar confirmación de la memoria
     sem_wait(&sem_confirmacion_memoria);
-
-    // Liberar memoria
-   // eliminar_paquete(paquete_memoria);
-    //free(buffer_memoria->stream);
-   // free(buffer_memoria);
 
     // Finalizar el proceso en el planificador
     finalizar_proceso(planificador, proceso);
@@ -202,8 +180,6 @@ void enviar_interrupcion_a_cpu(t_pcb* proceso,motivo_interrupcion motivo_interru
     // Enviar señal de interrupción a la CPU
         t_paquete* paquete = crear_paquete(INTERRUPCION_KERNEL);
 
-        // Serializar el proceso interrumpido
-        //buffer = proceso_interrumpido_serializar(proceso_interrumpido);
         agregar_a_paquete(paquete, &(proceso->pid), sizeof(uint32_t));
         agregar_a_paquete(paquete, &motivo_interrupcion, sizeof(uint32_t));
 
@@ -216,12 +192,9 @@ void enviar_interrupcion_a_cpu(t_pcb* proceso,motivo_interrupcion motivo_interru
 void liberar_proceso_memoria(uint32_t pid){
      // Notificar a la memoria para liberar las estructuras del proceso
     t_paquete* paquete_memoria = crear_paquete(FINALIZAR_PROCESO);
-    //t_buffer* buffer_memoria = crear_buffer();
 
     // Serializar el PID del proceso a liberar
-    //buffer_write_uint32(buffer_memoria, proceso->pid);
     agregar_a_paquete(paquete_memoria, &pid, sizeof(uint32_t));
-   // agregar_a_paquete(paquete_memoria, buffer_memoria->stream, buffer_memoria->size);
 
     // Enviar el paquete a la memoria
     enviar_paquete(paquete_memoria, conexion_memoria);
@@ -260,10 +233,10 @@ void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
     agregar_a_paquete(paquete_archivo_nuevo, &(pcb->path_length), sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, (pcb->path), pcb->path_length);
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.PC, sizeof(uint32_t));
-    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.AX, sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.BX, sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.CX, sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.DX, sizeof(uint32_t)); 
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.EAX, sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.EBX, sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.ECX, sizeof(uint32_t));
@@ -381,72 +354,4 @@ void largo_plazo_nuevo_ready() {
         
     }
 }
-
-
-/* void replanificar_y_ejecutar() {
-    t_pcb* proceso_actual = NULL;
-    t_pcb* proximo_proceso = NULL;
-    int motivo_desalojo;
-
-    while (1) {
-        // Obtener el próximo proceso a ejecutar
-        proximo_proceso = obtener_proximo_proceso(planificador);
-
-        if (proximo_proceso == NULL) {
-            // No hay procesos para ejecutar, esperar un tiempo y volver a intentar
-            usleep(100000); // equivale a 100ms
-            continue;
-        }
-
-        // cambio de estado al estado EXEC
-        cambiar_estado(proximo_proceso, ESTADO_RUNNING);
-
-        // Enviar el Contexto de Ejecución al CPU
-        enviar_pcb_a_cpu_por_dispatch(proximo_proceso);
-
-        // Esperar la respuesta del CPU
-        t_paquete* paquete_respuesta = recibir_paquete(conexion_cpu_dispatch);
-        t_pcb* pcb_actualizado = deserializar_pcb(paquete_respuesta->buffer);
-        motivo_desalojo = paquete_respuesta->codigo_operacion;
-
-        // Actualizar el PCB con la información recibida
-        actualizar_pcb(proximo_proceso, pcb_actualizado);
-
-        // motivos de desalojo
-        switch (motivo_desalojo) {
-            case DESALOJO_QUANTUM:
-                if (planificador->algoritmo == ROUND_ROBIN || planificador->algoritmo == VIRTUAL_ROUND_ROBIN) {
-                    // Enviar interrupción para forzar el desalojo
-                    enviar_interrupcion_a_cpu(proximo_proceso, conexion_cpu_interrupt);
-                    cambiar_estado(proximo_proceso, ESTADO_READY);
-                    list_add(planificador->cola_ready, proximo_proceso);
-                }
-                break;
-            case DESALOJO_IO:
-                cambiar_estado(proximo_proceso, ESTADO_BLOCKED);
-                // Agregar a la cola de bloqueados correspondiente
-                // Esto dependerá de cómo manejes los recursos de I/O
-                break;
-            case DESALOJO_EXIT:
-                cambiar_estado(proximo_proceso, ESTADO_EXIT);
-                finalizar_proceso(planificador, proximo_proceso);
-                break;
-            // ver si hay mas casos de desalojo
-        }
-
-        // Liberar memoria
-        eliminar_paquete(paquete_respuesta);
-        free(pcb_actualizado);
-
-        // Si el motivo de desalojo implica replanificar, continuamos con el ciclo
-        if (motivo_desalojo == DESALOJO_QUANTUM || motivo_desalojo == DESALOJO_EXIT) {
-            continue;
-        }
-
-        // Si se llega aca, el proceso actual está bloqueado o ha finalizado
-        // Esperamos un corto tiempo antes de intentar planificar el siguiente proceso
-        usleep(10000); // 10ms
-    }
-}
-*/
 

@@ -57,5 +57,6 @@ bool list_contains(t_list* lista_de_procesos, uint32_t pid);
 void poner_en_cola_exit(t_pcb* proceso);
 void enviar_proceso_a_cpu(t_pcb* pcb, int conexion);
 void replanificar_y_ejecutar(t_pcb* proceso_ejecutando);
-void planificar_y_ejecutar():
+void planificar_y_ejecutar();
+void lanzar_interrupcion_fin_quantum (int quantum);
 #endif /* PLANIFICADORES_H_ */
