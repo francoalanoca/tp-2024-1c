@@ -26,7 +26,7 @@ void Escuchar_Msj_De_Conexiones(){
 }
 
 
-void Kernel_atender_cpu_dispatch(){
+void Kernel_escuchar_cpu_dispatch(){
 
 bool control_key = 1;
 t_list* lista_paquete =  malloc(sizeof(t_list));

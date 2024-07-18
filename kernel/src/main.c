@@ -28,7 +28,7 @@ int main(char argc, char *argv[]) {
     }
 
     
-
+    sem_init(&sem_planificar, 1, 1);
     sem_init(&sem_contexto_ejecucion_recibido,0,0);
 
     sem_init(&sem_confirmacion_memoria,0,0);

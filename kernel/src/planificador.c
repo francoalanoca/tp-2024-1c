@@ -1,5 +1,5 @@
 #include "../include/planificador.h"
-
+t_planificador* planificador;
 sem_t* sem_planificar;
 t_temporal* cronometro;
 sem_t sem_contexto_ejecucion_recibido;
