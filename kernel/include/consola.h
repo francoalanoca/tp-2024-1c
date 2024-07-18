@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <readline/readline.h>
-#include "../include/init_kernel.h"
+
 //#include <init_kernel.h>
 #include <utils/utils.h>
 #include <commons/log.h>
@@ -29,8 +29,8 @@ extern pthread_mutex_t mutex_process_id; // Declaración externa
 extern int process_id; // Declaración externa
 
 void iniciar_consola_interactiva(int conexion);
-bool validacion_de_instruccion_de_consola(char* leido);
-void atender_instruccion_validada(char* leido);
+bool validacion_de_instruccion_de_consola(char** comando_consola);
+void atender_instruccion_validada(char** comando_consola);
 void f_ejecutar_script(char* path);
 //t_planificador *inicializar_planificador(t_algoritmo_planificacion algoritmo, uint32_t quantum);
 void detener_planificacion(t_planificador* planificador);

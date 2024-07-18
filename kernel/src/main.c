@@ -1,16 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <commons/log.h>
-#include <commons/config.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+
 #include "../include/main.h"
-#include "../include/planificador.h"
-//#include <main.h>
-//#include <planificador.h>
 
 
 #define EXIT_FAILURE 1
@@ -18,7 +7,7 @@
 
 char *path_config;
 
-t_planificador* planificador;
+
 
 
 int main(char argc, char *argv[]) {
@@ -38,7 +27,7 @@ int main(char argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    crear_listas_recursos();
+    
 
     sem_init(&sem_contexto_ejecucion_recibido,0,0);
 

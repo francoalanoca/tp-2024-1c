@@ -7,84 +7,77 @@
 int process_id = 0; // Definición
  t_pcb* pcb2;
 t_algoritmo_planificacion algortimo ;
-//Funcion que implementa el inicio de la consola iterativa
-void iniciar_consola_interactiva(int conexion){
+
+// Función que implementa el inicio de la consola interactiva
+void iniciar_consola_interactiva(int conexion) {
     conexion_memoria = conexion;
     char* leido;
-    //Asignamos el caracter > a la variable leido
-	leido = readline("> ");
-	log_info(logger_kernel, leido);
+    leido = readline("> ");
+    log_info(logger_kernel, leido);
     bool validacion_leido;
 
-	// El resto, las vamos leyendo y logueando hasta recibir un string vacío
-	while (strcmp(leido, "\0") != 0){
+    // El resto, las vamos leyendo y logueando hasta recibir un string vacío
+    while (strcmp(leido, "\0") != 0) {
+        // Dividir el comando en partes
+        char** comando_consola = string_split(leido, " ");
 
-        //paso lo leido a validar
-        validacion_leido = validacion_de_instruccion_de_consola(leido);
+        // Paso lo leído a validar
+        validacion_leido = validacion_de_instruccion_de_consola(comando_consola);
 
-        //Si lo validado no fue reconocido pasa por el if
-        if (!validacion_leido){
-
+        // Si lo validado no fue reconocido pasa por el if
+        if (!validacion_leido) {
             log_error(logger_kernel, "Comando de CONSOLA no reconocido");
+            string_array_destroy(comando_consola);
             free(leido);
             leido = readline("> ");
             log_info(logger_kernel, leido);
-            continue;   //salto el resto del while
+            continue;   // Salto el resto del while
         }
-        
-        //Una vez validado paso a atender lo leido
-        atender_instruccion_validada(leido);
-		free(leido);
-        leido = readline("> ");
-	}
 
-	free(leido);
+        // Una vez validado, paso a atender lo leído
+        atender_instruccion_validada(comando_consola);
+        string_array_destroy(comando_consola);
+        free(leido);
+        leido = readline("> ");
+    }
+
+    free(leido);
 }
 
 
-//FUncnion que evalua lo ingresado por consola y verifica si es alguno de los protocolos
-bool validacion_de_instruccion_de_consola(char* leido){
+
+// Función que evalúa lo ingresado por consola y verifica si es alguno de los protocolos
+bool validacion_de_instruccion_de_consola(char** comando_consola) {
     bool resultado_validacion = false;
 
-    //Paso lo leido por consola a un vector para saber luego si es un comando de consola
-    char** comando_consola = string_split(leido, "");
-
-    //Comparo si lo leido coincide con alguno de los comandos
-    if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0){
+    // Comparo si lo leído coincide con alguno de los comandos
+    if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0){
+    } else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0){
+    } else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0){
+    } else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){
+    } else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){
+    } else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "PROCESO_ESTADO") == 0){
+    } else if (strcmp(comando_consola[0], "PROCESO_ESTADO") == 0) {
         resultado_validacion = true;
-    }else{
+    } else {
         log_error(logger_kernel, "Comando no reconocido");
         resultado_validacion = false;
     }
-    
-    string_array_destroy(comando_consola);
 
     return resultado_validacion;
 }
 
 
+void atender_instruccion_validada(char** comando_consola){
+       t_buffer* un_buffer = crear_buffer();
 
-void atender_instruccion_validada(char* leido){
-    char** comando_consola = string_split(leido, "");
-    t_buffer* un_buffer = crear_buffer();
-
-    if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0){    //EJECUTAR_SCRIPT [PATH]
-        cargar_string_al_buffer(un_buffer, comando_consola[1]);     //[PATH]
-
-        //Procedo a ejecuratar el script
-
+    if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0) {    // EJECUTAR_SCRIPT [PATH]
         if (comando_consola[1] == NULL) {
             fprintf(stderr, "Error: se debe proporcionar el path del script.\n");
             return;
@@ -94,16 +87,16 @@ void atender_instruccion_validada(char* leido){
         // Procedo a ejecutar el script
         f_ejecutar_script(comando_consola[1]);
 
-    } else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0) { //INICIAR_PROCESO [NOMBRE]
+    } else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0) { // INICIAR_PROCESO [NOMBRE]
         if (comando_consola[1] == NULL) {
             fprintf(stderr, "Error: se debe proporcionar el nombre del proceso.\n");
             return;
         }
-        cargar_string_al_buffer(un_buffer, comando_consola[1]); //[NOMBRE]
+        cargar_string_al_buffer(un_buffer, comando_consola[1]); // [NOMBRE]
 
         // Procedo a iniciar el proceso
-        f_iniciar_proceso(un_buffer);
-
+        f_iniciar_proceso(un_buffer);  
+    
     }else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0){    //FINALIZAR_PROCESO [PID]
        
         int pid = atoi(comando_consola[1]);
@@ -119,11 +112,9 @@ void atender_instruccion_validada(char* leido){
 
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
         
-        //inicializar_planificador(); //algoritmno, quantum?? ---> quiero preguntar.
-        
         algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
         planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
-        sem_post(sem_planificar);
+        sem_post(&sem_planificar);
         // Hilo para mantener la ejecución andando y no deneter la consola
         if (pthread_create(&planificacion, NULL, planificar_y_ejecutar,NULL) != 0) {
             perror("pthread_create");            

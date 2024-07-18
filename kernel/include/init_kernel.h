@@ -6,8 +6,9 @@
 //#define PUERTO_ESCUCHA 5000 // Puerto de escucha para conexiones entrantes
 
 #include <utils/utils.h>
-#include "../include/planificador.h"
+
 #include <semaphore.h>
+#include <commons/temporal.h>
 
 int checkProperties(char *path_config);
 int cargar_configuracion(char *path);
@@ -19,12 +20,14 @@ t_pcb* buscar_pcb_en_lista(t_list* lista_de_pcb, uint32_t pid);
 
 bool interfaz_permite_operacion(t_tipo_interfaz_enum tipo_interfaz, tipo_instruccion instruccion);
 
-void crear_listas_recursos();
+
 
 
 
 
 // Variables Globales
+sem_t* sem_planificar;
+t_temporal* cronometro;
 extern t_log *logger_kernel;
 extern t_config* file_cfg_kernel;
 extern t_pcb* pcb;
@@ -80,4 +83,7 @@ void liberar_memoria_paquete(t_paquete* paquete);
 
 void liberar_memoria_pcb(t_pcb* pcb);
 
+void destruir_diccionario(t_dictionary *dict);
+
+void destruir_elemento(void *elemento);
 #endif /* INIT_KERNEL_H_ */

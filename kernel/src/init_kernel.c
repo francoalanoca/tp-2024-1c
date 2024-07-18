@@ -125,19 +125,7 @@ int hacer_handshake (int socket_cliente){
     log_destroy(logger_kernel);
 }*/
 
-void crear_listas_recursos(){
 
-t_list* recursos = malloc(sizeof(t_list));
-recursos = cfg_kernel->RECURSOS;
-for (size_t i = 0; i < recursos->elements_count; i++)
-{
-    dictionary_put(planificador->cola_blocked ,list_get(recursos,i),list_create());
-    
-}
-
-list_destroy_and_destroy_elements(recursos,free);
-
-}
 
 
 void liberar_cfg_kernel(t_config_kernel *cfg) {
@@ -160,12 +148,13 @@ void liberar_cfg_kernel(t_config_kernel *cfg) {
 }
 
 void destruir_diccionario(t_dictionary *dict) {
-    void destruir_elemento(void *elemento) {
-        list_destroy_and_destroy_elements((t_list *)elemento, free);
-    }
-    dictionary_destroy_and_destroy_elements(dict, destruir_elemento);
+    
+    dictionary_destroy_and_destroy_elements(dict, destruir_elemento );
 }
 
+void destruir_elemento(void *elemento) {
+        list_destroy_and_destroy_elements((t_list *)elemento, free);
+}
 void cerrar_programa() {
     // Liberar memoria de la configuración
     liberar_cfg_kernel(cfg_kernel);

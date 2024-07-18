@@ -314,7 +314,7 @@ while (control_key)
          mandar_proceso_a_finalizar(io_stdout_write->pid);
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdout_write->pid);
       }
-      mandar_interrupcion_a_cpu();
+      //mandar_interrupcion_a_cpu();
       break;
    
    case SOLICITUD_IO_FS_CREATE_A_KERNEL:
@@ -489,18 +489,18 @@ while (control_key)
             }
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
-               sem_wait(sem_planificar);
+               sem_wait(&sem_planificar);
                mandar_proceso_a_finalizar(io_read_archivo->pid);
                log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCONTRO PROCESO ", io_read_archivo->pid);
-               sem_post(sem_planificar);
+               sem_post(&sem_planificar);
             }
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
-            sem_wait(sem_planificar);
+            sem_wait(&sem_planificar);
             mandar_proceso_a_finalizar(io_read_archivo->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_read_archivo->pid);
-            sem_post(sem_planificar);
+            sem_post(&sem_planificar);
          }
          
       }

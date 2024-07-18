@@ -1,12 +1,9 @@
 #include "../include/planificador.h"
-// ver si tengo que incluir la libreria donde esta el pcb
-//#include "../include/servidorCpu.c"
-//#include "../include/servidorCpu.h"
+
 
 sem_t sem_contexto_ejecucion_recibido;
 sem_t sem_confirmacion_memoria;
-sem_t* sem_planificar;
-t_temporal* cronometro;
+
 
 // Devuelve un t_algoritmo a partir de la config cargada
 t_algoritmo_planificacion obtener_algoritmo_planificador(char* algoritmo_planificacion) {
@@ -43,6 +40,7 @@ t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, in
     planificador->grado_multiprogramacion = grado_multiprogramacion;
     planificador->grado_multiprogramacion_actual = 0;
     planificador->planificacion_detenida = false; // Inicializar planificación como no detenida
+    crear_listas_recursos();
     return planificador;
 }
 
@@ -295,33 +293,46 @@ void replanificar_y_ejecutar(t_pcb* proceso_ejecutando){
 }
 
 void  ejecutar_modo_round_robin( t_pcb* proceso){
-    int quatum_restante;
+    int quantum_restante;
     pthread_t hilo_cronometro;
-    
+    t_args_fin_q* args = malloc(sizeof(t_args_fin_q));
+
     if (planificador->algoritmo == ROUND_ROBIN) {
-		 quatum_restante = cfg_kernel->QUANTUM;
+		 quantum_restante = cfg_kernel->QUANTUM;
 	}else {
-		quatum_restante = proceso->quantum; // si ejecuta sin interrupciones entonces  proceso->quantum = cfg_kernel->QUANTUM
+		quantum_restante = proceso->quantum; // si ejecuta sin interrupciones entonces  proceso->quantum = cfg_kernel->QUANTUM
 	}
 	enviar_proceso_a_cpu(proceso,conexion_cpu_dispatch);
+   
+    args->quantum = quantum_restante;
+    args->pid = proceso->pid;
+
+
 	cronometro = temporal_create();	
     //creamos hilo para no tener espera activa del cronometro      
-    if (pthread_create(&hilo_cronometro, NULL, lanzar_interrupcion_fin_quantum, (int*)quatum_restante ) != 0) {
+    if (pthread_create(&hilo_cronometro, NULL, lanzar_interrupcion_fin_quantum, (void*)args) != 0) {
         perror("pthread_create_hilo_cronometro");
         free(hilo_cronometro);       
         
     }
      pthread_detach(hilo_cronometro);
 	
-	
+	free(args);
 }
 
 
-void lanzar_interrupcion_fin_quantum (int quantum){
-    uint32_t motivo  = FIN_QUANTUM;
-    sleep(quantum);
-    send(conexion_cpu_interrupt, &motivo, sizeof(uint32_t), NULL); // hacer un paquete y enviar motivo y pid
+void lanzar_interrupcion_fin_quantum (void* args) {
+    t_args_fin_q* args_fin_q = (t_args_fin_q*) args;
+    int quantum = args_fin_q->quantum;
+    int pid = args_fin_q->pid;
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+
+    sleep(quantum);   
+    paquete = crear_paquete(FIN_QUANTUM);    
+    agregar_a_paquete(paquete, &pid, sizeof(uint32_t));
+    enviar_paquete(paquete, conexion_cpu_interrupt); 
     log_info(logger_kernel, "Enviando interrupcion FIN de QUANTUM\n");
+    free(paquete);
 }
 
 void desalojar_proceso_vrr(t_pcb* proceso){ // recibo contexto actualizado desde cpu
@@ -330,12 +341,12 @@ void desalojar_proceso_vrr(t_pcb* proceso){ // recibo contexto actualizado desde
     
     list_remove(planificador->cola_exec, 0); // debería ser el único ejecutando}
     
-    proceso->tiempo_ejecucion = get_time_temporal(cronometro);
+    proceso->tiempo_ejecucion = temporal_gettime(cronometro);
 	
 	proceso->quantum = cfg_kernel->QUANTUM - proceso->tiempo_ejecucion; // actualizo el nuevo quantum restante
 
 	if  (proceso->tiempo_ejecucion !=cfg_kernel->QUANTUM) {
-		 list_add(planificador->cola_ready_prioridad, proceso); // como todavia le queda por ejecutar se asigna a la cola de prioridad
+		list_add(planificador->cola_ready_prioridad, proceso); // como todavia le queda por ejecutar se asigna a la cola de prioridad
 	}else {
 		list_add(planificador->cola_ready, proceso);
 	}	 
@@ -355,3 +366,16 @@ void largo_plazo_nuevo_ready() {
     }
 }
 
+void crear_listas_recursos(){
+
+t_list* recursos = malloc(sizeof(t_list));
+recursos = cfg_kernel->RECURSOS;
+for (size_t i = 0; i < recursos->elements_count; i++)
+{
+    dictionary_put(planificador->cola_blocked ,list_get(recursos,i),list_create());
+    
+} 
+
+list_destroy_and_destroy_elements(recursos,free);
+
+}

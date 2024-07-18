@@ -8,6 +8,7 @@
 #include <commons/temporal.h>
 #include <commons/collections/list.h>
 #include <pthread.h>
+#include <semaphore.h>
 // Enumeración para los algoritmos de planificación
 typedef enum {
     FIFO,
@@ -30,14 +31,18 @@ typedef struct {
 } t_planificador;
 
 
-t_temporal* cronometro;
 // ver si falta poner alguna libreria
 extern t_planificador* planificador;
 
-sem_t* sem_planificar;
+
 // Inicializa un nuevo planificador
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum, int grado_multiprogramacion);
 // Destruye el planificador y libera la memoria
+
+typedef struct {
+    int quantum;
+    int pid;
+}t_args_fin_q;
 
 void destruir_planificador(t_planificador* planificador);
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso);
@@ -58,5 +63,6 @@ void poner_en_cola_exit(t_pcb* proceso);
 void enviar_proceso_a_cpu(t_pcb* pcb, int conexion);
 void replanificar_y_ejecutar(t_pcb* proceso_ejecutando);
 void planificar_y_ejecutar();
-void lanzar_interrupcion_fin_quantum (int quantum);
+void lanzar_interrupcion_fin_quantum (void* args);
+void crear_listas_recursos();
 #endif /* PLANIFICADORES_H_ */
