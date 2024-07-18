@@ -416,7 +416,7 @@ t_io_output* deserializar_output(t_list*  lista_paquete );
 t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete );
 void enviar_pcb_a_memoria(t_m_crear_proceso* pcb, int socket_memoria);
 void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket_kernel);
-uint32_t* deserializar_finalizar_proceso(t_list*  lista_paquete );
+uint32_t deserializar_finalizar_proceso(t_list*  lista_paquete );
 void enviar_respuesta_finalizar_proceso(uint32_t pid_proceso_a_finalizar ,int socket_kernel);
 t_proceso_memoria* deserializar_proxima_instruccion(t_list*  lista_paquete );
 t_busqueda_marco* deserializar_solicitud_marco(t_list*  lista_paquete );

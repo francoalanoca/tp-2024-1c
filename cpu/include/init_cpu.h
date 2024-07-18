@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include </home/utnso/so-commons-library/src/commons/string.h>
+#include <commons/string.h>
 #include <utils/utils.h>
 #include <semaphore.h>
 #include <pthread.h>

@@ -23,6 +23,13 @@ t_bitarray *bitmap_frames;
 t_dictionary* instrucciones_de_procesos;
 
 
+t_config_memoria *cfg_memoria_start(){
+
+    t_config_memoria *cfg = malloc(sizeof(t_config_memoria));
+    return cfg;
+}
+
+
 //Funcion que hace la inicializacion de las config y logger
 int init(char *path_config) {
     //inicializo estructura de configuracion

@@ -449,10 +449,10 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
 
 
 
-uint32_t* deserializar_finalizar_proceso(t_list*  lista_paquete ){
+uint32_t deserializar_finalizar_proceso(t_list*  lista_paquete ){
 
     //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
-    uint32_t* proceso_a_finalizar = malloc(sizeof(uint32_t));
+    uint32_t proceso_a_finalizar;
     
     proceso_a_finalizar = *(uint32_t*)list_get(lista_paquete, 0);
     printf("Pid recibido: %d \n", proceso_a_finalizar);

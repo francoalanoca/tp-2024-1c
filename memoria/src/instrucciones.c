@@ -6,10 +6,11 @@
 
 
 //Funcion que crea la lista de instrucciones dado un puntero al archivo de un proceso
-void leer_instrucciones(char* nombre_archivo) {
+void leer_instrucciones(char* nombre_archivo, uint32_t proceso_pid) {
 
 	t_miniPCB *miniPCB = malloc(sizeof(t_miniPCB));
 
+    miniPCB->pid = proceso_pid;
     miniPCB->lista_de_instrucciones = list_create();
 
 	//Creamos una variable que gurada el path entero: path_instrucciones/nombre

@@ -9,7 +9,7 @@
 #include "../include/init_memoria.h"
 
 
-void leer_instrucciones(char* nombre_archivo);
+void leer_instrucciones(char* nombre_archivo, uint32_t proceso_pid);
 char *buscar_instruccion(int proceso_pid, int program_counter);
 
 #endif

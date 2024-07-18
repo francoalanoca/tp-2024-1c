@@ -6,8 +6,8 @@
 //Funcion que crea la tabla de paginas a partir de un pid
 void crear_proceso(uint32_t proceso_pid){
 
-    printf("Creacion del proceso PID %i", proceso_pid);
-    printf("Iniciando estructuras");
+    printf("Creacion del proceso PID %i \n", proceso_pid);
+    printf("Iniciando estructuras \n");
 
     //Guardo en una varia de tipo struct la tabla creada
     t_tabla_de_paginas *tabla_de_paginas = crear_tabla_pagina(proceso_pid);
@@ -118,7 +118,7 @@ uint32_t obtener_numero_pagina(t_list* lista_de_paginas, uint32_t marco_buscado)
 //Funcion que escribe una valor con un tamaño, de un proceso con la df
 char* escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor, uint32_t tamanio_a_escribir){
 
-    char* escrito = malloc(3);
+    char* escrito;
 
     //Aca se almacenara lo que ya fue escrito como un contador
     uint32_t espacio_escrito = 0;
@@ -284,7 +284,7 @@ void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
 
 char* copiar_solicitud(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor){
 
-    char* copiado = malloc(3);
+    char* copiado;
 
     copiado = escribir_memoria(proceso_pid, direccion_fisica, valor, strlen(valor));
 
@@ -394,4 +394,7 @@ void finalizar_proceso(uint32_t proceso_pid){
     }
     
     log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, list_size(tabla_de_paginas->lista_de_paginas));
+
+    list_destroy_and_destroy_elements(tabla_de_paginas->lista_de_paginas, free);
+    free(tabla_de_paginas);
 }

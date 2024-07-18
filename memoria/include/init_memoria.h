@@ -65,15 +65,7 @@ extern t_dictionary* instrucciones_de_procesos;
 
 
 
-static t_config_memoria *cfg_memoria_start();
-
-static t_config_memoria *cfg_memoria_start(){
-
-    t_config_memoria *cfg = malloc(sizeof(t_config_memoria));
-    return cfg;
-}
-
-
+t_config_memoria *cfg_memoria_start();
 
 int init(char *path_config);
 int checkProperties(char *path_config);
