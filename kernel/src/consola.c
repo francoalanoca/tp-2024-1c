@@ -3,6 +3,131 @@
 int identificador_pid;
 pthread_mutex_t mutex_pid;
 pthread_mutex_t mutex_process_id = PTHREAD_MUTEX_INITIALIZER; // Definición
+int process_id = 0; // Definición
+t_pcb* pcb2;
+t_algoritmo_planificacion algortimo;
+
+// Función que implementa el inicio de la consola interactiva
+void iniciar_consola_interactiva(int conexion) {
+    conexion_memoria = conexion;
+    char* leido;
+    leido = readline("> ");
+    log_info(logger_kernel, leido);
+    bool validacion_leido;
+
+    // El resto, las vamos leyendo y logueando hasta recibir un string vacío
+    while (strcmp(leido, "\0") != 0) {
+        // Dividir el comando en partes
+        char** comando_consola = string_split(leido, " ");
+
+        // Paso lo leído a validar
+        validacion_leido = validacion_de_instruccion_de_consola(comando_consola);
+
+        // Si lo validado no fue reconocido pasa por el if
+        if (!validacion_leido) {
+            log_error(logger_kernel, "Comando de CONSOLA no reconocido");
+            string_array_destroy(comando_consola);
+            free(leido);
+            leido = readline("> ");
+            log_info(logger_kernel, leido);
+            continue;   // Salto el resto del while
+        }
+
+        // Una vez validado, paso a atender lo leído
+        atender_instruccion_validada(comando_consola);
+        string_array_destroy(comando_consola);
+        free(leido);
+        leido = readline("> ");
+    }
+
+    free(leido);
+}
+
+// Función que evalúa lo ingresado por consola y verifica si es alguno de los protocolos
+bool validacion_de_instruccion_de_consola(char** comando_consola) {
+    bool resultado_validacion = false;
+
+    // Comparo si lo leído coincide con alguno de los comandos
+    if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0) {
+        resultado_validacion = true;
+    } else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0) {
+        resultado_validacion = true;
+    } else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0) {
+        resultado_validacion = true;
+    } else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0) {
+        resultado_validacion = true;
+    } else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0) {
+        resultado_validacion = true;
+    } else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0) {
+        resultado_validacion = true;
+    } else if (strcmp(comando_consola[0], "PROCESO_ESTADO") == 0) {
+        resultado_validacion = true;
+    } else {
+        log_error(logger_kernel, "Comando no reconocido");
+        resultado_validacion = false;
+    }
+
+    return resultado_validacion;
+}
+
+void atender_instruccion_validada(char** comando_consola) {
+    t_buffer* un_buffer = crear_buffer();
+
+    if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0) {    // EJECUTAR_SCRIPT [PATH]
+        if (comando_consola[1] == NULL) {
+            fprintf(stderr, "Error: se debe proporcionar el path del script.\n");
+            return;
+        }
+        cargar_string_al_buffer(un_buffer, comando_consola[1]); // [PATH]
+
+        // Procedo a ejecutar el script
+        f_ejecutar_script(comando_consola[1]);
+
+    } else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0) { // INICIAR_PROCESO [NOMBRE]
+        if (comando_consola[1] == NULL) {
+            fprintf(stderr, "Error: se debe proporcionar el nombre del proceso.\n");
+            return;
+        }
+        cargar_string_al_buffer(un_buffer, comando_consola[1]); // [NOMBRE]
+
+        // Procedo a iniciar el proceso
+        f_iniciar_proceso(un_buffer);
+
+    } else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0) {    // FINALIZAR_PROCESO [PID]
+        int pid = atoi(comando_consola[1]);
+        if (kill(pid, SIGTERM) == 0) {
+            printf("Proceso con PID %d finalizado exitosamente.\n", pid);
+        } else {
+            if (errno == ESRCH) {
+                printf("No se encontró un proceso con PID %d.\n", pid);
+            } else if (errno == EPERM) {
+                printf("No tienes permiso para finalizar el proceso con PID %d.\n", pid);
+            } else {
+                printf("Ocurrió un error al finalizar el proceso con PID %d: %s\n", pid, strerror(errno));
+            }
+        }
+
+    } else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0) {    // DETENER_PLANIFICACION
+        detener_planificacion(planificador);
+
+    } else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0) {    // INICIAR_PLANIFICACION
+        algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
+        planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION);
+
+    } else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0) {    // MULTIPROGRAMACION [VALOR]
+        int valor = atoi(comando_consola[1]);
+        ajustar_multiprogramacion(valor);
+
+    } else if (strcmp(comando_consola[0], "PROCESO_ESTADO") == 0) {   // PROCESO_ESTADO
+        pid_t pid = atoi(comando_consola[1]);
+        mostrar_estado_proceso(pid);
+
+    } else {
+        log_error(logger_kernel, "Comando no reconocido que logró pasar el filtro!!!");
+        exit(EXIT_FAILURE);
+    }
+}
+
 
 //Funcion que carga las instrucciones de path para iniciar un proceso en New
 void f_iniciar_proceso(t_buffer* un_buffer) {
