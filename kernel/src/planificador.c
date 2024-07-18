@@ -22,7 +22,7 @@ t_algoritmo_planificacion obtener_algoritmo_planificador(char* algoritmo_planifi
 
 // detiene tanto el planificador de corto plazo como el de largo plazo
 void detener_planificacion(t_planificador* planificador) {
-    sem_wait(sem_planificar);
+    sem_wait(&sem_planificar);
     planificador->planificacion_detenida = true;
 }
 
