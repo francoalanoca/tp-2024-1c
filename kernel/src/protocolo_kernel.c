@@ -1,7 +1,7 @@
 
 #include "../include/protocolo_kernel.h"
 
-
+sem_t *sem_planificar;
 t_pcb* pcb_actualizado_interrupcion;
 
 //Funcion que crea hilos para cada modulo y los va atendiendo
