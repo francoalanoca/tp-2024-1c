@@ -26,8 +26,6 @@ bool interfaz_permite_operacion(t_tipo_interfaz_enum tipo_interfaz, tipo_instruc
 
 
 // Variables Globales
-sem_t* sem_planificar;
-t_temporal* cronometro;
 extern t_log *logger_kernel;
 extern t_config* file_cfg_kernel;
 extern t_pcb* pcb;

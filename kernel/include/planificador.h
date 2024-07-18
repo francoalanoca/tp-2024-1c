@@ -34,6 +34,8 @@ typedef struct {
 // ver si falta poner alguna libreria
 extern t_planificador* planificador;
 
+sem_t* sem_planificar;
+t_temporal* cronometro;
 
 // Inicializa un nuevo planificador
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum, int grado_multiprogramacion);
