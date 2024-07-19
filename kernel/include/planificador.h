@@ -51,7 +51,7 @@ bool agregar_proceso(t_planificador* planificador, t_pcb* proceso);
 t_algoritmo_planificacion obtener_algoritmo_planificador( char* algoritmo_planificacion);
 t_pcb* obtener_proximo_proceso(t_planificador* planificador);
 void desalojar_proceso(t_planificador* planificador, t_pcb* proceso);
-void bloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nombre_lista);
+void bloquear_proceso(t_planificador* planificador, t_proceso_data* proceso_data, char* nombre_lista);
 void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nombre_lista);
 void finalizar_proceso(t_planificador* planificador, t_pcb* proceso);
 void crear_proceso(t_planificador* planificador, char* path_pseudocodigo);
@@ -67,4 +67,5 @@ void replanificar_y_ejecutar(t_pcb* proceso_ejecutando);
 void planificar_y_ejecutar();
 void lanzar_interrupcion_fin_quantum (void* args);
 void crear_listas_recursos();
+void desalojar_proceso_vrr(t_pcb* proceso);
 #endif /* PLANIFICADORES_H_ */

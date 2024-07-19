@@ -264,13 +264,24 @@ while (control_key)
          interfaz_encontrada = dictionary_get(interfaces,io_stdin_read->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDIN_READ)){
             // el pedido debe agregar la estructura 
+            //bloquear proceso(con estructura correspondiente)
+            t_proceso_data* proceso_data_stdin_read = malloc(sizeof(t_proceso_data));
+            proceso_data_stdin_read->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
+            proceso_data_stdin_read->data = io_stdin_read;
+            bloquear_proceso(planificador,proceso_data_stdin_read,interfaz_encontrada->nombre);
+            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
+
             sem_wait(sem_io_fs_libre);// USAR SEMAFOROS para ordenar el envio a la interfaz, ya que solo atiende de a 1 pedido.
+            //obtener proximo proceso en la lista de bloqueados de ese tipo de interfaz y enviar ese a IO
+            void* a_enviar_a_io = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+            //COMO SE DE QUE TIPO ES LO QUE OBTENGO DE LA LISTA DE BLOQUEADOS?
             enviar_io_stdin_read(io_stdin_read,socket_servidor);
 
             t_pcb* pcb_a_bloquear_stdout_read = malloc(sizeof(t_pcb));
             pcb_a_bloquear_stdout_read = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
             if(pcb_a_bloquear_stdout_read != NULL){
                sem_wait(sem_io);// agregar antes de los bloques de io en TODOS
+               //antes de bloquear crear el  t_proceso_data como hice mas arriba
                bloquear_proceso(planificador,pcb_a_bloquear_stdout_read,interfaz_encontrada->nombre);
             }
          }

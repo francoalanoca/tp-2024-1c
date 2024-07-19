@@ -10,6 +10,8 @@ int conexion_memoria;
 int socket_servidor;
 t_dictionary* interfaces; //Diccionario donde se encuentran las interfaces que van llegando de IO
 t_dictionary* procesos_recursos; //Diccionario donde se vinculan los procesos con sus recursos asignados
+sem_t sem_contexto_ejecucion_recibido;
+sem_t sem_confirmacion_memoria;
 
 int checkProperties(char *path_config) {
     // config valida

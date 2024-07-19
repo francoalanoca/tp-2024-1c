@@ -17,6 +17,7 @@ int hacer_handshake (int socket_cliente);
 void cerrar_programa();
 
 t_pcb* buscar_pcb_en_lista(t_list* lista_de_pcb, uint32_t pid);
+t_pcb* buscar_pcb_en_lista_de_data(t_list* lista_de_data, uint32_t pid);
 
 bool interfaz_permite_operacion(t_tipo_interfaz_enum tipo_interfaz, tipo_instruccion instruccion);
 
@@ -31,6 +32,8 @@ extern int socket_servidor;
 extern t_dictionary* interfaces;
 extern sem_t sem_contexto_ejecucion_recibido;
 extern sem_t sem_confirmacion_memoria;
+extern sem_t sem_io;
+extern sem_t sem_io_fs_libre;
 extern t_pcb* pcb_actualizado_interrupcion;
 extern t_dictionary* procesos_recursos;
 typedef struct {
@@ -67,6 +70,16 @@ typedef struct{
     t_list* instancias_recursos;
 
 }t_proceso_recurso_diccionario;
+
+typedef struct{
+    t_pcb* pcb;
+    void* data;
+}t_proceso_data;
+
+typedef struct{
+    char* nombre_interfaz;
+    uint32_t pid;
+}t_interfaz_pid;
 
 void liberar_cfg_kernel(t_config_kernel *cfg);
 

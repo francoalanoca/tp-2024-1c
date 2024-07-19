@@ -32,6 +32,9 @@ int main(char argc, char *argv[]) {
     sem_init(&sem_contexto_ejecucion_recibido,0,0);
 
     sem_init(&sem_confirmacion_memoria,0,0);
+    sem_init(&sem_io,0,0);
+    sem_init(&sem_io_fs_libre,0,0);
+
 
 //INICIAR SERVIDOR Y CONSOLA INTERACTIVA 
 

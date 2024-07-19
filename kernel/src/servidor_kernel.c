@@ -92,8 +92,11 @@ void procesar_conexion(void *void_args) {
             case IO_K_FS_CREATE_FIN:
                 printf("Received IO_K_FS_CREATE_FIN request\n");
                 //TODO: deserealizar paquete. nombre interfaz, pid.
+                t_list* lista_paquete_interfaz_pid = recibir_paquete(socket_servidor);
+                t_interfaz_pid* interfaz_pid = deserializar_interfaz_pid(lista_paquete_interfaz_pid);
                 t_pcb* proceso = malloc(sizeof(t_pcb));
-                proceso = buscar_pcb_en_lista(dictionary_get(planificador->cola_blocked, nombre_intefaz),io_gen_sleep->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
+                proceso = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid->nombre_interfaz),interfaz_pid->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
+
                //TODO: Sacar el pcb de la lista de bloqueados.
                if  ( planificador->algoritmo = VIRTUAL_ROUND_ROBIN ) { // meterlo en una funcion y repetirlo en trodas las respuestas de interface yyyyyy agregar mutex
                     if  (proceso->tiempo_ejecucion !=cfg_kernel->QUANTUM) {
@@ -144,6 +147,7 @@ void procesar_conexion(void *void_args) {
     log_warning(logger, "El cliente se desconecto de %s server", server_name);
     return;
 }
+}
 
 
 
@@ -164,4 +168,24 @@ void Empezar_conexiones(){
     
     log_info(logger_kernel, "Socket de MEMORIA : %d\n",conexion_memoria); 
 
+}
+
+t_pcb* buscar_pcb_en_lista_de_data(t_list* lista_de_data, uint32_t pid){
+   t_proceso_data* pcb_data_de_lista = malloc(sizeof(t_proceso_data));
+   for (uint32_t i = 0; i < lista_de_data->elements_count; i++)
+   {
+      pcb_data_de_lista = list_get(lista_de_data,i);
+      if(pcb_data_de_lista->pcb->pid == pid){
+         return pcb_data_de_lista;
+      }
+   }
+   
+   return NULL;
+}
+
+t_interfaz_pid* deserializar_interfaz_pid(t_list*  lista_paquete ){
+    t_interfaz_pid* interfaz_pid = malloc(sizeof(t_interfaz_pid));
+    interfaz_pid->nombre_interfaz = list_get(lista_paquete, 0);
+    interfaz_pid->pid= *(uint32_t*)list_get(lista_paquete, 1);
+	return interfaz_pid;
 }
