@@ -33,23 +33,24 @@ int main(char argc, char *argv[]) {
 
     sem_init(&sem_confirmacion_memoria,0,0);
 
-//INICIAR SERVIDOR y CONSOLA
+//INICIAR SERVIDOR Y CONSOLA INTERACTIVA 
 
-    crearServidor();
- 
-    iniciar_consola_interactiva();
-    
-// ESCUCHAR A LOS MODULOS
- 
-    Escuchar_Msj_De_Conexiones();
- 
-//EMPEZAR PLANIFICACIONES
+    pthread_t hilo1, hilo2, hilo3;
+
+    pthread_create(&hilo1, NULL, (void*)iniciar_consola_interactiva, NULL);
+    pthread_create(&hilo2, NULL, (void*)crearServidor, NULL);
+    pthread_create(&hilo3, NULL, (void*)Escuchar_Msj_De_Conexiones, NULL);
+
+    // ESPERAR A QUE LOS HILOS TERINEN (OPCIONAL, EN CASO DE QUE QUIERAS ESPERAR)
+
+    pthread_join(hilo1, NULL);
+    pthread_join(hilo2, NULL);
+    pthread_join(hilo3, NULL);
+    cerrar_programa();
+       
+    return 0;
 
 
    
-
-//CERRAR PROGRAMA
-
-    cerrar_programa();
 
 }
