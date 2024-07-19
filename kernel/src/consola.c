@@ -116,6 +116,7 @@ void atender_instruccion_validada(char** comando_consola){
         planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
         sem_post(&sem_planificar);
         // Hilo para mantener la ejecución andando y no deneter la consola
+        sem_wait(sem_cpu_libre);
         if (pthread_create(&planificacion, NULL, planificar_y_ejecutar,NULL) != 0) {
             perror("pthread_create");            
             

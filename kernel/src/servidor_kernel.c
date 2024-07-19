@@ -91,9 +91,23 @@ void procesar_conexion(void *void_args) {
             break;
             case IO_K_FS_CREATE_FIN:
                 printf("Received IO_K_FS_CREATE_FIN request\n");
-                
-                replanificar_y_ejecutar(list_get(planificador->cola_exec,0));
-
+                //TODO: deserealizar paquete. nombre interfaz, pid.
+                t_pcb* proceso = malloc(sizeof(t_pcb));
+                proceso = buscar_pcb_en_lista(dictionary_get(planificador->cola_blocked, nombre_intefaz),io_gen_sleep->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
+               //TODO: Sacar el pcb de la lista de bloqueados.
+               if  ( planificador->algoritmo = VIRTUAL_ROUND_ROBIN ) { // meterlo en una funcion y repetirlo en trodas las respuestas de interface yyyyyy agregar mutex
+                    if  (proceso->tiempo_ejecucion !=cfg_kernel->QUANTUM) {
+                        sem_wait(mutex_cola_ready_prioridad);
+                        list_add(planificador->cola_ready_prioridad, proceso); // como todavia le queda por ejecutar se asigna a la cola de prioridad
+                        sem_post(mutex_cola_ready_prioridad);
+                    }
+                else {
+                        sem_wait(mutex_cola_ready);
+                        list_add(planificador->cola_ready, proceso);
+                        sem_post(mutex_cola_ready);
+                }	 
+                log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
+                 sem_post(sem_io_fs_libre);   
             break;
             case IO_K_FS_DELETE_FIN:
                 printf("Received IO_K_FS_DELETE_FIN request\n");

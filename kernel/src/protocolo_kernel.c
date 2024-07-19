@@ -72,7 +72,9 @@ while (control_key)
          proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
          log_info(logger_kernel, "PID: %U - Desalojado por fin de Quantum", proceso_interrumpido->pcb->pid); 
          log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
-         replanificar_y_ejecutar(proceso_interrumpido->pcb);
+         sem_wait(mutex_cola_ready);
+         list_add(planificador->cola_ready,  proceso_interrumpido->pcb); // envolver con mutex 
+         sem_post(mutex_cola_ready);
          free(proceso_interrumpido);// crear funcion para liberar pcb
          break;
 
@@ -82,13 +84,18 @@ while (control_key)
          sem_post(&sem_contexto_ejecucion_recibido);
          break;
       case INTERRUPCION_IO:
-         printf("Se recibió una interrupción de IO");              
+         printf("Se recibió una interrupción de IO");    
+                 
          lista_paquete = recibir_paquete(conexion_cpu_dispatch);       
          proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
+         if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+            
+          desalojar_proceso_vrr(proceso_interrumpido>pcb);
+         } 
          log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_interrumpido->pcb->pid);
-         replanificar_y_ejecutar(proceso_interrumpido->pcb);
+        
          free(proceso_interrumpido);// crear funcion para liberar pcb
-      
+         sem_post(sem_io);
       default:
       printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
       mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
@@ -256,12 +263,14 @@ while (control_key)
          t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
          interfaz_encontrada = dictionary_get(interfaces,io_stdin_read->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDIN_READ)){
-
+            // el pedido debe agregar la estructura 
+            sem_wait(sem_io_fs_libre);// USAR SEMAFOROS para ordenar el envio a la interfaz, ya que solo atiende de a 1 pedido.
             enviar_io_stdin_read(io_stdin_read,socket_servidor);
 
             t_pcb* pcb_a_bloquear_stdout_read = malloc(sizeof(t_pcb));
             pcb_a_bloquear_stdout_read = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
             if(pcb_a_bloquear_stdout_read != NULL){
+               sem_wait(sem_io);// agregar antes de los bloques de io en TODOS
                bloquear_proceso(planificador,pcb_a_bloquear_stdout_read,interfaz_encontrada->nombre);
             }
          }
@@ -447,6 +456,7 @@ while (control_key)
             pcb_a_bloquear_write = buscar_pcb_en_lista(planificador->cola_exec,io_write_archivo->pid);
             if(pcb_a_bloquear_write != NULL){
                bloquear_proceso(planificador,pcb_a_bloquear_write,interfaz_encontrada->nombre);
+               
             }
             else{
                log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
@@ -476,10 +486,12 @@ while (control_key)
       
       t_io_fs_write* io_read_archivo = malloc(sizeof(t_io_fs_write));
       io_read_archivo = deserializar_io_write_archivo(lista_paquete);
+
       if(dictionary_has_key(interfaces,io_read_archivo->nombre_interfaz)){
          t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
             interfaz_encontrada = dictionary_get(interfaces,io_read_archivo->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_READ)){
+            
             enviar_read_archivo(io_read_archivo,socket_servidor);
 
             t_pcb* pcb_a_bloquear_read = malloc(sizeof(t_pcb));

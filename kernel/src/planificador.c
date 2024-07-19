@@ -81,6 +81,12 @@ t_pcb* obtener_proximo_proceso(t_planificador* planificador) {
 
     return proceso;
 }
+// pasar a .h
+typedef {
+t_pcb* proceso;
+void* data;
+}t_proceso_data;
+
 
 // Desaloja un proceso de la cola de ejecución y lo pone en la cola de listos
 void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
@@ -89,9 +95,10 @@ void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
 }
 
 //Bloquea un proceso y lo mueve a la cola de bloqueados
-void bloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nombre_lista) {
-    list_remove(planificador->cola_exec, proceso);
-    dictionary_put(planificador->cola_blocked,nombre_lista,proceso);
+void bloquear_proceso(t_planificador* planificador, t_proceso_data* proceso_data, char* nombre_lista) {
+    list_remove(planificador->cola_exec, proceso_data->proceso);
+    dictionary_put(planificador->cola_blocked,nombre_lista,proceso_data);
+    sem_post(sem_cpu_libre);
 }
 
 //  Desbloquea un proceso y lo mueve a la cola de listos
@@ -259,7 +266,7 @@ void planificar_y_ejecutar(){
               
         if (planificador->algoritmo = FIFO) { 
             siguiente_proceso = obtener_proximo_proceso(planificador);
-            enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);
+            enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);            
             list_add(planificador->cola_exec,siguiente_proceso);           
             free(siguiente_proceso); 
         }else {
@@ -269,28 +276,6 @@ void planificar_y_ejecutar(){
 
         }
     }
-}
- 
-void replanificar_y_ejecutar(t_pcb* proceso_ejecutando){
-   t_pcb* siguiente_proceso = malloc(sizeof(t_pcb));
-     
-   if (planificador->algoritmo = FIFO) { // en este caso obtiene el siguiente proceso en la lista y lo manda a ejecutar.		
-        siguiente_proceso = obtener_proximo_proceso(planificador);        
-        enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);        
-        free(siguiente_proceso); 
-	}else {
-		 if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
-            
-            desalojar_proceso_vrr(proceso_ejecutando); // finalizo la ejecucion del proceso actual y lo mando a alguna cola ready segun corresponda
-            siguiente_proceso = obtener_proximo_proceso(planificador);
-            ejecutar_modo_round_robin(siguiente_proceso);            
-        }else {
-            siguiente_proceso = obtener_proximo_proceso(planificador);
-            ejecutar_modo_round_robin(siguiente_proceso);
-         }
-    }
-    log_info(logger_kernel, "PID: %u - Estado Anterior: READY - Estado Actual: EJECUTANDO", siguiente_proceso->pid);
-
 }
 
 void  ejecutar_modo_round_robin( t_pcb* proceso){
@@ -327,31 +312,24 @@ void lanzar_interrupcion_fin_quantum (void* args) {
     int quantum = args_fin_q->quantum;
     int pid = args_fin_q->pid;
     t_paquete* paquete = malloc(sizeof(t_paquete));
-
+    uint32_t motivo = FIN_QUANTUM;
+   
     sleep(quantum);   
-    paquete = crear_paquete(FIN_QUANTUM);    
+    paquete = crear_paquete(INTERRUPCION_KERNEL); 
     agregar_a_paquete(paquete, &pid, sizeof(uint32_t));
-    enviar_paquete(paquete, conexion_cpu_interrupt); 
+    agregar_a_paquete(paquete, &motivo, sizeof(uint32_t));   
+    enviar_paquete(paquete, conexion_cpu_interrupt);  
     log_info(logger_kernel, "Enviando interrupcion FIN de QUANTUM\n");
     free(paquete);
 }
 
-void desalojar_proceso_vrr(t_pcb* proceso){ // recibo contexto actualizado desde cpu
+void desalojar_proceso_vrr(t_pcb* proceso){ // recibo contexto actualizado desde cpu TODO: Cambiar nombre
     
-    temporal_stop(cronometro);
-    
-    list_remove(planificador->cola_exec, 0); // debería ser el único ejecutando}
-    
+    temporal_stop(cronometro); // mover a la interrupcion de IO y tambien de recurso     
+      
     proceso->tiempo_ejecucion = temporal_gettime(cronometro);
 	
 	proceso->quantum = cfg_kernel->QUANTUM - proceso->tiempo_ejecucion; // actualizo el nuevo quantum restante
-
-	if  (proceso->tiempo_ejecucion !=cfg_kernel->QUANTUM) {
-		list_add(planificador->cola_ready_prioridad, proceso); // como todavia le queda por ejecutar se asigna a la cola de prioridad
-	}else {
-		list_add(planificador->cola_ready, proceso);
-	}	 
-
 }
 
 void largo_plazo_nuevo_ready() {
