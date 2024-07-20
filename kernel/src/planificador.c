@@ -81,11 +81,6 @@ t_pcb* obtener_proximo_proceso(t_planificador* planificador) {
 
     return proceso;
 }
-// pasar a .h
-typedef {
-t_pcb* proceso;
-void* data;
-}t_proceso_data;
 
 
 // Desaloja un proceso de la cola de ejecución y lo pone en la cola de listos
@@ -96,7 +91,7 @@ void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
 
 //Bloquea un proceso y lo mueve a la cola de bloqueados
 void bloquear_proceso(t_planificador* planificador, t_proceso_data* proceso_data, char* nombre_lista) {
-    list_remove(planificador->cola_exec, proceso_data->proceso);
+    list_remove(planificador->cola_exec, proceso_data->pcb);
     dictionary_put(planificador->cola_blocked,nombre_lista,proceso_data);
     sem_post(sem_cpu_libre);
 }
@@ -106,7 +101,7 @@ void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nom
     t_list* lista_a_desbloquear = malloc(sizeof(t_list));
     lista_a_desbloquear = dictionary_remove(planificador->cola_blocked,nombre_lista);
     uint32_t indice_a_desbloquear = malloc(sizeof(uint32_t));
-    indice_a_desbloquear = encontrar_indice_proceso_pid(lista_a_desbloquear,proceso);
+    indice_a_desbloquear = encontrar_indice_proceso_data_pid(lista_a_desbloquear,proceso);
     list_remove_and_destroy_element(lista_a_desbloquear,indice_a_desbloquear,list_destroy);
     dictionary_put(planificador->cola_blocked,nombre_lista,lista_a_desbloquear);
     if (!planificador->planificacion_detenida) {
@@ -176,6 +171,16 @@ uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb) {
     for (int i = 0; i < list_size(lista_procesos); i++) {
         t_pcb* proceso = list_get(lista_procesos, i);
         if (proceso->pid == pcb->pid) {
+            return i;
+        }
+    }
+    return NULL;
+}
+
+uint32_t encontrar_indice_proceso_data_pid(t_list * lista_procesos_data , t_pcb* pcb) {
+    for (int i = 0; i < list_size(lista_procesos_data); i++) {
+        t_proceso_data* proceso = list_get(lista_procesos_data, i);
+        if (proceso->pcb->pid == pcb->pid) {
             return i;
         }
     }

@@ -12,6 +12,8 @@ t_dictionary* interfaces; //Diccionario donde se encuentran las interfaces que v
 t_dictionary* procesos_recursos; //Diccionario donde se vinculan los procesos con sus recursos asignados
 sem_t sem_contexto_ejecucion_recibido;
 sem_t sem_confirmacion_memoria;
+pthread_mutex_t mutex_cola_ready_prioridad; 
+pthread_mutex_t mutex_cola_ready;
 
 int checkProperties(char *path_config) {
     // config valida

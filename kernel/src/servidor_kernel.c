@@ -91,49 +91,71 @@ void procesar_conexion(void *void_args) {
             break;
             case IO_K_FS_CREATE_FIN:
                 printf("Received IO_K_FS_CREATE_FIN request\n");
-                //TODO: deserealizar paquete. nombre interfaz, pid.
-                t_list* lista_paquete_interfaz_pid = recibir_paquete(socket_servidor);
-                t_interfaz_pid* interfaz_pid = deserializar_interfaz_pid(lista_paquete_interfaz_pid);
-                t_pcb* proceso = malloc(sizeof(t_pcb));
-                proceso = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid->nombre_interfaz),interfaz_pid->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
+                //TODO: deserealizar paquete. nombre interfaz, pid.(LISTO)
+                t_list* lista_paquete_interfaz_pid_create = recibir_paquete(socket_servidor);
+                t_interfaz_pid* interfaz_pid_create = deserializar_interfaz_pid(lista_paquete_interfaz_pid_create);
+                t_pcb* proceso_create = malloc(sizeof(t_pcb));
+                proceso_create = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_create->nombre_interfaz),interfaz_pid_create->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
 
-               //TODO: Sacar el pcb de la lista de bloqueados.
-               if  ( planificador->algoritmo = VIRTUAL_ROUND_ROBIN ) { // meterlo en una funcion y repetirlo en trodas las respuestas de interface yyyyyy agregar mutex
-                    if  (proceso->tiempo_ejecucion !=cfg_kernel->QUANTUM) {
-                        sem_wait(mutex_cola_ready_prioridad);
-                        list_add(planificador->cola_ready_prioridad, proceso); // como todavia le queda por ejecutar se asigna a la cola de prioridad
-                        sem_post(mutex_cola_ready_prioridad);
-                    }
-                else {
-                        sem_wait(mutex_cola_ready);
-                        list_add(planificador->cola_ready, proceso);
-                        sem_post(mutex_cola_ready);
-                }	 
-                log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
+                desbloquear_y_agregar_a_ready(interfaz_pid_create,proceso_create);
+               
+                log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_create->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
                  sem_post(sem_io_fs_libre);   
             break;
             case IO_K_FS_DELETE_FIN:
                 printf("Received IO_K_FS_DELETE_FIN request\n");
                 
-                replanificar_y_ejecutar(list_get(planificador->cola_exec,0));
+                t_list* lista_paquete_interfaz_pid_delete = recibir_paquete(socket_servidor);
+                t_interfaz_pid* interfaz_pid_delete = deserializar_interfaz_pid(lista_paquete_interfaz_pid_delete);
+                t_pcb* proceso_delete = malloc(sizeof(t_pcb));
+                proceso_delete = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_delete->nombre_interfaz),interfaz_pid_delete->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
+
+                desbloquear_y_agregar_a_ready(interfaz_pid_delete,proceso_delete);
+               
+                log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_delete->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
+                 sem_post(sem_io_fs_libre);  
 
             break;
             case IO_K_FS_TRUNCATE_FIN:
                 printf("Received IO_K_FS_TRUNCATE_FIN request\n");
                 
-                replanificar_y_ejecutar(list_get(planificador->cola_exec,0));
+                t_list* lista_paquete_interfaz_pid_truncate = recibir_paquete(socket_servidor);
+                t_interfaz_pid* interfaz_pid_truncate = deserializar_interfaz_pid(lista_paquete_interfaz_pid_truncate);
+                t_pcb* proceso_truncate = malloc(sizeof(t_pcb));
+                proceso_truncate = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_truncate->nombre_interfaz),interfaz_pid_truncate->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
+
+                desbloquear_y_agregar_a_ready(interfaz_pid_truncate,proceso_truncate);
+               
+                log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_truncate->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
+                 sem_post(sem_io_fs_libre);  
 
             break;
             case IO_K_FS_READ_FIN:
                 printf("Received IO_K_FS_READ_FIN request\n");
                 
-                replanificar_y_ejecutar(list_get(planificador->cola_exec,0));
+                t_list* lista_paquete_interfaz_pid_read = recibir_paquete(socket_servidor);
+                t_interfaz_pid* interfaz_pid_read = deserializar_interfaz_pid(lista_paquete_interfaz_pid_read);
+                t_pcb* proceso_read = malloc(sizeof(t_pcb));
+                proceso_read = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_read->nombre_interfaz),interfaz_pid_read->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
+
+                desbloquear_y_agregar_a_ready(interfaz_pid_read,proceso_read);
+               
+                log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_read->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
+                 sem_post(sem_io_fs_libre);  
 
             break;
             case IO_K_FS_WRITE_FIN:
                 printf("Received IO_K_FS_WRITE_FIN request\n");
                 
-                replanificar_y_ejecutar(list_get(planificador->cola_exec,0));
+                t_list* lista_paquete_interfaz_pid_write = recibir_paquete(socket_servidor);
+                t_interfaz_pid* interfaz_pid_write = deserializar_interfaz_pid(lista_paquete_interfaz_pid_write);
+                t_pcb* proceso_write = malloc(sizeof(t_pcb));
+                proceso_write = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_write->nombre_interfaz),interfaz_pid_write->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
+
+                desbloquear_y_agregar_a_ready(interfaz_pid_write,proceso_write);
+               
+                log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_write->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
+                 sem_post(sem_io_fs_libre);  
 
             break;
             default:
@@ -147,7 +169,7 @@ void procesar_conexion(void *void_args) {
     log_warning(logger, "El cliente se desconecto de %s server", server_name);
     return;
 }
-}
+
 
 
 
@@ -185,7 +207,26 @@ t_pcb* buscar_pcb_en_lista_de_data(t_list* lista_de_data, uint32_t pid){
 
 t_interfaz_pid* deserializar_interfaz_pid(t_list*  lista_paquete ){
     t_interfaz_pid* interfaz_pid = malloc(sizeof(t_interfaz_pid));
-    interfaz_pid->nombre_interfaz = list_get(lista_paquete, 0);
-    interfaz_pid->pid= *(uint32_t*)list_get(lista_paquete, 1);
+    interfaz_pid->pid= *(uint32_t*)list_get(lista_paquete, 0);
+    interfaz_pid->nombre_length= *(uint32_t*)list_get(lista_paquete, 1);
+    interfaz_pid->nombre_interfaz = list_get(lista_paquete, 2);
+    
 	return interfaz_pid;
+}
+
+void desbloquear_y_agregar_a_ready(t_interfaz_pid* interfaz_pid,t_pcb* proceso){
+    //TODO: Sacar el pcb de la lista de bloqueados.
+                desbloquear_proceso(planificador,proceso,interfaz_pid->nombre_interfaz);
+                
+               if  ( planificador->algoritmo = VIRTUAL_ROUND_ROBIN ) { // meterlo en una funcion y repetirlo en trodas las respuestas de interface yyyyyy agregar mutex
+                    if  (proceso->tiempo_ejecucion !=cfg_kernel->QUANTUM) {
+                        pthread_mutex_lock(&mutex_cola_ready_prioridad);
+                        list_add(planificador->cola_ready_prioridad, proceso); // como todavia le queda por ejecutar se asigna a la cola de prioridad
+                        pthread_mutex_unlock(&mutex_cola_ready_prioridad);
+                    }
+                else {
+                        pthread_mutex_lock(&mutex_cola_ready);
+                        list_add(planificador->cola_ready, proceso);
+                        pthread_mutex_unlock(&mutex_cola_ready);
+                }	 
 }

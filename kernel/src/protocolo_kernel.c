@@ -72,9 +72,9 @@ while (control_key)
          proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
          log_info(logger_kernel, "PID: %U - Desalojado por fin de Quantum", proceso_interrumpido->pcb->pid); 
          log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
-         sem_wait(mutex_cola_ready);
+         pthread_mutex_lock(&mutex_cola_ready);
          list_add(planificador->cola_ready,  proceso_interrumpido->pcb); // envolver con mutex 
-         sem_post(mutex_cola_ready);
+         pthread_mutex_unlock(&mutex_cola_ready);
          free(proceso_interrumpido);// crear funcion para liberar pcb
          break;
 
@@ -90,12 +90,12 @@ while (control_key)
          proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
          if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
             
-          desalojar_proceso_vrr(proceso_interrumpido>pcb);
+          desalojar_proceso_vrr(proceso_interrumpido->pcb);
          } 
          log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_interrumpido->pcb->pid);
         
          free(proceso_interrumpido);// crear funcion para liberar pcb
-         sem_post(sem_io);
+         sem_post(&sem_io);
       default:
       printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
       mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
@@ -271,7 +271,7 @@ while (control_key)
             bloquear_proceso(planificador,proceso_data_stdin_read,interfaz_encontrada->nombre);
             enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
 
-            sem_wait(sem_io_fs_libre);// USAR SEMAFOROS para ordenar el envio a la interfaz, ya que solo atiende de a 1 pedido.
+            sem_wait(&sem_io_fs_libre);// USAR SEMAFOROS para ordenar el envio a la interfaz, ya que solo atiende de a 1 pedido.
             //obtener proximo proceso en la lista de bloqueados de ese tipo de interfaz y enviar ese a IO
             void* a_enviar_a_io = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //COMO SE DE QUE TIPO ES LO QUE OBTENGO DE LA LISTA DE BLOQUEADOS?
@@ -280,7 +280,7 @@ while (control_key)
             t_pcb* pcb_a_bloquear_stdout_read = malloc(sizeof(t_pcb));
             pcb_a_bloquear_stdout_read = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
             if(pcb_a_bloquear_stdout_read != NULL){
-               sem_wait(sem_io);// agregar antes de los bloques de io en TODOS
+               sem_wait(&sem_io);// agregar antes de los bloques de io en TODOS
                //antes de bloquear crear el  t_proceso_data como hice mas arriba
                bloquear_proceso(planificador,pcb_a_bloquear_stdout_read,interfaz_encontrada->nombre);
             }

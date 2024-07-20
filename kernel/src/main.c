@@ -35,6 +35,9 @@ int main(char argc, char *argv[]) {
     sem_init(&sem_io,0,0);
     sem_init(&sem_io_fs_libre,0,0);
 
+    pthread_mutex_init(&mutex_cola_ready_prioridad, NULL);
+    pthread_mutex_init(&mutex_cola_ready, NULL);
+
 
 //INICIAR SERVIDOR Y CONSOLA INTERACTIVA 
 
