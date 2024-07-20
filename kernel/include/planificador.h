@@ -67,5 +67,5 @@ void replanificar_y_ejecutar(t_pcb* proceso_ejecutando);
 void planificar_y_ejecutar();
 void lanzar_interrupcion_fin_quantum (void* args);
 void crear_listas_recursos();
-void desalojar_proceso_vrr(t_pcb* proceso);
+void actualizar_quantum(t_pcb* proceso);
 #endif /* PLANIFICADORES_H_ */

@@ -88,14 +88,10 @@ while (control_key)
                  
          lista_paquete = recibir_paquete(conexion_cpu_dispatch);       
          proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
-         if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
-            
-          desalojar_proceso_vrr(proceso_interrumpido->pcb);
-         } 
-         log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_interrumpido->pcb->pid);
-        
+         list_add_in_index(planificador->cola_exec,0,proceso_interrumpido->pcb);
+
          free(proceso_interrumpido);// crear funcion para liberar pcb
-         sem_post(&sem_io);
+         sem_post(&sem_interrupcion_atendida);
       default:
       printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
       mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
@@ -266,23 +262,43 @@ while (control_key)
             // el pedido debe agregar la estructura 
             //bloquear proceso(con estructura correspondiente)
             t_proceso_data* proceso_data_stdin_read = malloc(sizeof(t_proceso_data));
+            proceso_data_stdin_read->op = IO_K_STDIN;
             proceso_data_stdin_read->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
-            proceso_data_stdin_read->data = io_stdin_read;
-            bloquear_proceso(planificador,proceso_data_stdin_read,interfaz_encontrada->nombre);
+            //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
+            t_io_direcciones_fisicas* io_direcciones_fisicas_a_bloquear = malloc(sizeof(t_io_direcciones_fisicas));
+            io_direcciones_fisicas_a_bloquear->pid = io_stdin_read->pid;
+            io_direcciones_fisicas_a_bloquear->tamanio_operacion = io_stdin_read->tamanio;
+            t_list* lista_nueva_read = list_create();
+            list_add(lista_nueva_read,io_stdin_read->direccion);
+            io_direcciones_fisicas_a_bloquear->direcciones_fisicas = lista_nueva_read; 
+            proceso_data_stdin_read->data = io_direcciones_fisicas_a_bloquear;
+            //bloquear_proceso(planificador,proceso_data_stdin_read,interfaz_encontrada->nombre);
             enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
 
             sem_wait(&sem_io_fs_libre);// USAR SEMAFOROS para ordenar el envio a la interfaz, ya que solo atiende de a 1 pedido.
-            //obtener proximo proceso en la lista de bloqueados de ese tipo de interfaz y enviar ese a IO
-            void* a_enviar_a_io = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
-            //COMO SE DE QUE TIPO ES LO QUE OBTENGO DE LA LISTA DE BLOQUEADOS?
-            enviar_io_stdin_read(io_stdin_read,socket_servidor);
+            
+            
 
             t_pcb* pcb_a_bloquear_stdout_read = malloc(sizeof(t_pcb));
             pcb_a_bloquear_stdout_read = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
             if(pcb_a_bloquear_stdout_read != NULL){
-               sem_wait(&sem_io);// agregar antes de los bloques de io en TODOS
-               //antes de bloquear crear el  t_proceso_data como hice mas arriba
+               sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+               
+               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+            
+                  actualizar_quantum(pcb_a_bloquear_stdout_read);
+               } 
+               log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_interrumpido->pcb->pid);
+                     
+               //antes de bloquear crear el  t_proceso_data como hice mas arriba, pero no se como identificar el tipo de struct de io
                bloquear_proceso(planificador,pcb_a_bloquear_stdout_read,interfaz_encontrada->nombre);
+               //obtener proximo proceso en la lista de bloqueados de ese tipo de interfaz y enviar ese a IO
+               t_proceso_data* a_enviar_a_io = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+               //COMO SE DE QUE TIPO ES LO QUE OBTENGO DE LA LISTA DE BLOQUEADOS?
+               //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+               //MUTEX
+               enviar_io_df(a_enviar_a_io->data,socket_servidor,a_enviar_a_io->op);
+               //FIN MUTEX
             }
          }
          else{

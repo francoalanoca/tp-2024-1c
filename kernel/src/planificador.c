@@ -328,7 +328,7 @@ void lanzar_interrupcion_fin_quantum (void* args) {
     free(paquete);
 }
 
-void desalojar_proceso_vrr(t_pcb* proceso){ // recibo contexto actualizado desde cpu TODO: Cambiar nombre
+void actualizar_quantum(t_pcb* proceso){ // recibo contexto actualizado desde cpu TODO: Cambiar nombre
     
     temporal_stop(cronometro); // mover a la interrupcion de IO y tambien de recurso     
       

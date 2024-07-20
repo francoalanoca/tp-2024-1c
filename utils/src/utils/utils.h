@@ -262,7 +262,7 @@ typedef struct {
 //Kernel le manda a IO en operaciones STDIN, STDOUT 
 typedef struct {
 	uint32_t pid;
-    t_list*  direcciones_fisicas; 
+    uint32_t*  direcciones_fisicas; 
     uint32_t tamanio_operacion;
 } t_io_direcciones_fisicas;
 

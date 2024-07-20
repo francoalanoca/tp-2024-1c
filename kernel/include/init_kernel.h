@@ -32,7 +32,7 @@ extern int socket_servidor;
 extern t_dictionary* interfaces;
 extern sem_t sem_contexto_ejecucion_recibido;
 extern sem_t sem_confirmacion_memoria;
-extern sem_t sem_io;
+extern sem_t sem_interrupcion_atendida;
 extern sem_t sem_io_fs_libre;
 extern pthread_mutex_t mutex_cola_ready_prioridad; 
 extern pthread_mutex_t mutex_cola_ready;
@@ -76,6 +76,7 @@ typedef struct{
 typedef struct{
     t_pcb* pcb;
     void* data;
+    op_code op;
 }t_proceso_data;
 
 typedef struct{
