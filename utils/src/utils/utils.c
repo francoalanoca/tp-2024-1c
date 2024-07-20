@@ -404,14 +404,12 @@ t_tipo_interfaz_enum obtener_tipo_interfaz_enum (const char* tipo_interfaz_str) 
 // kernel envia el tiempo a esperar a IO
 void enviar_espera(t_io_espera* io_espera, int socket){
 
-    t_paquete* paquete_espera = malloc(sizeof(t_paquete)); 
-
-    paquete_espera = crear_paquete(IO_K_GEN_SLEEP); 
+    t_paquete* paquete_espera = crear_paquete(IO_K_GEN_SLEEP); 
     agregar_a_paquete(paquete_espera, &io_espera->pid, sizeof(io_espera->pid));  
     agregar_a_paquete(paquete_espera, &io_espera->tiempo_espera, sizeof(io_espera->tiempo_espera));      
        
     enviar_paquete(paquete_espera, socket);  
-
+    eliminar_paquete(paquete_espera);
 }
 
 
@@ -443,7 +441,7 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
     
     enviar_paquete(paquete_crear_proceso, socket_kernel);   
     printf("Proceso enviado: %s\n", crear_proceso->archivo_pseudocodigo); 
-    free(paquete_crear_proceso);
+    eliminar_paquete(paquete_crear_proceso);
     
 }
 
@@ -470,7 +468,7 @@ void enviar_respuesta_finalizar_proceso(uint32_t pid_proceso_a_finalizar ,int so
     
     enviar_paquete(paquete_finalizar_proceso, socket_kernel);   
     printf("Proceso enviado"); 
-    free(paquete_finalizar_proceso);
+    eliminar_paquete(paquete_finalizar_proceso); 
     
 }
 
@@ -610,7 +608,7 @@ void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu) {
     
     enviar_paquete(paquete_instruccion, socket_cpu);   
     printf("Instruccion enviada"); 
-    free(paquete_instruccion);
+    eliminar_paquete(paquete_instruccion);
     
 }
 
@@ -625,7 +623,7 @@ void enviar_solicitud_marco(int marco ,int socket_cpu) {
     
     enviar_paquete(paquete_marco, socket_cpu);   
     printf("Marco enviado"); 
-    free(paquete_marco);
+    eliminar_paquete(paquete_marco);
     
 }
 
@@ -638,7 +636,7 @@ void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu) {
     
     enviar_paquete(paquete_tam_pagina, socket_cpu);   
     printf("Tamaño de pagina enviada"); 
-    free(paquete_tam_pagina);
+    eliminar_paquete(paquete_tam_pagina);
     
 }
 
@@ -654,7 +652,7 @@ void enviar_peticion_valor(void* respuesta_leer ,int socket_cpu) {
     
     enviar_paquete(paquete_valor, socket_cpu);   
     printf("Se envio respuesta de lectura"); 
-    free(paquete_valor);
+    eliminar_paquete(paquete_valor);
     
 }
 
@@ -669,7 +667,7 @@ void enviar_resultado_guardar(void* respuesta_escribir, int socket_cliente){
 
     enviar_paquete(paquete_valor, socket_cliente);
     printf("Se envio respuesta de guardado"); 
-    free(paquete_valor);
+   eliminar_paquete(paquete_valor);
 }
 
 
@@ -682,7 +680,7 @@ void enviar_respuesta_resize(op_code respuesta_resize, int socket_cliente){
  printf("respuesta agregada"); 
     enviar_paquete(paquete_valor, socket_cliente);
     printf("Se envio respuesta de resize"); 
-    free(paquete_valor);
+    eliminar_paquete(paquete_valor);  
 }
 
 
@@ -695,7 +693,7 @@ void enviar_resultado_copiar(void* respuesta_copy, int socket_cliente){
 
     enviar_paquete(paquete_valor, socket_cliente);
     printf("Se envio respuesta de copiado"); 
-    free(paquete_valor);
+    eliminar_paquete(paquete_valor); 
 }
 
 
@@ -732,9 +730,7 @@ t_io_memo_escritura* deserializar_input(t_list*  lista_paquete ){
 // Kernel envía a io un stdin usando op_cod= IO_K_STDIN
 void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_operacion){
 
-    t_paquete* paquete_df = malloc(sizeof(t_paquete));    
-   
-    paquete_df = crear_paquete(codigo_operacion); 
+    t_paquete* paquete_df = crear_paquete(codigo_operacion); 
     
     agregar_a_paquete(paquete_df, &io_df->pid, sizeof(io_df->pid)); 
     
@@ -750,7 +746,7 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
     }   
      agregar_a_paquete(paquete_df, &io_df->tamanio_operacion, sizeof(uint32_t));    
     enviar_paquete(paquete_df, socket);
-     free(paquete_df);  
+     eliminar_paquete(paquete_df); 
   printf("Se envio io df\n");
 
 }
@@ -786,7 +782,7 @@ void enviar_output(t_io_output* io_output ,int socket_io, uint32_t op_code) {
     
     enviar_paquete(paquete_output, socket_io);   
     printf("Output enviado: %s\n",io_output->output) ; 
-    free(paquete_output);
+    eliminar_paquete(paquete_output); 
     
 }
 
@@ -802,15 +798,14 @@ void enviar_output(t_io_output* io_output ,int socket_io, uint32_t op_code) {
 }
 
 void  enviar_gestionar_archivo(t_io_gestion_archivo* nuevo_archivo, int socket, uint32_t cod_op ){
-    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));;
-    
-    paquete_archivo_nuevo = crear_paquete(cod_op);
+    t_paquete* paquete_archivo_nuevo = crear_paquete(cod_op);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->pid), sizeof(nuevo_archivo->pid));
     agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->nombre_archivo_length, sizeof(nuevo_archivo->nombre_archivo_length));  
     agregar_a_paquete(paquete_archivo_nuevo, nuevo_archivo->nombre_archivo, nuevo_archivo->nombre_archivo_length);
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->tamanio_archivo), sizeof(nuevo_archivo->tamanio_archivo));   
-    enviar_paquete(paquete_archivo_nuevo, socket);    
+    enviar_paquete(paquete_archivo_nuevo, socket);  
+    eliminar_paquete(paquete_archivo_nuevo);  
 }
 
 void enviar_input(t_io_memo_escritura* io_input ,int socket, uint32_t op_code ) {
@@ -830,7 +825,7 @@ void enviar_input(t_io_memo_escritura* io_input ,int socket, uint32_t op_code ) 
     agregar_a_paquete(paquete_input, &io_input->input_length, sizeof(uint32_t));  
     agregar_a_paquete(paquete_input, io_input->input, io_input->input_length);  
     enviar_paquete(paquete_input, socket);    
-    free(paquete_input);     
+    eliminar_paquete(paquete_input);   
 
 }
 
@@ -914,9 +909,7 @@ void terminar_programa(int conexion, t_log* logger, t_config* config)
 }
 
 void  enviar_creacion_archivo(t_io_crear_archivo* nuevo_archivo, int socket ){
-    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
-    
-    paquete_archivo_nuevo = crear_paquete(IO_FS_CREATE);
+    t_paquete* paquete_archivo_nuevo = crear_paquete(IO_FS_CREATE);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->pid), sizeof(nuevo_archivo->pid));
     agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->nombre_archivo_length, sizeof(nuevo_archivo->nombre_archivo_length));  
@@ -925,13 +918,11 @@ void  enviar_creacion_archivo(t_io_crear_archivo* nuevo_archivo, int socket ){
     agregar_a_paquete(paquete_archivo_nuevo, nuevo_archivo->interfaz->nombre, nuevo_archivo->interfaz->nombre_length); //AGREGADO
     agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->interfaz->tipo, sizeof(nuevo_archivo->interfaz->tipo)); //AGREGADO
     enviar_paquete(paquete_archivo_nuevo, socket);  
-    
+    eliminar_paquete(paquete_archivo_nuevo);
 }
 
 void  enviar_delete_archivo(t_io_crear_archivo* nuevo_archivo, int socket ){
-    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
-    
-    paquete_archivo_nuevo = crear_paquete(IO_FS_DELETE);
+    t_paquete* paquete_archivo_nuevo = crear_paquete(IO_FS_DELETE);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->pid), sizeof(nuevo_archivo->pid));
     agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->nombre_archivo_length, sizeof(nuevo_archivo->nombre_archivo_length));  
@@ -940,7 +931,7 @@ void  enviar_delete_archivo(t_io_crear_archivo* nuevo_archivo, int socket ){
     agregar_a_paquete(paquete_archivo_nuevo, nuevo_archivo->interfaz->nombre, nuevo_archivo->interfaz->nombre_length); //AGREGADO
     agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->interfaz->tipo, sizeof(nuevo_archivo->interfaz->tipo)); //AGREGADO
     enviar_paquete(paquete_archivo_nuevo, socket);  
-    
+    eliminar_paquete(paquete_archivo_nuevo);
 }
 
  t_io_fs_truncate* deserializar_io_truncate_archivo(t_list*  lista_paquete ){
@@ -958,9 +949,7 @@ void  enviar_delete_archivo(t_io_crear_archivo* nuevo_archivo, int socket ){
 }
 
 void  enviar_truncate_archivo(t_io_fs_truncate* nuevo_archivo, int socket ){
-    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
-    
-    paquete_archivo_nuevo = crear_paquete(IO_FS_TRUNCATE);
+    t_paquete* paquete_archivo_nuevo = crear_paquete(IO_FS_TRUNCATE);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->pid), sizeof(nuevo_archivo->pid));
     agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->nombre_archivo_length, sizeof(nuevo_archivo->nombre_archivo_length));  
@@ -970,7 +959,7 @@ void  enviar_truncate_archivo(t_io_fs_truncate* nuevo_archivo, int socket ){
     agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->interfaz->tipo, sizeof(nuevo_archivo->interfaz->tipo)); //AGREGADO
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->tamanio), sizeof(nuevo_archivo->tamanio));
     enviar_paquete(paquete_archivo_nuevo, socket);  
-    
+    eliminar_paquete(paquete_archivo_nuevo);
 }
 
  t_io_fs_write* deserializar_io_write_archivo(t_list*  lista_paquete ){
@@ -991,9 +980,7 @@ void  enviar_truncate_archivo(t_io_fs_truncate* nuevo_archivo, int socket ){
 }
 
 void  enviar_write_archivo(t_io_fs_write* nuevo_archivo, int socket ){
-    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
-    
-    paquete_archivo_nuevo = crear_paquete(IO_FS_WRITE);
+    t_paquete* paquete_archivo_nuevo = crear_paquete(IO_FS_WRITE);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->pid), sizeof(nuevo_archivo->pid));
     agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->nombre_archivo_length, sizeof(nuevo_archivo->nombre_archivo_length));  
@@ -1005,14 +992,12 @@ void  enviar_write_archivo(t_io_fs_write* nuevo_archivo, int socket ){
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->tamanio), sizeof(nuevo_archivo->tamanio));
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->puntero_archivo), sizeof(nuevo_archivo->puntero_archivo));
     enviar_paquete(paquete_archivo_nuevo, socket);  
-    
+    eliminar_paquete(paquete_archivo_nuevo);
 }
 
 
 void  enviar_read_archivo(t_io_fs_write* nuevo_archivo, int socket ){
-    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
-    
-    paquete_archivo_nuevo = crear_paquete(IO_FS_READ);
+    t_paquete* paquete_archivo_nuevo = crear_paquete(IO_FS_READ);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->pid), sizeof(nuevo_archivo->pid));
     agregar_a_paquete(paquete_archivo_nuevo, &nuevo_archivo->nombre_archivo_length, sizeof(nuevo_archivo->nombre_archivo_length));  
@@ -1024,7 +1009,7 @@ void  enviar_read_archivo(t_io_fs_write* nuevo_archivo, int socket ){
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->tamanio), sizeof(nuevo_archivo->tamanio));
     agregar_a_paquete(paquete_archivo_nuevo, &(nuevo_archivo->puntero_archivo), sizeof(nuevo_archivo->puntero_archivo));
     enviar_paquete(paquete_archivo_nuevo, socket);  
-    
+    eliminar_paquete(paquete_archivo_nuevo);
 }
 
  t_pcb* deserializar_pcb(t_list*  lista_paquete ){
@@ -1077,9 +1062,7 @@ void  enviar_read_archivo(t_io_fs_write* nuevo_archivo, int socket ){
 }
 
 void  enviar_io_stdin_read(t_io_stdin_stdout* io_stdin_read, int socket ){
-    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
-    
-    paquete_archivo_nuevo = crear_paquete(IO_K_STDIN);
+    t_paquete* paquete_archivo_nuevo = crear_paquete(IO_K_STDIN);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(io_stdin_read->pid), sizeof(io_stdin_read->pid));
     agregar_a_paquete(paquete_archivo_nuevo, &io_stdin_read->interfaz->nombre_length, sizeof(io_stdin_read->interfaz->nombre_length)); //AGREGADO
@@ -1088,13 +1071,11 @@ void  enviar_io_stdin_read(t_io_stdin_stdout* io_stdin_read, int socket ){
     agregar_a_paquete(paquete_archivo_nuevo, &(io_stdin_read->direccion), sizeof(io_stdin_read->direccion));
     agregar_a_paquete(paquete_archivo_nuevo, &(io_stdin_read->tamanio), sizeof(io_stdin_read->tamanio));
     enviar_paquete(paquete_archivo_nuevo, socket);  
-    
+    eliminar_paquete(paquete_archivo_nuevo); 
 }
 
 void  enviar_io_stdout_write(t_io_stdin_stdout* io_stdout_write, int socket ){
-    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
-    
-    paquete_archivo_nuevo = crear_paquete(IO_K_STDOUT);
+    t_paquete* paquete_archivo_nuevo = crear_paquete(IO_K_STDOUT);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(io_stdout_write->pid), sizeof(io_stdout_write->pid));
     agregar_a_paquete(paquete_archivo_nuevo, &io_stdout_write->interfaz->nombre_length, sizeof(io_stdout_write->interfaz->nombre_length)); //AGREGADO
@@ -1103,7 +1084,7 @@ void  enviar_io_stdout_write(t_io_stdin_stdout* io_stdout_write, int socket ){
     agregar_a_paquete(paquete_archivo_nuevo, &(io_stdout_write->direccion), sizeof(io_stdout_write->direccion));
     agregar_a_paquete(paquete_archivo_nuevo, &(io_stdout_write->tamanio), sizeof(io_stdout_write->tamanio));
     enviar_paquete(paquete_archivo_nuevo, socket);  
-    
+    eliminar_paquete(paquete_archivo_nuevo); 
 }
 
  t_io_gen_sleep* deserializar_io_gen_sleep(t_list*  lista_paquete ){
@@ -1119,9 +1100,7 @@ void  enviar_io_stdout_write(t_io_stdin_stdout* io_stdout_write, int socket ){
 }
 
 void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket ){
-    t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
-    
-    paquete_archivo_nuevo = crear_paquete(IO_K_GEN_SLEEP);
+    t_paquete* paquete_archivo_nuevo = crear_paquete(IO_K_GEN_SLEEP);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(io_gen_sleep->pid), sizeof(io_gen_sleep->pid));
     agregar_a_paquete(paquete_archivo_nuevo, &io_gen_sleep->interfaz->nombre_length, sizeof(io_gen_sleep->interfaz->nombre_length)); 
@@ -1130,7 +1109,7 @@ void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket ){
     agregar_a_paquete(paquete_archivo_nuevo, &io_gen_sleep->unidades_de_trabajo, sizeof(io_gen_sleep->unidades_de_trabajo)); 
 
     enviar_paquete(paquete_archivo_nuevo, socket);  
-    
+    eliminar_paquete(paquete_archivo_nuevo); 
 }
 
  t_proceso_interrumpido* deserializar_proceso_interrumpido(t_list*  lista_paquete ){
@@ -1153,7 +1132,7 @@ void enviar_crear_proceso_memoria(t_m_crear_proceso* proceso_nuevo, int socket){
     
     enviar_paquete(paquete_crear_proceso, socket);   
     printf("Proceso enviado: %s\n", proceso_nuevo->archivo_pseudocodigo); 
-    free(paquete_crear_proceso);
+    eliminar_paquete(paquete_crear_proceso); 
 
 }
 
@@ -1168,6 +1147,77 @@ void enviar_resize_memoria(t_resize* proceso_resize, int socket){
     
     enviar_paquete(paquete_resize, socket);   
     printf("Tamaño resize solicitado: %d\n", proceso_resize->tamanio); 
-    free(paquete_resize);
+    eliminar_paquete(paquete_resize);
 
+}
+
+void enviar_respuesta_io ( int socket, op_code respuesta, uint32_t pid, char* nombre_intefaz){
+
+    t_paquete* paquete; 
+    paquete = crear_paquete(respuesta);
+    
+    uint32_t nombre_length = string_length(nombre_intefaz) + 1;
+    agregar_a_paquete(paquete,pid,  sizeof(uint32_t));   
+    agregar_a_paquete(paquete, nombre_length, sizeof(uint32_t));  
+    agregar_a_paquete(paquete, nombre_intefaz, nombre_length);
+    
+    enviar_paquete(paquete, socket); 
+    eliminar_paquete(paquete); 
+
+}
+
+void free_io_readwrite_archivo(t_io_readwrite_archivo* io_rw) {
+    if (io_rw != NULL) {
+        free(io_rw->nombre_archivo);
+        if (io_rw->direcciones_fisicas != NULL) {            
+            list_destroy_and_destroy_elements(io_rw->direcciones_fisicas, free);
+        }
+        free(io_rw);
+    }
+}
+
+void free_io_gestion_archivo(t_io_gestion_archivo* io_gestion) {
+    if (io_gestion != NULL ) {
+        free(io_gestion->nombre_archivo);
+        free(io_gestion);
+    }
+}
+
+void free_io_direcciones_fisicas(t_io_direcciones_fisicas* io_df) {
+    if (io_df != NULL) {
+        if (io_df->direcciones_fisicas != NULL) {          
+            list_destroy_and_destroy_elements(io_df->direcciones_fisicas, free);
+        }
+        free(io_df);
+    }
+}
+
+void free_io_memo_escritura(t_io_memo_escritura* io_memo_escritura) {
+    if (io_memo_escritura != NULL) {     
+        if (io_memo_escritura->direcciones_fisicas != NULL) {
+            list_destroy_and_destroy_elements(io_memo_escritura->direcciones_fisicas, free);
+        }   
+        if (io_memo_escritura->input != NULL ) {
+            free(io_memo_escritura->input);
+        }   
+        free(io_memo_escritura);
+    }
+}
+
+void free_io_output(t_io_output* io_output) {
+    if (io_output != NULL) {      
+        if (io_output->output != NULL ) {
+            free(io_output->output);
+        }
+        free(io_output);
+    }
+}
+
+void free_t_interfaz(t_interfaz* interfaz) {
+    if (interfaz != NULL) {
+        if (interfaz->nombre != NULL) {
+            free(interfaz->nombre);
+        }
+        free(interfaz);
+    }
 }

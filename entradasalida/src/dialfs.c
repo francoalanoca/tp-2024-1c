@@ -64,7 +64,7 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 response = HANDSHAKE_OK;
                 if (send(socket_kernel, &response, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
                     log_error(logger_entrada_salida, "Error al enviar respuesta de handshake a kernel");
-                    free(paquete);
+                    eliminar_paquete(paquete);
                     break;
                 }
                 break;
@@ -80,52 +80,40 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 log_info(logger_entrada_salida, "IO_FS_CREATE recibida desde Kernel");
                     
                 lista_paquete = recibir_paquete(socket_kernel);
-                t_io_gestion_archivo* archivo_nuevo = malloc(sizeof(t_io_gestion_archivo));
-                archivo_nuevo = deserializar_fs_gestion (lista_paquete);
+                t_io_gestion_archivo* archivo_nuevo = deserializar_fs_gestion (lista_paquete);
                 crear_archivo(archivo_nuevo->nombre_archivo);
-                list_clean(lista_paquete);
-                free(archivo_nuevo);
-                response = IO_K_GEN_SLEEP_FIN;
-
-                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
-                    log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
-                    break;
-                }
+                list_clean(lista_paquete);                
+                response = IO_K_FS_CREATE_FIN;
+                
+                enviar_respuesta_io (socket_kernel,response,archivo_nuevo->pid, cfg_entrada_salida->NOMBRE_INTERFAZ);
+                free_io_gestion_archivo(archivo_nuevo);
                 break;
             case IO_FS_DELETE :
                 
                 log_info(logger_entrada_salida, "IO_FS_DELETE recibida desde Kernel");
                     
                 lista_paquete = recibir_paquete(socket_kernel);
-                t_io_gestion_archivo* archivo_borrar = malloc(sizeof(t_io_gestion_archivo));
-                archivo_borrar = deserializar_fs_gestion (lista_paquete);
+                t_io_gestion_archivo* archivo_borrar = deserializar_fs_gestion (lista_paquete);
                 borrar_archivo(archivo_borrar->nombre_archivo);
                 list_clean(lista_paquete);
-                free(archivo_borrar);
-                response = IO_K_GEN_SLEEP_FIN;
+                response = IO_K_FS_DELETE_FIN;
 
-                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
-                    log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
-                    break;
-                }
+                enviar_respuesta_io (socket_kernel,response,archivo_borrar->pid, cfg_entrada_salida->NOMBRE_INTERFAZ);
+                free_io_gestion_archivo(archivo_borrar);
                 break;  
             case IO_FS_TRUNCATE : 
                 
                 log_info(logger_entrada_salida, "IO_FS_TRUNCATE recibida desde Kernel");
                     
                 lista_paquete = recibir_paquete(socket_kernel);
-                t_io_gestion_archivo* archivo_truncar = malloc(sizeof(t_io_gestion_archivo));
-                archivo_truncar = deserializar_fs_gestion (lista_paquete);
+                t_io_gestion_archivo* archivo_truncar = deserializar_fs_gestion (lista_paquete);
                 log_info(logger_entrada_salida, "IO_FS_TRUNCATE Tamaño solicitado %d",archivo_truncar->tamanio_archivo);
                 truncar_archivo(archivo_truncar->nombre_archivo, archivo_truncar->tamanio_archivo);
-                list_clean(lista_paquete);
-                free(archivo_truncar);
-                response = IO_K_GEN_SLEEP_FIN;
+                list_clean(lista_paquete);                
+                response = IO_K_FS_TRUNCATE_FIN;
 
-                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
-                    log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
-                    break;
-                }
+                enviar_respuesta_io (socket_kernel,response,archivo_truncar->pid, cfg_entrada_salida->NOMBRE_INTERFAZ);
+                free_io_gestion_archivo(archivo_truncar);
                 break;    
 
             case IO_FS_READ : 
@@ -133,17 +121,14 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 log_info(logger_entrada_salida, "IO_FS_READ recibida desde Kernel");
                     
                 lista_paquete = recibir_paquete(socket_kernel);
-                t_io_readwrite_archivo* archivo_leer = malloc(sizeof(t_io_readwrite_archivo));
-                archivo_leer = deserializar_io_readwrite (lista_paquete);
+                t_io_readwrite_archivo* archivo_leer = deserializar_io_readwrite (lista_paquete);
                 leer_archivo(archivo_leer,socket_memoria);
                 list_clean(lista_paquete);
-                free(archivo_leer);
-                response = IO_K_GEN_SLEEP_FIN;
+                
+                response = IO_K_FS_READ_FIN;
 
-                 if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
-                    log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
-                    break;
-                }
+                enviar_respuesta_io (socket_kernel,response,archivo_leer->pid, cfg_entrada_salida->NOMBRE_INTERFAZ);
+                free_io_readwrite_archivo(archivo_leer);
                 break;  
            case IO_FS_WRITE : 
                 
@@ -151,41 +136,41 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                  
                 t_io_direcciones_fisicas* solicitud_datos_escribir = malloc (sizeof(t_io_direcciones_fisicas));    
                 lista_paquete = recibir_paquete(socket_kernel);
-                t_io_readwrite_archivo* archivo_escribir = malloc(sizeof(t_io_readwrite_archivo));                
-                archivo_escribir = deserializar_io_readwrite (lista_paquete);
-                char* datos_escribir = malloc(archivo_escribir->tamanio_operacion * sizeof(char));
+                t_io_readwrite_archivo* archivo_escribir = deserializar_io_readwrite (lista_paquete);
+               
+               
                 solicitud_datos_escribir->pid = archivo_escribir->pid;
                 solicitud_datos_escribir->direcciones_fisicas = list_create ();
                 list_add_all(solicitud_datos_escribir->direcciones_fisicas,archivo_escribir->direcciones_fisicas);
                 solicitud_datos_escribir->tamanio_operacion = archivo_escribir->tamanio_operacion;
+               
                //reenvio la solicitud a memoria
                 enviar_io_df(solicitud_datos_escribir, socket_memoria, IO_FS_WRITE);
-               
+                free_io_direcciones_fisicas(solicitud_datos_escribir); 
                 //Espero respuesta de memoria
                 if (recv(socket_memoria, &cop, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
                   log_info(logger_entrada_salida, "DISCONNECT!");
                  }
 
                  if (cop == IO_FS_WRITE_M) {
-                    
-                    t_list* lista_paquete_nueva = list_create();     
-                    t_io_output* io_output_recibido = malloc(sizeof(t_io_output));
-                    
+
+                    char* datos_escribir = malloc(archivo_escribir->tamanio_operacion * sizeof(char));
+                    t_list* lista_paquete_nueva = list_create();                    
                     lista_paquete_nueva = recibir_paquete(socket_memoria);                   
-                    io_output_recibido = deserializar_output(lista_paquete_nueva);                 
+                    t_io_output* io_output_recibido = deserializar_output(lista_paquete_nueva);                 
                  
                     datos_escribir = io_output_recibido->output;
                     printf("Datos recibido para escribir:  %s \n",datos_escribir); // despues borrar
 
                     escribir_archivo(archivo_escribir,datos_escribir);
                     list_clean(lista_paquete);
-                    free(archivo_escribir);
-                    response = IO_K_GEN_SLEEP_FIN;
+                    free_io_readwrite_archivo(archivo_escribir);
+                    response = IO_K_FS_WRITE_FIN;
 
-                    if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
-                        log_error(logger_entrada_salida, " Error al enviar IO_K_GEN_SLEEP_FIN a Kernel");
-                        break;
-                    }
+                    enviar_respuesta_io (socket_kernel,response,io_output_recibido->pid, cfg_entrada_salida->NOMBRE_INTERFAZ);
+                    free_io_output(io_output_recibido);
+                    list_destroy_and_destroy_elements(lista_paquete_nueva, free);
+                    free(datos_escribir);
                   }
                 break;                                                                                            
 
@@ -198,6 +183,11 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                 break;
         }
     }
+    dictionary_clean_and_destroy_elements(fcb_dict,free_t_FCB);
+    list_destroy_and_destroy_elements(lista_paquete, free);
+    free(path_archivo_bitmap);
+    free(path_archivo_bloques);
+    cerrar_bitmap();
 }
 
 /////////////////////////////////////////////////INICIAR FS////////////////////////////////////
@@ -340,7 +330,7 @@ t_FCB* cargar_fcb(t_config *file_fcb) {
     //log_info(logger_entradasalida, "ENTRO EN CARGAR FCB");
     fcb->tamanio_archivo = config_get_int_value(file_fcb, "tamanio_archivo");
     fcb->primer_bloque = config_get_int_value(file_fcb, "primer_bloque");  
-    return fcb;
+    return fcb;   
 }
 
 
@@ -409,7 +399,7 @@ void cargar_directorio_fcbs(char* path_fcb ){
             // aca se puede crear un nuevo t_fcb para cada archivo y asociarlo al nombre del archivo en el diccionario
             t_FCB* nuevo_fcb = buscar_cargar_fcb(fcb->d_name);
            // Agregar el nuevo_fcb al diccionario con el nombre del archivo como clave
-            dictionary_put(fcb_dict, fcb->d_name, nuevo_fcb);
+            dictionary_put(fcb_dict, fcb->d_name, nuevo_fcb);           
         }
     }
 
@@ -437,6 +427,7 @@ t_FCB* buscar_cargar_fcb(char* nombre) {
 
     fcb = cargar_fcb(file_fcb);
     return  fcb;
+
 }
 
 //////////////////////////////////////////////FUNCIONALIDADES//////////////////////////////////
@@ -446,14 +437,14 @@ uint32_t  crear_archivo(char* nombre){
     char path_fcb [100] ;
     strcpy(path_fcb, cfg_entrada_salida->PATH_BASE_DIALFS);
     char file_path[100]; // Tamaño suficiente para almacenar la ruta completa del archivo
-    //snprintf(file_path, sizeof(file_path), "%s/%s%s",path_fcb,nombre,".config" );
+    
     snprintf(file_path, sizeof(file_path), "%s/%s",path_fcb,nombre);
     if(  dictionary_has_key(fcb_dict,nombre) ) {
-        log_info(logger_entrada_salida, "Ya existe el archivo: %s  ",nombre);// LOG OBLIGATORIO
+        log_info(logger_entrada_salida, "Ya existe el archivo: %s  ",nombre);
         return 1;
      }else 
      {   
-        log_info(logger_entrada_salida, "Crear Archivo: %s  ",nombre);// LOG OBLIGATORIO
+        log_info(logger_entrada_salida, "Crear Archivo: %s  ",nombre);
 
         FILE* file_fcb_vacio = fopen(file_path,"w");
 
@@ -500,19 +491,19 @@ uint32_t  borrar_archivo(char* nombre) {
             sincronizar_bitmap ();
     }  
 // borrar archivo fcb fisico 
- if (remove(path_archivo_borrar) == 0) {
-        log_info(logger_entrada_salida, "Archivo eliminado exitosamente: %s", path_archivo_borrar);
-    } else {
-        log_error(logger_entrada_salida, "Error al eliminar el archivo: %s", path_archivo_borrar);
-        perror("Error al eliminar el archivo");
-    } 
+    if (remove(path_archivo_borrar) == 0) {
+            log_info(logger_entrada_salida, "Archivo eliminado exitosamente: %s", path_archivo_borrar);
+        } else {
+            log_error(logger_entrada_salida, "Error al eliminar el archivo: %s", path_archivo_borrar);
+            perror("Error al eliminar el archivo");
+        } 
 // borrar fcb del diccionario
 //dictionary_remove_and_destroy veo si lo uso
     dictionary_remove(fcb_dict,nombre);
 // mostrar como queda el diccionario
     log_info(logger_entrada_salida, "Tamanio diccionario: %d", dictionary_size(fcb_dict));
-         
-return 1 ;
+    free_t_FCB(fcb_eliminar);        
+    return 1 ;
 }
 
 uint32_t  truncar_archivo(char* nombre, uint32_t tamanio ){
@@ -532,6 +523,7 @@ uint32_t  truncar_archivo(char* nombre, uint32_t tamanio ){
 
     }
      imprimir_estado_bitarray();
+     free_t_FCB(fcb);
     return 1;
 }
 
@@ -553,8 +545,7 @@ void achicar_archivo(uint32_t tamanio, t_FCB* fcb) {
 
 void agrandar_archivo(uint32_t nuevo_tamanio, char* nombre_archivo) {
     int nueva_posicion_inicial = hay_espacio_disponible(nuevo_tamanio); 
-    t_FCB* fcb = malloc(sizeof( t_FCB));
-    fcb = dictionary_get(fcb_dict,nombre_archivo);
+    t_FCB* fcb = dictionary_get(fcb_dict,nombre_archivo);
 
     if (nueva_posicion_inicial>= 0 ) {
         if (fcb->tamanio_archivo == 0 ) { // para archivos recien creados
@@ -582,15 +573,15 @@ void agrandar_archivo(uint32_t nuevo_tamanio, char* nombre_archivo) {
         log_info(logger_entrada_salida, "No hay más bloques disponibles"); // no verfico el caso sin espacio ISSUE #3568
     }   
 
-
+ 
 }
 
 
 void leer_archivo(t_io_readwrite_archivo* archivo, int socket){
     char* datos_leidos = malloc(archivo->tamanio_operacion * sizeof(char));
     t_io_memo_escritura* input = malloc (sizeof(t_io_memo_escritura));
-    t_FCB* fbc_leer = malloc (sizeof(t_FCB));
-    fbc_leer = dictionary_get(fcb_dict,archivo->nombre_archivo);
+    t_FCB* fbc_leer = dictionary_get(fcb_dict,archivo->nombre_archivo);
+
     int primer_bloque =  fbc_leer->primer_bloque;  
     int puntero_archivo_bloques = (cfg_entrada_salida->BLOCK_SIZE*primer_bloque+1)+archivo->puntero_archivo;
     
@@ -613,11 +604,12 @@ void leer_archivo(t_io_readwrite_archivo* archivo, int socket){
         log_info(logger_entrada_salida, "input lenght: %d",input->input_length);
         enviar_input(input, socket, IO_FS_READ);
     };
+    free_io_memo_escritura(input);
+    free(datos_leidos);
 }
 
 void escribir_archivo(t_io_readwrite_archivo* archivo, char* datos_escribir){
-    t_FCB* fbc_escribir = malloc (sizeof(t_FCB));
-    fbc_escribir = dictionary_get(fcb_dict,archivo->nombre_archivo);
+    t_FCB* fbc_escribir = dictionary_get(fcb_dict,archivo->nombre_archivo);
     int primer_bloque =  fbc_escribir->primer_bloque;  
     int puntero_archivo_bloques = (cfg_entrada_salida->BLOCK_SIZE*primer_bloque+1)+archivo->puntero_archivo;
     
@@ -636,6 +628,7 @@ void escribir_archivo(t_io_readwrite_archivo* archivo, char* datos_escribir){
         log_info(logger_entrada_salida,"Datos escritos, %s",datos_escribir);
       
     };
+    
 }
 ////////////////////////////////////////////// UTILIDAD/////////////////////////////////////////////////
 t_io_gestion_archivo* deserializar_fs_gestion (t_list* lista_paquete){
@@ -645,7 +638,7 @@ t_io_gestion_archivo* deserializar_fs_gestion (t_list* lista_paquete){
     nuevo_archivo->nombre_archivo_length = *(uint32_t*)list_get(lista_paquete, 1);
     nuevo_archivo->nombre_archivo = list_get(lista_paquete, 2);  
     nuevo_archivo->tamanio_archivo = *(uint32_t*)list_get(lista_paquete, 3);  
-	return nuevo_archivo;
+	return nuevo_archivo;    
 }
 
 uint32_t encontrar_bit_libre(t_bitarray* bitarray_in) {
@@ -773,6 +766,8 @@ int compactar(int espacio_necesario){
     sincronizar_bitmap ();
     log_info(logger_entrada_salida, "Espacio contiguo suficiente encontrado en la posición %d.", posicion_inicio);
     usleep(cfg_entrada_salida->RETRASO_COMPACTACION);
+    free_t_FCB(fcb);
+    list_clean_and_destroy_elements(fcbs,free);
     return posicion_inicio;
 }    
 
@@ -828,12 +823,14 @@ void mover_archivo(t_FCB* fcb_archivo, int nueva_posicion_inicial){
             bitarray_set_bit(bitarray, nueva_posicion_inicial+j);
             j++;
         }
+        free(valor_bloque); // ojo el piojo con este free
     }
     // actualizo fcb en todas las estructuras
     fcb_archivo ->primer_bloque = nueva_posicion_inicial;
     dictionary_put(fcb_dict ,fcb_archivo->nombre_archivo, fcb_archivo);
     persistir_fcb(fcb_archivo);
     sincronizar_bitmap ();  
+    
 }
 
 char* uint32_to_string (uint32_t number) {
@@ -855,5 +852,14 @@ void imprimir_estado_bitarray() {
         }else {
             log_info(logger_entrada_salida,"%d",0); 
         }
+    }
+}
+
+void free_t_FCB(t_FCB* fcb) {
+    if (fcb != NULL) {
+        if (fcb->nombre_archivo != NULL) {
+            free(fcb->nombre_archivo);
+        }
+        free(fcb);
     }
 }
