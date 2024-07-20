@@ -80,7 +80,7 @@ typedef enum
     IO_K_FS_TRUNCATE_FIN,
     IO_K_FS_READ_FIN,
     IO_K_FS_WRITE_FIN,
-    
+
 //----------------KERNEL-MEMORIA
     CREAR_PROCESO_KERNEL,       // Kerner le solicita a Memoria crear las estructuras necesarias
     CREAR_PROCESO_KERNEL_FIN,
@@ -467,5 +467,17 @@ void enviar_io_readwrite(t_io_readwrite_archivo* io_readwrite ,int socket, uint3
 t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete );
 // Devuelve un out a partit de un pid y un valor char*
 t_io_output* armar_io_output(uint32_t pid, char* output);
-
+//Kernel le envia a memoria para crear un proceso
+void enviar_crear_proceso_memoria(t_m_crear_proceso* proceso_nuevo, int socket);
+//Kernel le envía a memoria para solicitar el resize de un proceso 
+void enviar_resize_memoria(t_resize* proceso_resize, int socket);
+//IO envía respuestas a kernel.
+void enviar_respuesta_io ( int socket, op_code respuesta, uint32_t pid, char* nombre_intefaz);
+//Funciones para liberar memoria de IO
+void free_io_readwrite_archivo(t_io_readwrite_archivo* io_rw); 
+void free_io_gestion_archivo(t_io_gestion_archivo* io_gestion);
+void free_io_direcciones_fisicas(t_io_direcciones_fisicas* io_df); 
+void free_io_output(t_io_output* io_output);
+void free_io_memo_escritura(t_io_memo_escritura* io_memo_escritura) ;
+void free_t_interfaz(t_interfaz* interfaz);
 #endif /* UTILS_H_ */
