@@ -140,8 +140,7 @@ void iniciar_interfaz_dialfs (int socket_kernel, int socket_memoria) {
                
                
                 solicitud_datos_escribir->pid = archivo_escribir->pid;
-                solicitud_datos_escribir->direcciones_fisicas = list_create ();
-                list_add_all(solicitud_datos_escribir->direcciones_fisicas,archivo_escribir->direcciones_fisicas);
+                solicitud_datos_escribir->direcciones_fisicas =archivo_escribir->direcciones_fisicas;                
                 solicitud_datos_escribir->tamanio_operacion = archivo_escribir->tamanio_operacion;
                
                //reenvio la solicitud a memoria
@@ -597,8 +596,7 @@ void leer_archivo(t_io_readwrite_archivo* archivo, int socket){
         log_info(logger_entrada_salida, "PID: %d - Leer Archivo: %s - Tamaño a Leer: %d- Puntero Archivo: %d", archivo->pid, archivo->nombre_archivo, archivo->tamanio_operacion, archivo->puntero_archivo);
         log_info(logger_entrada_salida," Datos leidos, %s",datos_leidos);
         input->pid =archivo->pid;
-        input->direcciones_fisicas =list_create();
-        list_add_all(input->direcciones_fisicas,archivo->direcciones_fisicas);
+        input->direcciones_fisicas = archivo->direcciones_fisicas;        
         input->input = datos_leidos;
         input->input_length =string_length(datos_leidos) + 1;
         log_info(logger_entrada_salida, "input lenght: %d",input->input_length);
