@@ -1,7 +1,7 @@
 
 #include "../include/protocolo_kernel.h"
 
-sem_t *sem_planificar;
+//sem_t *sem_planificar;
 t_pcb* pcb_actualizado_interrupcion;
 
 //Funcion que crea hilos para cada modulo y los va atendiendo
@@ -157,7 +157,7 @@ while (control_key)
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_gen_sleep->pid);
       }
 
-      replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid));
+     // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid));
       
       
       
@@ -210,7 +210,7 @@ while (control_key)
          //NO EXISTE RECURSO, MANDAR A EXIT
          mandar_proceso_a_finalizar(recurso_recibido_wait->pcb->pid);
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_RESOURCE  ", recurso_recibido_wait->pcb->pid);
-         replanificar_y_ejecutar(recurso_recibido_wait->pcb);
+        // replanificar_y_ejecutar(recurso_recibido_wait->pcb);
       }
       break;
    case ENVIO_SIGNAL_A_KERNEL:
@@ -327,7 +327,7 @@ while (control_key)
          mandar_proceso_a_finalizar(io_stdin_read->pid);
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdin_read->pid);
       }
-      replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid));
+     // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid));
       break;
    case SOLICITUD_IO_STDOUT_WRITE:
 
@@ -448,7 +448,7 @@ while (control_key)
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_crear_archivo->pid);
       }
 
-      replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_crear_archivo->pid));
+      //replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_crear_archivo->pid));
       break;
    case SOLICITUD_IO_FS_DELETE_A_KERNEL:
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_DELETE_A_KERNEL desde CPU");
@@ -504,7 +504,7 @@ while (control_key)
          mandar_proceso_a_finalizar(io_delete_archivo->pid);
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_delete_archivo->pid);
       }
-      replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_delete_archivo->pid));
+      //replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_delete_archivo->pid));
       break;
    case SOLICITUD_IO_FS_TRUNCATE_A_KERNEL:
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_TRUNCATE_A_KERNEL desde CPU");
@@ -563,7 +563,7 @@ while (control_key)
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_truncate_archivo->pid);
       }
 
-      replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_truncate_archivo->pid));
+     // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_truncate_archivo->pid));
       break;
    case SOLICITUD_IO_FS_WRITE_A_KERNEL:
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_WRITE_A_KERNEL desde CPU");
@@ -623,7 +623,7 @@ while (control_key)
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_write_archivo->pid);
       }
 
-      replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_write_archivo->pid));
+      //replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_write_archivo->pid));
       break;
    case SOLICITUD_IO_FS_READ_A_KERNEL:
 
@@ -689,7 +689,7 @@ while (control_key)
          sem_post(sem_planificar);
       }
       
-      replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid));
+      //replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid));
       break;
    case -1:
       log_error(logger_kernel, "Desconexion de cpu - Dispatch");

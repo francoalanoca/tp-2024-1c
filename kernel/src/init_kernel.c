@@ -15,6 +15,7 @@ sem_t sem_confirmacion_memoria;
 sem_t sem_io_fs_libre;
 sem_t sem_cpu_libre;
 sem_t sem_prioridad_io;
+sem_t sem_interrupcion_atendida;
 pthread_mutex_t mutex_cola_ready_prioridad; 
 pthread_mutex_t mutex_cola_ready;
 pthread_mutex_t mutex_envio_io;
