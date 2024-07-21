@@ -10,17 +10,17 @@ void Escuchar_Msj_De_Conexiones(){
 
 //Escuchar los msj de memoria
    pthread_t hilo_kernel_memoria;
-   //pthread_create(&hilo_kernel_memoria, NULL, (void*)Kernel_escuchar_memoria, NULL);
+   pthread_create(&hilo_kernel_memoria, NULL, (void*)Kernel_escuchar_memoria, NULL);
    pthread_detach(hilo_kernel_memoria);
 
 //Escuchar los msj de cpu - dispatch
    pthread_t hilo_cpu_dispatch;
-  // pthread_create(&hilo_cpu_dispatch, NULL, (void*)Kernel_escuchar_cpu_dispatch, NULL);
+   pthread_create(&hilo_cpu_dispatch, NULL, (void*)Kernel_escuchar_cpu_dispatch, NULL);
    pthread_detach(hilo_cpu_dispatch);
 
 //Escuchar los msj de cpu - interrupt
    pthread_t hilo_cpu_interrupt;
-   //pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt, NULL);
+   pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt, NULL);
    pthread_join(hilo_cpu_interrupt, NULL);
 
 }
@@ -29,7 +29,7 @@ void Escuchar_Msj_De_Conexiones(){
 void Kernel_escuchar_cpu_dispatch(){
 
 bool control_key = 1;
-t_list* lista_paquete =  malloc(sizeof(t_list));
+t_list* lista_paquete;
 while (control_key)
 {
    int cod_op = recibir_operacion(conexion_cpu_dispatch);
@@ -90,7 +90,6 @@ while (control_key)
          proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
          list_add_in_index(planificador->cola_exec,0,proceso_interrumpido->pcb);
 
-         free(proceso_interrumpido);// crear funcion para liberar pcb
          sem_post(&sem_interrupcion_atendida);
       default:
       printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
@@ -98,14 +97,14 @@ while (control_key)
       
          break;
       }
+      liberar_proceso_interrumpido(proceso_interrumpido);
       break;
    case ENVIO_INTERFAZ:
       //Recibo PID, interfaz y unidades de trabajo de cpu, debo pedir a kernel que realice la instruccion IO_GEN_SLEEP (comprobar interfaz en diccionaro de interfaces antes)         
       log_info(logger_kernel,"Recibo ENVIO_INTERFAZ desde CPU");
       lista_paquete = recibir_paquete(conexion_cpu_dispatch);
       
-      t_io_gen_sleep* io_gen_sleep = malloc(sizeof(t_io_gen_sleep));
-      io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
+      t_io_gen_sleep* io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
 
       //Verifico que la interfaz exista y este conectada
       if(dictionary_has_key(interfaces,io_gen_sleep->nombre_interfaz)){
@@ -142,6 +141,10 @@ while (control_key)
             pthread_mutex_lock(&mutex_envio_io);
             enviar_espera(a_enviar_a_io_gen_sleep->data,socket_servidor);
             pthread_mutex_unlock(&mutex_envio_io);
+
+            liberar_memoria_t_proceso_data(proceso_data_io_gen_sleep);
+            liberar_memoria_t_io_espera(io_espera_a_bloquear);
+            liberar_memoria_t_proceso_data(a_enviar_a_io_gen_sleep);
             
          }
          else{
@@ -149,7 +152,7 @@ while (control_key)
             mandar_proceso_a_finalizar(io_gen_sleep->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_gen_sleep->pid);
          }
-         
+         liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
@@ -159,7 +162,8 @@ while (control_key)
 
      // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid));
       
-      
+      liberar_memoria_t_io_gen_sleep(io_gen_sleep);
+
       
       break;
 
@@ -186,6 +190,7 @@ while (control_key)
                list_replace(registro_actual_diccionario->instancias_recursos,indice_recurso_buscado,valor_instancias_actual + 1);
                dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
                dictionary_put(procesos_recursos,pid_string,registro_actual_diccionario);
+               free(pid_string);
             }
             else{//El proceso no tenia instancias de ese recurso
                //crear id nuevo y agregar a lista el recurso con instancia en 1
@@ -197,6 +202,8 @@ while (control_key)
                list_add(registro_actual_diccionario->instancias_recursos,1);
                dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
                dictionary_put(procesos_recursos,pid_string,registro_actual_diccionario);
+               free(pid_string);
+               liberar_memoria_t_proceso_recurso_diccionario(registro_actual_diccionario);
             }
          }
          else{
@@ -212,6 +219,7 @@ while (control_key)
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_RESOURCE  ", recurso_recibido_wait->pcb->pid);
         // replanificar_y_ejecutar(recurso_recibido_wait->pcb);
       }
+      liberar_memoria_t_recurso(recurso_recibido_wait);
       break;
    case ENVIO_SIGNAL_A_KERNEL:
       //Recibo t_recurso(pcb y nombre recurso) desde cpu, debo liberar una instancia del recurso al proceso(verificar recursos disponibles)
@@ -236,6 +244,8 @@ while (control_key)
                pid_string = sprintf(pid_string, "%u", recurso_recibido_signal->pcb->pid);
                dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
                dictionary_put(procesos_recursos,pid_string,registro_actual_diccionario);
+               free(pid_string);
+               liberar_memoria_t_proceso_recurso_diccionario(registro_actual_diccionario);
             }
             else{//El proceso no tenia instancias de ese recurso
                //crear id nuevo y agregar a lista el recurso con instancia en 1
@@ -247,24 +257,27 @@ while (control_key)
                list_add(registro_actual_diccionario->instancias_recursos,0);
                dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
                dictionary_put(procesos_recursos,pid_string,registro_actual_diccionario);
+               free(pid_string);
+               liberar_memoria_t_proceso_recurso_diccionario(registro_actual_diccionario);
             }
          
 
          t_list* lista_bloqueados_correspondiente = dictionary_get(planificador->cola_blocked,recurso_recibido_signal->nombre_recurso);
          if(lista_bloqueados_correspondiente->elements_count > 0){
-            uint32_t indice_primer_valor = malloc(sizeof(uint32_t));
-            indice_primer_valor = buscar_indice_primer_valor_no_nulo(lista_bloqueados_correspondiente);
+            uint32_t indice_primer_valor = buscar_indice_primer_valor_no_nulo(lista_bloqueados_correspondiente);
                t_pcb* pcb_desbloqueado = malloc(sizeof(t_pcb));
                pcb_desbloqueado = list_get(lista_bloqueados_correspondiente,indice_primer_valor);
                desbloquear_proceso(planificador,pcb_desbloqueado,recurso_recibido_signal->nombre_recurso);
-               
+               liberar_memoria_pcb(pcb_desbloqueado);
          }
           enviar_proceso_a_cpu(recurso_recibido_signal->pcb,conexion_cpu_dispatch);
+          list_destroy_and_destroy_elements(lista_bloqueados_correspondiente,liberar_memoria_pcb);
       }
       else{
          //NO EXISTE RECURSO, MANDAR A EXIT
          mandar_proceso_a_finalizar(recurso_recibido_signal->pcb->pid);
       }
+      liberar_memoria_t_recurso(recurso_recibido_signal);
       break;
    case SOLICITUD_IO_STDIN_READ:
       //Recibo pid, interfaz, direccion y tamanio desde cpu, se solicita a IO que haga la operacion IO_STDIN_READ(hay que bloquear el porceso)
@@ -311,7 +324,13 @@ while (control_key)
             pthread_mutex_lock(&mutex_envio_io);
             enviar_io_df(a_enviar_a_io->data,socket_servidor,a_enviar_a_io->op);
             pthread_mutex_unlock(&mutex_envio_io);
-            
+            liberar_memoria_t_proceso_data(proceso_data_stdin_read);
+            liberar_memoria_t_io_direcciones_fisicas(io_direcciones_fisicas_a_bloquear);
+            list_destroy_and_destroy_elements(lista_nueva_read,free);
+            liberar_memoria_t_proceso_data(a_enviar_a_io);
+
+
+
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
@@ -319,6 +338,9 @@ while (control_key)
             mandar_proceso_a_finalizar(io_stdin_read->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdin_read->pid);
          }
+
+         liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
+
          
       }
       else{
@@ -328,6 +350,7 @@ while (control_key)
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdin_read->pid);
       }
      // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid));
+      liberar_memoria_t_io_stdin_stdout(io_stdin_read);
       break;
    case SOLICITUD_IO_STDOUT_WRITE:
 
@@ -374,6 +397,11 @@ while (control_key)
             pthread_mutex_lock(&mutex_envio_io);
             enviar_io_df(a_enviar_a_io_write->data,socket_servidor,a_enviar_a_io_write->op);
             pthread_mutex_unlock(&mutex_envio_io);
+
+            liberar_memoria_t_proceso_data(proceso_data_stdout_write);
+            liberar_memoria_t_io_direcciones_fisicas(io_direcciones_fisicas_a_bloquear_write);
+            list_destroy_and_destroy_elements(lista_nueva_write,free);
+            liberar_memoria_t_proceso_data(a_enviar_a_io_write);
             
          }
          else{
@@ -382,7 +410,7 @@ while (control_key)
             mandar_proceso_a_finalizar(io_stdout_write->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdout_write->pid);
          }
-         
+         liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
@@ -391,6 +419,7 @@ while (control_key)
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdout_write->pid);
       }
       //mandar_interrupcion_a_cpu();
+      liberar_memoria_t_io_stdin_stdout(io_stdout_write);
       break;
    
    case SOLICITUD_IO_FS_CREATE_A_KERNEL:
@@ -433,14 +462,16 @@ while (control_key)
             pthread_mutex_lock(&mutex_envio_io);
             enviar_gestionar_archivo(a_enviar_a_io_fs_create->data,socket_servidor,a_enviar_a_io_fs_create->op);
             pthread_mutex_unlock(&mutex_envio_io);
-
+            liberar_memoria_t_proceso_data(proceso_data_io_crear_archivo);
+            liberar_memoria_t_io_gestion_archivo(io_create_archivo_a_bloquear);
+            liberar_memoria_t_proceso_data(a_enviar_a_io_fs_create);
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             mandar_proceso_a_finalizar(io_crear_archivo->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_crear_archivo->pid);
          }
-         
+         liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
@@ -449,6 +480,7 @@ while (control_key)
       }
 
       //replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_crear_archivo->pid));
+      liberar_memoria_t_io_crear_archivo(io_crear_archivo);
       break;
    case SOLICITUD_IO_FS_DELETE_A_KERNEL:
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_DELETE_A_KERNEL desde CPU");
@@ -490,14 +522,16 @@ while (control_key)
             pthread_mutex_lock(&mutex_envio_io);
             enviar_gestionar_archivo(a_enviar_a_io_fs_delete->data,socket_servidor,a_enviar_a_io_fs_delete->op);
             pthread_mutex_unlock(&mutex_envio_io);
-            
+            liberar_memoria_t_proceso_data(proceso_data_io_delete_archivo);
+            liberar_memoria_t_io_gestion_archivo(io_delete_archivo_a_bloquear);
+            liberar_memoria_t_proceso_data(proceso_data_io_delete_archivo);
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             mandar_proceso_a_finalizar(io_delete_archivo->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_delete_archivo->pid);
          }
-         
+         liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
@@ -505,6 +539,7 @@ while (control_key)
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_delete_archivo->pid);
       }
       //replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_delete_archivo->pid));
+      liberar_memoria_t_io_crear_archivo(io_crear_archivo);
       break;
    case SOLICITUD_IO_FS_TRUNCATE_A_KERNEL:
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_TRUNCATE_A_KERNEL desde CPU");
@@ -548,14 +583,16 @@ while (control_key)
             pthread_mutex_lock(&mutex_envio_io);
             enviar_gestionar_archivo(a_enviar_a_io_fs_truncate->data,socket_servidor,a_enviar_a_io_fs_truncate->op);
             pthread_mutex_unlock(&mutex_envio_io);
-
+            liberar_memoria_t_proceso_data(proceso_data_io_truncate_archivo);
+            liberar_memoria_t_io_gestion_archivo(io_truncate_archivo_a_bloquear);
+            liberar_memoria_t_proceso_data(proceso_data_io_truncate_archivo);
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             mandar_proceso_a_finalizar(io_truncate_archivo->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_truncate_archivo->pid);
          }
-         
+         liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
@@ -564,6 +601,7 @@ while (control_key)
       }
 
      // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_truncate_archivo->pid));
+      liberar_memoria_t_io_fs_truncate(io_truncate_archivo);
       break;
    case SOLICITUD_IO_FS_WRITE_A_KERNEL:
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_WRITE_A_KERNEL desde CPU");
@@ -608,14 +646,16 @@ while (control_key)
             pthread_mutex_lock(&mutex_envio_io);
             enviar_io_readwrite(a_enviar_a_io_fs_write->data,socket_servidor,a_enviar_a_io_fs_write->op);
             pthread_mutex_unlock(&mutex_envio_io);
-
+            liberar_memoria_t_proceso_data(proceso_data_io_write_archivo);
+            liberar_memoria_t_io_readwrite_archivo(io_write_archivo_a_bloquear);
+            liberar_memoria_t_proceso_data(a_enviar_a_io_fs_write);
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             mandar_proceso_a_finalizar(io_write_archivo->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_write_archivo->pid);
          }
-         
+         liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
@@ -624,6 +664,7 @@ while (control_key)
       }
 
       //replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_write_archivo->pid));
+      liberar_memoria_t_io_fs_write(io_write_archivo);
       break;
    case SOLICITUD_IO_FS_READ_A_KERNEL:
 
@@ -670,7 +711,9 @@ while (control_key)
             pthread_mutex_lock(&mutex_envio_io);
             enviar_io_readwrite(a_enviar_a_io_fs_read->data,socket_servidor,a_enviar_a_io_fs_read->op);
             pthread_mutex_unlock(&mutex_envio_io);
-
+            liberar_memoria_t_proceso_data(proceso_data_io_read_archivo);
+            liberar_memoria_t_io_readwrite_archivo(io_read_archivo_a_bloquear);
+            liberar_memoria_t_proceso_data(a_enviar_a_io_fs_read);
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
@@ -679,7 +722,7 @@ while (control_key)
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_read_archivo->pid);
             sem_post(&sem_planificar);
          }
-         
+         liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
@@ -690,6 +733,7 @@ while (control_key)
       }
       
       //replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid));
+      liberar_memoria_t_io_fs_write(io_read_archivo);
       break;
    case -1:
       log_error(logger_kernel, "Desconexion de cpu - Dispatch");
@@ -699,6 +743,7 @@ while (control_key)
       log_warning(logger_kernel, "Operacion desconocida de cpu - Dispatch");
       break;
    }
+   list_destroy_and_destroy_elements(lista_paquete,free);
 }
 
 }
@@ -765,7 +810,7 @@ void enviar_creacion_de_proceso_a_memoria(t_pcb* pcb, int conexion_memoria) {
     enviar_paquete(paquete_enviar_creacion_de_proceso, conexion_memoria);
 
     printf("Se envió PCB\n");
-    free(paquete_enviar_creacion_de_proceso);
+    liberar_memoria_paquete(paquete_enviar_creacion_de_proceso);
 }
 
 t_pcb* buscar_pcb_en_lista(t_list* lista_de_pcb, uint32_t pid){
@@ -871,8 +916,7 @@ void mandar_proceso_a_finalizar(uint32_t pid){
    t_pcb* pcb_a_procesar = malloc(sizeof(t_pcb));
    pcb_a_procesar = encontrar_proceso_pid(planificador->cola_exec,pid);
    eliminar_proceso(planificador,pcb_a_procesar);
+   liberar_memoria_pcb(pcb_a_procesar);
 }
-
-
 
 

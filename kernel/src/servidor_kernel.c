@@ -88,9 +88,9 @@ void procesar_conexion(void *void_args) {
                 if (send(cliente_socket, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
                 perror("send INTERFAZ_RECIBIDA response");
                 }
-
-                free(interfaz_nueva);   
-                free(lista_paquete_interfaz);
+                liberar_memoria_t_interfaz(interfaz_recibida);
+                liberar_memoria_t_interfaz_diccionario(interfaz_nueva);  
+                list_destroy_and_destroy_elements(lista_paquete_interfaz,free);
             break;
             case IO_K_FS_CREATE_FIN:
                 printf("Received IO_K_FS_CREATE_FIN request\n");
@@ -103,7 +103,11 @@ void procesar_conexion(void *void_args) {
                 desbloquear_y_agregar_a_ready(interfaz_pid_create,proceso_create);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_create->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
-                 sem_post(&sem_io_fs_libre);   
+                sem_post(&sem_io_fs_libre); 
+
+                list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_create,free);
+                liberar_memoria_t_interfaz_pid(interfaz_pid_create);
+                liberar_memoria_pcb(proceso_create);
             break;
             case IO_K_FS_DELETE_FIN:
                 printf("Received IO_K_FS_DELETE_FIN request\n");
@@ -116,7 +120,12 @@ void procesar_conexion(void *void_args) {
                 desbloquear_y_agregar_a_ready(interfaz_pid_delete,proceso_delete);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_delete->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
-                 sem_post(&sem_io_fs_libre);  
+                sem_post(&sem_io_fs_libre);  
+
+                list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_delete,free);
+                liberar_memoria_t_interfaz_pid(interfaz_pid_delete);
+                liberar_memoria_pcb(proceso_delete);
+
 
             break;
             case IO_K_FS_TRUNCATE_FIN:
@@ -130,7 +139,11 @@ void procesar_conexion(void *void_args) {
                 desbloquear_y_agregar_a_ready(interfaz_pid_truncate,proceso_truncate);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_truncate->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
-                 sem_post(&sem_io_fs_libre);  
+                sem_post(&sem_io_fs_libre);  
+
+                list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_truncate,free);
+                liberar_memoria_t_interfaz_pid(interfaz_pid_truncate);
+                liberar_memoria_pcb(proceso_truncate);
 
             break;
             case IO_K_FS_READ_FIN:
@@ -144,7 +157,11 @@ void procesar_conexion(void *void_args) {
                 desbloquear_y_agregar_a_ready(interfaz_pid_read,proceso_read);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_read->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
-                 sem_post(&sem_io_fs_libre);  
+                sem_post(&sem_io_fs_libre); 
+
+                list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_read,free);
+                liberar_memoria_t_interfaz_pid(interfaz_pid_read);
+                liberar_memoria_pcb(proceso_read); 
 
             break;
             case IO_K_FS_WRITE_FIN:
@@ -158,7 +175,11 @@ void procesar_conexion(void *void_args) {
                 desbloquear_y_agregar_a_ready(interfaz_pid_write,proceso_write);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_write->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
-                 sem_post(&sem_io_fs_libre);  
+                sem_post(&sem_io_fs_libre);  
+
+                list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_write,free);
+                liberar_memoria_t_interfaz_pid(interfaz_pid_write);
+                liberar_memoria_pcb(proceso_write);
 
             break;
             default:
@@ -170,6 +191,7 @@ void procesar_conexion(void *void_args) {
     }
 
     log_warning(logger, "El cliente se desconecto de %s server", server_name);
+    log_destroy(logger);
     return;
 }
 

@@ -190,3 +190,86 @@ void liberar_memoria_pcb(t_pcb* pcb){
     free(pcb);
 }
 
+void liberar_proceso_interrumpido(t_proceso_interrumpido* proceso_interrumpido){
+   liberar_memoria_pcb(proceso_interrumpido->pcb);
+   free(proceso_interrumpido);
+}
+
+void liberar_memoria_t_io_gen_sleep(t_io_gen_sleep* io_gen_sleep){
+   free(io_gen_sleep->nombre_interfaz);
+   free(io_gen_sleep);
+}
+
+void liberar_memoria_t_interfaz_diccionario(t_interfaz_diccionario* interfaz_diccionario){
+   free(interfaz_diccionario->nombre);
+   free(interfaz_diccionario);
+}
+
+void liberar_memoria_t_proceso_data(t_proceso_data* proceso_data){
+   liberar_memoria_pcb(proceso_data->pcb);
+   free(proceso_data);
+}
+
+void liberar_memoria_t_io_espera(t_io_espera* io_espera){
+   free(io_espera);
+}
+
+void liberar_memoria_t_recurso(t_recurso* recurso){
+   liberar_memoria_pcb(recurso->pcb);
+   free(recurso->nombre_recurso);
+   free(recurso);
+}
+
+void liberar_memoria_t_io_direcciones_fisicas(t_io_direcciones_fisicas* io_direcciones_fisicas){
+   free(io_direcciones_fisicas);
+}
+
+void liberar_memoria_t_io_stdin_stdout(t_io_stdin_stdout* io_stdin_stdout){
+   free(io_stdin_stdout->nombre_interfaz);
+   free(io_stdin_stdout);
+}
+
+void liberar_memoria_t_io_gestion_archivo(t_io_gestion_archivo* io_gestion_archivo){
+   free(io_gestion_archivo->nombre_archivo);
+   free(io_gestion_archivo);
+}
+
+void liberar_memoria_t_io_crear_archivo(t_io_crear_archivo* io_crear_archivo){
+   free(io_crear_archivo->nombre_archivo);
+   free(io_crear_archivo->nombre_interfaz);
+   free(io_crear_archivo);
+}
+
+void liberar_memoria_t_io_fs_truncate(t_io_fs_truncate* io_fs_truncate){
+   free(io_fs_truncate->nombre_archivo);
+   free(io_fs_truncate->nombre_interfaz);
+   free(io_fs_truncate);
+}
+
+void liberar_memoria_t_io_readwrite_archivo(t_io_readwrite_archivo* io_readwrite_archivo){
+   free(io_readwrite_archivo->nombre_archivo);
+   free(io_readwrite_archivo);
+}
+
+void liberar_memoria_t_io_fs_write(t_io_fs_write* io_fs_write){
+   free(io_fs_write->nombre_archivo);
+   free(io_fs_write->nombre_interfaz);
+   free(io_fs_write);
+}
+
+void liberar_memoria_t_proceso_recurso_diccionario(t_proceso_recurso_diccionario* proceso_recurso_diccionario){
+   list_destroy_and_destroy_elements(proceso_recurso_diccionario->nombres_recursos,free);
+   list_destroy(proceso_recurso_diccionario->instancias_recursos);
+   free(proceso_recurso_diccionario);
+}
+
+void liberar_memoria_t_interfaz(t_interfaz* interfaz){
+    free(interfaz->nombre);
+    free(interfaz);
+}
+
+void liberar_memoria_t_interfaz_pid(t_interfaz_pid* interfaz_pid){
+    free(interfaz_pid->nombre_interfaz);
+    free(interfaz_pid);
+}
+
