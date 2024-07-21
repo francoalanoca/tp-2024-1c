@@ -81,6 +81,9 @@ void procesar_conexion(void *void_args) {
 			    
                 dictionary_put(interfaces,interfaz_recibida->nombre,interfaz_nueva);
 
+                //agrego la nueva cola blocked de la interfaz conectada
+                dictionary_put(planificador->cola_blocked ,interfaz_recibida->nombre,list_create());
+
                 uint32_t response_interfaz = INTERFAZ_RECIBIDA;
                 if (send(cliente_socket, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
                 perror("send INTERFAZ_RECIBIDA response");
@@ -100,7 +103,7 @@ void procesar_conexion(void *void_args) {
                 desbloquear_y_agregar_a_ready(interfaz_pid_create,proceso_create);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_create->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
-                 sem_post(sem_io_fs_libre);   
+                 sem_post(&sem_io_fs_libre);   
             break;
             case IO_K_FS_DELETE_FIN:
                 printf("Received IO_K_FS_DELETE_FIN request\n");
@@ -113,7 +116,7 @@ void procesar_conexion(void *void_args) {
                 desbloquear_y_agregar_a_ready(interfaz_pid_delete,proceso_delete);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_delete->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
-                 sem_post(sem_io_fs_libre);  
+                 sem_post(&sem_io_fs_libre);  
 
             break;
             case IO_K_FS_TRUNCATE_FIN:
@@ -127,7 +130,7 @@ void procesar_conexion(void *void_args) {
                 desbloquear_y_agregar_a_ready(interfaz_pid_truncate,proceso_truncate);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_truncate->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
-                 sem_post(sem_io_fs_libre);  
+                 sem_post(&sem_io_fs_libre);  
 
             break;
             case IO_K_FS_READ_FIN:
@@ -141,7 +144,7 @@ void procesar_conexion(void *void_args) {
                 desbloquear_y_agregar_a_ready(interfaz_pid_read,proceso_read);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_read->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
-                 sem_post(sem_io_fs_libre);  
+                 sem_post(&sem_io_fs_libre);  
 
             break;
             case IO_K_FS_WRITE_FIN:
@@ -155,7 +158,7 @@ void procesar_conexion(void *void_args) {
                 desbloquear_y_agregar_a_ready(interfaz_pid_write,proceso_write);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_write->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
-                 sem_post(sem_io_fs_libre);  
+                 sem_post(&sem_io_fs_libre);  
 
             break;
             default:
@@ -223,10 +226,13 @@ void desbloquear_y_agregar_a_ready(t_interfaz_pid* interfaz_pid,t_pcb* proceso){
                         pthread_mutex_lock(&mutex_cola_ready_prioridad);
                         list_add(planificador->cola_ready_prioridad, proceso); // como todavia le queda por ejecutar se asigna a la cola de prioridad
                         pthread_mutex_unlock(&mutex_cola_ready_prioridad);
+                        sem_post(&sem_prioridad_io);
                     }
                 else {
                         pthread_mutex_lock(&mutex_cola_ready);
                         list_add(planificador->cola_ready, proceso);
                         pthread_mutex_unlock(&mutex_cola_ready);
+                        sem_post(&sem_prioridad_io);
                 }	 
+    }
 }

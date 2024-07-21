@@ -2,8 +2,8 @@
 t_planificador* planificador;
 sem_t* sem_planificar;
 t_temporal* cronometro;
-sem_t sem_contexto_ejecucion_recibido;
-sem_t sem_confirmacion_memoria;
+//sem_t sem_contexto_ejecucion_recibido;
+//sem_t sem_confirmacion_memoria;
 
 
 // Devuelve un t_algoritmo a partir de la config cargada
@@ -59,6 +59,7 @@ void destruir_planificador(t_planificador* planificador) {
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso) {
     list_add(planificador->cola_new, proceso);
     if (planificador->grado_multiprogramacion_actual <= planificador->grado_multiprogramacion) {
+        sem_wait(&sem_prioridad_io);
         t_pcb* proceso_nuevo = list_remove(planificador->cola_new, 0);
         list_add(planificador->cola_ready, proceso_nuevo);
         planificador->grado_multiprogramacion_actual++;
@@ -93,15 +94,14 @@ void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
 void bloquear_proceso(t_planificador* planificador, t_proceso_data* proceso_data, char* nombre_lista) {
     list_remove(planificador->cola_exec, proceso_data->pcb);
     dictionary_put(planificador->cola_blocked,nombre_lista,proceso_data);
-    sem_post(sem_cpu_libre);
+    sem_post(&sem_cpu_libre);
 }
 
 //  Desbloquea un proceso y lo mueve a la cola de listos
 void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nombre_lista) {
     t_list* lista_a_desbloquear = malloc(sizeof(t_list));
     lista_a_desbloquear = dictionary_remove(planificador->cola_blocked,nombre_lista);
-    uint32_t indice_a_desbloquear = malloc(sizeof(uint32_t));
-    indice_a_desbloquear = encontrar_indice_proceso_data_pid(lista_a_desbloquear,proceso);
+    uint32_t indice_a_desbloquear = encontrar_indice_proceso_data_pid(lista_a_desbloquear,proceso);
     list_remove_and_destroy_element(lista_a_desbloquear,indice_a_desbloquear,list_destroy);
     dictionary_put(planificador->cola_blocked,nombre_lista,lista_a_desbloquear);
     if (!planificador->planificacion_detenida) {

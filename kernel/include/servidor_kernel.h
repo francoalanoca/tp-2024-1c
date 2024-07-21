@@ -2,8 +2,9 @@
 #define SERVIDOR_KERNEL_H_
 
 //#include "../include/init_kernel.h"
-#include "../include/planificador.h"
-#include <utils/utils.h>
+//#include "../include/planificador.h"
+//#include <utils/utils.h>
+#include "../include/protocolo_kernel.h"
 #include <pthread.h>
 
 void* crearServidor();

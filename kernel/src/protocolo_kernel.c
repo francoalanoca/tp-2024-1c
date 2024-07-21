@@ -139,9 +139,9 @@ while (control_key)
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
             t_proceso_data* a_enviar_a_io_gen_sleep = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
-            //MUTEX
+            pthread_mutex_lock(&mutex_envio_io);
             enviar_espera(a_enviar_a_io_gen_sleep->data,socket_servidor);
-            //FIN MUTEX
+            pthread_mutex_unlock(&mutex_envio_io);
             
          }
          else{
@@ -308,9 +308,9 @@ while (control_key)
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
             t_proceso_data* a_enviar_a_io = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
-            //MUTEX
+            pthread_mutex_lock(&mutex_envio_io);
             enviar_io_df(a_enviar_a_io->data,socket_servidor,a_enviar_a_io->op);
-            //FIN MUTEX
+            pthread_mutex_unlock(&mutex_envio_io);
             
          }
          else{
@@ -371,9 +371,9 @@ while (control_key)
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
             t_proceso_data* a_enviar_a_io_write = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
-            //MUTEX
+            pthread_mutex_lock(&mutex_envio_io);
             enviar_io_df(a_enviar_a_io_write->data,socket_servidor,a_enviar_a_io_write->op);
-            //FIN MUTEX
+            pthread_mutex_unlock(&mutex_envio_io);
             
          }
          else{
@@ -424,15 +424,15 @@ while (control_key)
             
                actualizar_quantum(proceso_data_io_crear_archivo->pcb);
             } 
-            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_create_archivo->pcb->pid);
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_crear_archivo->pcb->pid);
                      
             bloquear_proceso(planificador,proceso_data_io_crear_archivo,interfaz_encontrada->nombre);
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
             t_proceso_data* a_enviar_a_io_fs_create = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
-            //MUTEX
+            pthread_mutex_lock(&mutex_envio_io);
             enviar_gestionar_archivo(a_enviar_a_io_fs_create->data,socket_servidor,a_enviar_a_io_fs_create->op);
-            //FIN MUTEX
+            pthread_mutex_unlock(&mutex_envio_io);
 
          }
          else{
@@ -487,9 +487,9 @@ while (control_key)
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
             t_proceso_data* a_enviar_a_io_fs_delete = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
-            //MUTEX
+            pthread_mutex_lock(&mutex_envio_io);
             enviar_gestionar_archivo(a_enviar_a_io_fs_delete->data,socket_servidor,a_enviar_a_io_fs_delete->op);
-            //FIN MUTEX
+            pthread_mutex_unlock(&mutex_envio_io);
             
          }
          else{
@@ -545,9 +545,9 @@ while (control_key)
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
             t_proceso_data* a_enviar_a_io_fs_truncate = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
-            //MUTEX
+            pthread_mutex_lock(&mutex_envio_io);
             enviar_gestionar_archivo(a_enviar_a_io_fs_truncate->data,socket_servidor,a_enviar_a_io_fs_truncate->op);
-            //FIN MUTEX
+            pthread_mutex_unlock(&mutex_envio_io);
 
          }
          else{
@@ -605,9 +605,9 @@ while (control_key)
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
             t_proceso_data* a_enviar_a_io_fs_write = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
-            //MUTEX
+            pthread_mutex_lock(&mutex_envio_io);
             enviar_io_readwrite(a_enviar_a_io_fs_write->data,socket_servidor,a_enviar_a_io_fs_write->op);
-            //FIN MUTEX
+            pthread_mutex_unlock(&mutex_envio_io);
 
          }
          else{
@@ -667,9 +667,9 @@ while (control_key)
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
             t_proceso_data* a_enviar_a_io_fs_read = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
-            //MUTEX
+            pthread_mutex_lock(&mutex_envio_io);
             enviar_io_readwrite(a_enviar_a_io_fs_read->data,socket_servidor,a_enviar_a_io_fs_read->op);
-            //FIN MUTEX
+            pthread_mutex_unlock(&mutex_envio_io);
 
          }
          else{

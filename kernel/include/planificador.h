@@ -34,8 +34,8 @@ typedef struct {
 // ver si falta poner alguna libreria
 extern t_planificador* planificador;
 
-sem_t* sem_planificar;
-t_temporal* cronometro;
+extern sem_t* sem_planificar;
+extern t_temporal* cronometro;
 
 // Inicializa un nuevo planificador
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum, int grado_multiprogramacion);
@@ -58,6 +58,7 @@ void crear_proceso(t_planificador* planificador, char* path_pseudocodigo);
 void eliminar_proceso(t_planificador* planificador, t_pcb* proceso);
 void detener_planificacion(t_planificador* planificador);
 uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb);
+uint32_t encontrar_indice_proceso_data_pid(t_list * lista_procesos_data , t_pcb* pcb);
 void enviar_interrupcion_a_cpu(t_pcb* proceso,motivo_interrupcion motivo_interrupcion, int conexion);
 void liberar_proceso_memoria(uint32_t pid);
 bool list_contains(t_list* lista_de_procesos, uint32_t pid);

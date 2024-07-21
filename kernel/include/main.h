@@ -10,10 +10,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "../include/init_kernel.h"
-#include "../include/planificador.h"
-
-
+//#include "../include/init_kernel.h"
+//#include "../include/planificador.h"
+//#include "../include/protocolo_kernel.h"
+#include "../include/servidor_kernel.h"
 
 
 
