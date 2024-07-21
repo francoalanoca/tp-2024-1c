@@ -294,7 +294,7 @@ typedef struct {
 	uint32_t pid;
     uint32_t nombre_archivo_length; 
     char* nombre_archivo; 
-    t_list*  direcciones_fisicas;
+    uint32_t  direcciones_fisicas;
     uint32_t tamanio_operacion;  
     uint32_t puntero_archivo;
 } t_io_readwrite_archivo;

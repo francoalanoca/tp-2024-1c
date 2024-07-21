@@ -112,19 +112,37 @@ while (control_key)
          t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
             interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_GEN_SLEEP)){
-         
-            enviar_io_gen_sleep(io_gen_sleep,interfaz_encontrada->conexion);
+            
+            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
+            sem_wait(&sem_io_fs_libre);
 
-            t_pcb* pcb_a_bloquear_io_gen_sleep = malloc(sizeof(t_pcb));
-            pcb_a_bloquear_io_gen_sleep = buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid);
-            if(pcb_a_bloquear_io_gen_sleep != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_io_gen_sleep,interfaz_encontrada->nombre);
-            }
-            else{
-               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
-               mandar_proceso_a_finalizar(io_gen_sleep->pid);
-               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCUENTRA PROCESO ", io_gen_sleep->pid);
-            }
+            // preparo la estructura para mandar a  cola de bloqueados correspondiente
+            t_proceso_data* proceso_data_io_gen_sleep = malloc(sizeof(t_proceso_data));
+            proceso_data_io_gen_sleep->op = IO_K_GEN_SLEEP;
+            proceso_data_io_gen_sleep->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid);
+            //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
+            t_io_espera* io_espera_a_bloquear = malloc(sizeof(t_io_espera));
+            io_espera_a_bloquear->pid = io_gen_sleep->pid;
+            io_espera_a_bloquear->tiempo_espera = io_gen_sleep->unidades_de_trabajo;
+            proceso_data_io_gen_sleep->data = io_espera_a_bloquear;
+            
+            
+            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+
+            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+            
+               actualizar_quantum(proceso_data_io_gen_sleep->pcb);
+            } 
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_gen_sleep->pcb->pid);
+                     
+            bloquear_proceso(planificador,proceso_data_io_gen_sleep,interfaz_encontrada->nombre);
+            //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+            t_proceso_data* a_enviar_a_io_gen_sleep = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+            //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+            //MUTEX
+            enviar_espera(a_enviar_a_io_gen_sleep->data,socket_servidor);
+            //FIN MUTEX
+            
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
@@ -259,8 +277,12 @@ while (control_key)
          t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
          interfaz_encontrada = dictionary_get(interfaces,io_stdin_read->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDIN_READ)){
-            // el pedido debe agregar la estructura 
-            //bloquear proceso(con estructura correspondiente)
+            
+            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
+
+            sem_wait(&sem_io_fs_libre);// USAR SEMAFOROS para ordenar el envio a la interfaz, ya que solo atiende de a 1 pedido.
+            
+            // preparo la estructura para mandar a  cola de bloqueados correspondiente
             t_proceso_data* proceso_data_stdin_read = malloc(sizeof(t_proceso_data));
             proceso_data_stdin_read->op = IO_K_STDIN;
             proceso_data_stdin_read->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
@@ -272,34 +294,24 @@ while (control_key)
             list_add(lista_nueva_read,io_stdin_read->direccion);
             io_direcciones_fisicas_a_bloquear->direcciones_fisicas = lista_nueva_read; 
             proceso_data_stdin_read->data = io_direcciones_fisicas_a_bloquear;
-            //bloquear_proceso(planificador,proceso_data_stdin_read,interfaz_encontrada->nombre);
-            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
-
-            sem_wait(&sem_io_fs_libre);// USAR SEMAFOROS para ordenar el envio a la interfaz, ya que solo atiende de a 1 pedido.
             
             
-
-            t_pcb* pcb_a_bloquear_stdout_read = malloc(sizeof(t_pcb));
-            pcb_a_bloquear_stdout_read = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
-            if(pcb_a_bloquear_stdout_read != NULL){
-               sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
                
-               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
             
-                  actualizar_quantum(pcb_a_bloquear_stdout_read);
-               } 
-               log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_interrumpido->pcb->pid);
+               actualizar_quantum(proceso_data_stdin_read->pcb);
+            } 
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_stdin_read->pcb->pid);
                      
-               //antes de bloquear crear el  t_proceso_data como hice mas arriba, pero no se como identificar el tipo de struct de io
-               bloquear_proceso(planificador,pcb_a_bloquear_stdout_read,interfaz_encontrada->nombre);
-               //obtener proximo proceso en la lista de bloqueados de ese tipo de interfaz y enviar ese a IO
-               t_proceso_data* a_enviar_a_io = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
-               //COMO SE DE QUE TIPO ES LO QUE OBTENGO DE LA LISTA DE BLOQUEADOS?
-               //enviar_io_stdin_read(io_stdin_read,socket_servidor);
-               //MUTEX
-               enviar_io_df(a_enviar_a_io->data,socket_servidor,a_enviar_a_io->op);
-               //FIN MUTEX
-            }
+            bloquear_proceso(planificador,proceso_data_stdin_read,interfaz_encontrada->nombre);
+            //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+            t_proceso_data* a_enviar_a_io = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+            //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+            //MUTEX
+            enviar_io_df(a_enviar_a_io->data,socket_servidor,a_enviar_a_io->op);
+            //FIN MUTEX
+            
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
@@ -329,12 +341,40 @@ while (control_key)
          t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
             interfaz_encontrada = dictionary_get(interfaces,io_stdout_write->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDOUT_WRITE)){
-            enviar_io_stdout_write(io_stdout_write,socket_servidor);
-            t_pcb* pcb_a_bloquear_stdout_write = malloc(sizeof(t_pcb));
-            pcb_a_bloquear_stdout_write = buscar_pcb_en_lista(planificador->cola_exec,io_stdout_write->pid);
-            if(pcb_a_bloquear_stdout_write != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_stdout_write,interfaz_encontrada->nombre);
-            }
+
+            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_stdout_write->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
+            sem_wait(&sem_io_fs_libre);
+
+            // preparo la estructura para mandar a  cola de bloqueados correspondiente
+            t_proceso_data* proceso_data_stdout_write = malloc(sizeof(t_proceso_data));
+            proceso_data_stdout_write->op = IO_K_STDOUT;
+            proceso_data_stdout_write->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_stdout_write->pid);
+            //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
+            t_io_direcciones_fisicas* io_direcciones_fisicas_a_bloquear_write = malloc(sizeof(t_io_direcciones_fisicas));
+            io_direcciones_fisicas_a_bloquear_write->pid = io_stdout_write->pid;
+            io_direcciones_fisicas_a_bloquear_write->tamanio_operacion = io_stdout_write->tamanio;
+            t_list* lista_nueva_write = list_create();
+            list_add(lista_nueva_write,io_stdout_write->direccion);
+            io_direcciones_fisicas_a_bloquear_write->direcciones_fisicas = lista_nueva_write; 
+            proceso_data_stdout_write->data = io_direcciones_fisicas_a_bloquear_write;
+            
+            
+            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+
+            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+            
+               actualizar_quantum(proceso_data_stdout_write->pcb);
+            } 
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_stdout_write->pcb->pid);
+                     
+            bloquear_proceso(planificador,proceso_data_stdout_write,interfaz_encontrada->nombre);
+            //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+            t_proceso_data* a_enviar_a_io_write = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+            //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+            //MUTEX
+            enviar_io_df(a_enviar_a_io_write->data,socket_servidor,a_enviar_a_io_write->op);
+            //FIN MUTEX
+            
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
@@ -363,18 +403,37 @@ while (control_key)
          t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
             interfaz_encontrada = dictionary_get(interfaces,io_crear_archivo->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_CREATE)){
-            enviar_creacion_archivo(io_crear_archivo,socket_servidor);
+            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_crear_archivo->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
+            sem_wait(&sem_io_fs_libre);
 
-            t_pcb* pcb_a_bloquear = malloc(sizeof(t_pcb));
-            pcb_a_bloquear = buscar_pcb_en_lista(planificador->cola_exec,io_crear_archivo->pid);
-            if(pcb_a_bloquear != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear,interfaz_encontrada->nombre);
-            }
-            else{
-               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
-               mandar_proceso_a_finalizar(io_crear_archivo->pid);
-               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCONTRO EL PROCESO ", io_crear_archivo->pid);
-            }
+            // preparo la estructura para mandar a  cola de bloqueados correspondiente
+            t_proceso_data* proceso_data_io_crear_archivo = malloc(sizeof(t_proceso_data));
+            proceso_data_io_crear_archivo->op = IO_FS_CREATE;
+            proceso_data_io_crear_archivo->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_crear_archivo->pid);
+            //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
+            t_io_gestion_archivo* io_create_archivo_a_bloquear = malloc(sizeof(t_io_gestion_archivo));
+            io_create_archivo_a_bloquear->pid = io_crear_archivo->pid;
+            io_create_archivo_a_bloquear->nombre_archivo_length = io_crear_archivo->nombre_archivo_length;
+            strcpy(io_create_archivo_a_bloquear->nombre_archivo, io_crear_archivo->nombre_archivo);
+            proceso_data_io_crear_archivo->data = io_create_archivo_a_bloquear;
+            
+            
+            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+
+            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+            
+               actualizar_quantum(proceso_data_io_crear_archivo->pcb);
+            } 
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_create_archivo->pcb->pid);
+                     
+            bloquear_proceso(planificador,proceso_data_io_crear_archivo,interfaz_encontrada->nombre);
+            //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+            t_proceso_data* a_enviar_a_io_fs_create = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+            //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+            //MUTEX
+            enviar_gestionar_archivo(a_enviar_a_io_fs_create->data,socket_servidor,a_enviar_a_io_fs_create->op);
+            //FIN MUTEX
+
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
@@ -401,18 +460,37 @@ while (control_key)
          t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
             interfaz_encontrada = dictionary_get(interfaces,io_delete_archivo->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_DELETE)){
-            enviar_delete_archivo(io_delete_archivo,socket_servidor);
+            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_delete_archivo->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
+            sem_wait(&sem_io_fs_libre);
 
-            t_pcb* pcb_a_bloquear_delete = malloc(sizeof(t_pcb));
-            pcb_a_bloquear_delete = buscar_pcb_en_lista(planificador->cola_exec,io_delete_archivo->pid);
-            if(pcb_a_bloquear_delete != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_delete,interfaz_encontrada->nombre);
-            }
-            else{
-               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
-               mandar_proceso_a_finalizar(io_delete_archivo->pid);
-               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCONTRO PROCESO ", io_delete_archivo->pid);
-            }
+            // preparo la estructura para mandar a  cola de bloqueados correspondiente
+            t_proceso_data* proceso_data_io_delete_archivo = malloc(sizeof(t_proceso_data));
+            proceso_data_io_delete_archivo->op = IO_FS_DELETE;
+            proceso_data_io_delete_archivo->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_delete_archivo->pid);
+            //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
+            t_io_gestion_archivo* io_delete_archivo_a_bloquear = malloc(sizeof(t_io_gestion_archivo));
+            io_delete_archivo_a_bloquear->pid = io_delete_archivo->pid;
+            io_delete_archivo_a_bloquear->nombre_archivo_length = io_delete_archivo->nombre_archivo_length;
+            strcpy(io_delete_archivo_a_bloquear->nombre_archivo, io_delete_archivo->nombre_archivo);
+            proceso_data_io_delete_archivo->data = io_delete_archivo_a_bloquear;
+            
+            
+            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+
+            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+            
+               actualizar_quantum(proceso_data_io_delete_archivo->pcb);
+            } 
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_delete_archivo->pcb->pid);
+                     
+            bloquear_proceso(planificador,proceso_data_io_delete_archivo,interfaz_encontrada->nombre);
+            //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+            t_proceso_data* a_enviar_a_io_fs_delete = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+            //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+            //MUTEX
+            enviar_gestionar_archivo(a_enviar_a_io_fs_delete->data,socket_servidor,a_enviar_a_io_fs_delete->op);
+            //FIN MUTEX
+            
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
@@ -439,18 +517,38 @@ while (control_key)
          t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
             interfaz_encontrada = dictionary_get(interfaces,io_truncate_archivo->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_TRUNCATE)){
-            enviar_truncate_archivo(io_truncate_archivo,socket_servidor);
+            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_truncate_archivo->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
+            sem_wait(&sem_io_fs_libre);
 
-            t_pcb* pcb_a_bloquear_truncate = malloc(sizeof(t_pcb));
-            pcb_a_bloquear_truncate = buscar_pcb_en_lista(planificador->cola_exec,io_truncate_archivo->pid);
-            if(pcb_a_bloquear_truncate != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_truncate,interfaz_encontrada->nombre);
-            }
-            else{
-               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
-               mandar_proceso_a_finalizar(io_truncate_archivo->pid);
-               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCONTRO PROCESO ", io_truncate_archivo->pid);
-            }
+            // preparo la estructura para mandar a  cola de bloqueados correspondiente
+            t_proceso_data* proceso_data_io_truncate_archivo = malloc(sizeof(t_proceso_data));
+            proceso_data_io_truncate_archivo->op = IO_FS_TRUNCATE;
+            proceso_data_io_truncate_archivo->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_truncate_archivo->pid);
+            //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
+            t_io_gestion_archivo* io_truncate_archivo_a_bloquear = malloc(sizeof(t_io_gestion_archivo));
+            io_truncate_archivo_a_bloquear->pid = io_truncate_archivo->pid;
+            io_truncate_archivo_a_bloquear->nombre_archivo_length = io_truncate_archivo->nombre_archivo_length;
+            strcpy(io_truncate_archivo_a_bloquear->nombre_archivo, io_truncate_archivo->nombre_archivo);
+            io_truncate_archivo_a_bloquear->tamanio_archivo = io_truncate_archivo->tamanio;
+            proceso_data_io_truncate_archivo->data = io_truncate_archivo_a_bloquear;
+            
+            
+            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+
+            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+            
+               actualizar_quantum(proceso_data_io_truncate_archivo->pcb);
+            } 
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_truncate_archivo->pcb->pid);
+                     
+            bloquear_proceso(planificador,proceso_data_io_truncate_archivo,interfaz_encontrada->nombre);
+            //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+            t_proceso_data* a_enviar_a_io_fs_truncate = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+            //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+            //MUTEX
+            enviar_gestionar_archivo(a_enviar_a_io_fs_truncate->data,socket_servidor,a_enviar_a_io_fs_truncate->op);
+            //FIN MUTEX
+
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
@@ -477,19 +575,40 @@ while (control_key)
          t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
             interfaz_encontrada = dictionary_get(interfaces,io_write_archivo->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_WRITE)){
-            enviar_write_archivo(io_write_archivo,socket_servidor);
+            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_write_archivo->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
+            sem_wait(&sem_io_fs_libre);
 
-            t_pcb* pcb_a_bloquear_write = malloc(sizeof(t_pcb));
-            pcb_a_bloquear_write = buscar_pcb_en_lista(planificador->cola_exec,io_write_archivo->pid);
-            if(pcb_a_bloquear_write != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_write,interfaz_encontrada->nombre);
-               
-            }
-            else{
-               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
-               mandar_proceso_a_finalizar(io_write_archivo->pid);
-               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCONTRO PROCESO ", io_write_archivo->pid);
-            }
+            // preparo la estructura para mandar a  cola de bloqueados correspondiente
+            t_proceso_data* proceso_data_io_write_archivo = malloc(sizeof(t_proceso_data));
+            proceso_data_io_write_archivo->op = IO_FS_WRITE;
+            proceso_data_io_write_archivo->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_write_archivo->pid);
+            //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
+            t_io_readwrite_archivo* io_write_archivo_a_bloquear = malloc(sizeof(t_io_readwrite_archivo));
+            io_write_archivo_a_bloquear->pid = io_write_archivo->pid;
+            io_write_archivo_a_bloquear->nombre_archivo_length = io_write_archivo->nombre_archivo_length;
+            strcpy(io_write_archivo_a_bloquear->nombre_archivo, io_write_archivo->nombre_archivo);
+            io_write_archivo_a_bloquear->direcciones_fisicas = io_write_archivo->direccion;
+            io_write_archivo_a_bloquear->puntero_archivo = io_write_archivo->puntero_archivo;
+            io_write_archivo_a_bloquear->tamanio_operacion = io_write_archivo->tamanio;
+            proceso_data_io_write_archivo->data = io_write_archivo_a_bloquear;
+            
+            
+            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+
+            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+            
+               actualizar_quantum(proceso_data_io_write_archivo->pcb);
+            } 
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_write_archivo->pcb->pid);
+                     
+            bloquear_proceso(planificador,proceso_data_io_write_archivo,interfaz_encontrada->nombre);
+            //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+            t_proceso_data* a_enviar_a_io_fs_write = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+            //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+            //MUTEX
+            enviar_io_readwrite(a_enviar_a_io_fs_write->data,socket_servidor,a_enviar_a_io_fs_write->op);
+            //FIN MUTEX
+
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
@@ -518,21 +637,40 @@ while (control_key)
          t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
             interfaz_encontrada = dictionary_get(interfaces,io_read_archivo->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_READ)){
-            
-            enviar_read_archivo(io_read_archivo,socket_servidor);
+            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
+            sem_wait(&sem_io_fs_libre);
 
-            t_pcb* pcb_a_bloquear_read = malloc(sizeof(t_pcb));
-            pcb_a_bloquear_read = buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid);
-            if(pcb_a_bloquear_read != NULL){
-               bloquear_proceso(planificador,pcb_a_bloquear_read,interfaz_encontrada->nombre);
-            }
-            else{
-               log_info(logger_kernel,"No se encontro el proceso en la lista de ejecutados");
-               sem_wait(&sem_planificar);
-               mandar_proceso_a_finalizar(io_read_archivo->pid);
-               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: NO SE ENCONTRO PROCESO ", io_read_archivo->pid);
-               sem_post(&sem_planificar);
-            }
+            // preparo la estructura para mandar a  cola de bloqueados correspondiente
+            t_proceso_data* proceso_data_io_read_archivo = malloc(sizeof(t_proceso_data));
+            proceso_data_io_read_archivo->op = IO_FS_READ;
+            proceso_data_io_read_archivo->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid);
+            //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
+            t_io_readwrite_archivo* io_read_archivo_a_bloquear = malloc(sizeof(t_io_readwrite_archivo));
+            io_read_archivo_a_bloquear->pid = io_read_archivo->pid;
+            io_read_archivo_a_bloquear->nombre_archivo_length = io_read_archivo->nombre_archivo_length;
+            strcpy(io_read_archivo_a_bloquear->nombre_archivo, io_read_archivo->nombre_archivo);
+            io_read_archivo_a_bloquear->direcciones_fisicas = io_read_archivo->direccion;
+            io_read_archivo_a_bloquear->puntero_archivo = io_read_archivo->puntero_archivo;
+            io_read_archivo_a_bloquear->tamanio_operacion = io_read_archivo->tamanio;
+            proceso_data_io_read_archivo->data = io_read_archivo_a_bloquear;
+            
+            
+            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+
+            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+            
+               actualizar_quantum(proceso_data_io_read_archivo->pcb);
+            } 
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_read_archivo->pcb->pid);
+                     
+            bloquear_proceso(planificador,proceso_data_io_read_archivo,interfaz_encontrada->nombre);
+            //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+            t_proceso_data* a_enviar_a_io_fs_read = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+            //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+            //MUTEX
+            enviar_io_readwrite(a_enviar_a_io_fs_read->data,socket_servidor,a_enviar_a_io_fs_read->op);
+            //FIN MUTEX
+
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
