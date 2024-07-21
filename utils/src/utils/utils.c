@@ -697,23 +697,12 @@ t_io_memo_escritura* deserializar_input(t_list*  lista_paquete ){
     io_input->pid = *(uint32_t*)list_get(lista_paquete, 0);
     printf("Pid recibido: %d \n",io_input->pid);
     
-    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
-    printf("tamanio lista: %d \n",tamanio_lista);
+    io_input->direcciones_fisicas = *(uint32_t*)list_get(lista_paquete, 1);  
 
-     // Deserializar cada elemento de la lista
-    io_input->direcciones_fisicas = list_create();
-    for (int i = 0; i < tamanio_lista; i++) {
-        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
-        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
-        printf("Posicion %d, valor %d \n",2 + i, direccion_fisica) ;
-        list_add(io_input->direcciones_fisicas, direccion_fisica);
-         printf("Valor agregado %d \n",direccion_fisica);
-    }
-
-    io_input->input_length = *(uint32_t*)list_get(lista_paquete,2+tamanio_lista);
+    io_input->input_length = *(uint32_t*)list_get(lista_paquete,2);
     printf("Cantidad caracteres input: %d \n",io_input->input_length);
-    io_input->input = list_get(lista_paquete, 2+tamanio_lista+1);
-    printf("Input: %s \n",io_input->input);    
+    io_input->input = list_get(lista_paquete, 3);
+    printf("Input: %s \n",io_input->input);  
 
     return io_input;
 }
@@ -723,22 +712,12 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
 
     t_paquete* paquete_df = crear_paquete(codigo_operacion); 
     
-    agregar_a_paquete(paquete_df, &io_df->pid, sizeof(io_df->pid)); 
-    
-    uint32_t list_tamanio = list_size(io_df->direcciones_fisicas);
-   
-    agregar_a_paquete(paquete_df, &list_tamanio, sizeof(uint32_t));
-
-    for (int i = 0; i < list_tamanio; i++) {
-        uint32_t* direccion_fisica = (uint32_t*) list_get(io_df->direcciones_fisicas, i);
-        
-        agregar_a_paquete(paquete_df,  &direccion_fisica, sizeof(uint32_t));
-        
-    }   
-     agregar_a_paquete(paquete_df, &io_df->tamanio_operacion, sizeof(uint32_t));    
+    agregar_a_paquete(paquete_df, &io_df->pid, sizeof(uint32_t));   
+    agregar_a_paquete(paquete_df, &io_df->direcciones_fisicas, sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_df, &io_df->tamanio_operacion, sizeof(uint32_t));    
     enviar_paquete(paquete_df, socket);
-     eliminar_paquete(paquete_df); 
-  printf("Se envio io df\n");
+    eliminar_paquete(paquete_df); 
+    printf("Se envio io df\n");
 
 }
 
@@ -746,16 +725,8 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
 
     t_io_direcciones_fisicas* io_df = malloc(sizeof(t_io_direcciones_fisicas));
     io_df->pid = *(uint32_t*)list_get(lista_paquete, 0);
-    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 1);
-   
-  // Deserializar cada elemento de la lista
-    io_df->direcciones_fisicas = list_create();
-    for (int i = 0; i < tamanio_lista; i++) {
-        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
-        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 2 + i);
-        list_add(io_df->direcciones_fisicas, direccion_fisica);
-    }
-    io_df->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,2+tamanio_lista);
+    io_df->direcciones_fisicas = *(uint32_t*)list_get(lista_paquete, 1);   
+    io_df->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,2);
     printf("Tamanio operacion: %d \n",io_df->tamanio_operacion);
     return io_df;
 
@@ -805,14 +776,7 @@ void enviar_input(t_io_memo_escritura* io_input ,int socket, uint32_t op_code ) 
     paquete_input = crear_paquete(op_code);
  
     agregar_a_paquete(paquete_input,  &io_input->pid,  sizeof(uint32_t));      
-    uint32_t list_tamanio = list_size(io_input->direcciones_fisicas);    
-    agregar_a_paquete(paquete_input, &list_tamanio, sizeof(uint32_t));  
-    //agrego cada elemento de la lista de direcciones fisicas
-    for (int i = 0; i < list_tamanio; i++) {
-        uint32_t direccion_fisica = (uint32_t*) list_get(io_input->direcciones_fisicas, i);        
-        agregar_a_paquete(paquete_input,  &direccion_fisica, sizeof(uint32_t));        
-    }   
-
+    agregar_a_paquete(paquete_input, &io_input->direcciones_fisicas, sizeof(uint32_t));  
     agregar_a_paquete(paquete_input, &io_input->input_length, sizeof(uint32_t));  
     agregar_a_paquete(paquete_input, io_input->input, io_input->input_length);  
     enviar_paquete(paquete_input, socket);    
@@ -821,19 +785,13 @@ void enviar_input(t_io_memo_escritura* io_input ,int socket, uint32_t op_code ) 
 }
 
 void enviar_io_readwrite(t_io_readwrite_archivo* io_readwrite ,int socket, uint32_t op_code ){
-    t_paquete* paquete_readwrite;
-    uint32_t list_tamanio = list_size(io_readwrite->direcciones_fisicas); 
+    t_paquete* paquete_readwrite;   
     paquete_readwrite = crear_paquete(op_code);
  
     agregar_a_paquete(paquete_readwrite,  &io_readwrite->pid,  sizeof(uint32_t));     
     agregar_a_paquete(paquete_readwrite, &io_readwrite->nombre_archivo_length, sizeof(uint32_t));  
     agregar_a_paquete(paquete_readwrite, io_readwrite->nombre_archivo, io_readwrite->nombre_archivo_length);       
-    agregar_a_paquete(paquete_readwrite, &list_tamanio, sizeof(uint32_t));  
-    //agrego cada elemento de la lista de direcciones fisicas
-    for (int i = 0; i < list_tamanio; i++) {
-        uint32_t direccion_fisica = (uint32_t*) list_get(io_readwrite->direcciones_fisicas, i);        
-        agregar_a_paquete(paquete_readwrite,  &direccion_fisica, sizeof(uint32_t));        
-    }   
+    agregar_a_paquete(paquete_readwrite, &io_readwrite->direcciones_fisicas, sizeof(uint32_t));   
     agregar_a_paquete(paquete_readwrite,  &io_readwrite->tamanio_operacion,  sizeof(uint32_t));  
     agregar_a_paquete(paquete_readwrite,  &io_readwrite->puntero_archivo,  sizeof(uint32_t));   
     enviar_paquete(paquete_readwrite, socket);    
@@ -848,25 +806,13 @@ t_io_readwrite_archivo* deserializar_io_readwrite(t_list*  lista_paquete ){
     io_readwrite->nombre_archivo_length = *(uint32_t*)list_get(lista_paquete,1);
     io_readwrite->nombre_archivo = list_get(lista_paquete, 2);
     printf("Nombre archivo: %s \n",io_readwrite->nombre_archivo); 
-
-    uint32_t tamanio_lista = *(uint32_t*)list_get(lista_paquete, 3);
-    printf("tamanio lista: %d \n",tamanio_lista); // despues borrar print
-
-     // Deserializar cada elemento de la lista
-    io_readwrite->direcciones_fisicas = list_create();
-    for (int i = 0; i < tamanio_lista; i++) {
-        uint32_t* direccion_fisica = malloc(sizeof(uint32_t));
-        direccion_fisica = *(uint32_t*)list_get(lista_paquete, 4 + i);
-        printf("Posicion %d, valor %d \n",4 + i, direccion_fisica) ; // despues borrar print
-        list_add(io_readwrite->direcciones_fisicas, direccion_fisica);
-         printf("Valor agregado %d \n",direccion_fisica); // despues borrar print
-    }
-    io_readwrite->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,4+tamanio_lista);
+    io_readwrite->direcciones_fisicas = *(uint32_t*)list_get(lista_paquete, 3);       
+    io_readwrite->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,4);
      printf("tamanio operacion %d \n",io_readwrite->tamanio_operacion);// despues borrar print
-    io_readwrite->puntero_archivo = *(uint32_t*)list_get(lista_paquete,4+tamanio_lista+1);
+    io_readwrite->puntero_archivo = *(uint32_t*)list_get(lista_paquete,5);
      printf("Puntero archivo %d \n",io_readwrite->puntero_archivo); // despues borrar print
     return io_readwrite; 
-    free(io_readwrite);
+    
 }
 
 t_io_output* armar_io_output(uint32_t pid, char* output){
@@ -1135,10 +1081,7 @@ void enviar_respuesta_io ( int socket, op_code respuesta, uint32_t pid, char* no
 
 void free_io_readwrite_archivo(t_io_readwrite_archivo* io_rw) {
     if (io_rw != NULL) {
-        free(io_rw->nombre_archivo);
-        if (io_rw->direcciones_fisicas != NULL) {            
-            list_destroy_and_destroy_elements(io_rw->direcciones_fisicas, free);
-        }
+        free(io_rw->nombre_archivo);    
         free(io_rw);
     }
 }
@@ -1152,18 +1095,12 @@ void free_io_gestion_archivo(t_io_gestion_archivo* io_gestion) {
 
 void free_io_direcciones_fisicas(t_io_direcciones_fisicas* io_df) {
     if (io_df != NULL) {
-        if (io_df->direcciones_fisicas != NULL) {          
-            list_destroy_and_destroy_elements(io_df->direcciones_fisicas, free);
-        }
         free(io_df);
     }
 }
 
 void free_io_memo_escritura(t_io_memo_escritura* io_memo_escritura) {
     if (io_memo_escritura != NULL) {     
-        if (io_memo_escritura->direcciones_fisicas != NULL) {
-            list_destroy_and_destroy_elements(io_memo_escritura->direcciones_fisicas, free);
-        }   
         if (io_memo_escritura->input != NULL ) {
             free(io_memo_escritura->input);
         }   
