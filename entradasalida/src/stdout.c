@@ -35,13 +35,11 @@ void iniciar_interfaz_stdout (int socket_kernel, int socket_memoria) {
                 
                 break;     
             case IO_K_STDOUT:{
-
-                t_io_direcciones_fisicas* io_stdout = malloc(sizeof(t_io_direcciones_fisicas));
-                
+                        
                 log_info(logger_entrada_salida, "Recibido IO_K_STDOUT desde kernel");
                 
                 lista_paquete = recibir_paquete(socket_kernel);
-                io_stdout = deserializar_io_df(lista_paquete);
+                t_io_direcciones_fisicas* io_stdout = deserializar_io_df(lista_paquete);
                 
                 //reenvio la solicitud a memoria
                 enviar_io_df(io_stdout, socket_memoria, IO_M_STDOUT);
@@ -60,19 +58,17 @@ void iniciar_interfaz_stdout (int socket_kernel, int socket_memoria) {
                     lista_paquete_nueva = recibir_paquete(socket_memoria);
               
                     
-                    t_io_output* io_output_recibido = malloc(sizeof(t_io_output));
-                    io_output_recibido = deserializar_output(lista_paquete_nueva);
+                    t_io_output* io_output_recibido = deserializar_output(lista_paquete_nueva);
                     printf("Output recibido:  %s \n",io_output_recibido->output);
                  
                     
                     free(io_output_recibido);
                     response = IO_K_STDOUT_FIN;
                     
-                    if (send(socket_kernel, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
-                        log_error(logger_entrada_salida, " Error al enviar respuesta de IO_K_STDOUT_FIN a Kernel");
-                        break;
-                    }
-
+                    enviar_respuesta_io (socket_kernel,response,io_stdout->pid, cfg_entrada_salida->NOMBRE_INTERFAZ);
+                    free_io_output(io_output_recibido);                    
+                    list_destroy_and_destroy_elements(lista_paquete_nueva, free);
+                    free_io_direcciones_fisicas(io_stdout);
                  }
 
                 
@@ -90,11 +86,10 @@ void iniciar_interfaz_stdout (int socket_kernel, int socket_memoria) {
                 break;
         }
 }
-
+list_destroy_and_destroy_elements(lista_paquete, free);
 }
 
  
  
-
 
 

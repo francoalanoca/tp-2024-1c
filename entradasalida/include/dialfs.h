@@ -111,4 +111,6 @@ uint32_t encontrar_bit_libre(t_bitarray* bitarray_in);
 //desearliza un paquete de creacion/eliminacion de archivo
 t_io_gestion_archivo* deserializar_fs_gestion (t_list* lista_paquete);
 void imprimir_estado_bitarray() ;
+//para liberar la memoria ocupada por un fcb
+void free_t_FCB(t_FCB* fcb); 
 #endif //TP_2024_1C_PASARONCOSAS_DIALFS_H

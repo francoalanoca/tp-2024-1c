@@ -89,17 +89,15 @@ int hacer_handshake (int socket_cliente){
 
 
 int  presentar_interfaz(int socket_kernel, t_interfaz* interfaz ){
-    t_paquete* paquete_interfaz = malloc(sizeof(t_paquete));;
-    
-    paquete_interfaz = crear_paquete(INTERFAZ_ENVIAR);
- 
+    t_paquete* paquete_interfaz = crear_paquete(INTERFAZ_ENVIAR); 
     agregar_a_paquete(paquete_interfaz, &interfaz->nombre_length, sizeof(interfaz->nombre_length));  
     agregar_a_paquete(paquete_interfaz, interfaz->nombre, interfaz->nombre_length);
     agregar_a_paquete(paquete_interfaz, &(interfaz->tipo), sizeof(interfaz->tipo));
        
     enviar_paquete(paquete_interfaz, socket_kernel);  
-  
+    eliminar_paquete(paquete_interfaz);
     return recibir_operacion(socket_kernel);
+   
 
 }
     //INICIAR INTERFACE CORRESPONDIENTE
@@ -171,6 +169,7 @@ log_info(logger_entrada_salida, "dentro iniciar interface\n");
                 log_error(logger_entrada_salida, "Algo anduvo mal en el inicio de interface ");
                 break;
         }
+        free_t_interfaz(interfaz);
 }
 
 
