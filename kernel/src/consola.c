@@ -3,120 +3,114 @@
  int identificador_pid;
  pthread_mutex_t mutex_pid;
  pthread_mutex_t mutex_process_id = PTHREAD_MUTEX_INITIALIZER; // Definición
+ pthread_t* planificacion;
 int process_id = 0; // Definición
  t_pcb* pcb2;
 t_algoritmo_planificacion algortimo ;
-//Funcion que implementa el inicio de la consola iterativa
-void iniciar_consola_interactiva(int conexion){
+
+// Función que implementa el inicio de la consola interactiva
+void iniciar_consola_interactiva(int conexion) {
     conexion_memoria = conexion;
-    char* leido;
-    //Asignamos el caracter > a la variable leido
-	leido = readline("> ");
-	log_info(logger_kernel, leido);
+    char* leido = malloc(sizeof(char) * 22);
+     printf("INICIA CONSOLA\n");
+    leido = readline("> ");
+    log_info(logger_kernel, "CARACTER LEIDO: %s",leido);
     bool validacion_leido;
+    
+    // El resto, las vamos leyendo y logueando hasta recibir un string vacío
+    while (strcmp(leido, "\0") != 0) {
+        printf("ME METI AL WHILE\n");
+        // Dividir el comando en partes
+        char** comando_consola = malloc(sizeof(char) * 22);
+        comando_consola = string_split(leido, " ");
+        printf("DESPUES DE STRING SPLIT\n");
 
-	// El resto, las vamos leyendo y logueando hasta recibir un string vacío
-	while (strcmp(leido, "\0") != 0){
+        printf("COMANDO LEIDO: %s\n", comando_consola[0]);
+        printf("COMANDO LEIDO 1: %s\n", comando_consola[1]);
+        // Paso lo leído a validar
+        validacion_leido = validacion_de_instruccion_de_consola(comando_consola);
 
-        //paso lo leido a validar
-        validacion_leido = validacion_de_instruccion_de_consola(leido);
-
-        //Si lo validado no fue reconocido pasa por el if
-        if (!validacion_leido){
-
+        // Si lo validado no fue reconocido pasa por el if
+        if (!validacion_leido) {
             log_error(logger_kernel, "Comando de CONSOLA no reconocido");
+            string_array_destroy(comando_consola);
             free(leido);
             leido = readline("> ");
             log_info(logger_kernel, leido);
-            continue;   //salto el resto del while
+            continue;   // Salto el resto del while
         }
-        
-        //Una vez validado paso a atender lo leido
-        atender_instruccion_validada(leido);
-		free(leido);
-        leido = readline("> ");
-	}
 
-	free(leido);
+        // Una vez validado, paso a atender lo leído
+        atender_instruccion_validada(comando_consola);
+        string_array_destroy(comando_consola);
+        free(leido);
+        leido = readline("> ");
+    }
+
+    free(leido);
 }
 
 
-//FUncnion que evalua lo ingresado por consola y verifica si es alguno de los protocolos
-bool validacion_de_instruccion_de_consola(char* leido){
+
+// Función que evalúa lo ingresado por consola y verifica si es alguno de los protocolos
+bool validacion_de_instruccion_de_consola(char** comando_consola) {
+    printf("ME METI AL VALIDACION CONSOLA\n");
     bool resultado_validacion = false;
-
-    //Paso lo leido por consola a un vector para saber luego si es un comando de consola
-    char** comando_consola = string_split(leido, "");
-
-    //Comparo si lo leido coincide con alguno de los comandos
-    if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0){
+    printf("COMANDO CONSOLA 0: %s",comando_consola[0]);
+    // Comparo si lo leído coincide con alguno de los comandos
+    if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0){
+    } else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0){
+    } else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0){
+    } else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){
+    } else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){
+    } else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0) {
         resultado_validacion = true;
-    }else if (strcmp(comando_consola[0], "PROCESO_ESTADO") == 0){
+    } else if (strcmp(comando_consola[0], "PROCESO_ESTADO") == 0) {
         resultado_validacion = true;
-    }else{
+    } else {
         log_error(logger_kernel, "Comando no reconocido");
         resultado_validacion = false;
     }
-    
-    string_array_destroy(comando_consola);
 
     return resultado_validacion;
 }
 
 
+void atender_instruccion_validada(char** comando_consola){
+       //t_buffer* un_buffer = crear_buffer();
 
-void atender_instruccion_validada(char* leido){
-    char** comando_consola = string_split(leido, "");
-    t_buffer* un_buffer = crear_buffer();
-
-    if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0){    //EJECUTAR_SCRIPT [PATH]
-        cargar_string_al_buffer(un_buffer, comando_consola[1]);     //[PATH]
-
-        //Procedo a ejecuratar el script
-
+    if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0) {    // EJECUTAR_SCRIPT [PATH]
         if (comando_consola[1] == NULL) {
             fprintf(stderr, "Error: se debe proporcionar el path del script.\n");
             return;
         }
-        cargar_string_al_buffer(un_buffer, comando_consola[1]); // [PATH]
 
         // Procedo a ejecutar el script
         f_ejecutar_script(comando_consola[1]);
 
-    } else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0) { //INICIAR_PROCESO [NOMBRE]
+    } else if (strcmp(comando_consola[0], "INICIAR_PROCESO") == 0) { // INICIAR_PROCESO [NOMBRE]
+    printf("ENTRE A INICIAR_PROCESO\n");
+    printf("RUTA ARCHIVO: %s ",comando_consola[1]);
         if (comando_consola[1] == NULL) {
             fprintf(stderr, "Error: se debe proporcionar el nombre del proceso.\n");
             return;
         }
-        cargar_string_al_buffer(un_buffer, comando_consola[1]); //[NOMBRE]
 
         // Procedo a iniciar el proceso
-        f_iniciar_proceso(un_buffer);
-
+        f_iniciar_proceso(comando_consola[1]);  
+    
     }else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0){    //FINALIZAR_PROCESO [PID]
        
         int pid = atoi(comando_consola[1]);
-        if (kill(pid, SIGTERM) == 0) {
-            printf("Proceso con PID %d finalizado exitosamente.\n", pid);
-        } else {
-            if (errno == ESRCH) {
-                printf("No se encontró un proceso con PID %d.\n", pid);
-            } else if (errno == EPERM) {
-                printf("No tienes permiso para finalizar el proceso con PID %d.\n", pid);
-            } else {
-                printf("Ocurrió un error al finalizar el proceso con PID %d: %s\n", pid, strerror(errno));
-            }
-        }
+       
+        mandar_proceso_a_finalizar(pid);
+        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INTERRUPTED_BY_USER ", pid);
+
        
     }else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0){    //DETENER_PLANIFICACION
         
@@ -124,10 +118,17 @@ void atender_instruccion_validada(char* leido){
      
 
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
-        
-        //inicializar_planificador(); //algoritmno, quantum?? ---> quiero preguntar.
+        printf("ENTRE A INICIAR_PLANIFICACION\n");
         algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
         planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
+        sem_post(&sem_planificar);
+        // Hilo para mantener la ejecución andando y no deneter la consola
+        sem_wait(&sem_cpu_libre);
+        if (pthread_create(&planificacion, NULL, planificar_y_ejecutar,NULL) != 0) {
+            perror("pthread_create");            
+            
+        }
+        pthread_detach(planificacion);
 
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         
@@ -153,35 +154,20 @@ void atender_instruccion_validada(char* leido){
 }
 
 //Funcion que carga las instrucciones de path para iniciar un proceso en New
-void f_iniciar_proceso(t_buffer* un_buffer) {
-    char* path = extraer_string_del_buffer(un_buffer);  // Extraemos el path del buffer
-    if (path == NULL) {
-        fprintf(stderr, "Error: no se pudo extraer el path del buffer.\n");
-        return;
-    }
+void f_iniciar_proceso(char* path) {
 
-    char* nombre = extraer_string_del_buffer(un_buffer);  // Extraemos el nombre del buffer
-    if (nombre == NULL) {
-        fprintf(stderr, "Error: no se pudo extraer el nombre del buffer.\n");
-        free(path);
-        return;
-    }
 
-    log_trace(logger_kernel, "BUFFER: [PATH: %s, NOMBRE: %s]", path, nombre);
-    eliminar_buffer(un_buffer);
-
-    t_pcb* pcb = crear_pcb(path,nombre);
+    t_pcb* pcb = crear_pcb(path);
     if (pcb == NULL) {
         fprintf(stderr, "Error: no se pudo crear el PCB.\n");
         free(path);
-        free(nombre);
         return;
     }
 
 
     enviar_creacion_de_proceso_a_memoria(pcb,conexion_memoria);
 
-    int cop = recibir_operacion(conexion_memoria);
+    op_code cop = recibir_operacion(conexion_memoria);
     if(cop==CREAR_PROCESO_KERNEL_FIN);
 
     // Cambiar el estado del PCB a ESTADO_READY
@@ -201,7 +187,7 @@ void f_iniciar_proceso(t_buffer* un_buffer) {
 
     destruir_pcb(pcb);
     free(path);
-    free(nombre);
+
 
 }
 
@@ -214,33 +200,17 @@ void f_iniciar_proceso(t_buffer* un_buffer) {
 
 
 
-t_pcb* crear_pcb(char* path, char* nombre) {
+t_pcb* crear_pcb(char* path) {
     t_pcb* nuevo_pcb = malloc(sizeof(t_pcb));
     if (nuevo_pcb == NULL) {
         log_error(logger_kernel, "No se pudo asignar memoria para el nuevo PCB\n");
         return NULL;
     }
 
-    //pthread_mutex_lock(&mutex_process_id);
-    //process_id++;
-    //nuevo_pcb->pid = process_id;
-    //pthread_mutex_unlock(&mutex_process_id);
 
     nuevo_pcb->program_counter = 0;
     nuevo_pcb->path = strdup(path);  // Guardar el path del proceso
-    //nuevo_pcb->nombre_proceso = strdup(nombre);  // Guardar el nombre del proceso
-    //nuevo_pcb->lista_recursos_pcb = list_create(); // hacerlo en diccionario 
-
     nuevo_pcb->estado = ESTADO_NEW;
-
-   /* if (pthread_mutex_init(&nuevo_pcb->mutex_lista_recursos, NULL) != 0) {
-        log_error(logger_kernel, "No se pudo inicializar el mutex para el PCB\n");
-        free(nuevo_pcb->path);
-        //free(nuevo_pcb->nombre_proceso);
-       // list_destroy(nuevo_pcb->lista_recursos_pcb);
-        free(nuevo_pcb);
-        return NULL;
-    }*/
 
     // Inicializar registros CPU
     nuevo_pcb->registros_cpu.AX = 0;
@@ -397,4 +367,21 @@ void f_ejecutar_script(char* path) {
 
     free(linea);
     fclose(file);
+}
+
+//Kernel le envia a memoria lo que pide para crear un proceso
+void enviar_creacion_de_proceso_a_memoria(t_pcb* pcb, int conexion_memoria) {
+    t_paquete* paquete_enviar_creacion_de_proceso = crear_paquete(CREAR_PROCESO_KERNEL);
+
+    agregar_a_paquete(paquete_enviar_creacion_de_proceso, &pcb->pid, sizeof(uint32_t));
+    uint32_t path_length = strlen(pcb->path) + 1;
+    //agregar_a_paquete(paquete_enviar_creacion_de_proceso, &path_length, sizeof(uint32_t));
+    agregar_a_paquete(paquete_enviar_creacion_de_proceso, pcb->path, path_length);
+    printf("PID: %d", pcb->pid);
+    printf("PATH: %s", pcb->path);
+    printf("PATH LENGTH: %d", path_length);
+    enviar_paquete(paquete_enviar_creacion_de_proceso, conexion_memoria);
+
+    printf("Se envió PCB\n");
+    liberar_memoria_paquete(paquete_enviar_creacion_de_proceso);
 }

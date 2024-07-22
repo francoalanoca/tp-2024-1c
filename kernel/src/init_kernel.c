@@ -9,6 +9,16 @@ int conexion_cpu_interrupt;
 int conexion_memoria;
 int socket_servidor;
 t_dictionary* interfaces; //Diccionario donde se encuentran las interfaces que van llegando de IO
+t_dictionary* procesos_recursos; //Diccionario donde se vinculan los procesos con sus recursos asignados
+sem_t sem_contexto_ejecucion_recibido;
+sem_t sem_confirmacion_memoria;
+sem_t sem_io_fs_libre;
+sem_t sem_cpu_libre;
+sem_t sem_prioridad_io;
+sem_t sem_interrupcion_atendida;
+pthread_mutex_t mutex_cola_ready_prioridad; 
+pthread_mutex_t mutex_cola_ready;
+pthread_mutex_t mutex_envio_io;
 
 int checkProperties(char *path_config) {
     // config valida
@@ -53,17 +63,17 @@ int cargar_configuracion(char *path) {
     cfg_kernel->IP_MEMORIA = strdup(config_get_string_value(file_cfg_kernel, "IP_MEMORIA"));
     log_info(logger_kernel, "IP_MEMORIA cargado correctamente: %s", cfg_kernel->IP_MEMORIA);
 
-    cfg_kernel->PUERTO_MEMORIA = config_get_int_value(file_cfg_kernel, "PUERTO_MEMORIA");
-    log_info(logger_kernel, "PUERTO_MEMORIA cargado correctamente: %d", cfg_kernel->PUERTO_MEMORIA);
+    cfg_kernel->PUERTO_MEMORIA = strdup(config_get_string_value(file_cfg_kernel, "PUERTO_MEMORIA"));
+    log_info(logger_kernel, "PUERTO_MEMORIA cargado correctamente: %s", cfg_kernel->PUERTO_MEMORIA);
 
     cfg_kernel->IP_CPU = strdup(config_get_string_value(file_cfg_kernel, "IP_CPU"));
     log_info(logger_kernel, "IP_CPU cargado correctamente: %s", cfg_kernel->IP_CPU);
 
-    cfg_kernel->PUERTO_CPU_DISPATCH = config_get_int_value(file_cfg_kernel, "PUERTO_CPU_DISPATCH");
-    log_info(logger_kernel, "PUERTO_CPU_DISPATCH cargado correctamente: %d", cfg_kernel->PUERTO_CPU_DISPATCH);
+    cfg_kernel->PUERTO_CPU_DISPATCH = strdup(config_get_string_value(file_cfg_kernel, "PUERTO_CPU_DISPATCH"));
+    log_info(logger_kernel, "PUERTO_CPU_DISPATCH cargado correctamente: %s", cfg_kernel->PUERTO_CPU_DISPATCH);
 
-    cfg_kernel->PUERTO_CPU_INTERRUPT = config_get_int_value(file_cfg_kernel, "PUERTO_CPU_INTERRUPT");
-    log_info(logger_kernel, "PUERTO_CPU_INTERRUPT cargado correctamente: %d", cfg_kernel->PUERTO_CPU_INTERRUPT);
+    cfg_kernel->PUERTO_CPU_INTERRUPT = strdup(config_get_string_value(file_cfg_kernel, "PUERTO_CPU_INTERRUPT"));
+    log_info(logger_kernel, "PUERTO_CPU_INTERRUPT cargado correctamente: %s", cfg_kernel->PUERTO_CPU_INTERRUPT);
     
     cfg_kernel->ALGORITMO_PLANIFICACION = strdup(config_get_string_value(file_cfg_kernel, "ALGORITMO_PLANIFICACION"));
     log_info(logger_kernel, "ALGORITMO_PLANIFICACION cargado correctamente: %s", cfg_kernel->ALGORITMO_PLANIFICACION);
@@ -101,6 +111,8 @@ int init(char *path_config) {
 
     interfaces = dictionary_create();
 
+    procesos_recursos = dictionary_create();
+
     return checkProperties(path_config);
 }
 
@@ -112,7 +124,7 @@ int hacer_handshake (int socket_cliente){
 }
 
 
-void cerrar_programa() {
+/*void cerrar_programa() {
 
     //cortar_conexiones();
     //cerrar_servers();  
@@ -120,17 +132,144 @@ void cerrar_programa() {
     log_info(logger_kernel,"TERMINADA_LA_CONFIG");
     log_info(logger_kernel, "TERMINANDO_EL_LOG");
     log_destroy(logger_kernel);
+}*/
+
+
+
+
+void liberar_cfg_kernel(t_config_kernel *cfg) {
+    free(cfg->PUERTO_ESCUCHA);
+    free(cfg->IP_MEMORIA);
+    free(cfg->IP_CPU);
+    free(cfg->ALGORITMO_PLANIFICACION);
+
+    for (int i = 0; cfg->RECURSOS[i] != NULL; i++) {
+        free(cfg->RECURSOS[i]);
+    }
+    free(cfg->RECURSOS);
+
+    for (int i = 0; cfg->INSTANCIAS_RECURSOS[i] != NULL; i++) {
+        free(cfg->INSTANCIAS_RECURSOS[i]);
+    }
+    free(cfg->INSTANCIAS_RECURSOS);
+
+    free(cfg);
 }
 
-void crear_listas_recursos(){
-
-t_list* recursos = malloc(sizeof(t_list));
-recursos = cfg_kernel->RECURSOS;
-for (size_t i = 0; i < recursos->elements_count; i++)
-{
-    dictionary_put(planificador->cola_blocked ,list_get(recursos,i),list_create());
+void destruir_diccionario(t_dictionary *dict) {
     
+    dictionary_destroy_and_destroy_elements(dict, destruir_elemento );
 }
 
+void destruir_elemento(void *elemento) {
+        list_destroy_and_destroy_elements((t_list *)elemento, free);
+}
+void cerrar_programa() {
+    // Liberar memoria de la configuración
+    liberar_cfg_kernel(cfg_kernel);
+
+    // Liberar diccionarios
+    destruir_diccionario(interfaces);
+    destruir_diccionario(procesos_recursos);
+
+    // Destruir el archivo de configuración y el logger
+    config_destroy(file_cfg_kernel);
+    log_info(logger_kernel, "TERMINADA_LA_CONFIG");
+    log_info(logger_kernel, "TERMINANDO_EL_LOG");
+    log_destroy(logger_kernel);
+}
+
+void liberar_memoria_paquete(t_paquete* paquete){
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+void liberar_memoria_pcb(t_pcb* pcb){
+    free(pcb->path);
+    free(pcb);
+}
+
+void liberar_proceso_interrumpido(t_proceso_interrumpido* proceso_interrumpido){
+   liberar_memoria_pcb(proceso_interrumpido->pcb);
+   free(proceso_interrumpido);
+}
+
+void liberar_memoria_t_io_gen_sleep(t_io_gen_sleep* io_gen_sleep){
+   free(io_gen_sleep->nombre_interfaz);
+   free(io_gen_sleep);
+}
+
+void liberar_memoria_t_interfaz_diccionario(t_interfaz_diccionario* interfaz_diccionario){
+   free(interfaz_diccionario->nombre);
+   free(interfaz_diccionario);
+}
+
+void liberar_memoria_t_proceso_data(t_proceso_data* proceso_data){
+   liberar_memoria_pcb(proceso_data->pcb);
+   free(proceso_data);
+}
+
+void liberar_memoria_t_io_espera(t_io_espera* io_espera){
+   free(io_espera);
+}
+
+void liberar_memoria_t_recurso(t_recurso* recurso){
+   liberar_memoria_pcb(recurso->pcb);
+   free(recurso->nombre_recurso);
+   free(recurso);
+}
+
+void liberar_memoria_t_io_direcciones_fisicas(t_io_direcciones_fisicas* io_direcciones_fisicas){
+   free(io_direcciones_fisicas);
+}
+
+void liberar_memoria_t_io_stdin_stdout(t_io_stdin_stdout* io_stdin_stdout){
+   free(io_stdin_stdout->nombre_interfaz);
+   free(io_stdin_stdout);
+}
+
+void liberar_memoria_t_io_gestion_archivo(t_io_gestion_archivo* io_gestion_archivo){
+   free(io_gestion_archivo->nombre_archivo);
+   free(io_gestion_archivo);
+}
+
+void liberar_memoria_t_io_crear_archivo(t_io_crear_archivo* io_crear_archivo){
+   free(io_crear_archivo->nombre_archivo);
+   free(io_crear_archivo->nombre_interfaz);
+   free(io_crear_archivo);
+}
+
+void liberar_memoria_t_io_fs_truncate(t_io_fs_truncate* io_fs_truncate){
+   free(io_fs_truncate->nombre_archivo);
+   free(io_fs_truncate->nombre_interfaz);
+   free(io_fs_truncate);
+}
+
+void liberar_memoria_t_io_readwrite_archivo(t_io_readwrite_archivo* io_readwrite_archivo){
+   free(io_readwrite_archivo->nombre_archivo);
+   free(io_readwrite_archivo);
+}
+
+void liberar_memoria_t_io_fs_write(t_io_fs_write* io_fs_write){
+   free(io_fs_write->nombre_archivo);
+   free(io_fs_write->nombre_interfaz);
+   free(io_fs_write);
+}
+
+void liberar_memoria_t_proceso_recurso_diccionario(t_proceso_recurso_diccionario* proceso_recurso_diccionario){
+   list_destroy_and_destroy_elements(proceso_recurso_diccionario->nombres_recursos,free);
+   list_destroy(proceso_recurso_diccionario->instancias_recursos);
+   free(proceso_recurso_diccionario);
+}
+
+void liberar_memoria_t_interfaz(t_interfaz* interfaz){
+    free(interfaz->nombre);
+    free(interfaz);
+}
+
+void liberar_memoria_t_interfaz_pid(t_interfaz_pid* interfaz_pid){
+    free(interfaz_pid->nombre_interfaz);
+    free(interfaz_pid);
 }
 

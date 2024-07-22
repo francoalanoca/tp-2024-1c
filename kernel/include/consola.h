@@ -5,11 +5,12 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <readline/readline.h>
-#include "../include/init_kernel.h"
+
 //#include <init_kernel.h>
 #include <utils/utils.h>
 #include <commons/log.h>
 #include <commons/config.h>
+#include <commons/string.h>
 #include <stdint.h>
 #include <string.h>
 #include "../include/planificador.h"
@@ -29,16 +30,16 @@ extern pthread_mutex_t mutex_process_id; // Declaración externa
 extern int process_id; // Declaración externa
 
 void iniciar_consola_interactiva(int conexion);
-bool validacion_de_instruccion_de_consola(char* leido);
-void atender_instruccion_validada(char* leido);
+bool validacion_de_instruccion_de_consola(char** comando_consola);
+void atender_instruccion_validada(char** comando_consola);
 void f_ejecutar_script(char* path);
 //t_planificador *inicializar_planificador(t_algoritmo_planificacion algoritmo, uint32_t quantum);
 void detener_planificacion(t_planificador* planificador);
 void mostrar_estado_proceso(pid_t pid);
 void ajustar_multiprogramacion(int nuevo_valor);
-void f_iniciar_proceso(t_buffer* un_buffer);
+void f_iniciar_proceso(char* path);
 char* extraer_string_del_buffer(un_buffer);
-t_pcb* crear_pcb(char* path,char* nombre);
+t_pcb* crear_pcb(char* path);
 void imprimir_pcb(t_pcb* pcb);
 void enviar_pcb_a_cpu_por_dispatch(t_pcb* pcb);
 void destruir_pcb(t_pcb* pcb);

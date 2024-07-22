@@ -47,6 +47,7 @@ typedef enum
     SOLICITUD_IO_FS_READ_A_KERNEL =160, //CPU envia a kernel la solicitud de IO_FS_READ
     INTERRUPCION_KERNEL, //kernel manda interrupcion a CPU
 
+
  //---------------CPU-MEMORIA-------------------
     PROXIMA_INSTRUCCION = 40,   // Cpu le solicita a Memoria la proxima instruccion a ejecutar
     INSTRUCCION_RECIBIDA = 55,  // Memoria envia a Cpu la instruccion solicitada
@@ -96,10 +97,10 @@ typedef enum
 
 typedef enum {
     INTERRUPCION_OUT_OF_MEMORY,
-    FIN_QUANTUM_RR,
-    FIN_QUANTUM_VRR,
+    FIN_QUANTUM,
     INSTRUCCION_EXIT,
-    ELIMINAR_PROCESO
+    ELIMINAR_PROCESO,
+    INTERRUPCION_IO
 }motivo_interrupcion;
 
 
