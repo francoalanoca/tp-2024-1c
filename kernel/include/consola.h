@@ -10,6 +10,7 @@
 #include <utils/utils.h>
 #include <commons/log.h>
 #include <commons/config.h>
+#include <commons/string.h>
 #include <stdint.h>
 #include <string.h>
 #include "../include/planificador.h"
@@ -36,9 +37,9 @@ void f_ejecutar_script(char* path);
 void detener_planificacion(t_planificador* planificador);
 void mostrar_estado_proceso(pid_t pid);
 void ajustar_multiprogramacion(int nuevo_valor);
-void f_iniciar_proceso(t_buffer* un_buffer);
+void f_iniciar_proceso(char* path);
 char* extraer_string_del_buffer(un_buffer);
-t_pcb* crear_pcb(char* path,char* nombre);
+t_pcb* crear_pcb(char* path);
 void imprimir_pcb(t_pcb* pcb);
 void enviar_pcb_a_cpu_por_dispatch(t_pcb* pcb);
 void destruir_pcb(t_pcb* pcb);

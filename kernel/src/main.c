@@ -42,12 +42,13 @@ int main(char argc, char *argv[]) {
     pthread_mutex_init(&mutex_cola_ready, NULL);
     pthread_mutex_init(&mutex_envio_io, NULL);
 
+    Empezar_conexiones();
 
 //INICIAR SERVIDOR Y CONSOLA INTERACTIVA 
 
     pthread_t hilo1, hilo2, hilo3;
 
-    pthread_create(&hilo1, NULL, (void*)iniciar_consola_interactiva, NULL);
+    pthread_create(&hilo1, NULL, (void*)iniciar_consola_interactiva, conexion_memoria);
     pthread_create(&hilo2, NULL, (void*)crearServidor, NULL);
     pthread_create(&hilo3, NULL, (void*)Escuchar_Msj_De_Conexiones, NULL);
 

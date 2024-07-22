@@ -423,8 +423,9 @@ t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete ){
     crear_proceso->pid = *(uint32_t*)list_get(lista_paquete, 0);
     printf("Pid recibido: %d \n", crear_proceso->pid);
 
-    crear_proceso->archivo_pseudocodigo = list_get(lista_paquete, 1);
-    printf("Nombre del proceso: %s \n", crear_proceso->archivo_pseudocodigo);
+    printf("Nombre del proceso: %s \n", (char*) list_get(lista_paquete, 1));
+    crear_proceso->archivo_pseudocodigo = (char*) list_get(lista_paquete, 1);
+    
 
     return crear_proceso;
 

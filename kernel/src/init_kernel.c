@@ -63,17 +63,17 @@ int cargar_configuracion(char *path) {
     cfg_kernel->IP_MEMORIA = strdup(config_get_string_value(file_cfg_kernel, "IP_MEMORIA"));
     log_info(logger_kernel, "IP_MEMORIA cargado correctamente: %s", cfg_kernel->IP_MEMORIA);
 
-    cfg_kernel->PUERTO_MEMORIA = config_get_int_value(file_cfg_kernel, "PUERTO_MEMORIA");
-    log_info(logger_kernel, "PUERTO_MEMORIA cargado correctamente: %d", cfg_kernel->PUERTO_MEMORIA);
+    cfg_kernel->PUERTO_MEMORIA = strdup(config_get_string_value(file_cfg_kernel, "PUERTO_MEMORIA"));
+    log_info(logger_kernel, "PUERTO_MEMORIA cargado correctamente: %s", cfg_kernel->PUERTO_MEMORIA);
 
     cfg_kernel->IP_CPU = strdup(config_get_string_value(file_cfg_kernel, "IP_CPU"));
     log_info(logger_kernel, "IP_CPU cargado correctamente: %s", cfg_kernel->IP_CPU);
 
-    cfg_kernel->PUERTO_CPU_DISPATCH = config_get_int_value(file_cfg_kernel, "PUERTO_CPU_DISPATCH");
-    log_info(logger_kernel, "PUERTO_CPU_DISPATCH cargado correctamente: %d", cfg_kernel->PUERTO_CPU_DISPATCH);
+    cfg_kernel->PUERTO_CPU_DISPATCH = strdup(config_get_string_value(file_cfg_kernel, "PUERTO_CPU_DISPATCH"));
+    log_info(logger_kernel, "PUERTO_CPU_DISPATCH cargado correctamente: %s", cfg_kernel->PUERTO_CPU_DISPATCH);
 
-    cfg_kernel->PUERTO_CPU_INTERRUPT = config_get_int_value(file_cfg_kernel, "PUERTO_CPU_INTERRUPT");
-    log_info(logger_kernel, "PUERTO_CPU_INTERRUPT cargado correctamente: %d", cfg_kernel->PUERTO_CPU_INTERRUPT);
+    cfg_kernel->PUERTO_CPU_INTERRUPT = strdup(config_get_string_value(file_cfg_kernel, "PUERTO_CPU_INTERRUPT"));
+    log_info(logger_kernel, "PUERTO_CPU_INTERRUPT cargado correctamente: %s", cfg_kernel->PUERTO_CPU_INTERRUPT);
     
     cfg_kernel->ALGORITMO_PLANIFICACION = strdup(config_get_string_value(file_cfg_kernel, "ALGORITMO_PLANIFICACION"));
     log_info(logger_kernel, "ALGORITMO_PLANIFICACION cargado correctamente: %s", cfg_kernel->ALGORITMO_PLANIFICACION);

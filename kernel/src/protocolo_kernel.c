@@ -32,7 +32,7 @@ bool control_key = 1;
 t_list* lista_paquete;
 while (control_key)
 {
-   int cod_op = recibir_operacion(conexion_cpu_dispatch);
+   op_code cod_op = recibir_operacion(conexion_cpu_dispatch);
    switch (cod_op)
    {
    case INTERRUPCION_CPU:
@@ -753,7 +753,7 @@ void Kernel_escuchar_cpu_interrupt(){
 bool control_key = 1;
 while (control_key)
 {
-   int cod_op = recibir_operacion(conexion_cpu_interrupt);
+   op_code cod_op = recibir_operacion(conexion_cpu_interrupt);
    switch (cod_op)
    {
    case MENSAJE:
@@ -779,7 +779,7 @@ void Kernel_escuchar_memoria(){
 bool control_key = 1;
 while (control_key)
 {
-   int cod_op = recibir_operacion(conexion_memoria);
+   op_code cod_op = recibir_operacion(conexion_memoria);
    switch (cod_op)
    {
    case -1:
@@ -788,6 +788,9 @@ while (control_key)
       break;
    case FINALIZAR_PROCESO_FIN:
       sem_post(&sem_confirmacion_memoria);
+      break;
+   case CREAR_PROCESO_KERNEL_FIN:
+      
       break;
    default:
       log_warning(logger_kernel, "Operacion desconocida de memoria");
@@ -798,20 +801,7 @@ while (control_key)
 }
 
 
-//Kernel le envia a memoria lo que pide para crear un proceso
-void enviar_creacion_de_proceso_a_memoria(t_pcb* pcb, int conexion_memoria) {
-    t_paquete* paquete_enviar_creacion_de_proceso = crear_paquete(CREAR_PROCESO_KERNEL);
 
-    agregar_a_paquete(paquete_enviar_creacion_de_proceso, &pcb->pid, sizeof(uint32_t));
-    //int nombre_len = strlen(pcb->nombre_proceso) + 1;
-    //agregar_a_paquete(paquete_enviar_creacion_de_proceso, &nombre_len, sizeof(nombre_len));
-    //agregar_a_paquete(paquete_enviar_creacion_de_proceso, pcb->nombre_proceso, nombre_len);
-
-    enviar_paquete(paquete_enviar_creacion_de_proceso, conexion_memoria);
-
-    printf("Se envió PCB\n");
-    liberar_memoria_paquete(paquete_enviar_creacion_de_proceso);
-}
 
 t_pcb* buscar_pcb_en_lista(t_list* lista_de_pcb, uint32_t pid){
    t_pcb* pcb_de_lista = malloc(sizeof(t_pcb));
