@@ -144,6 +144,7 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 }
 
 int crear_conexion(t_log* logger, const char* server_name, char* ip, char* puerto) {
+ printf("Entro crear_conexion\n");
     struct addrinfo hints, *servinfo;
 
     // Init de hints

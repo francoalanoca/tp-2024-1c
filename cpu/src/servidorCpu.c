@@ -98,11 +98,7 @@ void procesar_conexion(void *v_args){
                 pthread_mutex_lock(&mutex_proceso_actual);
                 proceso_actual = proceso; //Agregar a lista de procesos?
                 pthread_mutex_unlock(&mutex_proceso_actual);
-                printf("pase mutex\n");
                 list_destroy_and_destroy_elements(lista_paquete_nuevo_proceso,free);
-                printf("pase list_destory\n");
-               // free(proceso->path);
-                printf("pase free path\n");
                 free(proceso);
                 printf("pase free proceso\n");
                 break;
@@ -220,7 +216,7 @@ void procesar_conexion(void *v_args){
 
 int hacer_handshake (int socket_cliente){
     uint32_t handshake  = HANDSHAKE;
-
+    printf("El handshake a enviar es: %d", handshake);
     send(socket_cliente, &handshake, sizeof(uint32_t), NULL);
     return recibir_operacion(socket_cliente);
 }

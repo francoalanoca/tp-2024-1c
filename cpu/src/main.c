@@ -23,6 +23,7 @@ sem_t sem_marco_recibido;
 sem_t sem_valor_registro_recibido;
 sem_t sem_valor_resize_recibido;
 sem_t sem_valor_tamanio_pagina;
+sem_t sem_servidor_creado;
 uint32_t tamanio_pagina;
 pthread_mutex_t mutex_proceso_actual;
 pthread_mutex_t mutex_proceso_interrumpido_actual;
@@ -48,6 +49,7 @@ int main(int argc, char* argv[]) {
     sem_init(&sem_valor_registro_recibido, 0, 0);
     sem_init(&sem_valor_resize_recibido, 0, 0);
     sem_init(&sem_valor_tamanio_pagina, 0, 0);
+    sem_init(&sem_servidor_creado, 0, 0);
     pthread_mutex_init(&mutex_proceso_actual, NULL);
     pthread_mutex_init(&mutex_proceso_interrumpido_actual, NULL);
     pthread_mutex_init(&mutex_interrupcion_kernel, NULL);
@@ -73,23 +75,25 @@ int main(int argc, char* argv[]) {
     pthread_detach(servidor_interrupt);
     log_info(logger_cpu, "cree los hilos servidor");
 
-    // Obtener tamaño de página
-    obtenerTamanioPagina(socket_memoria);
-    sem_wait(&sem_valor_tamanio_pagina);
+
 
     prox_inst = malloc(sizeof(instr_t));
-
-    log_info(logger_cpu, "se creo el servidor");
+    printf("Creo prox_inst\n");
 
     socket_memoria = crear_conexion(logger_cpu, "MEMORIA", cfg_cpu->IP_MEMORIA, cfg_cpu->PUERTO_MEMORIA);
-
-    if (hacer_handshake(socket_memoria) == HANDSHAKE) {
+    log_info(logger_cpu, "cree la conexion con memoria");
+    if (hacer_handshake(socket_memoria) == HANDSHAKE_OK) {
         log_info(logger_cpu, "Correcto en handshake con memoria");
+        sem_post(&sem_servidor_creado);
     } else {
         log_info(logger_cpu, "Error en handshake con memoria");
         liberar_memoria();
         return EXIT_FAILURE;
     }
+    sem_wait(&sem_servidor_creado);
+        // Obtener tamaño de página
+    obtenerTamanioPagina(socket_memoria);
+    sem_wait(&sem_valor_tamanio_pagina);
 
     while(1){
         if(proceso_actual != NULL){

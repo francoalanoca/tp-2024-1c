@@ -25,6 +25,7 @@ extern sem_t sem_valor_registro_recibido;
 extern char* rta_resize;
 extern sem_t sem_valor_resize_recibido;
 extern sem_t sem_valor_tamanio_pagina;
+extern sem_t sem_servidor_creado;
 extern pthread_mutex_t mutex_proceso_actual;
 extern pthread_mutex_t mutex_proceso_interrumpido_actual;
 extern pthread_mutex_t mutex_interrupcion_kernel;
@@ -51,7 +52,7 @@ extern t_config *file_cfg_cpu;
 typedef struct
 {
     char *IP_MEMORIA;
-    int PUERTO_MEMORIA;
+    char* PUERTO_MEMORIA;
     char* PUERTO_ESCUCHA_DISPATCH;
     char* PUERTO_ESCUCHA_INTERRUPT;
     int CANTIDAD_ENTRADAS_TLB;
