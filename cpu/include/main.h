@@ -11,7 +11,7 @@
 
 
 
-void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_proceso* proceso);
+void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pcb* proceso);
 
 
 

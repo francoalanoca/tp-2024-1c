@@ -6,6 +6,7 @@
 #include </home/utnso/so-commons-library/src/commons/string.h>
 #include <utils/utils.h>
 #include <semaphore.h>
+#include <pthread.h>
 
 
 extern t_pcb* proceso_actual;
@@ -13,7 +14,7 @@ extern t_proceso_interrumpido* proceso_interrumpido_actual;
 extern bool interrupcion_kernel;
 extern int conexion_kernel;
 extern instr_t *prox_inst;
-extern sem_t sem_conexion_lista;
+extern sem_t sem_valor_instruccion;
 extern t_list* tlb;
 extern uint32_t marco_recibido;
 extern sem_t sem_marco_recibido;
@@ -24,6 +25,9 @@ extern sem_t sem_valor_registro_recibido;
 extern char* rta_resize;
 extern sem_t sem_valor_resize_recibido;
 extern sem_t sem_valor_tamanio_pagina;
+extern pthread_mutex_t mutex_proceso_actual;
+extern pthread_mutex_t mutex_proceso_interrumpido_actual;
+extern pthread_mutex_t mutex_interrupcion_kernel;
 typedef struct {
     uint32_t pid;
     uint32_t nro_pagina;
