@@ -319,19 +319,22 @@ void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
 
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
+    printf("ENTRO A enviar_paquete\n"); 
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 	void* a_enviar = serializar_paquete(paquete, bytes);
-	
+	printf("voy a enviar\n"); 
 	send(socket_cliente, a_enviar, bytes, 0);
-
+    printf("ya envie\n"); 
 	free(a_enviar);
 }
 
 void eliminar_paquete(t_paquete* paquete)
 {
+    printf("ENTRO eliminar_paquete\n"); 
 	free(paquete->buffer->stream);
 	free(paquete->buffer);
 	free(paquete);
+    printf("FIN eliminar_paquete\n"); 
 }
 
 void liberar_conexion(int socket_cliente)
@@ -443,6 +446,7 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
     enviar_paquete(paquete_crear_proceso, socket_kernel);   
     printf("Proceso enviado: %s\n", crear_proceso->archivo_pseudocodigo); 
     eliminar_paquete(paquete_crear_proceso);
+     printf("PAQUETE ELIMINADO\n"); 
     
 }
 
@@ -1125,4 +1129,12 @@ void free_t_interfaz(t_interfaz* interfaz) {
         }
         free(interfaz);
     }
+}
+
+t_list* char_array_to_list(char** array) {
+    t_list* list = list_create();  
+    for (int i = 0; array[i] != NULL; i++) {
+        list_add(list, strdup(array[i])); 
+    }
+    return list;
 }

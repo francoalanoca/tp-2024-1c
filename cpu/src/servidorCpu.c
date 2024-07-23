@@ -68,26 +68,28 @@ void procesar_conexion(void *v_args){
 
      ///
    
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    cop = recv(cliente_socket, &(paquete->codigo_operacion), sizeof(op_code), 0);
-    paquete->buffer = malloc(sizeof(t_buffer));
-    recv(cliente_socket, &(paquete->buffer->size), sizeof(uint32_t), 0);
-    paquete->buffer->stream = malloc(paquete->buffer->size);
-    recv(cliente_socket, paquete->buffer->stream, paquete->buffer->size, 0); //agregar &?
+   // t_paquete* paquete = malloc(sizeof(t_paquete));
+     recv(cliente_socket, &(cop), sizeof(op_code), 0);
+    //paquete->buffer = malloc(sizeof(t_buffer));
+    //recv(cliente_socket, &(paquete->buffer->size), sizeof(uint32_t), 0);
+    //paquete->buffer->stream = malloc(paquete->buffer->size);
+    //recv(cliente_socket, paquete->buffer->stream, paquete->buffer->size, 0); //agregar &?
      ///
-
+    printf("COP:%d\n",cop);
     while (cliente_socket != -1) {
+
 
        // if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
         if (cop != sizeof(op_code)) {
             log_info(logger, "DISCONNECT!");
-            return;
+            //return;
         }
 
     //switch (cop){
         switch (cop){
             case NUEVO_PROCESO:
             {
+                printf("llega nuevo_proceso\n");
                 t_list* lista_paquete_nuevo_proceso = recibir_paquete(cliente_socket);
                 t_pcb* proceso = malloc(sizeof(t_pcb));
                 proceso = proceso_deserializar(lista_paquete_nuevo_proceso); 
@@ -166,13 +168,19 @@ void procesar_conexion(void *v_args){
                 uint32_t valor_tamanio_pag = deserealizar_tamanio_pag(lista_paquete_tamanio_pag); 
                 tamanio_pagina = valor_tamanio_pag; 
                 sem_post(&sem_valor_tamanio_pagina);
+                break;
+            }
+            default:
+            {
+                printf("Codigo de operacion no identifcado\n");
+                break;
             }
             
            
     }   
-free(paquete->buffer->stream);
-free(paquete->buffer);
-free(paquete);
+//free(paquete->buffer->stream);
+//free(paquete->buffer);
+//free(paquete);
 }
 }
 
@@ -184,29 +192,25 @@ int hacer_handshake (int socket_cliente){
 }
 
 t_pcb *proceso_deserializar(t_list*  lista_paquete_proceso ) {
-    printf("entro a proceso_deserializar\n");
     t_pcb *proceso_nuevo = malloc(sizeof(t_pcb));
-
-    proceso_nuevo->pid = *(uint32_t*)list_get(lista_paquete_proceso, 0);
-     
     proceso_nuevo->pid = *(uint32_t*)list_get(lista_paquete_proceso, 0);
     proceso_nuevo->program_counter = *(uint32_t*)list_get(lista_paquete_proceso, 1);
     proceso_nuevo->path_length = *(uint32_t*)list_get(lista_paquete_proceso, 2);
     proceso_nuevo->path = list_get(lista_paquete_proceso, 3);
-    proceso_nuevo->registros_cpu.PC = *(uint32_t*)list_get(lista_paquete_proceso, 5);
-    proceso_nuevo->registros_cpu.AX = *(uint32_t*)list_get(lista_paquete_proceso, 6);
-    proceso_nuevo->registros_cpu.BX = *(uint32_t*)list_get(lista_paquete_proceso, 7);
-    proceso_nuevo->registros_cpu.CX = *(uint32_t*)list_get(lista_paquete_proceso, 8);
-    proceso_nuevo->registros_cpu.DX = *(uint32_t*)list_get(lista_paquete_proceso, 9);
-    proceso_nuevo->registros_cpu.EAX = *(uint32_t*)list_get(lista_paquete_proceso, 10);
-    proceso_nuevo->registros_cpu.EBX = *(uint32_t*)list_get(lista_paquete_proceso, 11);
-    proceso_nuevo->registros_cpu.ECX = *(uint32_t*)list_get(lista_paquete_proceso, 12);
-    proceso_nuevo->registros_cpu.EDX = *(uint32_t*)list_get(lista_paquete_proceso, 13);
-    proceso_nuevo->registros_cpu.SI = *(uint32_t*)list_get(lista_paquete_proceso, 14);
-    proceso_nuevo->registros_cpu.DI = *(uint32_t*)list_get(lista_paquete_proceso, 15);
-    proceso_nuevo->estado = *(uint32_t*)list_get(lista_paquete_proceso, 16);
-    proceso_nuevo->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete_proceso, 17);
-    proceso_nuevo->quantum = *(uint32_t*)list_get(lista_paquete_proceso, 18);
+    proceso_nuevo->registros_cpu.PC = *(uint32_t*)list_get(lista_paquete_proceso, 4);
+    proceso_nuevo->registros_cpu.AX = *(uint32_t*)list_get(lista_paquete_proceso, 5);
+    proceso_nuevo->registros_cpu.BX = *(uint32_t*)list_get(lista_paquete_proceso, 6);
+    proceso_nuevo->registros_cpu.CX = *(uint32_t*)list_get(lista_paquete_proceso, 7);
+    proceso_nuevo->registros_cpu.DX = *(uint32_t*)list_get(lista_paquete_proceso, 8);
+    proceso_nuevo->registros_cpu.EAX = *(uint32_t*)list_get(lista_paquete_proceso, 9);
+    proceso_nuevo->registros_cpu.EBX = *(uint32_t*)list_get(lista_paquete_proceso, 10);
+    proceso_nuevo->registros_cpu.ECX = *(uint32_t*)list_get(lista_paquete_proceso, 11);
+    proceso_nuevo->registros_cpu.EDX = *(uint32_t*)list_get(lista_paquete_proceso, 12);
+    proceso_nuevo->registros_cpu.SI = *(uint32_t*)list_get(lista_paquete_proceso, 13);
+    proceso_nuevo->registros_cpu.DI = *(uint32_t*)list_get(lista_paquete_proceso, 14);
+    proceso_nuevo->estado = *(uint32_t*)list_get(lista_paquete_proceso, 15);
+    proceso_nuevo->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete_proceso, 16);
+    proceso_nuevo->quantum = *(uint32_t*)list_get(lista_paquete_proceso, 17);
 	return proceso_nuevo;
 }
 

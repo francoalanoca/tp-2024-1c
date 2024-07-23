@@ -480,4 +480,5 @@ void free_io_direcciones_fisicas(t_io_direcciones_fisicas* io_df);
 void free_io_output(t_io_output* io_output);
 void free_io_memo_escritura(t_io_memo_escritura* io_memo_escritura) ;
 void free_t_interfaz(t_interfaz* interfaz);
+t_list* char_array_to_list(char** array);
 #endif /* UTILS_H_ */

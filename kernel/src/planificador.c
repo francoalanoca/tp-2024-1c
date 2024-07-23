@@ -1,6 +1,6 @@
 #include "../include/planificador.h"
-t_planificador* planificador;
-sem_t* sem_planificar;
+//t_planificador* planificador;
+sem_t sem_planificar;
 t_temporal* cronometro;
 //sem_t sem_contexto_ejecucion_recibido;
 //sem_t sem_confirmacion_memoria;
@@ -30,18 +30,23 @@ void detener_planificacion(t_planificador* planificador) {
 
 t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, int quantum,int grado_multiprogramacion) {
 
-    t_planificador* planificador = malloc(sizeof(t_planificador));
+    planificador = malloc(sizeof(t_planificador));
+    printf("creo planificador\n");
     planificador->cola_new = list_create();
     planificador->cola_ready = list_create();
     planificador->cola_exec = list_create();
+     printf("creo cola_exec\n");
     planificador->cola_blocked = dictionary_create();
+    printf("creo cola_blocked\n");
     planificador->cola_exit = list_create();
     planificador->algoritmo = algoritmo;
     planificador->quantum = quantum;
     planificador->grado_multiprogramacion = grado_multiprogramacion;
     planificador->grado_multiprogramacion_actual = 0;
     planificador->planificacion_detenida = false; // Inicializar planificación como no detenida
+    printf("creo planificacion_detenida\n");
     crear_listas_recursos();
+    printf("creo crear_listas_recursos\n");
     return planificador;
 }
 
@@ -57,9 +62,12 @@ void destruir_planificador(t_planificador* planificador) {
 
 // Agrega un nuevo proceso al planificador
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso) {
+printf("ENTRO agregar_proceso\n");
     list_add(planificador->cola_new, proceso);
+    printf("Agrego a cola new\n");
     if (planificador->grado_multiprogramacion_actual <= planificador->grado_multiprogramacion) {
-        sem_wait(&sem_prioridad_io);
+        printf("ENTRARE A sem_prioridad_io\n");
+       // sem_wait(&sem_prioridad_io); DESCOMENTAR
         t_pcb* proceso_nuevo = list_remove(planificador->cola_new, 0);
         list_add(planificador->cola_ready, proceso_nuevo);
         planificador->grado_multiprogramacion_actual++;
@@ -352,14 +360,50 @@ void largo_plazo_nuevo_ready() {
 
 void crear_listas_recursos(){
 
-t_list* recursos = malloc(sizeof(t_list));
-recursos = cfg_kernel->RECURSOS;
+recursos = malloc(sizeof(t_list));
+recursos = char_array_to_list(cfg_kernel->RECURSOS);
+
+printf("Creo lista recursos, tiene %d elementos, data:%s\n", recursos->elements_count,list_get(recursos,0));
+
 for (size_t i = 0; i < recursos->elements_count; i++)
 {
     dictionary_put(planificador->cola_blocked ,list_get(recursos,i),list_create());
-    
 } 
 
 list_destroy_and_destroy_elements(recursos,free);
 
+}
+
+t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid) {
+    for (int i = 0; i < list_size(lista_procesos); i++) {
+        t_pcb* proceso = list_get(lista_procesos, i);
+        if (proceso->pid == pid) {
+            return proceso;
+        }
+    }
+    return NULL;
+}
+
+void mandar_proceso_a_finalizar(uint32_t pid){
+    printf("ME METI AL mandar_proceso_a_finalizar\n");
+   t_pcb* pcb_a_procesar = malloc(sizeof(t_pcb));
+   pcb_a_procesar = encontrar_proceso_pid(planificador->cola_exec,pid);
+   printf("ENCONTRE PCB A PROCESAR\n");
+   eliminar_proceso(planificador,pcb_a_procesar);
+   printf("ELIMINE PROCESO\n");
+   liberar_memoria_pcb(pcb_a_procesar);
+   printf("LIBERE MEMORIA PCB\n");
+}
+
+uint32_t buscar_indice_recurso(t_list* lista_recursos,char* nombre_recurso){
+   uint32_t indice_encontrado = malloc(sizeof(uint32_t));
+   indice_encontrado = NULL;
+
+   for (size_t i = 0; i < lista_recursos->elements_count; i++)
+   {
+      if(strcmp(list_get(lista_recursos,i), nombre_recurso) == 0){
+         indice_encontrado = i;
+      }
+   }
+   return indice_encontrado;
 }
