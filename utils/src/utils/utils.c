@@ -448,10 +448,10 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
 
 
 
-uint32_t* deserializar_finalizar_proceso(t_list*  lista_paquete ){
+uint32_t deserializar_finalizar_proceso(t_list*  lista_paquete ){
 
     //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
-    uint32_t* proceso_a_finalizar = malloc(sizeof(uint32_t));
+    uint32_t proceso_a_finalizar;
     
     proceso_a_finalizar = *(uint32_t*)list_get(lista_paquete, 0);
     printf("Pid recibido: %d \n", proceso_a_finalizar);
@@ -650,7 +650,7 @@ void enviar_peticion_valor(void* respuesta_leer ,int socket_cpu) {
 
 
 
-void enviar_resultado_guardar(void* respuesta_escribir, int socket_cliente){
+void enviar_resultado_guardar(char* respuesta_escribir, int socket_cliente){
     t_paquete* paquete_valor;
 
     paquete_valor = crear_paquete(GUARDAR_EN_DIRECCION_FISICA_RTA);
@@ -1029,9 +1029,8 @@ void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket ){
  t_proceso_interrumpido* deserializar_proceso_interrumpido(t_list*  lista_paquete ){
 
     t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
-    proceso_interrumpido->pcb = deserializar_pcb(lista_paquete);
-    //proceso_interrumpido->tamanio_motivo_interrupcion = *(uint32_t*)list_get(lista_paquete, 18); //ver posicion en la lista
-    proceso_interrumpido->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete, 18); //ver posicion en la lista
+    proceso_interrumpido->pid = *(uint32_t*)list_get(lista_paquete, 0);
+    proceso_interrumpido->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete, 1); //ver posicion en la lista
 
 	return proceso_interrumpido;
 }

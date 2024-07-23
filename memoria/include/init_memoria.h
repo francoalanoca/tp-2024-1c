@@ -42,8 +42,6 @@ typedef struct{
 typedef struct{
     uint32_t marco;
     uint32_t posicion;
-    bool presencia;
-    bool modificado;
 }t_pagina;
 
 
@@ -56,7 +54,7 @@ typedef struct{
 extern void* memoria;
 extern t_list* lista_tablas_de_paginas;     
 extern t_list* lista_miniPCBs;
-extern pthread_mutex_t mutex_memoria;
+//extern pthread_mutex_t mutex_memoria;
 extern uint32_t cantidad_frames_memoria;
 extern uint32_t cantidad_page_fault;  
 extern t_bitarray *bitmap_frames;
@@ -67,15 +65,7 @@ extern t_dictionary* instrucciones_de_procesos;
 
 
 
-static t_config_memoria *cfg_memoria_start();
-
-static t_config_memoria *cfg_memoria_start(){
-
-    t_config_memoria *cfg = malloc(sizeof(t_config_memoria));
-    return cfg;
-}
-
-
+t_config_memoria *cfg_memoria_start();
 
 int init(char *path_config);
 int checkProperties(char *path_config);

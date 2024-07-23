@@ -86,11 +86,15 @@ int init(char *path_config) {
 
 
 void cerrar_programa() {
-
-
     //cortar_conexiones();
     //cerrar_servers();  
-    config_destroy(file_cfg_cpu);
+    //config_destroy(file_cfg_cpu);
+    free(cfg_cpu->IP_MEMORIA);
+    free(cfg_cpu->PUERTO_ESCUCHA_DISPATCH);
+    free(cfg_cpu->PUERTO_ESCUCHA_INTERRUPT);
+    free(cfg_cpu->ALGORITMO_TLB);
+    free(cfg_cpu);
+
     log_info(logger_cpu,"TERMINADA_LA_CONFIG");
     log_info(logger_cpu, "TERMINANDO_EL_LOG");
     log_destroy(logger_cpu);

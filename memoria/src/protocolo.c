@@ -43,7 +43,7 @@ switch (cod_op) {
         case CREAR_PROCESO_KERNEL:
             valores = recibir_paquete(socket_cliente);
             t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);
-            leer_instrucciones(iniciar_proceso->archivo_pseudocodigo);                  
+            leer_instrucciones(iniciar_proceso->archivo_pseudocodigo, iniciar_proceso->pid);                  
             crear_proceso(iniciar_proceso->pid);
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_respuesta_crear_proceso(iniciar_proceso, socket_cliente);
@@ -88,17 +88,19 @@ switch (cod_op) {
             void* respuesta_leer = leer_memoria(peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);          
             log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d - Tamaño: %d", peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);    
-            enviar_peticion_valor(respuesta_leer, socket_cliente);                            
+            enviar_peticion_valor(respuesta_leer, socket_cliente);
+            free(respuesta_leer);                            
             break;
 
         case GUARDAR_EN_DIRECCION_FISICA:
             valores = recibir_paquete(socket_cliente);
             peticion_escribir = deserializar_peticion_guardar(valores);   
-            void* respuesta_escribir = escribir_memoria(peticion_escribir->pid, peticion_escribir->direccion_fisica, peticion_escribir->valor, peticion_escribir->tamanio);
-            log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Direccion fisica: %d - Tamaño: %d", peticion_escribir->pid, peticion_escribir->direccion_fisica), peticion_escribir->tamanio;
+            char* respuesta_escribir = escribir_memoria(peticion_escribir->pid, peticion_escribir->direccion_fisica, peticion_escribir->valor, peticion_escribir->tamanio);
+            log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Direccion fisica: %d - Tamaño: %d", peticion_escribir->pid, peticion_escribir->direccion_fisica, peticion_escribir->tamanio);
             free(peticion_escribir);
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_resultado_guardar(respuesta_escribir, socket_cliente);
+            free(respuesta_escribir);
             break;
 
         case SOLICITUD_RESIZE:
@@ -116,6 +118,7 @@ switch (cod_op) {
             void* respuesta_copy = copiar_solicitud(copiar_valor->pid, copiar_valor->direccion_fisica, copiar_valor->valor);
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_resultado_copiar(respuesta_copy, socket_cliente);
+            free(respuesta_copy);
             break;
 		
 /*---------------------------- ENTRADASALIDA-------------------------*/  
@@ -131,7 +134,8 @@ switch (cod_op) {
                 printf("El paquete vino vacío\n");
                 break;
             }        
-             int dir = list_get(input->direcciones_fisicas,0);
+            
+            int dir = *(int*) list_get(input->direcciones_fisicas,0);
             escribir_memoria(input->pid, dir , input->input, input->input_length);    //ver
             response = IO_M_STDIN_FIN;
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
@@ -159,7 +163,7 @@ switch (cod_op) {
             }
 
              
-            output =  leer_memoria(io_stdout->pid, list_get(io_stdout->direcciones_fisicas,0), io_stdout->tamanio_operacion);
+            output =  leer_memoria(io_stdout->pid, *(uint32_t*)list_get(io_stdout->direcciones_fisicas,0), io_stdout->tamanio_operacion);
             uint32_t tamanio_output = string_length(output)+1;
             io_output->pid = io_stdout->pid;
             io_output->output_length = tamanio_output;
@@ -170,6 +174,7 @@ switch (cod_op) {
             enviar_output(io_output ,socket_cliente, IO_M_STDOUT_FIN );
             list_clean(valores);    
             break;
+            
         case IO_FS_WRITE://Lee de memoria y escribe en un archivo
             printf("Recibida IO_FS_WRITE \n");
 
@@ -183,8 +188,8 @@ switch (cod_op) {
             if (valores == NULL || list_size(valores) == 0) {
                 printf("El paquete vino vacío\n");
                 break;
-            } printf("direccionde posicion  %s\n",list_get(io_fs_write->direcciones_fisicas,0));
-            char* escritura = leer_memoria(io_fs_write->pid, list_get(io_fs_write->direcciones_fisicas,0), io_fs_write->tamanio_operacion);     //ver
+            } printf("direccionde posicion  %s\n", (char*)list_get(io_fs_write->direcciones_fisicas,0));
+            char* escritura = leer_memoria(io_fs_write->pid, *(uint32_t*)list_get(io_fs_write->direcciones_fisicas,0), io_fs_write->tamanio_operacion);     //ver
             
              printf("Lectura %s\n",escritura);
             uint32_t tamanio_escritura = string_length(escritura)+1;
@@ -203,7 +208,7 @@ switch (cod_op) {
             valores = recibir_paquete(socket_cliente);         
             input = deserializar_input(valores);        
              
-            escribir_memoria(input->pid, list_get(input->direcciones_fisicas,0), input->input, input->input_length);      
+            escribir_memoria(input->pid, *(uint32_t*)list_get(input->direcciones_fisicas,0), input->input, input->input_length);      
             response = IO_FS_READ_M; // termina de escribir
         //     usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             if (send(socket_cliente, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {

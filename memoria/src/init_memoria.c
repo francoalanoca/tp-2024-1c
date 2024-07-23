@@ -15,12 +15,19 @@ int fd_entradasalida;
 void* memoria;
 t_list* lista_tablas_de_paginas;
 t_list* lista_miniPCBs;
-pthread_mutex_t mutex_memoria;
+//pthread_mutex_t mutex_memoria;
 uint32_t cantidad_frames_memoria;       //seria tam_memoria / tam_pagina
 uint32_t cantidad_page_fault;       
 t_bitarray *bitmap_frames;
 
 t_dictionary* instrucciones_de_procesos;
+
+
+t_config_memoria *cfg_memoria_start(){
+
+    t_config_memoria *cfg = malloc(sizeof(t_config_memoria));
+    return cfg;
+}
 
 
 //Funcion que hace la inicializacion de las config y logger
@@ -118,7 +125,7 @@ void inicializar_memoria(){
 	lista_tablas_de_paginas = list_create();                //lista en en donde se almacenara la tabla de paginas de un proceso 
 	lista_miniPCBs = list_create();
     instrucciones_de_procesos = dictionary_create();        //memoria de instrucciones
-	pthread_mutex_init(&mutex_memoria, NULL);
+	//pthread_mutex_init(&mutex_memoria, NULL);
 	cantidad_page_fault = 0;
 	cantidad_frames_memoria = cfg_memoria->TAM_MEMORIA / cfg_memoria->TAM_PAGINA;
 	bitmap_frames = crear_bitmap(cantidad_frames_memoria);   

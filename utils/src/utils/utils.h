@@ -227,7 +227,7 @@ typedef struct {
 }t_proceso;
 
 typedef struct{
-    t_pcb* pcb;
+    uint32_t* pid;
     //uint32_t tamanio_motivo_interrupcion;
     //char* motivo_interrupcion;
     motivo_interrupcion motivo_interrupcion;
@@ -423,7 +423,7 @@ t_io_output* deserializar_output(t_list*  lista_paquete );
 t_m_crear_proceso* deserializar_crear_proceso(t_list*  lista_paquete );
 void enviar_pcb_a_memoria(t_m_crear_proceso* pcb, int socket_memoria);
 void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket_kernel);
-uint32_t* deserializar_finalizar_proceso(t_list*  lista_paquete );
+uint32_t deserializar_finalizar_proceso(t_list*  lista_paquete );
 void enviar_respuesta_finalizar_proceso(uint32_t pid_proceso_a_finalizar ,int socket_kernel);
 t_proceso_memoria* deserializar_proxima_instruccion(t_list*  lista_paquete );
 t_busqueda_marco* deserializar_solicitud_marco(t_list*  lista_paquete );
@@ -435,7 +435,7 @@ void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu);
 void enviar_solicitud_marco(int marco ,int socket_cpu);
 void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu);
 void enviar_peticion_valor(void* respuesta_leer ,int socket_cpu);
-void enviar_resultado_guardar(void* respuesta_escribir, int socket_cliente);
+void enviar_resultado_guardar(char* respuesta_escribir, int socket_cliente);
 void enviar_respuesta_resize(op_code respuesta_resize, int socket_cliente);
 void enviar_resultado_copiar(void* respuesta_copy, int socket_cliente);
 t_io_memo_escritura* deserializar_input(t_list*  lista_paquete );
@@ -454,7 +454,7 @@ void  enviar_io_stdout_write(t_io_stdin_stdout* io_stdout_write, int socket );
 t_io_gen_sleep* deserializar_io_gen_sleep(t_list*  lista_paquete );
 void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket );
 t_proceso_interrumpido* deserializar_proceso_interrumpido(t_list*  lista_paquete );
-void enviar_resultado_guardar(void* valor, int socket_cliente);
+
 //Memoria recibe para escribir desde io
 t_io_memo_escritura* deserializar_input(t_list*  lista_paquete );
 // Kernel envía a IO Crear/Borrar/Truncar Archivo

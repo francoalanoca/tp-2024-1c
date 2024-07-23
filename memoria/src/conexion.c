@@ -6,7 +6,6 @@ int iniciar_servidor_memoria()
 {
 
 	int memoria_server_fd, socket_cliente;
-    int err;
     char ip_str[INET_ADDRSTRLEN];
     struct addrinfo hints, *server_info;
     char puerto[6]; 
@@ -19,7 +18,7 @@ int iniciar_servidor_memoria()
     hints.ai_flags = AI_PASSIVE;
 
 
-    err = getaddrinfo(NULL, puerto, &hints, &server_info);
+    getaddrinfo(NULL, puerto, &hints, &server_info);
    
       for (p= server_info; p != NULL; p = p->ai_next) {
         if ((memoria_server_fd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
@@ -70,7 +69,7 @@ while (1) {
         *socket_cliente_hilo = socket_cliente;
 
         // Crear hilos para atender al cliente
-        if (pthread_create(&client_thread, NULL, memoria_atender_cliente, (void*)socket_cliente_hilo) != 0) {
+        if (pthread_create(&client_thread, NULL, (void*) memoria_atender_cliente, (void*)socket_cliente_hilo) != 0) {
             perror("pthread_create");
             free(socket_cliente_hilo);
             close(socket_cliente);
