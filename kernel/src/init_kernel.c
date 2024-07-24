@@ -16,9 +16,13 @@ sem_t sem_io_fs_libre;
 sem_t sem_cpu_libre;
 sem_t sem_prioridad_io;
 sem_t sem_interrupcion_atendida;
+sem_t sem_rta_crear_proceso;
 pthread_mutex_t mutex_cola_ready_prioridad; 
 pthread_mutex_t mutex_cola_ready;
 pthread_mutex_t mutex_envio_io;
+t_list* recursos;
+t_planificador* planificador;
+uint32_t contador_pid;
 
 int checkProperties(char *path_config) {
     // config valida
@@ -272,4 +276,5 @@ void liberar_memoria_t_interfaz_pid(t_interfaz_pid* interfaz_pid){
     free(interfaz_pid->nombre_interfaz);
     free(interfaz_pid);
 }
+
 

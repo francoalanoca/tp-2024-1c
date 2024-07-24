@@ -9,32 +9,9 @@
 #include <commons/collections/list.h>
 #include <pthread.h>
 #include <semaphore.h>
-// Enumeración para los algoritmos de planificación
-typedef enum {
-    FIFO,
-    ROUND_ROBIN,
-    VIRTUAL_ROUND_ROBIN
-} t_algoritmo_planificacion;
-
-typedef struct {
-    t_list* cola_new;      
-    t_list* cola_ready;   
-    t_list* cola_ready_prioridad; 
-    t_list* cola_exec;     
-    t_dictionary* cola_blocked;  
-    t_list* cola_exit;     
-    t_algoritmo_planificacion algoritmo;
-    int quantum;
-    int grado_multiprogramacion;
-    int grado_multiprogramacion_actual;
-    bool planificacion_detenida;         
-} t_planificador;
 
 
-// ver si falta poner alguna libreria
-extern t_planificador* planificador;
-
-extern sem_t* sem_planificar;
+extern sem_t sem_planificar;
 extern t_temporal* cronometro;
 
 // Inicializa un nuevo planificador
@@ -69,4 +46,5 @@ void planificar_y_ejecutar();
 void lanzar_interrupcion_fin_quantum (void* args);
 void crear_listas_recursos();
 void actualizar_quantum(t_pcb* proceso);
+uint32_t buscar_indice_recurso(t_list* lista_recursos,char* nombre_recurso);
 #endif /* PLANIFICADORES_H_ */

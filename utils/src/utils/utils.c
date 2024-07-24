@@ -144,6 +144,7 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 }
 
 int crear_conexion(t_log* logger, const char* server_name, char* ip, char* puerto) {
+ printf("Entro crear_conexion\n");
     struct addrinfo hints, *servinfo;
 
     // Init de hints
@@ -319,19 +320,22 @@ void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
 
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
+    printf("ENTRO A enviar_paquete\n"); 
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 	void* a_enviar = serializar_paquete(paquete, bytes);
-	
+	printf("voy a enviar\n"); 
 	send(socket_cliente, a_enviar, bytes, 0);
-
+    printf("ya envie\n"); 
 	free(a_enviar);
 }
 
 void eliminar_paquete(t_paquete* paquete)
 {
+    printf("ENTRO eliminar_paquete\n"); 
 	free(paquete->buffer->stream);
 	free(paquete->buffer);
 	free(paquete);
+    printf("FIN eliminar_paquete\n"); 
 }
 
 void liberar_conexion(int socket_cliente)
@@ -443,6 +447,7 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
     enviar_paquete(paquete_crear_proceso, socket_kernel);   
     printf("Proceso enviado: %s\n", crear_proceso->archivo_pseudocodigo); 
     eliminar_paquete(paquete_crear_proceso);
+     printf("PAQUETE ELIMINADO\n"); 
     
 }
 
@@ -1029,8 +1034,9 @@ void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket ){
  t_proceso_interrumpido* deserializar_proceso_interrumpido(t_list*  lista_paquete ){
 
     t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
-    proceso_interrumpido->pid = *(uint32_t*)list_get(lista_paquete, 0);
-    proceso_interrumpido->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete, 1); //ver posicion en la lista
+    proceso_interrumpido->pcb = deserializar_pcb(lista_paquete);
+    //proceso_interrumpido->tamanio_motivo_interrupcion = *(uint32_t*)list_get(lista_paquete, 18); //ver posicion en la lista
+    proceso_interrumpido->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete, 18); //ver posicion en la lista
 
 	return proceso_interrumpido;
 }
@@ -1124,4 +1130,12 @@ void free_t_interfaz(t_interfaz* interfaz) {
         }
         free(interfaz);
     }
+}
+
+t_list* char_array_to_list(char** array) {
+    t_list* list = list_create();  
+    for (int i = 0; array[i] != NULL; i++) {
+        list_add(list, strdup(array[i])); 
+    }
+    return list;
 }

@@ -429,24 +429,24 @@ void generar_interrupcion_a_kernel(int conexion){
  
     paquete_interrupcion_kernel = crear_paquete(INTERRUPCION_CPU);
  
-    agregar_a_paquete(paquete_interrupcion_kernel,  &proceso_interrumpido_actual->pid,  sizeof(uint32_t));         
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->program_counter, sizeof(uint32_t));  
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->path_length, sizeof(uint32_t)); 
-    agregar_a_paquete(paquete_interrupcion_kernel, proceso_actual->path, proceso_actual->path_length);
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->registros_cpu.PC, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->registros_cpu.EAX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->registros_cpu.EBX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->registros_cpu.ECX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->registros_cpu.EDX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->registros_cpu.SI, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->registros_cpu.DI, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->estado, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->tiempo_ejecucion, sizeof(uint32_t));
-    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_actual->quantum, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel,  &proceso_interrumpido_actual->pcb->pid,  sizeof(uint32_t));         
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->program_counter, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->path_length, sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_interrupcion_kernel, proceso_interrumpido_actual->pcb->path, proceso_interrumpido_actual->pcb->path_length);
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.PC, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.EAX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.EBX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.ECX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.EDX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.SI, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->registros_cpu.DI, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->estado, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->tiempo_ejecucion, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->quantum, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->motivo_interrupcion, sizeof(uint32_t));
 
     enviar_paquete(paquete_interrupcion_kernel, conexion);   
@@ -782,7 +782,7 @@ void resize(uint32_t tamanio){
     sem_wait(&sem_valor_resize_recibido);
     if(strcmp(rta_resize, "Out of memory") == 0){
         pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
-        proceso_interrumpido_actual->pid = proceso_actual->pid;
+        proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
         proceso_interrumpido_actual->motivo_interrupcion = INTERRUPCION_OUT_OF_MEMORY;
         pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
         envia_error_de_memoria_a_kernel(proceso_interrumpido_actual);
@@ -878,7 +878,7 @@ void exit_inst(){
     // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
     //Contexto de Ejecución actualizado al Kernel para su finalización.
     pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
-    proceso_interrumpido_actual->pid = proceso_actual->pid;
+    proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
     proceso_interrumpido_actual->motivo_interrupcion = INSTRUCCION_EXIT;
     pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
     solicitar_exit_a_kernel(proceso_interrumpido_actual);
@@ -947,24 +947,24 @@ void envia_error_de_memoria_a_kernel(t_proceso_interrumpido* proceso){
    
     paquete_error_memoria = crear_paquete(INTERRUPCION_CPU); 
     
-    agregar_a_paquete(paquete_error_memoria,  &proceso->pid,  sizeof(uint32_t));         
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->program_counter, sizeof(uint32_t));  
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->path_length, sizeof(uint32_t)); 
-    agregar_a_paquete(paquete_error_memoria, proceso_actual->path, proceso_actual->path_length);
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->registros_cpu.PC, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->registros_cpu.EAX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->registros_cpu.EBX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->registros_cpu.ECX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->registros_cpu.EDX, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->registros_cpu.SI, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->registros_cpu.DI, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->estado, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->tiempo_ejecucion, sizeof(uint32_t));
-    agregar_a_paquete(paquete_error_memoria, &proceso_actual->quantum, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria,  &proceso->pcb->pid,  sizeof(uint32_t));         
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->program_counter, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->path_length, sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_error_memoria, proceso->pcb->path, proceso->pcb->path_length);
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.PC, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.EAX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.EBX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.ECX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.EDX, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.SI, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->registros_cpu.DI, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->estado, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->tiempo_ejecucion, sizeof(uint32_t));
+    agregar_a_paquete(paquete_error_memoria, &proceso->pcb->quantum, sizeof(uint32_t));
     agregar_a_paquete(paquete_error_memoria, &proceso->motivo_interrupcion, sizeof(uint32_t));
        
     enviar_paquete(paquete_error_memoria, conexion_kernel); 
@@ -1108,24 +1108,24 @@ void solicitar_exit_a_kernel(t_proceso_interrumpido* proceso){
         t_paquete* paquete_exit_kernel;
         paquete_exit_kernel = crear_paquete(INTERRUPCION_CPU); 
         
-        agregar_a_paquete(paquete_exit_kernel,  &proceso->pid,  sizeof(uint32_t));         
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->program_counter, sizeof(uint32_t));  
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->path_length, sizeof(uint32_t)); 
-        agregar_a_paquete(paquete_exit_kernel, proceso_actual->path, proceso_actual->path_length);
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->registros_cpu.PC, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->registros_cpu.EAX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->registros_cpu.EBX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->registros_cpu.ECX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->registros_cpu.EDX, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->registros_cpu.SI, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->registros_cpu.DI, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->estado, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->tiempo_ejecucion, sizeof(uint32_t));
-        agregar_a_paquete(paquete_exit_kernel, &proceso_actual->quantum, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel,  &proceso->pcb->pid,  sizeof(uint32_t));         
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->program_counter, sizeof(uint32_t));  
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->path_length, sizeof(uint32_t)); 
+        agregar_a_paquete(paquete_exit_kernel, proceso->pcb->path, proceso->pcb->path_length);
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.PC, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.AX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.BX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.CX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.DX, sizeof(uint32_t)); //VER TAMANIO
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.EAX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.EBX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.ECX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.EDX, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.SI, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->registros_cpu.DI, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->estado, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->tiempo_ejecucion, sizeof(uint32_t));
+        agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->quantum, sizeof(uint32_t));
         agregar_a_paquete(paquete_exit_kernel, &proceso->motivo_interrupcion, sizeof(uint32_t));
         
         enviar_paquete(paquete_exit_kernel, conexion_kernel); 

@@ -12,7 +12,11 @@ t_algoritmo_planificacion algortimo ;
 void iniciar_consola_interactiva(int conexion) {
     conexion_memoria = conexion;
     char* leido = malloc(sizeof(char) * 22);
-     printf("INICIA CONSOLA\n");
+
+    algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
+    planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
+ 
+    printf("INICIA CONSOLA\n");
     leido = readline("> ");
     log_info(logger_kernel, "CARACTER LEIDO: %s",leido);
     bool validacion_leido;
@@ -35,6 +39,7 @@ void iniciar_consola_interactiva(int conexion) {
             log_error(logger_kernel, "Comando de CONSOLA no reconocido");
             string_array_destroy(comando_consola);
             free(leido);
+            printf("INICIA CONSOLA\n");
             leido = readline("> ");
             log_info(logger_kernel, leido);
             continue;   // Salto el resto del while
@@ -44,6 +49,7 @@ void iniciar_consola_interactiva(int conexion) {
         atender_instruccion_validada(comando_consola);
         string_array_destroy(comando_consola);
         free(leido);
+        printf("INICIA CONSOLA\n");
         leido = readline("> ");
     }
 
@@ -105,23 +111,30 @@ void atender_instruccion_validada(char** comando_consola){
         f_iniciar_proceso(comando_consola[1]);  
     
     }else if (strcmp(comando_consola[0], "FINALIZAR_PROCESO") == 0){    //FINALIZAR_PROCESO [PID]
-       
-        int pid = atoi(comando_consola[1]);
-       
+       printf("ME METI AL FINALIZAR_PROCESO\n");
+        uint32_t pid = atoi(comando_consola[1]);
+       printf("OBTENGO PID: %u\n",pid);
         mandar_proceso_a_finalizar(pid);
         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INTERRUPTED_BY_USER ", pid);
 
        
     }else if (strcmp(comando_consola[0], "DETENER_PLANIFICACION") == 0){    //DETENER_PLANIFICACION
+        if(!planificador->planificacion_detenida){
+            detener_planificacion(planificador);
+        }
+        else{
+            printf("LA PLANIFICACION YA ESTA DETENIDA\n");
+        }
         
-        detener_planificacion(planificador);
      
 
     }else if (strcmp(comando_consola[0], "INICIAR_PLANIFICACION") == 0){    //INICIAR_PLANIFICACION
         printf("ENTRE A INICIAR_PLANIFICACION\n");
-        algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
-        planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
-        sem_post(&sem_planificar);
+        //algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
+       // planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
+        if(planificador->planificacion_detenida){
+            printf("ENTRE A IFF INICIAR_PLANIFICACION\n");
+            sem_post(&sem_planificar);
         // Hilo para mantener la ejecución andando y no deneter la consola
         sem_wait(&sem_cpu_libre);
         if (pthread_create(&planificacion, NULL, planificar_y_ejecutar,NULL) != 0) {
@@ -129,6 +142,11 @@ void atender_instruccion_validada(char** comando_consola){
             
         }
         pthread_detach(planificacion);
+        }
+        else{
+            printf("LA PLANIFICACION YA ESTA INICIADA\n");
+        }
+        
 
     }else if (strcmp(comando_consola[0], "MULTIPROGRAMACION") == 0){    //MULTIPROGRAMACION [VALOR]
         
@@ -149,7 +167,6 @@ void atender_instruccion_validada(char** comando_consola){
         exit(EXIT_FAILURE);
     }
     
-    string_array_destroy(comando_consola);
     
 }
 
@@ -165,30 +182,25 @@ void f_iniciar_proceso(char* path) {
     }
 
 
-    enviar_creacion_de_proceso_a_memoria(pcb,conexion_memoria);
+    //enviar_creacion_de_proceso_a_memoria(pcb,conexion_memoria);
+    printf("ENTRO A WAIT SEM CREACION PROCESO\n");
 
-    op_code cop = recibir_operacion(conexion_memoria);
-    if(cop==CREAR_PROCESO_KERNEL_FIN);
-
+    //ESTO DESCOMENTARLO PERO PONER UN SEM WAIT(SEM POST EN EL CASE DE PROTOCOLO KERNEL DE CREAR_PROCESO_KERNEL_FIN)
+    //sem_wait(&sem_rta_crear_proceso);
     // Cambiar el estado del PCB a ESTADO_READY
     if (agregar_proceso( planificador, pcb)){
 
-    log_info(logger_kernel, "Proceso enviado a new");
+    printf("PROCESO AGREAGADO\n");
 
     };
+
     
-
-    imprimir_pcb(pcb);
-
-    //pcb2 obtener_proximo_proceso(t_planificador* planificador)
-    //enviar_pcb_a_cpu_por_dispatch(pcb2); //declarar pcb2
     pcb2 = obtener_proximo_proceso(planificador);
+    printf("PROXIMO PROCESO:%d \n",pcb2->pid);
     enviar_pcb_a_cpu_por_dispatch(pcb2); //declarar pcb2
-
+    list_add(planificador->cola_exec,pcb2);  //ES PARA PROBAR, BORRAR DESPUES
+    printf("ENVIE A CPU EL PROCESO\n");
     destruir_pcb(pcb);
-    free(path);
-
-
 }
 
 
@@ -207,7 +219,8 @@ t_pcb* crear_pcb(char* path) {
         return NULL;
     }
 
-
+    nuevo_pcb->pid = contador_pid;
+    contador_pid+=1;
     nuevo_pcb->program_counter = 0;
     nuevo_pcb->path = strdup(path);  // Guardar el path del proceso
     nuevo_pcb->estado = ESTADO_NEW;
@@ -239,10 +252,11 @@ void enviar_pcb_a_cpu_por_dispatch(t_pcb* pcb) {
     //cambiar_estado(pcb, ESTADO_RUNNING);
 
 
-    t_paquete* un_paquete = crear_paquete(conexion_cpu_dispatch);
-    agregar_a_paquete(un_paquete, pcb->pid, sizeof(uint32_t));
-    agregar_a_paquete(un_paquete, pcb->program_counter, sizeof(uint32_t)); // cambiar a agregar_a_paquete y agregar sizeof.
-
+    t_paquete* un_paquete = crear_paquete(NUEVO_PROCESO);
+    agregar_a_paquete(un_paquete, &pcb->pid, sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &pcb->program_counter, sizeof(uint32_t)); // cambiar a agregar_a_paquete y agregar sizeof.
+    agregar_a_paquete(un_paquete, &(pcb->path_length), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, (pcb->path), pcb->path_length);
     agregar_a_paquete(un_paquete, &(pcb->registros_cpu.PC), sizeof(uint32_t));
     agregar_a_paquete(un_paquete, &(pcb->registros_cpu.AX), sizeof(uint8_t));
     agregar_a_paquete(un_paquete, &(pcb->registros_cpu.BX), sizeof(uint8_t));
@@ -251,9 +265,12 @@ void enviar_pcb_a_cpu_por_dispatch(t_pcb* pcb) {
     agregar_a_paquete(un_paquete, &(pcb->registros_cpu.EAX), sizeof(uint32_t));
     agregar_a_paquete(un_paquete, &(pcb->registros_cpu.EBX), sizeof(uint32_t));
     agregar_a_paquete(un_paquete, &(pcb->registros_cpu.ECX), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(pcb->registros_cpu.EDX), sizeof(uint32_t));
     agregar_a_paquete(un_paquete, &(pcb->registros_cpu.SI), sizeof(uint32_t));
     agregar_a_paquete(un_paquete, &(pcb->registros_cpu.DI), sizeof(uint32_t));
-
+    agregar_a_paquete(un_paquete, &(pcb->estado), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(pcb->tiempo_ejecucion), sizeof(uint32_t));
+    agregar_a_paquete(un_paquete, &(pcb->quantum), sizeof(uint32_t));
     enviar_paquete(un_paquete, conexion_cpu_dispatch);
     eliminar_paquete(un_paquete);
 }
