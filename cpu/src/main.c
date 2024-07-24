@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
         // Obtener tamaño de página
     obtenerTamanioPagina(socket_memoria);
     sem_wait(&sem_valor_tamanio_pagina);
-   proceso_actual = malloc(sizeof(t_pcb));
+   //proceso_actual = malloc(sizeof(t_pcb));
     while(1){
         if(proceso_actual != NULL){
             ciclo_de_instrucciones(socket_memoria, logger_cpu, cfg_cpu, proceso_actual);

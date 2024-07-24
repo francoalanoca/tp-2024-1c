@@ -93,13 +93,12 @@ void procesar_conexion(void *v_args){
             {
                 printf("llega nuevo_proceso\n");
                 t_list* lista_paquete_nuevo_proceso = recibir_paquete(cliente_socket);
-                t_pcb* proceso = malloc(sizeof(t_pcb));
-                proceso = proceso_deserializar(lista_paquete_nuevo_proceso); 
+                t_pcb* proceso = proceso_deserializar(lista_paquete_nuevo_proceso); 
                 pthread_mutex_lock(&mutex_proceso_actual);
                 proceso_actual = proceso; //Agregar a lista de procesos?
                 pthread_mutex_unlock(&mutex_proceso_actual);
                 list_destroy_and_destroy_elements(lista_paquete_nuevo_proceso,free);
-                free(proceso);
+                //free(proceso);
                 printf("pase free proceso\n");
                 break;
             }
