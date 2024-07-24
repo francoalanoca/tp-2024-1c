@@ -84,7 +84,7 @@ void procesar_conexion(void *v_args){
        // if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
         if (cop != sizeof(op_code)) {
             log_info(logger, "DISCONNECT!");
-            //return;
+            return;
         }
 
     //switch (cop){
@@ -192,6 +192,7 @@ void procesar_conexion(void *v_args){
             case SOLICITUD_TAMANIO_PAGINA_RTA:
             {
                 log_info(logger_cpu, "SOLICITUD_TAMANIO_PAGINA_RTA");
+                printf("ENTRO A SOLICITUD_TAMANIO_PAGINA_RTA\n");
                 t_list* lista_paquete_tamanio_pag = recibir_paquete(cliente_socket);
                 uint32_t valor_tamanio_pag = deserealizar_tamanio_pag(lista_paquete_tamanio_pag); 
                 tamanio_pagina = valor_tamanio_pag; 

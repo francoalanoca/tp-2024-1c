@@ -31,7 +31,7 @@ while (1) {
 switch (cod_op) {
 		
 		case HANDSHAKE:
-			log_info(logger_memoria, "Handshake realizado con cliente");
+			log_info(logger_memoria, "Handshake realizado con cliente(%d)",socket_cliente);
             response = HANDSHAKE_OK;
             if (send(socket_cliente, &response, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
                 log_error(logger_memoria, "Error al enviar respuesta de handshake a cliente");
@@ -222,7 +222,7 @@ switch (cod_op) {
         
         
         default:
-			log_warning(logger_memoria,"Operacion desconocida");
+			log_warning(logger_memoria,"Operacion desconocida: %d",cod_op );
 			break;  
         
         

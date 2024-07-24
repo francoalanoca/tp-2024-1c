@@ -130,17 +130,19 @@ t_list* recibir_paquete(int socket_cliente)
 
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {
-	void * magic = malloc(bytes);
-	int desplazamiento = 0;
+void* magic = malloc(bytes);
+    int desplazamiento = 0;
 
-	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
-	desplazamiento+= sizeof(int);
-	memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
-	desplazamiento+= sizeof(int);
-	memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
-	desplazamiento+= paquete->buffer->size;
+    // Copiar el código de operación
+    memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
+    desplazamiento += sizeof(int);
+    // Copiar el tamaño del buffer
+    memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
+    desplazamiento += sizeof(int);
+    // Copiar el contenido del buffer
+    memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
 
-	return magic;
+    return magic;
 }
 
 int crear_conexion(t_log* logger, const char* server_name, char* ip, char* puerto) {
@@ -309,24 +311,47 @@ void cargar_string_al_buffer(t_buffer* un_buffer, char* tamanio_string)
 }
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
 {
-	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio + sizeof(int));
-
-	memcpy(paquete->buffer->stream + paquete->buffer->size, &tamanio, sizeof(int));
-	memcpy(paquete->buffer->stream + paquete->buffer->size + sizeof(int), valor, tamanio);
-
-	paquete->buffer->size += tamanio + sizeof(int);
+    // Asignar memoria para el nuevo valor
+    paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio);
+    // Copiar el valor al buffer
+    memcpy(paquete->buffer->stream + paquete->buffer->size, valor, tamanio);
+    // Actualizar el tamaño del buffer
+    paquete->buffer->size += tamanio;
 }
 
 
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
-    printf("ENTRO A enviar_paquete\n"); 
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-	void* a_enviar = serializar_paquete(paquete, bytes);
-	printf("voy a enviar\n"); 
-	send(socket_cliente, a_enviar, bytes, 0);
+     printf("ENTRO A enviar_paquete\n"); 
+    int bytes = paquete->buffer->size + 2 * sizeof(int);
+    void* a_enviar = serializar_paquete(paquete, bytes);
+
+    // Verificación antes de enviar
+    printf("Datos a enviar:\n");
+    for (int i = 0; i < bytes; i++) {
+        printf("%02X ", ((unsigned char*)a_enviar)[i]);
+    }
+    printf("\n");
+
+    // Interpretación de los valores como uint32_t
+    for (int i = 0; i < bytes; i += 4) {
+        uint32_t valor;
+        memcpy(&valor, (unsigned char*)a_enviar + i, sizeof(uint32_t));
+        printf("Valor uint32_t: %u\n", valor);
+    }
+
+    printf("voy a enviar\n"); 
+    int bytes_enviados = send(socket_cliente, a_enviar, bytes, 0);
+    if (bytes_enviados == -1) {
+        perror("Error al enviar el paquete");
+    } else if (bytes_enviados != bytes) {
+        printf("Advertencia: No se enviaron todos los bytes esperados. Bytes enviados: %d, Bytes esperados: %d\n", bytes_enviados, bytes);
+    } else {
+        printf("Paquete enviado correctamente a %d. Bytes enviados: %d\n",socket_cliente, bytes_enviados);
+    }
     printf("ya envie\n"); 
-	free(a_enviar);
+
+    free(a_enviar);
 }
 
 void eliminar_paquete(t_paquete* paquete)
@@ -625,14 +650,14 @@ void enviar_solicitud_marco(int marco ,int socket_cpu) {
 }
 
 void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu) {
-    t_paquete* paquete_tam_pagina;
- 
-    paquete_tam_pagina = crear_paquete(SOLICITUD_TAMANIO_PAGINA_RTA);
- 
-    agregar_a_paquete(paquete_tam_pagina, &tamanio_pagina,  sizeof(uint32_t));         
-    
+    t_paquete* paquete_tam_pagina = crear_paquete(SOLICITUD_TAMANIO_PAGINA_RTA);
+    printf("Preparando para agregar tamaño de página al paquete\n");
+    agregar_a_paquete(paquete_tam_pagina, &tamanio_pagina, sizeof(uint32_t));         
+    printf("Valor de tamanio_pagina agregado: %d\n", tamanio_pagina);
+
+    printf("Enviare %d a CPU\n", tamanio_pagina);
     enviar_paquete(paquete_tam_pagina, socket_cpu);   
-    printf("Tamaño de pagina enviada"); 
+    printf("Tamaño de página enviado\n"); 
     eliminar_paquete(paquete_tam_pagina);
     
 }

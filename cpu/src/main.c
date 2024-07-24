@@ -91,9 +91,11 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
     sem_wait(&sem_servidor_creado);
+     printf("Paso  sem_servidor_creado\n");
         // Obtener tamaño de página
     obtenerTamanioPagina(socket_memoria);
     sem_wait(&sem_valor_tamanio_pagina);
+    printf("Paso  sem_valor_tamanio_pagina\n");
 
     while(1){
         if(proceso_actual != NULL){
