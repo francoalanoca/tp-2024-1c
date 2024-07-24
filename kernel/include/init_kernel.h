@@ -36,11 +36,15 @@ extern sem_t sem_interrupcion_atendida;
 extern sem_t sem_io_fs_libre;
 extern sem_t sem_cpu_libre;
 extern sem_t sem_prioridad_io;
+extern sem_t sem_rta_crear_proceso;
 extern pthread_mutex_t mutex_cola_ready_prioridad; 
 extern pthread_mutex_t mutex_cola_ready;
 extern pthread_mutex_t mutex_envio_io;
 extern t_pcb* pcb_actualizado_interrupcion;
 extern t_dictionary* procesos_recursos;
+extern t_list* recursos;
+extern uint32_t contador_pid;
+
 typedef struct {
     char* PUERTO_ESCUCHA;
     char* IP_MEMORIA;
@@ -62,6 +66,30 @@ static t_config_kernel *cfg_kernel_start()
     t_config_kernel *cfg = malloc(sizeof(t_config_kernel));
     return cfg;
 }
+
+// Enumeración para los algoritmos de planificación
+typedef enum {
+    FIFO,
+    ROUND_ROBIN,
+    VIRTUAL_ROUND_ROBIN
+} t_algoritmo_planificacion;
+
+typedef struct {
+    t_list* cola_new;      
+    t_list* cola_ready;   
+    t_list* cola_ready_prioridad; 
+    t_list* cola_exec;     
+    t_dictionary* cola_blocked;  
+    t_list* cola_exit;     
+    t_algoritmo_planificacion algoritmo;
+    int quantum;
+    int grado_multiprogramacion;
+    int grado_multiprogramacion_actual;
+    bool planificacion_detenida;         
+} t_planificador;
+
+// ver si falta poner alguna libreria
+extern t_planificador* planificador;
 
 typedef struct{
     char* nombre;
@@ -131,4 +159,9 @@ void liberar_memoria_t_proceso_recurso_diccionario(t_proceso_recurso_diccionario
 void liberar_memoria_t_interfaz(t_interfaz* interfaz);
 
 void liberar_memoria_t_interfaz_pid(t_interfaz_pid* interfaz_pid);
+
+t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid);
+
+void mandar_proceso_a_finalizar(uint32_t pid);
+
 #endif /* INIT_KERNEL_H_ */

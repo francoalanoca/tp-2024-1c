@@ -16,9 +16,6 @@ int main(char argc, char *argv[]) {
     int conexion_consola;
     int conexion_entrada_salida;
 
-
-    int contador_pid;
-
 //CONFIGURACION
 
    if (!init(path_config) || !cargar_configuracion(path_config)) {
@@ -27,7 +24,8 @@ int main(char argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    
+    contador_pid = 1;
+
     sem_init(&sem_planificar, 1, 1);
     sem_init(&sem_contexto_ejecucion_recibido,0,0);
 
@@ -36,6 +34,7 @@ int main(char argc, char *argv[]) {
     sem_init(&sem_io_fs_libre,1,1);
     sem_init(&sem_cpu_libre,1,1);
     sem_init(&sem_prioridad_io,1,1);
+    sem_init(&sem_rta_crear_proceso,0,0);
     
 
     pthread_mutex_init(&mutex_cola_ready_prioridad, NULL);

@@ -41,8 +41,8 @@ int cargar_configuracion(char *path) {
     cfg_cpu->IP_MEMORIA = strdup(config_get_string_value(file_cfg_cpu, "IP_MEMORIA"));
     log_info(logger_cpu, "IP_MEMORIA cargado correctamente: %s", cfg_cpu->IP_MEMORIA);
 
-    cfg_cpu->PUERTO_MEMORIA = config_get_int_value(file_cfg_cpu, "PUERTO_MEMORIA");
-    log_info(logger_cpu, "PUERTO_MEMORIA cargado correctamente: %d", cfg_cpu->PUERTO_MEMORIA);
+    cfg_cpu->PUERTO_MEMORIA = strdup(config_get_string_value(file_cfg_cpu, "PUERTO_MEMORIA"));
+    log_info(logger_cpu, "PUERTO_MEMORIA cargado correctamente: %s", cfg_cpu->PUERTO_MEMORIA);
 
     cfg_cpu->PUERTO_ESCUCHA_DISPATCH = strdup(config_get_string_value(file_cfg_cpu, "PUERTO_ESCUCHA_DISPATCH"));
     log_info(logger_cpu, "PUERTO_ESCUCHA_DISPATCH cargado correctamente: %s", cfg_cpu->PUERTO_ESCUCHA_DISPATCH);

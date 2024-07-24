@@ -726,10 +726,10 @@ while (control_key)
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
-         sem_wait(sem_planificar);
+         sem_wait(&sem_planificar);
          mandar_proceso_a_finalizar(io_read_archivo->pid);
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_read_archivo->pid);
-         sem_post(sem_planificar);
+         sem_post(&sem_planificar);
       }
       
       //replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid));
@@ -790,7 +790,14 @@ while (control_key)
       sem_post(&sem_confirmacion_memoria);
       break;
    case CREAR_PROCESO_KERNEL_FIN:
-      
+   printf("LLEGA PROCESO CREADO DE MEMORIA");
+   t_list* lista_paquete_crear_proceso_fin = recibir_paquete(conexion_memoria);
+   //buscar_pcb_en_lista(planificador->cola_new,*(uint32_t*)list_get(lista_paquete_crear_proceso_fin, 0))
+
+    
+    //sem_post(&sem_rta_crear_proceso);
+
+ 
       break;
    default:
       log_warning(logger_kernel, "Operacion desconocida de memoria");
@@ -838,16 +845,6 @@ bool interfaz_permite_operacion(t_tipo_interfaz_enum tipo_interfaz, tipo_instruc
    }
 }
 
-t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid) {
-    for (int i = 0; i < list_size(lista_procesos); i++) {
-        t_pcb* proceso = list_get(lista_procesos, i);
-        if (proceso->pid == pid) {
-            return proceso;
-        }
-    }
-    return NULL;
-}
-
 
  t_recurso* deserializar_recurso(t_list*  lista_paquete ){
 
@@ -877,19 +874,6 @@ t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid) {
 }
 
 
-uint32_t buscar_indice_recurso(t_list* lista_recursos,char* nombre_recurso){
-   uint32_t indice_encontrado = malloc(sizeof(uint32_t));
-   indice_encontrado = NULL;
-
-   for (size_t i = 0; i < lista_recursos->elements_count; i++)
-   {
-      if(strcmp(list_get(lista_recursos,i), nombre_recurso) == 0){
-         indice_encontrado = i;
-      }
-   }
-   return indice_encontrado;
-}
-
 uint32_t buscar_indice_primer_valor_no_nulo(t_list* lista){
    for (size_t i = 0; i < lista->elements_count; i++)
    {
@@ -901,12 +885,5 @@ uint32_t buscar_indice_primer_valor_no_nulo(t_list* lista){
 }
 
 
-
-void mandar_proceso_a_finalizar(uint32_t pid){
-   t_pcb* pcb_a_procesar = malloc(sizeof(t_pcb));
-   pcb_a_procesar = encontrar_proceso_pid(planificador->cola_exec,pid);
-   eliminar_proceso(planificador,pcb_a_procesar);
-   liberar_memoria_pcb(pcb_a_procesar);
-}
 
 
