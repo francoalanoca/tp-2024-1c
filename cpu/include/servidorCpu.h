@@ -22,6 +22,7 @@ uint32_t deserealizar_marco(t_list*  lista_paquete );
 char* deserealizar_valor_memoria(t_list*  lista_paquete );
 uint32_t deserealizar_tamanio_pag(t_list*  lista_paquete );
 t_rta_resize* deserealizar_rta_resize(t_list*  lista_paquete );
+void atender_memoria (int socket_memoria);
 
 //void *conectarConMemoria();
 //void cortar_conexiones();

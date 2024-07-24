@@ -28,6 +28,7 @@ uint32_t tamanio_pagina;
 pthread_mutex_t mutex_proceso_actual;
 pthread_mutex_t mutex_proceso_interrumpido_actual;
 pthread_mutex_t mutex_interrupcion_kernel;
+pthread_t hilo_atender_memoria;
 
 int socket_memoria;
 
@@ -90,11 +91,16 @@ int main(int argc, char* argv[]) {
         liberar_memoria();
         return EXIT_FAILURE;
     }
+    
+
+
+    pthread_create(&hilo_atender_memoria, NULL,atender_memoria,socket_memoria);
+
     sem_wait(&sem_servidor_creado);
         // Obtener tamaño de página
     obtenerTamanioPagina(socket_memoria);
     sem_wait(&sem_valor_tamanio_pagina);
-
+   proceso_actual = malloc(sizeof(t_pcb));
     while(1){
         if(proceso_actual != NULL){
             ciclo_de_instrucciones(socket_memoria, logger_cpu, cfg_cpu, proceso_actual);
