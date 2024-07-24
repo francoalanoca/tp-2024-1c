@@ -34,12 +34,14 @@ void memoria_atender_cliente(void* socket){
 
 /*---------------------------- KERNEL-------------------------*/
         case CREAR_PROCESO_KERNEL:
+            printf("Recibí CREAR_PROCESO_KERNEL \n");
             valores = recibir_paquete(socket_cliente);
             t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);
             leer_instrucciones(iniciar_proceso->archivo_pseudocodigo, iniciar_proceso->pid);                  
             crear_proceso(iniciar_proceso->pid);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_respuesta_crear_proceso(iniciar_proceso, socket_cliente);
+            printf("enviada respuesta de CREAR_PROCESO_KERNEL_FIN \n");
             break;
 
 		case FINALIZAR_PROCESO:
@@ -61,11 +63,13 @@ void memoria_atender_cliente(void* socket){
             break;
 
         case PEDIDO_MARCO_A_MEMORIA:
+            printf("Recibida PEDIDO_MARCO_A_MEMORIA\n");
             valores = recibir_paquete(socket_cliente);
             t_busqueda_marco* solicitud_marco = deserializar_solicitud_marco(valores);
             int marco = buscar_marco_pagina(solicitud_marco->pid, solicitud_marco->nro_pagina);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_solicitud_marco(marco, socket_cliente);
+            printf("Marco enviado %d \n", marco);
             break;
 
 
