@@ -445,7 +445,7 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
      
     
     enviar_paquete(paquete_crear_proceso, socket_kernel);   
-    printf("Proceso enviado: %s\n", crear_proceso->pid); 
+    printf("Proceso enviado: %i\n", crear_proceso->pid); 
     eliminar_paquete(paquete_crear_proceso);
     printf("PAQUETE ELIMINADO\n"); 
     

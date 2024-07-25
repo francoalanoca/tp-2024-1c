@@ -375,7 +375,7 @@ int espacio_disponible(){
 
 
 
-t_list *busco_lista_instrucciones_por_PID(uint32_t proceso_pid){
+t_miniPCB *busco_un_proceso_PID(uint32_t proceso_pid){
 
     log_trace(logger_memoria, "Buscando la lista de instrucciones por PID");
 
@@ -388,7 +388,7 @@ t_list *busco_lista_instrucciones_por_PID(uint32_t proceso_pid){
         proceso = list_get(lista_miniPCBs, i);
         //Si el id del proceso es el mismo que el proceso, la retorna
         if (proceso_pid == proceso->pid)
-            return proceso->lista_de_instrucciones;
+            return proceso;
     }
 
     log_error(logger_memoria, "PID - %d No se encontro la lista de instrucciones", proceso_pid);
@@ -403,7 +403,7 @@ void finalizar_proceso(uint32_t proceso_pid){
 
     log_trace(logger_memoria, "Liberacion del proceso PID %i", proceso_pid);
     t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
-    t_list *lista_de_instrucciones = busco_lista_instrucciones_por_PID(proceso_pid);
+    t_miniPCB *proceso = busco_un_proceso_PID(proceso_pid);
 
     //Recorremos la lista de paginas
     for (int j = 0; j < list_size(tabla_de_paginas->lista_de_paginas); j++){
@@ -419,6 +419,7 @@ void finalizar_proceso(uint32_t proceso_pid){
     log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, list_size(tabla_de_paginas->lista_de_paginas));
 
     list_destroy_and_destroy_elements(tabla_de_paginas->lista_de_paginas, free);
-    list_destroy_and_destroy_elements(lista_de_instrucciones, free);
+    list_destroy_and_destroy_elements(proceso->lista_de_instrucciones, free);
     free(tabla_de_paginas);
+    list_remove_element(lista_miniPCBs, proceso);
 }
