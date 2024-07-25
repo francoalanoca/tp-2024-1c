@@ -6,7 +6,7 @@ int tamanioInterfaces;
 instr_t* fetch(int conexion, t_log* logger, t_config* config, t_pcb* proceso){
     log_info(logger, "PID: %u- FETCH- Program Counter: %u", proceso->pid,proceso->program_counter); //LOG OBLIGATORIO
     log_info(logger, "Voy a entrar a pedir_instruccion");
-    pedir_instruccion(proceso, conexion,logger); //TODO:VER COMO RECIBIR LA INSTRUCCION
+    pedir_instruccion(proceso, conexion,logger); 
     //TODO:WAIT semaforo
     sem_wait(&sem_valor_instruccion);
     return prox_inst;

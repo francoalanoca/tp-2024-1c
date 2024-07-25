@@ -481,4 +481,5 @@ void free_io_output(t_io_output* io_output);
 void free_io_memo_escritura(t_io_memo_escritura* io_memo_escritura) ;
 void free_t_interfaz(t_interfaz* interfaz);
 t_list* char_array_to_list(char** array);
+tipo_instruccion str_to_tipo_instruccion(const char *str);
 #endif /* UTILS_H_ */

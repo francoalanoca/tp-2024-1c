@@ -151,9 +151,10 @@ void atender_memoria (int socket_memoria) {
         case INSTRUCCION_RECIBIDA:
                     {
                         log_info(logger_cpu, "SE RECIBE INSTRUCCION DE MEMORIA");
+                         
                         t_list* lista_paquete_instruccion_rec = recibir_paquete(socket_memoria);
-                        instr_t* instruccion_recibida = malloc(sizeof(instr_t));
-                        instruccion_recibida = instruccion_deserializar(lista_paquete_instruccion_rec);
+                         log_info(logger_cpu, "Paquete recibido");
+                        instr_t* instruccion_recibida = instruccion_deserializar(lista_paquete_instruccion_rec);
                         
                         if(instruccion_recibida != NULL){
                             prox_inst = instruccion_recibida;
@@ -303,21 +304,12 @@ t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete
 }
 
 instr_t* instruccion_deserializar(t_list* lista_paquete_inst){
-        instr_t *instruccion_nueva = malloc(sizeof(instr_t));
-
-    instruccion_nueva->idLength = *(uint32_t*)list_get(lista_paquete_inst, 0);
-    instruccion_nueva->id = *(uint32_t*)list_get(lista_paquete_inst, 1);
-    instruccion_nueva->param1Length = *(uint32_t*)list_get(lista_paquete_inst, 2); 
-    instruccion_nueva->param1 = list_get(lista_paquete_inst, 3);
-    instruccion_nueva->param2Length = *(uint32_t*)list_get(lista_paquete_inst, 4); 
-    instruccion_nueva->param2 = list_get(lista_paquete_inst, 5);
-    instruccion_nueva->param3Length = *(uint32_t*)list_get(lista_paquete_inst, 6); 
-    instruccion_nueva->param3 = list_get(lista_paquete_inst, 7);
-    instruccion_nueva->param4Length = *(uint32_t*)list_get(lista_paquete_inst, 8); 
-    instruccion_nueva->param4 = list_get(lista_paquete_inst, 9);
-    instruccion_nueva->param5Length = *(uint32_t*)list_get(lista_paquete_inst, 10); 
-    instruccion_nueva->param5 = list_get(lista_paquete_inst, 11);
-
+    instr_t *instruccion_nueva = malloc(sizeof(instr_t));
+    log_info(logger_cpu, "Paquete recibido Entro en instruccion deserealizar");
+    char* instruccion = list_get(lista_paquete_inst, 0);
+    log_info(logger_cpu,"instruccioiin recibida: %s", instruccion);
+    armar_instr(instruccion_nueva,instruccion);
+  
 	return instruccion_nueva;
 }
 
@@ -348,4 +340,70 @@ uint32_t deserealizar_tamanio_pag(t_list*  lista_paquete ){
     valor_tam_pag = *(uint32_t*)list_get(lista_paquete, 0);
 
 	return valor_tam_pag;
+}
+
+void armar_instr(instr_t *instr, const char *input) {
+    // Copia la cadena de entrada para no modificar el original
+    char *input_copy = strdup(input);
+    char *token = strtok(input_copy, " ");
+    if (token == NULL) {
+        free(input_copy);
+        return;
+    }
+
+    // Primer token es el id
+    instr->id = str_to_tipo_instruccion(strdup(token));
+    instr->idLength = strlen(token);
+
+    // Inicializo estructura
+    instr->param1Length = 0;
+    instr->param1 = NULL;
+    instr->param2Length = 0;
+    instr->param2 = NULL;
+    instr->param3Length = 0;
+    instr->param3 = NULL;
+    instr->param4Length = 0;
+    instr->param4 = NULL;
+    instr->param5Length = 0;
+    instr->param5 = NULL;
+
+    int param_count = 0;
+    while ((token = strtok(NULL, " ")) != NULL) {
+        switch (param_count) {
+            case 0:
+                instr->param1 = strdup(token);
+                instr->param1Length = strlen(token);
+                break;
+            case 1:
+                instr->param2 = strdup(token);
+                instr->param2Length = strlen(token);
+                break;
+            case 2:
+                instr->param3 = strdup(token);
+                instr->param3Length = strlen(token);
+                break;
+            case 3:
+                instr->param4 = strdup(token);
+                instr->param4Length = strlen(token);
+                break;
+            case 4:
+                instr->param5 = strdup(token);
+                instr->param5Length = strlen(token);
+                break;
+            default:
+                break;
+        }
+        param_count++;
+    }
+
+    free(input_copy);
+}
+
+void free_instr(instr_t *instr) {
+    
+    if (instr->param1 != NULL) free(instr->param1);
+    if (instr->param2 != NULL) free(instr->param2);
+    if (instr->param3 != NULL) free(instr->param3);
+    if (instr->param4 != NULL) free(instr->param4);
+    if (instr->param5 != NULL) free(instr->param5);
 }
