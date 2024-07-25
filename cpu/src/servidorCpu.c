@@ -75,7 +75,7 @@ void procesar_conexion(void *v_args){
  
     while (cliente_socket != -1) {
    
-        if (recv(cliente_socket, &cop, sizeof(int32_t), MSG_WAITALL) != sizeof(int32_t)) {
+        if (recv(cliente_socket, &cop, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
             log_info(logger, "DISCONNECT! KERNEL");
 
             break;
