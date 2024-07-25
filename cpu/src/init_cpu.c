@@ -67,7 +67,7 @@ int init(char *path_config) {
     //inicializo estructura de configuracion
     cfg_cpu = cfg_cpu_start();
 
-    logger_cpu = log_create("entradasalida.log", "EntradaSalida", true, LOG_LEVEL_INFO);
+    logger_cpu = log_create("cpu.log", "CPU", true, LOG_LEVEL_INFO);
     if (logger_cpu == NULL) {
         printf("No pude crear el logger");
         return false;

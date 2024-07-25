@@ -182,7 +182,7 @@ void f_iniciar_proceso(char* path) {
     }
 
 
-    //enviar_creacion_de_proceso_a_memoria(pcb,conexion_memoria);
+    enviar_creacion_de_proceso_a_memoria(pcb,conexion_memoria);
     printf("ENTRO A WAIT SEM CREACION PROCESO\n");
 
     //ESTO DESCOMENTARLO PERO PONER UN SEM WAIT(SEM POST EN EL CASE DE PROTOCOLO KERNEL DE CREAR_PROCESO_KERNEL_FIN)

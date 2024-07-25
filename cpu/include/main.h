@@ -7,7 +7,7 @@
 #include <utils/utils.h>
 #include <signal.h>
 #include "../include/cpu_utils.h"
-
+#include "../include/servidorCpu.h"
 
 
 

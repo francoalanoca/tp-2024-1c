@@ -6,10 +6,11 @@
 
 
 //Funcion que crea la lista de instrucciones dado un puntero al archivo de un proceso
-void leer_instrucciones(char* nombre_archivo) {
+void leer_instrucciones(char* nombre_archivo, uint32_t proceso_pid) {
 
 	t_miniPCB *miniPCB = malloc(sizeof(t_miniPCB));
 
+    miniPCB->pid = proceso_pid;
     miniPCB->lista_de_instrucciones = list_create();
 
 	//Creamos una variable que gurada el path entero: path_instrucciones/nombre
@@ -19,7 +20,7 @@ void leer_instrucciones(char* nombre_archivo) {
 	string_append(&path_total, nombre_archivo);
 
     //creamos una variable que guarda el archivo
-    FILE* archivo = fopen(path_total, "r");		//tengo problemas con ese fopen
+    FILE* archivo = fopen(path_total, "r");		
     log_info(logger_memoria, "%s", nombre_archivo);
 
 	//Si no se puede abrir el archivo marca error
@@ -29,40 +30,39 @@ void leer_instrucciones(char* nombre_archivo) {
     }
 
 	char *linea;
-	//instr_t *inst;
-	//t_list *instrucciones = list_create();
 	size_t len;
-
 	linea = string_new();
-	
 	len = 0;
 
     //mientras no sea el fin del archivo
 	//devuelve la cnatidad de stram leidos
 	while(getline(&linea, &len, archivo) != -1) {
 		
-		if (strcmp(linea, "EXIT") == 0)
-        {
+		if (strcmp(linea, "EXIT") == 0){    //Si la línea leída es "EXIT"
 
+            //Calculamos el tamanio del nombre mas caracter nulo
             int tamanio_del_nombre = strlen(linea) + 1;
 
             char *linea2 = malloc(tamanio_del_nombre);
             strcpy(linea2, linea);
 
+            //Agregamos la linea a la lista de instrucciones
             list_add(miniPCB->lista_de_instrucciones, linea2);
         }
-        else
-        {
+        else{       //Si la línea leída no es "EXIT"
 
+            //Calculamos el tamanio del nombre y luego se elimina el nulo
             int tamanio_del_nombre = strlen(linea);
             linea[tamanio_del_nombre - 1] = '\0';
 
             char *linea2 = malloc(tamanio_del_nombre);
             strcpy(linea2, linea);
 
+            //Agregamos la linea a la lista de instrucciones
             list_add(miniPCB->lista_de_instrucciones, linea2);
         }
 	}
+    //Agregamos el proceso a la lista de procesos
 	list_add(lista_miniPCBs, miniPCB);
 
     fclose(archivo);

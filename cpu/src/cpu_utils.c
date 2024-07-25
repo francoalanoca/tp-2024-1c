@@ -1187,7 +1187,7 @@ void obtenerTamanioPagina(int conexion){
     t_paquete* paquete_pedido_tamanio_pag;
     paquete_pedido_tamanio_pag = crear_paquete(SOLICITUD_TAMANIO_PAGINA); 
     enviar_paquete(paquete_pedido_tamanio_pag, conexion); 
-    free(paquete_pedido_tamanio_pag);
+    eliminar_paquete(paquete_pedido_tamanio_pag);
 
 }
 

@@ -478,10 +478,10 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
 
 
 
-uint32_t* deserializar_finalizar_proceso(t_list*  lista_paquete ){
+uint32_t deserializar_finalizar_proceso(t_list*  lista_paquete ){
 
     //Creamos una variable de tipo struct que ira guardando todo del paquete y le asignamos tamaño
-    uint32_t* proceso_a_finalizar = malloc(sizeof(uint32_t));
+    uint32_t proceso_a_finalizar;
     
     proceso_a_finalizar = *(uint32_t*)list_get(lista_paquete, 0);
     printf("Pid recibido: %d \n", proceso_a_finalizar);
@@ -498,7 +498,7 @@ void enviar_respuesta_finalizar_proceso(uint32_t pid_proceso_a_finalizar ,int so
     agregar_a_paquete(paquete_finalizar_proceso, &pid_proceso_a_finalizar,  sizeof(uint32_t));
     
     enviar_paquete(paquete_finalizar_proceso, socket_kernel);   
-    printf("Proceso enviado"); 
+    printf("Proceso enviado \n"); 
     eliminar_paquete(paquete_finalizar_proceso); 
     
 }
@@ -629,7 +629,7 @@ void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu) {
     agregar_a_paquete(paquete_instruccion, &proxima_instruccion,  strlen(proxima_instruccion) + 1);          
     
     enviar_paquete(paquete_instruccion, socket_cpu);   
-    printf("Instruccion enviada"); 
+    printf("Instruccion enviada \n"); 
     eliminar_paquete(paquete_instruccion);
     
 }
@@ -644,7 +644,7 @@ void enviar_solicitud_marco(int marco ,int socket_cpu) {
     agregar_a_paquete(paquete_marco, &marco,  sizeof(int));         
     
     enviar_paquete(paquete_marco, socket_cpu);   
-    printf("Marco enviado"); 
+    printf("Marco enviado \n"); 
     eliminar_paquete(paquete_marco);
     
 }
@@ -657,7 +657,7 @@ void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu) {
 
     printf("Enviare %d a CPU\n", tamanio_pagina);
     enviar_paquete(paquete_tam_pagina, socket_cpu);   
-    printf("Tamaño de página enviado\n"); 
+    printf("Tamaño de pagina enviada \n"); 
     eliminar_paquete(paquete_tam_pagina);
     
 }
@@ -673,14 +673,14 @@ void enviar_peticion_valor(void* respuesta_leer ,int socket_cpu) {
     agregar_a_paquete(paquete_valor, &respuesta_leer,  sizeof(void*));          
     
     enviar_paquete(paquete_valor, socket_cpu);   
-    printf("Se envio respuesta de lectura"); 
+    printf("Se envio respuesta de lectura \n"); 
     eliminar_paquete(paquete_valor);
     
 }
 
 
 
-void enviar_resultado_guardar(void* respuesta_escribir, int socket_cliente){
+void enviar_resultado_guardar(char* respuesta_escribir, int socket_cliente){
     t_paquete* paquete_valor;
 
     paquete_valor = crear_paquete(GUARDAR_EN_DIRECCION_FISICA_RTA);
@@ -688,7 +688,7 @@ void enviar_resultado_guardar(void* respuesta_escribir, int socket_cliente){
     agregar_a_paquete(paquete_valor, &respuesta_escribir,  sizeof(void*));
 
     enviar_paquete(paquete_valor, socket_cliente);
-    printf("Se envio respuesta de guardado"); 
+    printf("Se envio respuesta de guardado \n"); 
    eliminar_paquete(paquete_valor);
 }
 
@@ -701,7 +701,7 @@ void enviar_respuesta_resize(op_code respuesta_resize, int socket_cliente){
     agregar_a_paquete(paquete_valor, &respuesta_resize,  sizeof(uint32_t));
  printf("respuesta agregada"); 
     enviar_paquete(paquete_valor, socket_cliente);
-    printf("Se envio respuesta de resize"); 
+    printf("Se envio respuesta de resize \n"); 
     eliminar_paquete(paquete_valor);  
 }
 
@@ -714,7 +714,7 @@ void enviar_resultado_copiar(void* respuesta_copy, int socket_cliente){
     agregar_a_paquete(paquete_valor, &respuesta_copy,  sizeof(void*));
 
     enviar_paquete(paquete_valor, socket_cliente);
-    printf("Se envio respuesta de copiado"); 
+    printf("Se envio respuesta de copiado \n"); 
     eliminar_paquete(paquete_valor); 
 }
 
