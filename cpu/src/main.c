@@ -78,6 +78,8 @@ int main(int argc, char* argv[]) {
 
 
     proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
+    proceso_interrumpido_actual->pcb = malloc(sizeof(t_pcb));
+    proceso_interrumpido_actual->pcb->pid = NULL;
     prox_inst = malloc(sizeof(instr_t));
     printf("Creo prox_inst\n");
 

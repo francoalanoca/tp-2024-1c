@@ -1108,7 +1108,7 @@ void solicitar_io_stdout_write_a_kernel(uint32_t tamanio_nombre_interfaz, char* 
 }
 
 void solicitar_exit_a_kernel(t_proceso_interrumpido* proceso){
-        printf("entro a solicitar_io_stdout_write_a_kernel\n");
+        printf("entro a solicitar_exit_a_kernel\n");
         t_paquete* paquete_exit_kernel;
         paquete_exit_kernel = crear_paquete(INTERRUPCION_CPU); 
         

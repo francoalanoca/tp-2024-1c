@@ -84,7 +84,7 @@ void procesar_conexion(void *v_args){
        // if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
         if (cop != sizeof(op_code)) {
             log_info(logger, "DISCONNECT!");
-            return;
+           // return;
         }
 
     //switch (cop){
