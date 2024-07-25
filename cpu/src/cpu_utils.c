@@ -878,8 +878,11 @@ void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_ta
 void exit_inst(){
     // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
     //Contexto de Ejecución actualizado al Kernel para su finalización.
+    log_info(logger_cpu, "Entro a exit_inst pid :%d", proceso_actual->pid); 
+
     pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
     proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
+    log_info(logger_cpu, "Pid asignado en proceo de interrupcion pid :%d", proceso_interrumpido_actual->pcb->pid ); 
     proceso_interrumpido_actual->motivo_interrupcion = INSTRUCCION_EXIT;
     pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
     solicitar_exit_a_kernel(proceso_interrumpido_actual);
