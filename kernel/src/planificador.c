@@ -276,7 +276,15 @@ void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
 void planificar_y_ejecutar(){
    log_info(logger_kernel, "PLANIFICAR Y EJECUTAR"); //despues borrar
     while (1){
-        if (planificador->grado_multiprogramacion_actual >0 && !planificador->planificacion_detenida) {  
+ 
+        int procesos_ready;
+        if (planificador->algoritmo != VIRTUAL_ROUND_ROBIN) {
+            procesos_ready = list_size(planificador->cola_ready); 
+        }else {
+         procesos_ready = list_size(planificador->cola_ready_prioridad) +list_size(planificador->cola_ready);
+        }
+       
+        if (procesos_ready > 0  && !planificador->planificacion_detenida) {  
             log_info(logger_kernel, "hay un proceso en ready"); //despues borrar
             t_pcb* siguiente_proceso;// = malloc(sizeof(t_pcb));      
             if (planificador->algoritmo == FIFO) { 
