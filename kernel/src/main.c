@@ -58,14 +58,16 @@ int main(char argc, char *argv[]) {
     log_info(logger_kernel,"Semáforo valor sem_cpu_libre : %d\n", value);
     sem_wait(&sem_cpu_libre);
 
+    if (pthread_create(&planificacion_largo_plazo, NULL, largo_plazo_nuevo_ready,NULL) != 0) {
+            perror("pthread_create");            
+    }
+
+
     if (pthread_create(&planificacion_corto_plazo, NULL, planificar_y_ejecutar,NULL) != 0) {
             perror("pthread_create");      
             
     }
 
-    if (pthread_create(&planificacion_largo_plazo, NULL, largo_plazo_nuevo_ready,NULL) != 0) {
-            perror("pthread_create");            
-    }
 
  
     pthread_detach(&planificacion_largo_plazo);

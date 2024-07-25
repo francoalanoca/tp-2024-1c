@@ -68,9 +68,9 @@ printf("ENTRO agregar_proceso\n");
     if (planificador->grado_multiprogramacion_actual <= planificador->grado_multiprogramacion) {
         printf("ENTRARE A sem_prioridad_io\n");
        // sem_wait(&sem_prioridad_io); DESCOMENTAR
-        t_pcb* proceso_nuevo = list_remove(planificador->cola_new, 0);
-        list_add(planificador->cola_ready, proceso_nuevo); // REVISAR
-        planificador->grado_multiprogramacion_actual++;
+        //t_pcb* proceso_nuevo = list_remove(planificador->cola_new, 0);
+       // list_add(planificador->cola_ready, proceso_nuevo); // REVISAR
+       // planificador->grado_multiprogramacion_actual++;
     }
     return true;
 }
@@ -366,12 +366,12 @@ void largo_plazo_nuevo_ready() {
 
          if (list_size(planificador->cola_new) > 0  && !planificador->planificacion_detenida) {
              log_info(logger_kernel, "hay un proceso en new"); //despues borrar
-          t_pcb* proceso_nuevo = malloc(sizeof(t_pcb));  
+          t_pcb* proceso_nuevo ;
             if (planificador->grado_multiprogramacion_actual < planificador->grado_multiprogramacion) {
                 proceso_nuevo = list_remove(planificador->cola_new, 0);
                 list_add(planificador->cola_ready, proceso_nuevo);
                 planificador->grado_multiprogramacion_actual++;
-                log_info(logger_kernel, "PID: %d - Estado Anterior: NEW - Estado Actual: READY",pcb->pid);
+                log_info(logger_kernel, "PID: %d - Estado Anterior: NEW - Estado Actual: READY",proceso_nuevo->pid);
             }
         }
     }
