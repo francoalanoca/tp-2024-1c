@@ -46,11 +46,32 @@ int main(char argc, char *argv[]) {
 //INICIAR SERVIDOR Y CONSOLA INTERACTIVA 
 
     pthread_t hilo1, hilo2, hilo3;
+    pthread_t* planificacion_largo_plazo,planificacion_corto_plazo;
 
     pthread_create(&hilo1, NULL, (void*)iniciar_consola_interactiva, conexion_memoria);
     pthread_create(&hilo2, NULL, (void*)crearServidor, NULL);
     pthread_create(&hilo3, NULL, (void*)Escuchar_Msj_De_Conexiones, NULL);
+    
+    
+    int value;
+    sem_getvalue(&sem_cpu_libre, &value);
+    log_info(logger_kernel,"Semáforo valor sem_cpu_libre : %d\n", value);
+    sem_wait(&sem_cpu_libre);
 
+    if (pthread_create(&planificacion_largo_plazo, NULL, largo_plazo_nuevo_ready,NULL) != 0) {
+            perror("pthread_create");            
+    }
+
+
+    if (pthread_create(&planificacion_corto_plazo, NULL, planificar_y_ejecutar,NULL) != 0) {
+            perror("pthread_create");      
+            
+    }
+
+
+ 
+    pthread_detach(&planificacion_largo_plazo);
+    pthread_detach(&planificacion_corto_plazo);
     // ESPERAR A QUE LOS HILOS TERINEN (OPCIONAL, EN CASO DE QUE QUIERAS ESPERAR)
 
     pthread_join(hilo1, NULL);

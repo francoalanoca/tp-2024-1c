@@ -68,9 +68,9 @@ printf("ENTRO agregar_proceso\n");
     if (planificador->grado_multiprogramacion_actual <= planificador->grado_multiprogramacion) {
         printf("ENTRARE A sem_prioridad_io\n");
        // sem_wait(&sem_prioridad_io); DESCOMENTAR
-        t_pcb* proceso_nuevo = list_remove(planificador->cola_new, 0);
-        list_add(planificador->cola_ready, proceso_nuevo);
-        planificador->grado_multiprogramacion_actual++;
+        //t_pcb* proceso_nuevo = list_remove(planificador->cola_new, 0);
+       // list_add(planificador->cola_ready, proceso_nuevo); // REVISAR
+       // planificador->grado_multiprogramacion_actual++;
     }
     return true;
 }
@@ -268,26 +268,39 @@ void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
 
     enviar_paquete(paquete_archivo_nuevo, conexion); 
 
-    free(paquete_archivo_nuevo);
+    eliminar_paquete(paquete_archivo_nuevo);
+    log_info(logger_kernel, "llamo enviar_proceso_a_cpu"); //despues borrar
 
 }
 
 void planificar_y_ejecutar(){
-  
+   log_info(logger_kernel, "PLANIFICAR Y EJECUTAR"); //despues borrar
     while (1){
-        t_pcb* siguiente_proceso = malloc(sizeof(t_pcb));
-              
-        if (planificador->algoritmo = FIFO) { 
-            siguiente_proceso = obtener_proximo_proceso(planificador);
-            enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);            
-            list_add(planificador->cola_exec,siguiente_proceso);           
-            free(siguiente_proceso); 
+ 
+        int procesos_ready;
+        if (planificador->algoritmo != VIRTUAL_ROUND_ROBIN) {
+            procesos_ready = list_size(planificador->cola_ready); 
         }else {
-            siguiente_proceso = obtener_proximo_proceso(planificador);
-            ejecutar_modo_round_robin(siguiente_proceso); 
-            free(siguiente_proceso); 
-
+         procesos_ready = list_size(planificador->cola_ready_prioridad) +list_size(planificador->cola_ready);
         }
+       
+        if (procesos_ready > 0  && !planificador->planificacion_detenida) {  
+            log_info(logger_kernel, "hay un proceso en ready"); //despues borrar
+            t_pcb* siguiente_proceso;// = malloc(sizeof(t_pcb));      
+            if (planificador->algoritmo == FIFO) { 
+                siguiente_proceso = obtener_proximo_proceso(planificador);
+                log_info(logger_kernel, "Proximo pid a enviar: %d",siguiente_proceso->pid);
+                enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);
+                log_info(logger_kernel, "Proceso enviado pid: %d",siguiente_proceso->pid);            
+                list_add(planificador->cola_exec,siguiente_proceso);                             
+                log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXECUTANDO",siguiente_proceso->pid); // LOG OBLIGATORIO
+            }else {
+                siguiente_proceso = obtener_proximo_proceso(planificador);
+                ejecutar_modo_round_robin(siguiente_proceso); 
+                //free(siguiente_proceso); 
+
+            }
+        }    
     }
 }
 
@@ -295,7 +308,7 @@ void  ejecutar_modo_round_robin( t_pcb* proceso){
     int quantum_restante;
     pthread_t hilo_cronometro;
     t_args_fin_q* args = malloc(sizeof(t_args_fin_q));
-
+     log_info(logger_kernel, "EJECUTAR MODO ROUND ROBIN\n");
     if (planificador->algoritmo == ROUND_ROBIN) {
 		 quantum_restante = cfg_kernel->QUANTUM;
 	}else {
@@ -346,15 +359,20 @@ void actualizar_quantum(t_pcb* proceso){ // recibo contexto actualizado desde cp
 }
 
 void largo_plazo_nuevo_ready() {
-   t_pcb* proceso_nuevo = malloc(sizeof(t_pcb));
+   log_info(logger_kernel, "PLANIFICADOR LARGO PLAZO INICIADO"); //Despues borrar
+   
     while (1) {
-        if (planificador->grado_multiprogramacion_actual < planificador->grado_multiprogramacion) {
-            proceso_nuevo = list_remove(planificador->cola_new, 0);
-            list_add(planificador->cola_ready, proceso_nuevo);
-            planificador->grado_multiprogramacion_actual++;
-            log_info(logger_kernel, "PID: %d - Estado Anterior: NEW - Estado Actual: READY",pcb->pid);
+
+         if (list_size(planificador->cola_new) > 0  && !planificador->planificacion_detenida) {
+             log_info(logger_kernel, "hay un proceso en new"); //despues borrar
+          t_pcb* proceso_nuevo ;
+            if (planificador->grado_multiprogramacion_actual < planificador->grado_multiprogramacion) {
+                proceso_nuevo = list_remove(planificador->cola_new, 0);
+                list_add(planificador->cola_ready, proceso_nuevo);
+                planificador->grado_multiprogramacion_actual++;
+                log_info(logger_kernel, "PID: %d - Estado Anterior: NEW - Estado Actual: READY",proceso_nuevo->pid); // LOG OBLIGATORIO
+            }
         }
-        
     }
 }
 

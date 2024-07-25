@@ -3,7 +3,7 @@
  int identificador_pid;
  pthread_mutex_t mutex_pid;
  pthread_mutex_t mutex_process_id = PTHREAD_MUTEX_INITIALIZER; // Definición
- pthread_t* planificacion;
+
 int process_id = 0; // Definición
  t_pcb* pcb2;
 t_algoritmo_planificacion algortimo ;
@@ -133,15 +133,10 @@ void atender_instruccion_validada(char** comando_consola){
         //algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
        // planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
         if(planificador->planificacion_detenida){
-            printf("ENTRE A IFF INICIAR_PLANIFICACION\n");
+            printf("ENTRE A IF INICIAR_PLANIFICACION\n");
             sem_post(&sem_planificar);
-        // Hilo para mantener la ejecución andando y no deneter la consola
-        sem_wait(&sem_cpu_libre);
-        if (pthread_create(&planificacion, NULL, planificar_y_ejecutar,NULL) != 0) {
-            perror("pthread_create");            
-            
-        }
-        pthread_detach(planificacion);
+        // Hilo para mantener la ejecución andando y no deneter la consola}
+
         }
         else{
             printf("LA PLANIFICACION YA ESTA INICIADA\n");
@@ -186,7 +181,7 @@ void f_iniciar_proceso(char* path) {
     printf("ENTRO A WAIT SEM CREACION PROCESO\n");
 
     //ESTO DESCOMENTARLO PERO PONER UN SEM WAIT(SEM POST EN EL CASE DE PROTOCOLO KERNEL DE CREAR_PROCESO_KERNEL_FIN)
-    //sem_wait(&sem_rta_crear_proceso);
+    sem_wait(&sem_rta_crear_proceso);
     // Cambiar el estado del PCB a ESTADO_READY
     if (agregar_proceso( planificador, pcb)){
 
@@ -195,12 +190,13 @@ void f_iniciar_proceso(char* path) {
     };
 
     
-    pcb2 = obtener_proximo_proceso(planificador);
+    /*pcb2 = obtener_proximo_proceso(planificador);
     printf("PROXIMO PROCESO:%d \n",pcb2->pid);
     enviar_pcb_a_cpu_por_dispatch(pcb2); //declarar pcb2
     list_add(planificador->cola_exec,pcb2);  //ES PARA PROBAR, BORRAR DESPUES
     printf("ENVIE A CPU EL PROCESO\n");
-    destruir_pcb(pcb);
+    //destruir_pcb(pcb);
+    */
 }
 
 

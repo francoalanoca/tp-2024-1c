@@ -28,7 +28,7 @@ else{
         return EXIT_FAILURE;
     }
     conexion_kernel = fd_mod2;
-log_info(logger_cpu, "va a escuchar");
+log_info(logger_cpu, "va a escuchar a la conexion: %d",conexion_kernel);
 //log_info(logger_cpu, "POST SEMAFORO");
   //     sem_post(&sem_valor_instruccion);
     while (server_escuchar(logger_cpu, "SERVER CPU", (uint32_t)fd_mod2));
@@ -71,23 +71,17 @@ void procesar_conexion(void *v_args){
      ///
    
    // t_paquete* paquete = malloc(sizeof(t_paquete));
-     recv(cliente_socket, &(cop), sizeof(op_code), 0);
-    //paquete->buffer = malloc(sizeof(t_buffer));
-    //recv(cliente_socket, &(paquete->buffer->size), sizeof(uint32_t), 0);
-    //paquete->buffer->stream = malloc(paquete->buffer->size);
-    //recv(cliente_socket, paquete->buffer->stream, paquete->buffer->size, 0); //agregar &?
-     ///
-    printf("COP:%d\n",cop);
+
+ 
     while (cliente_socket != -1) {
+   
+        if (recv(cliente_socket, &cop, sizeof(int32_t), MSG_WAITALL) != sizeof(int32_t)) {
+            log_info(logger, "DISCONNECT! KERNEL");
 
-
-       // if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
-        if (cop != sizeof(op_code)) {
-            log_info(logger, "DISCONNECT!");
-           // return;
+            break;
         }
+           printf("COP:%d\n",cop);
 
-    //switch (cop){
         switch (cop){
             case NUEVO_PROCESO:
             {
