@@ -588,10 +588,11 @@ void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, ui
     agregar_a_paquete(paquete_interfaz_kernel, &tamanio_nombre, sizeof(uint32_t)); 
     agregar_a_paquete(paquete_interfaz_kernel, nombre_interfaz, tamanio_nombre);
     agregar_a_paquete(paquete_interfaz_kernel, &unidades_de_trabajo, sizeof(uint32_t));
-     printf("entro a enviar_interfaz_a_kernel el socket de kernel es %d\n", conexion);
+    printf("entro a enviar_interfaz_a_kernel el socket de kernel es %d\n", conexion);
        
     enviar_paquete(paquete_interfaz_kernel, conexion); 
-    free(paquete_interfaz_kernel);
+    eliminar_paquete(paquete_interfaz_kernel);
+    printf("ENVIO SOLICITUD_IO_GEN_SLEEP a KERNEL %d\n", conexion);
 }
 
 

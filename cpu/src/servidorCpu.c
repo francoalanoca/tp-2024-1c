@@ -71,23 +71,17 @@ void procesar_conexion(void *v_args){
      ///
    
    // t_paquete* paquete = malloc(sizeof(t_paquete));
-     recv(cliente_socket, &(cop), sizeof(op_code), 0);
-    //paquete->buffer = malloc(sizeof(t_buffer));
-    //recv(cliente_socket, &(paquete->buffer->size), sizeof(uint32_t), 0);
-    //paquete->buffer->stream = malloc(paquete->buffer->size);
-    //recv(cliente_socket, paquete->buffer->stream, paquete->buffer->size, 0); //agregar &?
-     ///
-    printf("COP:%d\n",cop);
+
+ 
     while (cliente_socket != -1) {
+   
+        if (recv(cliente_socket, &cop, sizeof(int32_t), MSG_WAITALL) != sizeof(int32_t)) {
+            log_info(logger, "DISCONNECT! KERNEL");
 
-
-       // if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
-        if (cop != sizeof(op_code)) {
-            log_info(logger, "DISCONNECT!");
-            //return;
+            break;
         }
+           printf("COP:%d\n",cop);
 
-    //switch (cop){
         switch (cop){
             case NUEVO_PROCESO:
             {
