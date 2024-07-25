@@ -33,7 +33,7 @@ typedef enum
  //---------------CPU-KERNEL-------------------
 	NUEVO_PROCESO = 35,
     INTERRUPCION_CPU = 45, //CPU manda interrupcion a kernel
-    ENVIO_INTERFAZ = 50, //CPU envia interfaz a kernel en caso de instruccion IO_GEN_SLEEP 
+    SOLICITUD_IO_GEN_SLEEP = 50, //CPU envia interfaz a kernel en caso de instruccion IO_GEN_SLEEP 
     ENVIAR_ERROR_MEMORIA_A_KERNEL = 95, //CPU le manda a kernel el proceso loego de que memoria tire error de out of memory
     ENVIO_WAIT_A_KERNEL =105, //CPU solicita a kernel que se asigne una instancia del recurso al proceso
     ENVIO_SIGNAL_A_KERNEL =110, //CPU solicita a kernel que se libere una instancia del recurso al proceso

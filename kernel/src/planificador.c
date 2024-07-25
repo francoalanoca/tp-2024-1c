@@ -273,21 +273,25 @@ void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
 }
 
 void planificar_y_ejecutar(){
-  
+   log_info(logger_kernel, "PLANIFICAR Y EJECUTAR"); //despues borrar
     while (1){
-        t_pcb* siguiente_proceso = malloc(sizeof(t_pcb));
-              
-        if (planificador->algoritmo = FIFO) { 
-            siguiente_proceso = obtener_proximo_proceso(planificador);
-            enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);            
-            list_add(planificador->cola_exec,siguiente_proceso);           
-            free(siguiente_proceso); 
-        }else {
-            siguiente_proceso = obtener_proximo_proceso(planificador);
-            ejecutar_modo_round_robin(siguiente_proceso); 
-            free(siguiente_proceso); 
+        if (planificador->grado_multiprogramacion_actual >0 ) {  
+            t_pcb* siguiente_proceso = malloc(sizeof(t_pcb));      
+            if (planificador->algoritmo = FIFO) { 
+                siguiente_proceso = obtener_proximo_proceso(planificador);
+                log_info(logger_kernel, "Proximo pid a enviar: %d",siguiente_proceso->pid);
+                enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);
+                log_info(logger_kernel, "Proceso enviado pid: %d",siguiente_proceso->pid);            
+                list_add(planificador->cola_exec,siguiente_proceso); 
+                log_info(logger_kernel, "Proceso agregado a lista de ejeucion pid: %d",siguiente_proceso->pid);             
+                free(siguiente_proceso); 
+            }else {
+                siguiente_proceso = obtener_proximo_proceso(planificador);
+                ejecutar_modo_round_robin(siguiente_proceso); 
+                free(siguiente_proceso); 
 
-        }
+            }
+        }    
     }
 }
 
@@ -346,15 +350,19 @@ void actualizar_quantum(t_pcb* proceso){ // recibo contexto actualizado desde cp
 }
 
 void largo_plazo_nuevo_ready() {
-   t_pcb* proceso_nuevo = malloc(sizeof(t_pcb));
+   log_info(logger_kernel, "PLANIFICADOR LARGO PLAZO INICIADO"); //Despues borrar
+   
     while (1) {
-        if (planificador->grado_multiprogramacion_actual < planificador->grado_multiprogramacion) {
-            proceso_nuevo = list_remove(planificador->cola_new, 0);
-            list_add(planificador->cola_ready, proceso_nuevo);
-            planificador->grado_multiprogramacion_actual++;
-            log_info(logger_kernel, "PID: %d - Estado Anterior: NEW - Estado Actual: READY",pcb->pid);
+
+         if (list_size(planificador->cola_new) > 0) {
+          t_pcb* proceso_nuevo = malloc(sizeof(t_pcb));  
+            if (planificador->grado_multiprogramacion_actual < planificador->grado_multiprogramacion) {
+                proceso_nuevo = list_remove(planificador->cola_new, 0);
+                list_add(planificador->cola_ready, proceso_nuevo);
+                planificador->grado_multiprogramacion_actual++;
+                log_info(logger_kernel, "PID: %d - Estado Anterior: NEW - Estado Actual: READY",pcb->pid);
+            }
         }
-        
     }
 }
 

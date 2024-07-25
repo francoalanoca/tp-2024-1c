@@ -61,13 +61,13 @@ void procesar_conexion(void *void_args) {
 
             break;
             case INTERFAZ_ENVIAR:
-                printf("Received INTERFAZ_ENVIAR request se queda ac+a¡\n");
+                printf("Received INTERFAZ_ENVIAR request se queda\n");
 
                 t_list* lista_paquete_interfaz = list_create();
-                log_info(logger_kernel, "Memoria asignadaaa"); //despues borrar
+                
                 lista_paquete_interfaz = recibir_paquete(cliente_socket);
 
-                log_info(logger_kernel, "Paquete recibido,va a deserealizar la interfaz recibida"); //despues borrar
+                
                 t_interfaz* interfaz_recibida = deserializar_interfaz(lista_paquete_interfaz);
                 log_info(logger_kernel, "Deseralizo la interfaz recibida"); //despues borrar
                 if (lista_paquete_interfaz == NULL || list_size(lista_paquete_interfaz) == 0) {
@@ -81,7 +81,7 @@ void procesar_conexion(void *void_args) {
                 interfaz_nueva->conexion = cliente_socket;
 			    
                 dictionary_put(interfaces,interfaz_recibida->nombre,interfaz_nueva);
-                log_info(logger_kernel, "Interfaz agregada a diccionario"); //despues borrar
+               
                 //agrego la nueva cola blocked de la interfaz conectada
                 dictionary_put(planificador->cola_blocked ,interfaz_recibida->nombre,list_create());
                 log_info(logger_kernel,"cola de bloqueados agregada a interfaz %s\n", interfaz_recibida->nombre);//despues borrar
