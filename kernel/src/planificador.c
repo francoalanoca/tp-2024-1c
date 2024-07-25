@@ -292,9 +292,8 @@ void planificar_y_ejecutar(){
                 log_info(logger_kernel, "Proximo pid a enviar: %d",siguiente_proceso->pid);
                 enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);
                 log_info(logger_kernel, "Proceso enviado pid: %d",siguiente_proceso->pid);            
-                list_add(planificador->cola_exec,siguiente_proceso); 
-                log_info(logger_kernel, "Proceso agregado a lista de ejeucion pid: %d",siguiente_proceso->pid);             
-                //free(siguiente_proceso); 
+                list_add(planificador->cola_exec,siguiente_proceso);                             
+                log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXECUTANDO",siguiente_proceso->pid); // LOG OBLIGATORIO
             }else {
                 siguiente_proceso = obtener_proximo_proceso(planificador);
                 ejecutar_modo_round_robin(siguiente_proceso); 
@@ -371,7 +370,7 @@ void largo_plazo_nuevo_ready() {
                 proceso_nuevo = list_remove(planificador->cola_new, 0);
                 list_add(planificador->cola_ready, proceso_nuevo);
                 planificador->grado_multiprogramacion_actual++;
-                log_info(logger_kernel, "PID: %d - Estado Anterior: NEW - Estado Actual: READY",proceso_nuevo->pid);
+                log_info(logger_kernel, "PID: %d - Estado Anterior: NEW - Estado Actual: READY",proceso_nuevo->pid); // LOG OBLIGATORIO
             }
         }
     }
