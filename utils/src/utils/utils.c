@@ -625,11 +625,11 @@ void enviar_respuesta_instruccion(char* proxima_instruccion ,int socket_cpu) {
     t_paquete* paquete_instruccion;
  
     paquete_instruccion = crear_paquete(INSTRUCCION_RECIBIDA);
- 
-    agregar_a_paquete(paquete_instruccion, &proxima_instruccion,  strlen(proxima_instruccion) + 1);          
+
+    agregar_a_paquete(paquete_instruccion, proxima_instruccion,  strlen(proxima_instruccion) + 1);          
     
     enviar_paquete(paquete_instruccion, socket_cpu);   
-    printf("Instruccion enviada \n"); 
+    printf("Instruccion enviada %s\n", proxima_instruccion); 
     eliminar_paquete(paquete_instruccion);
     
 }
@@ -1163,4 +1163,27 @@ t_list* char_array_to_list(char** array) {
         list_add(list, strdup(array[i])); 
     }
     return list;
+}
+
+tipo_instruccion str_to_tipo_instruccion(const char *str) {
+    if (strcmp(str, "SET") == 0) return SET;
+    if (strcmp(str, "SUM") == 0) return SUM;
+    if (strcmp(str, "SUB") == 0) return SUB;
+    if (strcmp(str, "MOV_IN") == 0) return MOV_IN;
+    if (strcmp(str, "MOV_OUT") == 0) return MOV_OUT;
+    if (strcmp(str, "RESIZE") == 0) return RESIZE;
+    if (strcmp(str, "JNZ") == 0) return JNZ;
+    if (strcmp(str, "COPY_STRING") == 0) return COPY_STRING;
+    if (strcmp(str, "IO_GEN_SLEEP") == 0) return IO_GEN_SLEEP;
+    if (strcmp(str, "IO_STDIN_READ") == 0) return IO_STDIN_READ;
+    if (strcmp(str, "IO_STDOUT_WRITE") == 0) return IO_STDOUT_WRITE;
+    if (strcmp(str, "IO_FS_CREATE") == 0) return IO_FS_CREATE;
+    if (strcmp(str, "IO_FS_DELETE") == 0) return IO_FS_DELETE;
+    if (strcmp(str, "IO_FS_TRUNCATE") == 0) return IO_FS_TRUNCATE;
+    if (strcmp(str, "IO_FS_WRITE") == 0) return IO_FS_WRITE;
+    if (strcmp(str, "IO_FS_READ") == 0) return IO_FS_READ;
+    if (strcmp(str, "WAIT") == 0) return WAIT;
+    if (strcmp(str, "SIGNAL") == 0) return SIGNAL;
+    if (strcmp(str, "EXIT") == 0) return EXIT;
+   
 }
