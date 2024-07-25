@@ -20,7 +20,7 @@ void iniciar_consola_interactiva(int conexion) {
     leido = readline("> ");
     log_info(logger_kernel, "CARACTER LEIDO: %s",leido);
     bool validacion_leido;
-    add_history(leido);
+    //add_history(leido);
     // El resto, las vamos leyendo y logueando hasta recibir un string vacío
     while (strcmp(leido, "\0") != 0) {
         printf("ME METI AL WHILE\n");
