@@ -77,7 +77,7 @@ void esperar(int32_t pid, int32_t unidades ){
 
     log_info(logger_entrada_salida, "PID: %d - Operacion: IO_GEN_SLEEP ",pid);
     log_info(logger_entrada_salida, "Se solicitaron  %d unidades de trabajo",unidades);
-    sleep (unidades * cfg_entrada_salida->TIEMPO_UNIDAD_TRABAJO);
+    sleep (unidades * cfg_entrada_salida->TIEMPO_UNIDAD_TRABAJO / 1000);
     log_info(logger_entrada_salida, "Se completaron  %d unidades de trabajo",unidades);
 }
 

@@ -763,7 +763,7 @@ int compactar(int espacio_necesario){
 
     sincronizar_bitmap ();
     log_info(logger_entrada_salida, "Espacio contiguo suficiente encontrado en la posición %d.", posicion_inicio);
-    usleep(cfg_entrada_salida->RETRASO_COMPACTACION);
+    sleep(cfg_entrada_salida->RETRASO_COMPACTACION / 1000);
     free_t_FCB(fcb);
     list_clean_and_destroy_elements(fcbs,free);
     return posicion_inicio;
