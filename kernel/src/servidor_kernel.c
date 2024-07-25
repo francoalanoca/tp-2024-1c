@@ -89,9 +89,9 @@ void procesar_conexion(void *void_args) {
                 if (send(cliente_socket, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
                 perror("send INTERFAZ_RECIBIDA response");
                 }
-                liberar_memoria_t_interfaz(interfaz_recibida);
-                liberar_memoria_t_interfaz_diccionario(interfaz_nueva);  
-                list_destroy_and_destroy_elements(lista_paquete_interfaz,free);
+                //liberar_memoria_t_interfaz(interfaz_recibida);
+                //liberar_memoria_t_interfaz_diccionario(interfaz_nueva);  
+                //list_destroy_and_destroy_elements(lista_paquete_interfaz,free);
             break;
             case IO_K_FS_CREATE_FIN:
                 printf("Received IO_K_FS_CREATE_FIN request\n");

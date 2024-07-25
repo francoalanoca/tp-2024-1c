@@ -795,7 +795,7 @@ while (control_key)
    //buscar_pcb_en_lista(planificador->cola_new,*(uint32_t*)list_get(lista_paquete_crear_proceso_fin, 0))
 
     
-    //sem_post(&sem_rta_crear_proceso);
+    sem_post(&sem_rta_crear_proceso);
 
  
       break;

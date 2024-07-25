@@ -186,7 +186,7 @@ void f_iniciar_proceso(char* path) {
     printf("ENTRO A WAIT SEM CREACION PROCESO\n");
 
     //ESTO DESCOMENTARLO PERO PONER UN SEM WAIT(SEM POST EN EL CASE DE PROTOCOLO KERNEL DE CREAR_PROCESO_KERNEL_FIN)
-    //sem_wait(&sem_rta_crear_proceso);
+    sem_wait(&sem_rta_crear_proceso);
     // Cambiar el estado del PCB a ESTADO_READY
     if (agregar_proceso( planificador, pcb)){
 
