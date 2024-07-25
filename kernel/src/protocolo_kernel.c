@@ -735,10 +735,10 @@ while (control_key)
       //replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid));
       liberar_memoria_t_io_fs_write(io_read_archivo);
       break;
-   case -1:
+ /*  case -1:
       log_error(logger_kernel, "Desconexion de cpu - Dispatch");
       control_key = 0;
-      break;
+      break;*/
    default:
       log_warning(logger_kernel, "Operacion desconocida de cpu - Dispatch");
       break;

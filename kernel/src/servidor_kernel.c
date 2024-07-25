@@ -39,7 +39,7 @@ void procesar_conexion(void *void_args) {
     op_code cop;
     while (cliente_socket != -1) {
 
-        if (recv(cliente_socket, &cop, sizeof(op_code), 0) != sizeof(op_code)) {
+        if (recv(cliente_socket, &cop, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
             log_info(logger, "DISCONNECT!");
             return;
         }
@@ -48,8 +48,8 @@ void procesar_conexion(void *void_args) {
             
             case HANDSHAKE:
                 log_info(logger, "Handshake recibido");
-                response = HANDSHAKE;
-                if (send(cliente_socket, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
+                response = HANDSHAKE_OK;
+                if (send(cliente_socket, &response, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
                     log_error(logger, "Error al enviar respuesta de handshake a cliente");
                     break;
                 }
@@ -61,14 +61,15 @@ void procesar_conexion(void *void_args) {
 
             break;
             case INTERFAZ_ENVIAR:
-                printf("Received INTERFAZ_ENVIAR request\n");
+                printf("Received INTERFAZ_ENVIAR request se queda ac+a¡\n");
 
-                t_list* lista_paquete_interfaz = malloc(sizeof(t_list));
-                lista_paquete_interfaz = recibir_paquete(conexion_cpu_dispatch);
+                t_list* lista_paquete_interfaz = list_create();
+                log_info(logger_kernel, "Memoria asignadaaa"); //despues borrar
+                lista_paquete_interfaz = recibir_paquete(cliente_socket);
 
-         
+                log_info(logger_kernel, "Paquete recibido,va a deserealizar la interfaz recibida"); //despues borrar
                 t_interfaz* interfaz_recibida = deserializar_interfaz(lista_paquete_interfaz);
-        
+                log_info(logger_kernel, "Deseralizo la interfaz recibida"); //despues borrar
                 if (lista_paquete_interfaz == NULL || list_size(lista_paquete_interfaz) == 0) {
                     printf("Failed to receive data or empty list\n");
                     break;
@@ -80,10 +81,10 @@ void procesar_conexion(void *void_args) {
                 interfaz_nueva->conexion = cliente_socket;
 			    
                 dictionary_put(interfaces,interfaz_recibida->nombre,interfaz_nueva);
-
+                log_info(logger_kernel, "Interfaz agregada a diccionario"); //despues borrar
                 //agrego la nueva cola blocked de la interfaz conectada
                 dictionary_put(planificador->cola_blocked ,interfaz_recibida->nombre,list_create());
-
+                log_info(logger_kernel,"cola de bloqueados agregada a interfaz %s\n", interfaz_recibida->nombre);//despues borrar
                 uint32_t response_interfaz = INTERFAZ_RECIBIDA;
                 if (send(cliente_socket, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
                 perror("send INTERFAZ_RECIBIDA response");
@@ -95,7 +96,7 @@ void procesar_conexion(void *void_args) {
             case IO_K_FS_CREATE_FIN:
                 printf("Received IO_K_FS_CREATE_FIN request\n");
                 //TODO: deserealizar paquete. nombre interfaz, pid.(LISTO)
-                t_list* lista_paquete_interfaz_pid_create = recibir_paquete(socket_servidor);
+                t_list* lista_paquete_interfaz_pid_create = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_create = deserializar_interfaz_pid(lista_paquete_interfaz_pid_create);
                 t_pcb* proceso_create = malloc(sizeof(t_pcb));
                 proceso_create = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_create->nombre_interfaz),interfaz_pid_create->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
@@ -112,7 +113,7 @@ void procesar_conexion(void *void_args) {
             case IO_K_FS_DELETE_FIN:
                 printf("Received IO_K_FS_DELETE_FIN request\n");
                 
-                t_list* lista_paquete_interfaz_pid_delete = recibir_paquete(socket_servidor);
+                t_list* lista_paquete_interfaz_pid_delete = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_delete = deserializar_interfaz_pid(lista_paquete_interfaz_pid_delete);
                 t_pcb* proceso_delete = malloc(sizeof(t_pcb));
                 proceso_delete = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_delete->nombre_interfaz),interfaz_pid_delete->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
@@ -131,7 +132,7 @@ void procesar_conexion(void *void_args) {
             case IO_K_FS_TRUNCATE_FIN:
                 printf("Received IO_K_FS_TRUNCATE_FIN request\n");
                 
-                t_list* lista_paquete_interfaz_pid_truncate = recibir_paquete(socket_servidor);
+                t_list* lista_paquete_interfaz_pid_truncate = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_truncate = deserializar_interfaz_pid(lista_paquete_interfaz_pid_truncate);
                 t_pcb* proceso_truncate = malloc(sizeof(t_pcb));
                 proceso_truncate = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_truncate->nombre_interfaz),interfaz_pid_truncate->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
@@ -149,7 +150,7 @@ void procesar_conexion(void *void_args) {
             case IO_K_FS_READ_FIN:
                 printf("Received IO_K_FS_READ_FIN request\n");
                 
-                t_list* lista_paquete_interfaz_pid_read = recibir_paquete(socket_servidor);
+                t_list* lista_paquete_interfaz_pid_read = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_read = deserializar_interfaz_pid(lista_paquete_interfaz_pid_read);
                 t_pcb* proceso_read = malloc(sizeof(t_pcb));
                 proceso_read = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_read->nombre_interfaz),interfaz_pid_read->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
@@ -167,7 +168,7 @@ void procesar_conexion(void *void_args) {
             case IO_K_FS_WRITE_FIN:
                 printf("Received IO_K_FS_WRITE_FIN request\n");
                 
-                t_list* lista_paquete_interfaz_pid_write = recibir_paquete(socket_servidor);
+                t_list* lista_paquete_interfaz_pid_write = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_write = deserializar_interfaz_pid(lista_paquete_interfaz_pid_write);
                 t_pcb* proceso_write = malloc(sizeof(t_pcb));
                 proceso_write = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_write->nombre_interfaz),interfaz_pid_write->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
