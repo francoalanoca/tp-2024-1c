@@ -6,12 +6,11 @@
 //Funcion que crea la tabla de paginas a partir de un pid
 void crear_proceso(uint32_t proceso_pid){
 
-    printf("Creacion del proceso PID %i \n", proceso_pid);
-    printf("Iniciando estructuras \n");
+    log_info(logger_memoria, "Creacion del proceso PID %i \n", proceso_pid);
+    log_info(logger_memoria, "Iniciando estructuras \n");
 
     //Guardo en una varia de tipo struct la tabla creada
     t_tabla_de_paginas *tabla_de_paginas = crear_tabla_pagina(proceso_pid);
-    //log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, sizeof(t_tabla_de_paginas));
 
     list_add(lista_tablas_de_paginas, tabla_de_paginas);
 }
@@ -30,6 +29,7 @@ t_tabla_de_paginas *crear_tabla_pagina(uint32_t pid){
     tabla_de_paginas->id = pid;
     tabla_de_paginas->lista_de_paginas = list_create();
 
+    log_info(logger_memoria, "PID: %i - Tamaño: %d", pid, 0);
 
     return tabla_de_paginas;
 }

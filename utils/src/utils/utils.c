@@ -442,12 +442,12 @@ void enviar_respuesta_crear_proceso(t_m_crear_proceso* crear_proceso ,int socket
     paquete_crear_proceso = crear_paquete(CREAR_PROCESO_KERNEL_FIN);
  
     agregar_a_paquete(paquete_crear_proceso, &crear_proceso->pid,  sizeof(uint32_t));
-    agregar_a_paquete(paquete_crear_proceso, crear_proceso->archivo_pseudocodigo, strlen(crear_proceso->archivo_pseudocodigo) + 1);  
+     
     
     enviar_paquete(paquete_crear_proceso, socket_kernel);   
-    printf("Proceso enviado: %s\n", crear_proceso->archivo_pseudocodigo); 
+    printf("Proceso enviado: %s\n", crear_proceso->pid); 
     eliminar_paquete(paquete_crear_proceso);
-     printf("PAQUETE ELIMINADO\n"); 
+    printf("PAQUETE ELIMINADO\n"); 
     
 }
 

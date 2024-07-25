@@ -34,62 +34,71 @@ void memoria_atender_cliente(void* socket){
 
 /*---------------------------- KERNEL-------------------------*/
         case CREAR_PROCESO_KERNEL:
-            printf("Recibí CREAR_PROCESO_KERNEL \n");
+            log_info(logger_memoria, "Recibí CREAR_PROCESO_KERNEL \n");
             valores = recibir_paquete(socket_cliente);
             t_m_crear_proceso *iniciar_proceso = deserializar_crear_proceso(valores);
             leer_instrucciones(iniciar_proceso->archivo_pseudocodigo, iniciar_proceso->pid);                  
             crear_proceso(iniciar_proceso->pid);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_respuesta_crear_proceso(iniciar_proceso, socket_cliente);
-            printf("enviada respuesta de CREAR_PROCESO_KERNEL_FIN \n");
+            log_info(logger_memoria, "enviada respuesta de CREAR_PROCESO_KERNEL_FIN \n");
             break;
 
 		case FINALIZAR_PROCESO:
+            log_info(logger_memoria, "Recibí FINALIZAR_PROCESO \n");
             valores = recibir_paquete(socket_cliente);
             uint32_t pid_proceso_a_finalizar = deserializar_finalizar_proceso(valores);
             finalizar_proceso(pid_proceso_a_finalizar);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_respuesta_finalizar_proceso(pid_proceso_a_finalizar, socket_cliente);
+            log_info(logger_memoria, "enviada respuesta de FINALIZAR_PROCESO_FIN \n");
             break;
 
 /*---------------------------- CPU-------------------------*/
         case PROXIMA_INSTRUCCION:
+            log_info(logger_memoria, "Recibí PROXIMA_INSTRUCCION \n");
             valores = recibir_paquete(socket_cliente);
             t_proceso_memoria* solicitud_instruccion = deserializar_proxima_instruccion(valores);         
             char* instruccion = buscar_instruccion(solicitud_instruccion->pid, solicitud_instruccion->program_counter);
             log_trace(logger_memoria, "Se Encontro la Instruccion: %s", instruccion);
 		    usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_respuesta_instruccion(instruccion, socket_cliente);     
+            log_info(logger_memoria, "enviada respuesta de INSTRUCCION_RECIBIDA \n");
             break;
 
         case PEDIDO_MARCO_A_MEMORIA:
-            printf("Recibida PEDIDO_MARCO_A_MEMORIA\n");
+            log_info(logger_memoria, "Recibida PEDIDO_MARCO_A_MEMORIA\n");
             valores = recibir_paquete(socket_cliente);
             t_busqueda_marco* solicitud_marco = deserializar_solicitud_marco(valores);
             int marco = buscar_marco_pagina(solicitud_marco->pid, solicitud_marco->nro_pagina);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_solicitud_marco(marco, socket_cliente);
-            printf("Marco enviado %d \n", marco);
+            log_info(logger_memoria, "Marco enviado %d \n", marco);
             break;
 
 
         case SOLICITUD_TAMANIO_PAGINA:
+            log_info(logger_memoria, "Recibí SOLICITUD_TAMANIO_PAGINA \n");
             printf("Envio tamaño de pagina\n");
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_solicitud_tamanio(cfg_memoria->TAM_PAGINA, socket_cliente);
+            log_info(logger_memoria, "enviada respuesta de SOLICITUD_TAMANIO_PAGINA_RTA \n");
             break;
 
         case PETICION_VALOR_MEMORIA:
+            log_info(logger_memoria, "Recibí PETICION_VALOR_MEMORIA \n");
             valores = recibir_paquete(socket_cliente);
             t_escribir_leer* peticion_leer = deserializar_peticion_valor(valores);     
             void* respuesta_leer = leer_memoria(peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);          
             log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d - Tamaño: %d", peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);    
             enviar_peticion_valor(respuesta_leer, socket_cliente);
+            log_info(logger_memoria, "enviada respuesta de PETICION_VALOR_MEMORIA_RTA \n");
             free(respuesta_leer);                            
             break;
 
         case GUARDAR_EN_DIRECCION_FISICA:
+            log_info(logger_memoria, "Recibí GUARDAR_EN_DIRECCION_FISICA \n");
             valores = recibir_paquete(socket_cliente);
             t_escribir_leer* peticion_escribir = deserializar_peticion_guardar(valores);   
             char* respuesta_escribir = escribir_memoria(peticion_escribir->pid, peticion_escribir->direccion_fisica, peticion_escribir->valor, peticion_escribir->tamanio);
@@ -97,30 +106,34 @@ void memoria_atender_cliente(void* socket){
             free(peticion_escribir);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_resultado_guardar(respuesta_escribir, socket_cliente);
+            log_info(logger_memoria, "enviada respuesta de GUARDAR_EN_DIRECCION_FISICA_RTA \n");
             free(respuesta_escribir);
             break;
 
         case SOLICITUD_RESIZE:
-            printf("SOLICITUD_RESIZE recibida \n");
+            log_info(logger_memoria, "SOLICITUD_RESIZE recibida \n");
             valores = recibir_paquete(socket_cliente);
             t_resize* solicitud_resize = deserializar_solicitud_resize(valores);
             op_code respuesta_resize = administrar_resize(solicitud_resize->pid, solicitud_resize->tamanio);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_respuesta_resize(respuesta_resize, socket_cliente);
+            log_info(logger_memoria, "enviada respuesta de SOLICITUD_RESIZE_RTA \n");
             break;
 
         case ENVIO_COPY_STRING_A_MEMORIA:
+            log_info(logger_memoria, "Recibí ENVIO_COPY_STRING_A_MEMORIA \n");
             valores = recibir_paquete(socket_cliente);
             t_copy* copiar_valor = deserializar_solicitud_copy(valores);
             void* respuesta_copy = copiar_solicitud(copiar_valor->pid, copiar_valor->direccion_fisica, copiar_valor->valor);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_resultado_copiar(respuesta_copy, socket_cliente);
+            log_info(logger_memoria, "enviada respuesta de ENVIO_COPY_STRING_A_MEMORIA_RTA \n");
             free(respuesta_copy);
             break;
 		
 /*---------------------------- ENTRADASALIDA-------------------------*/  
         case IO_M_STDIN: // lee de teclado y escribe en memoria
-            printf("Recibida IO_M_STDIN \n");
+            log_info(logger_memoria, "Recibida IO_M_STDIN \n");
             // Llenamos la lista con los datos recibidos de recibir_paquete 
             valores = recibir_paquete(socket_cliente);
 
@@ -141,12 +154,12 @@ void memoria_atender_cliente(void* socket){
                 break;
             }
 
-            printf("Memoria envio IO_M_STDIN_FIN a IO \n");
+            log_info(logger_memoria, "Memoria envio IO_M_STDIN_FIN a IO \n");
             list_clean(valores);
             break;           
             
 		case IO_M_STDOUT: // Lee de memoria e imprime por pantalla
-             printf("Recibida IO_M_STDOUT \n");
+            log_info(logger_memoria, "Recibida IO_M_STDOUT \n");
 
             t_io_output* io_output = malloc(sizeof(t_io_output));
             t_io_direcciones_fisicas* io_stdout = malloc(sizeof(t_io_direcciones_fisicas));
@@ -169,11 +182,12 @@ void memoria_atender_cliente(void* socket){
             printf("Tamanio output %d\n",io_output->output_length);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_output(io_output ,socket_cliente, IO_M_STDOUT_FIN );
+            log_info(logger_memoria, "Sevidor Memoria envía IO_M_STDOUT_FIN al cliente\n");
             list_clean(valores);    
             break;
             
         case IO_FS_WRITE://Lee de memoria y escribe en un archivo
-            printf("Recibida IO_FS_WRITE \n");
+            log_info(logger_memoria, "Recibida IO_FS_WRITE \n");
 
             t_io_output* io_escritura = malloc(sizeof(t_io_output));
             t_io_direcciones_fisicas* io_fs_write = malloc(sizeof(t_io_direcciones_fisicas));
@@ -197,12 +211,12 @@ void memoria_atender_cliente(void* socket){
             printf("Tamanio output %d\n",io_escritura->output_length);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_output(io_escritura ,socket_cliente, IO_FS_WRITE_M);
-            printf("Sevidor Memoria envía IO_M_STDOUT_FIN al cliente\n");
+            log_info(logger_memoria, "Sevidor Memoria envía IO_M_STDOUT_FIN al cliente\n");
             list_clean(valores);
             break;
 
         case IO_FS_READ: //Lee de un archivo y escribe en memoria
-            printf("Recibida IO_FS_READ \n");
+            log_info(logger_memoria, "Recibida IO_FS_READ \n");
             
             valores = recibir_paquete(socket_cliente);         
             input = deserializar_input(valores);        
@@ -215,7 +229,7 @@ void memoria_atender_cliente(void* socket){
                 break;
             }
 
-            printf("Sevidor Memoria envía IO_FS_READ_M al cliente\n");
+            log_info(logger_memoria, "Sevidor Memoria envía IO_FS_READ_M al cliente\n");
             list_clean(valores);
             break;
 
