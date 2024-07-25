@@ -13,6 +13,7 @@ instr_t* fetch(int conexion, t_log* logger, t_config* config, t_pcb* proceso){
 }
 
 tipo_instruccion decode(instr_t* instr){
+    log_info(logger_cpu, "EL codigo de instrucción es %d ",instr->id);
     return instr->id;//TODO: VER IMPLEMENTACION
    // return SET;
 }
@@ -22,7 +23,7 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
     
     switch(tipo_inst){
         case SET:
-        {
+        {   log_info(logger, "ENTRO EN SET ");
             log_info(logger, "PID: %u - Ejecutando: SET - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             char *endptr;
             uint32_t param2_num = (uint32_t)strtoul(inst->param2, &endptr, 10);// Convertir la cadena a uint32_t
@@ -877,8 +878,11 @@ void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_ta
 void exit_inst(){
     // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
     //Contexto de Ejecución actualizado al Kernel para su finalización.
+    log_info(logger_cpu, "Entro a exit_inst pid :%d", proceso_actual->pid); 
+
     pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
     proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
+    log_info(logger_cpu, "Pid asignado en proceo de interrupcion pid :%d", proceso_interrumpido_actual->pcb->pid ); 
     proceso_interrumpido_actual->motivo_interrupcion = INSTRUCCION_EXIT;
     pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
     solicitar_exit_a_kernel(proceso_interrumpido_actual);

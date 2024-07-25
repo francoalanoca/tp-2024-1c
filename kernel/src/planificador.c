@@ -327,7 +327,7 @@ void lanzar_interrupcion_fin_quantum (void* args) {
     t_paquete* paquete = malloc(sizeof(t_paquete));
     uint32_t motivo = FIN_QUANTUM;
    
-    sleep(quantum);   
+    sleep(quantum / 1000);   
     paquete = crear_paquete(INTERRUPCION_KERNEL); 
     agregar_a_paquete(paquete, &pid, sizeof(uint32_t));
     agregar_a_paquete(paquete, &motivo, sizeof(uint32_t));   

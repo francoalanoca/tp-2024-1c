@@ -53,7 +53,7 @@ void leer_instrucciones(char* nombre_archivo, uint32_t proceso_pid) {
 
             //Calculamos el tamanio del nombre y luego se elimina el nulo
             int tamanio_del_nombre = strlen(linea);
-            linea[tamanio_del_nombre - 1] = '\0';
+            linea[tamanio_del_nombre] = '\0';
 
             char *linea2 = malloc(tamanio_del_nombre);
             strcpy(linea2, linea);
