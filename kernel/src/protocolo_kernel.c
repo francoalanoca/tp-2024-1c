@@ -99,9 +99,9 @@ while (control_key)
       }
       liberar_proceso_interrumpido(proceso_interrumpido);
       break;
-   case ENVIO_INTERFAZ:
+   case SOLICITUD_IO_GEN_SLEEP:
       //Recibo PID, interfaz y unidades de trabajo de cpu, debo pedir a kernel que realice la instruccion IO_GEN_SLEEP (comprobar interfaz en diccionaro de interfaces antes)         
-      log_info(logger_kernel,"Recibo ENVIO_INTERFAZ desde CPU");
+      log_info(logger_kernel,"Recibo IO_GEN_SLEEP desde CPU");
       lista_paquete = recibir_paquete(conexion_cpu_dispatch);
       
       t_io_gen_sleep* io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
@@ -735,10 +735,10 @@ while (control_key)
       //replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_read_archivo->pid));
       liberar_memoria_t_io_fs_write(io_read_archivo);
       break;
-   case -1:
+ /*  case -1:
       log_error(logger_kernel, "Desconexion de cpu - Dispatch");
       control_key = 0;
-      break;
+      break;*/
    default:
       log_warning(logger_kernel, "Operacion desconocida de cpu - Dispatch");
       break;
@@ -795,7 +795,7 @@ while (control_key)
    //buscar_pcb_en_lista(planificador->cola_new,*(uint32_t*)list_get(lista_paquete_crear_proceso_fin, 0))
 
     
-    //sem_post(&sem_rta_crear_proceso);
+    sem_post(&sem_rta_crear_proceso);
 
  
       break;

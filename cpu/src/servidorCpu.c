@@ -28,7 +28,7 @@ else{
         return EXIT_FAILURE;
     }
     conexion_kernel = fd_mod2;
-log_info(logger_cpu, "va a escuchar");
+log_info(logger_cpu, "va a escuchar a la conexion: %d",conexion_kernel);
 //log_info(logger_cpu, "POST SEMAFORO");
   //     sem_post(&sem_valor_instruccion);
     while (server_escuchar(logger_cpu, "SERVER CPU", (uint32_t)fd_mod2));
@@ -155,29 +155,30 @@ void atender_memoria (int socket_memoria) {
                         t_list* lista_paquete_instruccion_rec = recibir_paquete(socket_memoria);
                          log_info(logger_cpu, "Paquete recibido");
                         instr_t* instruccion_recibida = instruccion_deserializar(lista_paquete_instruccion_rec);
-                        
+                         log_info(logger_cpu, "EL codigo de instrucción es %d ",instruccion_recibida->id);
                         if(instruccion_recibida != NULL){
                             prox_inst = instruccion_recibida;
+                            log_info(logger_cpu, "EL codigo de instrucción es %d ",prox_inst->id);
                             //SEMAFORO QUE ACTIVA EL SEGUIMIENTO DEL FLUJO EN FETCH
                             list_destroy_and_destroy_elements(lista_paquete_instruccion_rec,free);
-                            free(instruccion_recibida->param1);
+                            /*free(instruccion_recibida->param1);
                             free(instruccion_recibida->param2);
                             free(instruccion_recibida->param3);
                             free(instruccion_recibida->param4);
                             free(instruccion_recibida->param5);
-                            free(instruccion_recibida);
+                            free(instruccion_recibida);*/
                             log_info(logger_cpu, "POST SEMAFORO");
                             sem_post(&sem_valor_instruccion);
                         }
                         else{
                             log_info(logger_cpu, "ERROR AL  RECIBIR INSTRUCCION DE MEMORIA");
                             list_destroy_and_destroy_elements(lista_paquete_instruccion_rec,free);
-                            free(instruccion_recibida->param1);
+                            /*free(instruccion_recibida->param1);
                             free(instruccion_recibida->param2);
                             free(instruccion_recibida->param3);
                             free(instruccion_recibida->param4);
                             free(instruccion_recibida->param5);
-                            free(instruccion_recibida);
+                            free(instruccion_recibida);*/
                         }
                         break;
                     }
@@ -350,9 +351,9 @@ void armar_instr(instr_t *instr, const char *input) {
         free(input_copy);
         return;
     }
-
+      log_info(logger_cpu, "el token es %s", token );
     // Primer token es el id
-    instr->id = str_to_tipo_instruccion(strdup(token));
+    instr->id = str_to_tipo_instruccion(token);
     instr->idLength = strlen(token);
 
     // Inicializo estructura

@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     log_info(logger_cpu, "cree los hilos servidor");
 
 
-
+    proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
     prox_inst = malloc(sizeof(instr_t));
     printf("Creo prox_inst\n");
 
