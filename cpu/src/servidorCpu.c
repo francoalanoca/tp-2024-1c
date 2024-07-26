@@ -88,8 +88,10 @@ void procesar_conexion(void *v_args){
                 printf("llega nuevo_proceso\n");
                 t_list* lista_paquete_nuevo_proceso = recibir_paquete(cliente_socket);
                 t_pcb* proceso = proceso_deserializar(lista_paquete_nuevo_proceso); 
+                printf("llega PATH:%s\n",proceso->path);
                 pthread_mutex_lock(&mutex_proceso_actual);
                 proceso_actual = proceso; //Agregar a lista de procesos?
+                strcpy(proceso_actual->path,proceso->path);
                 pthread_mutex_unlock(&mutex_proceso_actual);
                 list_destroy_and_destroy_elements(lista_paquete_nuevo_proceso,free);
                 //free(proceso);
@@ -241,15 +243,17 @@ int hacer_handshake (int socket_cliente){
 
 t_pcb *proceso_deserializar(t_list*  lista_paquete_proceso ) {
     t_pcb *proceso_nuevo = malloc(sizeof(t_pcb));
+   
     proceso_nuevo->pid = *(uint32_t*)list_get(lista_paquete_proceso, 0);
     proceso_nuevo->program_counter = *(uint32_t*)list_get(lista_paquete_proceso, 1);
     proceso_nuevo->path_length = *(uint32_t*)list_get(lista_paquete_proceso, 2);
-    proceso_nuevo->path = list_get(lista_paquete_proceso, 3);
+    proceso_nuevo->path = malloc(proceso_nuevo->path_length);
+    proceso_nuevo->path = strdup(list_get(lista_paquete_proceso, 3));
     proceso_nuevo->registros_cpu.PC = *(uint32_t*)list_get(lista_paquete_proceso, 4);
-    proceso_nuevo->registros_cpu.AX = *(uint32_t*)list_get(lista_paquete_proceso, 5);
-    proceso_nuevo->registros_cpu.BX = *(uint32_t*)list_get(lista_paquete_proceso, 6);
-    proceso_nuevo->registros_cpu.CX = *(uint32_t*)list_get(lista_paquete_proceso, 7);
-    proceso_nuevo->registros_cpu.DX = *(uint32_t*)list_get(lista_paquete_proceso, 8);
+    proceso_nuevo->registros_cpu.AX = *(uint8_t*)list_get(lista_paquete_proceso, 5);
+    proceso_nuevo->registros_cpu.BX = *(uint8_t*)list_get(lista_paquete_proceso, 6);
+    proceso_nuevo->registros_cpu.CX = *(uint8_t*)list_get(lista_paquete_proceso, 7);
+    proceso_nuevo->registros_cpu.DX = *(uint8_t*)list_get(lista_paquete_proceso, 8);
     proceso_nuevo->registros_cpu.EAX = *(uint32_t*)list_get(lista_paquete_proceso, 9);
     proceso_nuevo->registros_cpu.EBX = *(uint32_t*)list_get(lista_paquete_proceso, 10);
     proceso_nuevo->registros_cpu.ECX = *(uint32_t*)list_get(lista_paquete_proceso, 11);
@@ -259,6 +263,12 @@ t_pcb *proceso_deserializar(t_list*  lista_paquete_proceso ) {
     proceso_nuevo->estado = *(uint32_t*)list_get(lista_paquete_proceso, 15);
     proceso_nuevo->tiempo_ejecucion = *(uint32_t*)list_get(lista_paquete_proceso, 16);
     proceso_nuevo->quantum = *(uint32_t*)list_get(lista_paquete_proceso, 17);
+    printf("PID DESERIALIZADO:%u\n",proceso_nuevo->pid);
+    printf("PATH PROC LENGTH:%u\n",*(uint32_t*)list_get(lista_paquete_proceso, 2));
+    printf("PATH PROC DESERIALIZADO:%s\n",list_get(lista_paquete_proceso, 3));
+    printf("ESTADO DESERIALIZADO:%u\n",proceso_nuevo->estado);
+    printf("TIEMPO EJ DESERIALIZADO:%u\n",proceso_nuevo->tiempo_ejecucion);
+    printf("QUANTUM DESERIALIZADO:%u\n",proceso_nuevo->quantum);
 	return proceso_nuevo;
 }
 

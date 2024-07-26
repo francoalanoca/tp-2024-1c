@@ -882,11 +882,21 @@ void exit_inst(){
     log_info(logger_cpu, "Entro a exit_inst pid :%d", proceso_actual->pid); 
 
     pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
-    proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
+    //proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
+    t_proceso_interrumpido* proceso_interrumpido_a_enviar = malloc(sizeof(t_proceso_interrumpido));
+    proceso_interrumpido_a_enviar->pcb=malloc(sizeof(t_pcb));
+    proceso_interrumpido_a_enviar->pcb->path = malloc(proceso_actual->path_length);
+
+    proceso_interrumpido_a_enviar->pcb = proceso_actual;
+    log_info(logger_cpu, "Path del proc actual :%s", proceso_actual->path); 
+    strcpy(proceso_interrumpido_a_enviar->pcb->path, proceso_actual->path);
+    //proceso_interrumpido_actual->pcb = proceso_actual;
+    proceso_interrumpido_a_enviar->motivo_interrupcion = INSTRUCCION_EXIT;
     log_info(logger_cpu, "Pid asignado en proceo de interrupcion pid :%d", proceso_interrumpido_actual->pcb->pid ); 
-    proceso_interrumpido_actual->motivo_interrupcion = INSTRUCCION_EXIT;
+    //proceso_interrumpido_actual->motivo_interrupcion = INSTRUCCION_EXIT;
     pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
-    solicitar_exit_a_kernel(proceso_interrumpido_actual);
+   // solicitar_exit_a_kernel(proceso_interrumpido_actual);
+   solicitar_exit_a_kernel(proceso_interrumpido_a_enviar);
     pthread_mutex_lock(&mutex_proceso_actual);
     proceso_actual = NULL;
     pthread_mutex_unlock(&mutex_proceso_actual);
@@ -1107,11 +1117,25 @@ void solicitar_io_stdout_write_a_kernel(uint32_t tamanio_nombre_interfaz, char* 
         free(paquete_io_stdout_write->buffer);
         free(paquete_io_stdout_write);
 }
+void imprimir_contenido_paquete(t_paquete* paquete);
+void imprimir_contenido_paquete(t_paquete* paquete) {
+    printf("Codigo de operacion: %d\n", paquete->codigo_operacion);
+    printf("Tamaño del buffer: %d\n", paquete->buffer->size);
+    printf("Contenido del buffer:\n");
 
+    uint8_t* stream = (uint8_t*) paquete->buffer->stream;
+    for (int i = 0; i < paquete->buffer->size; i++) {
+        printf("%02X ", stream[i]);
+    }
+    printf("\n");
+}
 void solicitar_exit_a_kernel(t_proceso_interrumpido* proceso){
         printf("entro a solicitar_exit_a_kernel\n");
         t_paquete* paquete_exit_kernel;
         paquete_exit_kernel = crear_paquete(INTERRUPCION_CPU); 
+       // proceso->pcb->path = malloc(proceso->pcb->path_length);
+       // strcpy(proceso->pcb->path,"PATHPRUEBA");
+        printf("PID: %u,PATH:%s MOTIVO:%u\n",proceso->pcb->pid,proceso->pcb->path,proceso->motivo_interrupcion);
         
         agregar_a_paquete(paquete_exit_kernel,  &proceso->pcb->pid,  sizeof(uint32_t));         
         agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->program_counter, sizeof(uint32_t));  
@@ -1132,7 +1156,7 @@ void solicitar_exit_a_kernel(t_proceso_interrumpido* proceso){
         agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->tiempo_ejecucion, sizeof(uint32_t));
         agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->quantum, sizeof(uint32_t));
         agregar_a_paquete(paquete_exit_kernel, &proceso->motivo_interrupcion, sizeof(uint32_t));
-        
+        imprimir_contenido_paquete(paquete_exit_kernel);
         enviar_paquete(paquete_exit_kernel, conexion_kernel); 
         free(paquete_exit_kernel->buffer->stream);
         free(paquete_exit_kernel->buffer);
