@@ -4,39 +4,45 @@
 //sem_t *sem_planificar;
 t_pcb* pcb_actualizado_interrupcion;
 
-//Funcion que crea hilos para cada modulo y los va atendiendo
 
 void Escuchar_Msj_De_Conexiones(){
 
-//Escuchar los msj de memoria
+   log_info(logger_kernel, "ENTRO EN INICIAR CONEXIONES : %d\n",conexion_memoria); 
+   conexion_memoria = crear_conexion(logger_kernel, "MEMORIA", cfg_kernel->IP_MEMORIA, cfg_kernel->PUERTO_MEMORIA);    
+   log_info(logger_kernel, "Socket de MEMORIA : %d\n",conexion_memoria); 
    pthread_t hilo_kernel_memoria;
-   pthread_create(&hilo_kernel_memoria, NULL, (void*)Kernel_escuchar_memoria, NULL);
+   pthread_create(&hilo_kernel_memoria, NULL, (void*)Kernel_escuchar_memoria, &conexion_memoria);
    pthread_detach(hilo_kernel_memoria);
 
 //Escuchar los msj de cpu - dispatch
+   conexion_cpu_dispatch = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);    
+   log_info(logger_kernel, "Socket de CP DISPATCH : %d\n",conexion_cpu_dispatch);  
    pthread_t hilo_cpu_dispatch;
-   pthread_create(&hilo_cpu_dispatch, NULL, (void*)Kernel_escuchar_cpu_dispatch, NULL);
+   pthread_create(&hilo_cpu_dispatch, NULL, (void*)Kernel_escuchar_cpu_dispatch, &conexion_cpu_dispatch);
    pthread_detach(hilo_cpu_dispatch);
 
 //Escuchar los msj de cpu - interrupt
+   conexion_cpu_interrupt = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_INTERRUPT);    
+   log_info(logger_kernel, "Socket de CPU INTERRUP : %d\n",conexion_cpu_interrupt);
    pthread_t hilo_cpu_interrupt;
-   pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt, NULL);
+   pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt, &conexion_cpu_interrupt);
    pthread_join(hilo_cpu_interrupt, NULL);
 
 }
 
 
-void Kernel_escuchar_cpu_dispatch(){
+void Kernel_escuchar_cpu_dispatch(int* conexion){
+int socket_dispatch = *conexion;
 
 bool control_key = 1;
 t_list* lista_paquete;
 /*while (control_key)
 {
    op_code cod_op = recibir_operacion(conexion_cpu_dispatch);*/
-   op_code cod_op;
-    while (conexion_cpu_dispatch != -1) {
+   uint32_t cod_op;
+    while (socket_dispatch != -1) {
 
-        if (recv(conexion_cpu_dispatch, &cod_op, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+        if (recv(socket_dispatch, &cod_op, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
             log_info(logger_kernel, "DISCONNECT! DISPATCH");
             return;
         }
@@ -46,7 +52,7 @@ t_list* lista_paquete;
    case INTERRUPCION_CPU:
       //Recibo t_proceso_interrumpido(pcb y motivo) desde cpu(funcion check_interrupt)
       log_info(logger_kernel,"Recibo INTERRUPCION_CPU desde CPU");
-      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      lista_paquete = recibir_paquete(socket_dispatch);
       
       t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
       proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
@@ -76,7 +82,7 @@ t_list* lista_paquete;
       
       case FIN_QUANTUM:
          printf("Se recibió una interrupción de FIN DE QUANTUM");              
-         lista_paquete = recibir_paquete(conexion_cpu_dispatch);       
+         lista_paquete = recibir_paquete(socket_dispatch);       
          proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
          log_info(logger_kernel, "PID: %U - Desalojado por fin de Quantum", proceso_interrumpido->pcb->pid); 
          log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
@@ -94,7 +100,7 @@ t_list* lista_paquete;
       case INTERRUPCION_IO:
          printf("Se recibió una interrupción de IO");    
                  
-         lista_paquete = recibir_paquete(conexion_cpu_dispatch);       
+         lista_paquete = recibir_paquete(socket_dispatch);       
          proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
          list_add_in_index(planificador->cola_exec,0,proceso_interrumpido->pcb);
 
@@ -110,7 +116,7 @@ t_list* lista_paquete;
    case SOLICITUD_IO_GEN_SLEEP:
       //Recibo PID, interfaz y unidades de trabajo de cpu, debo pedir a kernel que realice la instruccion IO_GEN_SLEEP (comprobar interfaz en diccionaro de interfaces antes)         
       log_info(logger_kernel,"Recibo IO_GEN_SLEEP desde CPU");
-      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_gen_sleep* io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
 
@@ -178,7 +184,7 @@ t_list* lista_paquete;
    case ENVIO_WAIT_A_KERNEL:
       //Recibo t_recurso(pcb y nombre recurso) desde cpu, debo asignar una instancia del recurso al proceso(verificar recursos disponibles)
       log_info(logger_kernel,"Recibo ENVIO_WAIT_A_KERNEL desde CPU");
-      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      lista_paquete = recibir_paquete(socket_dispatch);
       
       t_recurso* recurso_recibido_wait = malloc(sizeof(t_recurso));
       recurso_recibido_wait = deserializar_recurso(lista_paquete);
@@ -232,7 +238,7 @@ t_list* lista_paquete;
    case ENVIO_SIGNAL_A_KERNEL:
       //Recibo t_recurso(pcb y nombre recurso) desde cpu, debo liberar una instancia del recurso al proceso(verificar recursos disponibles)
       log_info(logger_kernel,"Recibo ENVIO_SIGNAL_A_KERNEL desde CPU");
-      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      lista_paquete = recibir_paquete(socket_dispatch);
       
       t_recurso* recurso_recibido_signal = malloc(sizeof(t_recurso));
       recurso_recibido_signal = deserializar_recurso(lista_paquete);
@@ -278,7 +284,7 @@ t_list* lista_paquete;
                desbloquear_proceso(planificador,pcb_desbloqueado,recurso_recibido_signal->nombre_recurso);
                liberar_memoria_pcb(pcb_desbloqueado);
          }
-          enviar_proceso_a_cpu(recurso_recibido_signal->pcb,conexion_cpu_dispatch);
+          enviar_proceso_a_cpu(recurso_recibido_signal->pcb,socket_dispatch);
           list_destroy_and_destroy_elements(lista_bloqueados_correspondiente,liberar_memoria_pcb);
       }
       else{
@@ -290,7 +296,7 @@ t_list* lista_paquete;
    case SOLICITUD_IO_STDIN_READ:
       //Recibo pid, interfaz, direccion y tamanio desde cpu, se solicita a IO que haga la operacion IO_STDIN_READ(hay que bloquear el porceso)
       log_info(logger_kernel,"Recibo SOLICITUD_IO_STDIN_READ desde CPU");
-      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_stdin_stdout* io_stdin_read = malloc(sizeof(t_io_stdin_stdout));
       io_stdin_read = deserializar_io_stdin_stdout(lista_paquete);
@@ -364,7 +370,7 @@ t_list* lista_paquete;
 
       //Recibo pid, interfaz, direccion y tamanio desde cpu, se solicita a IO que haga la operacion IO_STDOUT_WRITE(hay que bloquear el porceso)
       log_info(logger_kernel,"Recibo SOLICITUD_IO_STDOUT_WRITE desde CPU");
-      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_stdin_stdout* io_stdout_write = malloc(sizeof(t_io_stdin_stdout));
       io_stdout_write = deserializar_io_stdin_stdout(lista_paquete);
@@ -432,7 +438,7 @@ t_list* lista_paquete;
    
    case SOLICITUD_IO_FS_CREATE_A_KERNEL:
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_CREATE_A_KERNEL desde CPU");
-      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_crear_archivo* io_crear_archivo = malloc(sizeof(t_io_crear_archivo));
       io_crear_archivo = deserializar_io_crear_archivo(lista_paquete);
@@ -492,7 +498,7 @@ t_list* lista_paquete;
       break;
    case SOLICITUD_IO_FS_DELETE_A_KERNEL:
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_DELETE_A_KERNEL desde CPU");
-      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_crear_archivo* io_delete_archivo = malloc(sizeof(t_io_crear_archivo));
       io_delete_archivo = deserializar_io_crear_archivo(lista_paquete);
@@ -551,7 +557,7 @@ t_list* lista_paquete;
       break;
    case SOLICITUD_IO_FS_TRUNCATE_A_KERNEL:
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_TRUNCATE_A_KERNEL desde CPU");
-      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_fs_truncate* io_truncate_archivo = malloc(sizeof(t_io_fs_truncate));
       io_truncate_archivo = deserializar_io_truncate_archivo(lista_paquete);
@@ -613,7 +619,7 @@ t_list* lista_paquete;
       break;
    case SOLICITUD_IO_FS_WRITE_A_KERNEL:
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_WRITE_A_KERNEL desde CPU");
-      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_fs_write* io_write_archivo = malloc(sizeof(t_io_fs_write));
       io_write_archivo = deserializar_io_write_archivo(lista_paquete);
@@ -677,7 +683,7 @@ t_list* lista_paquete;
    case SOLICITUD_IO_FS_READ_A_KERNEL:
 
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_READ_A_KERNEL desde CPU");
-      lista_paquete = recibir_paquete(conexion_cpu_dispatch);
+      lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_fs_write* io_read_archivo = malloc(sizeof(t_io_fs_write));
       io_read_archivo = deserializar_io_write_archivo(lista_paquete);
@@ -756,15 +762,14 @@ t_list* lista_paquete;
 
 }
 
-void Kernel_escuchar_cpu_interrupt(){
-op_code cod_op;
-/*bool control_key = 1;
-while (control_key)
-{
-   op_code cod_op = recibir_operacion(conexion_cpu_interrupt);*/
-    while (conexion_cpu_dispatch != -1) {
+void Kernel_escuchar_cpu_interrupt(int *conexion){
+uint32_t cod_op;
+int socket_interrupt = *conexion;
 
-        if (recv(conexion_cpu_dispatch, &cod_op, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+
+    while (socket_interrupt != -1) {
+
+        if (recv(socket_interrupt, &cod_op, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
             log_info(logger_kernel, "DISCONNECT! INTERRUPT");
             return;
         }   
@@ -788,12 +793,14 @@ while (control_key)
 
 }
 
-void Kernel_escuchar_memoria(){
+void Kernel_escuchar_memoria(int *conexion){
+
+int socket_memoria = *conexion;
 
 bool control_key = 1;
 while (control_key)
 {
-   op_code cod_op = recibir_operacion(conexion_memoria);
+   uint32_t cod_op = recibir_operacion(socket_memoria);
    switch (cod_op)
    {
    case -1:
@@ -805,7 +812,7 @@ while (control_key)
       break;
    case CREAR_PROCESO_KERNEL_FIN:
    printf("LLEGA PROCESO CREADO DE MEMORIA");
-   t_list* lista_paquete_crear_proceso_fin = recibir_paquete(conexion_memoria);
+   t_list* lista_paquete_crear_proceso_fin = recibir_paquete(socket_memoria);
    //buscar_pcb_en_lista(planificador->cola_new,*(uint32_t*)list_get(lista_paquete_crear_proceso_fin, 0))
 
     

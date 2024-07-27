@@ -41,7 +41,7 @@ int main(char argc, char *argv[]) {
     pthread_mutex_init(&mutex_cola_ready, NULL);
     pthread_mutex_init(&mutex_envio_io, NULL);
 
-    Empezar_conexiones();
+
 
 //INICIAR SERVIDOR Y CONSOLA INTERACTIVA 
 
