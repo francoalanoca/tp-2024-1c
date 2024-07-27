@@ -33,7 +33,7 @@ pthread_t hilo_atender_memoria;
 int socket_memoria;
 
 char* valor_registro_obtenido;
-char* rta_resize;
+int rta_resize;
 
 
 

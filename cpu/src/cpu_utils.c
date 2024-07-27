@@ -781,8 +781,8 @@ void resize(uint32_t tamanio, int conexion){
 
     solicitar_resize_a_memoria(proceso_actual->pid,tamanio, conexion);
     //WAIT SEMAFORO
-    //sem_wait(&sem_valor_resize_recibido);
-    if(strcmp(rta_resize, "Out of memory") == 0){
+    sem_wait(&sem_valor_resize_recibido);
+    if(rta_resize == OUT_OF_MEMORY){
         pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
         proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
         proceso_interrumpido_actual->motivo_interrupcion = INTERRUPCION_OUT_OF_MEMORY;

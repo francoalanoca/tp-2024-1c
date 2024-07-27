@@ -200,7 +200,7 @@ void atender_memoria (int socket_memoria) {
                     }
                     case SOLICITUD_RESIZE_RTA:
                     {
-                        log_info(logger_cpu, "SOLICITUD_RESIZE_RTA");
+                        log_info(logger_cpu, "SOLICITUD_RESIZE_RTA"); // RESIZE OK
                         t_list* lista_paquete_rta_resize = recibir_paquete(socket_memoria);
                         t_rta_resize* valor_rta_resize = deserealizar_rta_resize(lista_paquete_rta_resize);
                         strcpy(rta_resize, valor_rta_resize->rta); 
@@ -208,6 +208,21 @@ void atender_memoria (int socket_memoria) {
                         list_destroy_and_destroy_elements(lista_paquete_rta_resize,free);
                         free(valor_rta_resize->rta);
                         free(valor_rta_resize);
+                        sem_post(&sem_valor_resize_recibido);
+                        break;
+                    }
+                    case OUT_OF_MEMORY:
+                    {
+                        log_info(logger_cpu, "SOLICITUD_RESIZE_RTA OUT OF MEMORY"); // RESIZE NO SE PUEDE HACER
+                        rta_resize = OUT_OF_MEMORY;
+                        //t_list* lista_paquete_rta_resize = recibir_paquete(socket_memoria);
+                        //t_rta_resize* valor_rta_resize = deserealizar_rta_resize(lista_paquete_rta_resize);
+                        //strcpy(rta_resize, valor_rta_resize->rta); 
+
+                        //list_destroy_and_destroy_elements(lista_paquete_rta_resize,free);
+                        
+                        //free(valor_rta_resize->rta);
+                        //free(valor_rta_resize);
                         sem_post(&sem_valor_resize_recibido);
                         break;
                     }

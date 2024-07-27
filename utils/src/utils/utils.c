@@ -670,7 +670,7 @@ void enviar_respuesta_resize(op_code respuesta_resize, int socket_cliente){
     paquete_valor = crear_paquete(SOLICITUD_RESIZE_RTA);
 
     agregar_a_paquete(paquete_valor, &respuesta_resize,  sizeof(uint32_t));
- printf("respuesta agregada"); 
+    printf("respuesta agregada"); 
     enviar_paquete(paquete_valor, socket_cliente);
     printf("Se envio respuesta de resize \n"); 
     eliminar_paquete(paquete_valor);  

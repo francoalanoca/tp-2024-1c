@@ -22,7 +22,7 @@ extern uint32_t tamanio_pagina;
 extern int socket_memoria;
 extern char* valor_registro_obtenido;
 extern sem_t sem_valor_registro_recibido;
-extern char* rta_resize;
+extern int rta_resize;
 extern sem_t sem_valor_resize_recibido;
 extern sem_t sem_valor_tamanio_pagina;
 extern sem_t sem_servidor_creado;
