@@ -278,13 +278,14 @@ void planificar_y_ejecutar(){
     while (1){
  
         int procesos_ready;
+        bool cola_exec_vacia = list_size(planificador->cola_exec) == 0;
         if (planificador->algoritmo != VIRTUAL_ROUND_ROBIN) {
             procesos_ready = list_size(planificador->cola_ready); 
         }else {
          procesos_ready = list_size(planificador->cola_ready_prioridad) +list_size(planificador->cola_ready);
         }
        
-        if (procesos_ready > 0  && !planificador->planificacion_detenida) {  
+        if (procesos_ready > 0  && !planificador->planificacion_detenida && cola_exec_vacia) {  
             log_info(logger_kernel, "hay un proceso en ready"); //despues borrar
             t_pcb* siguiente_proceso;// = malloc(sizeof(t_pcb));      
             if (planificador->algoritmo == FIFO) { 

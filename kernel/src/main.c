@@ -48,10 +48,10 @@ int main(char argc, char *argv[]) {
     pthread_t hilo1, hilo2, hilo3;
     pthread_t planificacion_largo_plazo,planificacion_corto_plazo;
 
-    pthread_create(&hilo1, NULL, (void*)iniciar_consola_interactiva,conexion_memoria);
+
     pthread_create(&hilo2, NULL, (void*)crearServidor, NULL);
     pthread_create(&hilo3, NULL, (void*)Escuchar_Msj_De_Conexiones, NULL);
-    
+    pthread_create(&hilo1, NULL, (void*)iniciar_consola_interactiva,conexion_memoria);
     
     int value;
     sem_getvalue(&sem_cpu_libre, &value);
