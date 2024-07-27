@@ -30,14 +30,14 @@ typedef enum
 
 instr_t* fetch(int conexion, t_log* logger, t_config* config, t_pcb* proceso);
 tipo_instruccion decode(instr_t* instr);
-void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso);
+void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conexion_memoria);
 void check_interrupt();
 void pedir_instruccion(t_pcb* proceso,int conexion, t_log* logger);
 void set(char* registro, uint32_t valor, t_pcb* proceso, t_log *logger);
 void sum(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *logger);
 void sub(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *logger);
 void jnz(char* registro, uint32_t inst, t_pcb* proceso, t_log* logger);
-void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo, t_pcb* proceso);
+void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo, t_pcb* proceso, int conexion_kernel );
 void generar_interrupcion_a_kernel(int conexion);
 //t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso);
 void* crear_servidor_dispatch(char* ip_cpu);//
@@ -55,7 +55,7 @@ void pedir_marco_a_memoria(uint32_t pid, uint32_t nro_pagina, int conexion);
 void agregar_a_tlb(uint32_t pid, uint32_t nro_pag, uint32_t marco);
 void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_log* logger);
 void mov_out(char* registro_direccion, char* registro_datos, t_pcb* proceso, t_log* logger);
-void resize(uint32_t tamanio);
+void resize(uint32_t tamanio, int conexion);
 void copy_string(uint32_t tamanio, t_log* logger);
 void wait_inst(char* recurso);
 void signal_inst(char* recurso);
@@ -64,7 +64,7 @@ void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_ta
 void exit_inst();
 void pedir_valor_a_memoria(uint32_t dir_fisica, uint32_t pid, int conexion);
 void guardar_en_direccion_fisica(uint32_t dir_fisica_result,uint32_t tamanio_valor_datos,char* valor_registro_datos, uint32_t pid, int conexion);
-void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio);
+void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio, int conexion);
 void envia_error_de_memoria_a_kernel(t_proceso_interrumpido* proceso);
 void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint32_t direccion, uint32_t pid);
 void solicitar_wait_kernel(t_pcb* pcb,uint32_t recurso_tamanio ,char* recurso);

@@ -121,7 +121,7 @@ void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pcb
     log_info(logger, "Voy a entrar a decode");
     tipo_inst = decode(inst);
     log_info(logger, "Voy a entrar a execute");
-    execute(logger, config, inst, tipo_inst, proceso);
+    execute(logger, config, inst, tipo_inst, proceso, conexion);
     if(proceso_actual != NULL){// Si la instruccion que acaba de ejecutar no es EXIT
         pthread_mutex_lock(&mutex_proceso_actual);
         proceso_actual->program_counter += 1;
