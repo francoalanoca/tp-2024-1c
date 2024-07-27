@@ -228,8 +228,6 @@ typedef struct {
 
 typedef struct{
     t_pcb* pcb;
-    //uint32_t tamanio_motivo_interrupcion;
-    //char* motivo_interrupcion;
     motivo_interrupcion motivo_interrupcion;
 }t_proceso_interrumpido;
 

@@ -788,7 +788,7 @@ void resize(uint32_t tamanio, int conexion){
         proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
         proceso_interrumpido_actual->pcb = malloc(sizeof(t_pcb));
         log_info(logger_cpu,"Asigno memoria al interrupido" );
-        proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
+        proceso_interrumpido_actual->pcb = proceso_actual;
         proceso_interrumpido_actual->motivo_interrupcion = INTERRUPCION_OUT_OF_MEMORY;
         log_info(logger_cpu,"cargo motivo de interrupcion" );
         pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
