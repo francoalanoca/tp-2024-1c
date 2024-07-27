@@ -62,9 +62,9 @@ void destruir_planificador(t_planificador* planificador) {
 
 // Agrega un nuevo proceso al planificador
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso) {
-printf("ENTRO agregar_proceso\n");
+
     list_add(planificador->cola_new, proceso);
-    printf("Agrego a cola new\n");
+    log_info(logger_kernel,"Se crea el proceso %d en NEW",proceso->pid);
     if (planificador->grado_multiprogramacion_actual <= planificador->grado_multiprogramacion) {
         printf("ENTRARE A sem_prioridad_io\n");
        // sem_wait(&sem_prioridad_io); DESCOMENTAR
@@ -365,7 +365,7 @@ void largo_plazo_nuevo_ready() {
     while (1) {
 
          if (list_size(planificador->cola_new) > 0  && !planificador->planificacion_detenida) {
-             log_info(logger_kernel, "hay un proceso en new"); //despues borrar
+            
           t_pcb* proceso_nuevo ;
             if (planificador->grado_multiprogramacion_actual < planificador->grado_multiprogramacion) {
                 proceso_nuevo = list_remove(planificador->cola_new, 0);
