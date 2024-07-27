@@ -35,8 +35,8 @@ void atender_instruccion_validada(char** comando_consola);
 void f_ejecutar_script(char* path);
 //t_planificador *inicializar_planificador(t_algoritmo_planificacion algoritmo, uint32_t quantum);
 void detener_planificacion(t_planificador* planificador);
-void mostrar_estado_proceso(pid_t pid);
-void ajustar_multiprogramacion(int nuevo_valor);
+void mostrar_estado_proceso(t_planificador *planificador);
+void ajustar_multiprogramacion(int valor, t_planificador* planificador);
 void f_iniciar_proceso(char* path);
 char* extraer_string_del_buffer(un_buffer);
 t_pcb* crear_pcb(char* path);
@@ -46,7 +46,7 @@ void destruir_pcb(t_pcb* pcb);
 void cambiar_estado(t_pcb* un_pcb, estado_pcb prox_estado);
 bool encontrar_por_pid(void* elemento, void* pid_ptr);
 t_pcb* obtener_proximo_proceso(t_planificador* planificador);
-
-
+void mostrar_procesos_bloqueados(char* key, void* value);
+void mostrar_lista_procesos(t_list* lista, const char* nombre_cola);
 
 #endif

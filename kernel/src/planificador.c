@@ -62,9 +62,9 @@ void destruir_planificador(t_planificador* planificador) {
 
 // Agrega un nuevo proceso al planificador
 bool agregar_proceso(t_planificador* planificador, t_pcb* proceso) {
-printf("ENTRO agregar_proceso\n");
+
     list_add(planificador->cola_new, proceso);
-    printf("Agrego a cola new\n");
+    log_info(logger_kernel,"Se crea el proceso %d en NEW",proceso->pid);
     if (planificador->grado_multiprogramacion_actual <= planificador->grado_multiprogramacion) {
         printf("ENTRARE A sem_prioridad_io\n");
        // sem_wait(&sem_prioridad_io); DESCOMENTAR
@@ -284,13 +284,14 @@ void planificar_y_ejecutar(){
     while (1){
  
         int procesos_ready;
+        bool cola_exec_vacia = list_size(planificador->cola_exec) == 0;
         if (planificador->algoritmo != VIRTUAL_ROUND_ROBIN) {
             procesos_ready = list_size(planificador->cola_ready); 
         }else {
          procesos_ready = list_size(planificador->cola_ready_prioridad) +list_size(planificador->cola_ready);
         }
        
-        if (procesos_ready > 0  && !planificador->planificacion_detenida) {  
+        if (procesos_ready > 0  && !planificador->planificacion_detenida && cola_exec_vacia) {  
             log_info(logger_kernel, "hay un proceso en ready"); //despues borrar
             t_pcb* siguiente_proceso;// = malloc(sizeof(t_pcb));      
             if (planificador->algoritmo == FIFO) { 
@@ -370,7 +371,7 @@ void largo_plazo_nuevo_ready() {
     while (1) {
 
          if (list_size(planificador->cola_new) > 0  && !planificador->planificacion_detenida) {
-             log_info(logger_kernel, "hay un proceso en new"); //despues borrar
+            
           t_pcb* proceso_nuevo ;
             if (planificador->grado_multiprogramacion_actual < planificador->grado_multiprogramacion) {
                 proceso_nuevo = list_remove(planificador->cola_new, 0);

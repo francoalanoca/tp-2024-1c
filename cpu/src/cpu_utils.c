@@ -742,7 +742,7 @@ void pedir_marco_a_memoria(uint32_t pid, uint32_t nro_pagina, int conexion){
     agregar_a_paquete(paquete_pedido_marco,  &nro_pagina,  sizeof(uint32_t));  
         
     enviar_paquete(paquete_pedido_marco, conexion); 
-    free(paquete_pedido_marco);
+    eliminar_paquete(paquete_pedido_marco);
 }
 
 

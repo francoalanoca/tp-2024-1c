@@ -62,7 +62,7 @@ void iniciar_consola_interactiva(int conexion) {
 bool validacion_de_instruccion_de_consola(char** comando_consola) {
     printf("ME METI AL VALIDACION CONSOLA\n");
     bool resultado_validacion = false;
-    printf("COMANDO CONSOLA 0: %s",comando_consola[0]);
+    printf("COMANDO CONSOLA 0: %s\n",comando_consola[0]);
     // Comparo si lo leído coincide con alguno de los comandos
     if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0) {
         resultado_validacion = true;
@@ -147,14 +147,14 @@ void atender_instruccion_validada(char** comando_consola){
         
         int valor = atoi(comando_consola[1]);
    
-        ajustar_multiprogramacion(valor);
+        ajustar_multiprogramacion(valor, planificador);
       
       
     }else if (strcmp(comando_consola[0], "PROCESO_ESTADO") == 0){   //PROCESO_ESTADO
         
-        pid_t pid = atoi(comando_consola[1]);
+       // pid_t pid = atoi(comando_consola[1]);
        
-        mostrar_estado_proceso(pid);
+         mostrar_estado_proceso(planificador);
       
       
     }else{
@@ -189,14 +189,7 @@ void f_iniciar_proceso(char* path) {
 
     };
 
-    
-    /*pcb2 = obtener_proximo_proceso(planificador);
-    printf("PROXIMO PROCESO:%d \n",pcb2->pid);
-    enviar_pcb_a_cpu_por_dispatch(pcb2); //declarar pcb2
-    list_add(planificador->cola_exec,pcb2);  //ES PARA PROBAR, BORRAR DESPUES
-    printf("ENVIE A CPU EL PROCESO\n");
-    //destruir_pcb(pcb);
-    */
+
 }
 
 
@@ -287,63 +280,6 @@ void cambiar_estado(t_pcb* pcb, estado_pcb prox_estado) {
 }
 
 
-void mostrar_estado_proceso(pid_t pid) {
-   /* pthread_mutex_lock(&mutex_lista_procesos);
-
-    // Verifica que lista_procesos esté inicializada y no sea NULL
-    if (lista_procesos == NULL) {
-        log_error(logger_kernel, "La lista de procesos no está inicializada.\n");
-        pthread_mutex_unlock(&mutex_lista_procesos);
-        return;
-    }
-
-    t_pcb* pcb = list_find_with_args(lista_procesos, encontrar_por_pid, &pid);
-    
-    if (pcb == NULL) {
-        log_error(logger_kernel, "No se encontró el proceso con PID %d.\n", pid);
-    } else {
-        const char* estado_str;
-        switch (pcb->estado) {
-            case ESTADO_NEW:
-                estado_str = "NUEVO";
-                break;
-            case ESTADO_READY:
-                estado_str = "LISTO";
-                break;
-            case ESTADO_RUNNING:
-                estado_str = "EJECUTANDO";
-                break;
-            case ESTADO_BLOCKED:
-                estado_str = "BLOQUEADO";
-                break;
-            case ESTADO_EXIT:
-                estado_str = "TERMINADO";
-                break;
-            default:
-                estado_str = "DESCONOCIDO";
-                break;
-        }
-
-        //log_info(logger_kernel, "Estado del proceso con PID %d [%s]: %s\n", pid, pcb->nombre_proceso, estado_str);
-    }
-        log_info(logger_kernel, "Estado del proceso con PID %d [%s]: %s\n", pid, pcb->nombre_proceso, estado_str);
-    }
-
-    pthread_mutex_unlock(&mutex_lista_procesos);*/
-}
-
-void ajustar_multiprogramacion(int nuevo_valor) {
-    /*pthread_mutex_lock(&mutex_lista_procesos_listos);
-
-    grado_multiprogramacion = nuevo_valor;
-    log_info(logger_kernel, "Grado de multiprogramación ajustado a %d\n", nuevo_valor);
-
-    // Aca se podría agregar lógica adicional para mover procesos entre estados
-    // dependiendo del nuevo grado de multiprogramación.
-
-    pthread_mutex_unlock(&mutex_lista_procesos_listos);*/
-}
-
 // Función para encontrar un PCB por PID
 bool encontrar_por_pid(void* elemento, void* pid_ptr) {
     t_pcb* pcb = (t_pcb*)elemento;
@@ -399,4 +335,49 @@ void enviar_creacion_de_proceso_a_memoria(t_pcb* pcb, int conexion_memoria) {
 
     printf("Se envió PCB\n");
     liberar_memoria_paquete(paquete_enviar_creacion_de_proceso);
+}
+
+void ajustar_multiprogramacion(int valor, t_planificador* planificador){
+    planificador->grado_multiprogramacion = valor;
+}
+
+void mostrar_lista_procesos(t_list* lista, const char* nombre_cola) {
+
+    printf("%s: ", nombre_cola);
+    for(int i = 0; i < list_size(lista); i++) {
+        t_pcb* proceso = list_get(lista, i);
+        printf("%d", proceso->pid);
+        if (i < list_size(lista) - 1) {
+            printf(", ");
+        }
+    }
+    printf("\n");
+}
+ // Mostrar los procesos bloqueados por interfaz
+void mostrar_procesos_bloqueados(char* key, void* value) {
+    t_list* lista_bloqueados = (t_list*)value;
+    printf("Bloqueado %s: ", key);
+    for (int i = 0; i < list_size(lista_bloqueados); i++) {
+        t_proceso_data* proceso = list_get(lista_bloqueados, i);
+        printf("%d", proceso->pcb->pid);
+        if (i < list_size(lista_bloqueados) - 1) {
+            printf(", ");
+        }
+    }
+    printf("\n");
+}
+void mostrar_estado_proceso(t_planificador *planificador) {  
+    
+    mostrar_lista_procesos(planificador->cola_new, "New");
+    mostrar_lista_procesos(planificador->cola_ready, "Ready");
+    
+    if (planificador->algoritmo == VIRTUAL_ROUND_ROBIN) {
+        mostrar_lista_procesos(planificador->cola_ready_prioridad, "Ready prioridad");
+    }
+    
+    mostrar_lista_procesos(planificador->cola_exec, "Ejecutando");
+    
+    dictionary_iterator(planificador->cola_blocked, mostrar_procesos_bloqueados);
+    
+    mostrar_lista_procesos(planificador->cola_exit, "Exit");
 }
