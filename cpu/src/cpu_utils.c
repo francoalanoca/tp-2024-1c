@@ -781,7 +781,7 @@ void resize(uint32_t tamanio){
 
     solicitar_resize_a_memoria(proceso_actual->pid,tamanio);
     //WAIT SEMAFORO
-    sem_wait(&sem_valor_resize_recibido);
+    //sem_wait(&sem_valor_resize_recibido);
     if(strcmp(rta_resize, "Out of memory") == 0){
         pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
         proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
@@ -880,8 +880,10 @@ void exit_inst(){
     // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
     //Contexto de Ejecución actualizado al Kernel para su finalización.
     log_info(logger_cpu, "Entro a exit_inst pid :%d", proceso_actual->pid); 
-
+    
     pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
+    t_proceso_interrumpido *proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
+    proceso_interrumpido_actual->pcb = malloc(sizeof(t_pcb));
     proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
     log_info(logger_cpu, "Pid asignado en proceo de interrupcion pid :%d", proceso_interrumpido_actual->pcb->pid ); 
     proceso_interrumpido_actual->motivo_interrupcion = INSTRUCCION_EXIT;
@@ -939,9 +941,7 @@ void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio){
     agregar_a_paquete(paquete_pedido_resize,  &tamanio,  sizeof(uint32_t));  
         
     enviar_paquete(paquete_pedido_resize, socket_memoria); 
-    free(paquete_pedido_resize->buffer->stream);
-    free(paquete_pedido_resize->buffer);
-    free(paquete_pedido_resize);
+    eliminar_paquete(paquete_pedido_resize);
     
 }
 

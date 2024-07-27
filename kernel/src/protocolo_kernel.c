@@ -30,9 +30,17 @@ void Kernel_escuchar_cpu_dispatch(){
 
 bool control_key = 1;
 t_list* lista_paquete;
-while (control_key)
+/*while (control_key)
 {
-   op_code cod_op = recibir_operacion(conexion_cpu_dispatch);
+   op_code cod_op = recibir_operacion(conexion_cpu_dispatch);*/
+   op_code cod_op;
+    while (conexion_cpu_dispatch != -1) {
+
+        if (recv(conexion_cpu_dispatch, &cod_op, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+            log_info(logger_kernel, "DISCONNECT! DISPATCH");
+            return;
+        }
+  
    switch (cod_op)
    {
    case INTERRUPCION_CPU:
@@ -749,11 +757,17 @@ while (control_key)
 }
 
 void Kernel_escuchar_cpu_interrupt(){
-
-bool control_key = 1;
+op_code cod_op;
+/*bool control_key = 1;
 while (control_key)
 {
-   op_code cod_op = recibir_operacion(conexion_cpu_interrupt);
+   op_code cod_op = recibir_operacion(conexion_cpu_interrupt);*/
+    while (conexion_cpu_dispatch != -1) {
+
+        if (recv(conexion_cpu_dispatch, &cod_op, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+            log_info(logger_kernel, "DISCONNECT! INTERRUPT");
+            return;
+        }   
    switch (cod_op)
    {
    case MENSAJE:
@@ -762,10 +776,10 @@ while (control_key)
    case PAQUETE:
       //
       break;
-   case -1:
+ /*  case -1:
       log_error(logger_kernel, "Desconexion de cpu - interrupt");
       control_key = 0;
-      break;
+      break; */
    default:
       log_warning(logger_kernel, "Operacion desconocida de cpu - interrupt");
       break;

@@ -568,10 +568,6 @@ t_resize* deserializar_solicitud_resize(t_list*  lista_paquete){
     
     solicitud_resize->tamanio = *(uint32_t*)list_get(lista_paquete, 1);
     printf("Tamanio proceso: %d \n", solicitud_resize->tamanio);
-
-    solicitud_resize->valor = list_get(lista_paquete, 2);
-    printf("Valor: %s \n", solicitud_resize->valor);
-
     return solicitud_resize;
 
 }
@@ -1061,8 +1057,7 @@ void enviar_resize_memoria(t_resize* proceso_resize, int socket){
     paquete_resize = crear_paquete(SOLICITUD_RESIZE);
  
     agregar_a_paquete(paquete_resize, &proceso_resize->pid,  sizeof(uint32_t));
-    agregar_a_paquete(paquete_resize, &proceso_resize->tamanio,  sizeof(uint32_t));
-    agregar_a_paquete(paquete_resize, proceso_resize->valor, strlen(proceso_resize->valor) + 1);  
+    agregar_a_paquete(paquete_resize, &proceso_resize->tamanio,  sizeof(uint32_t)); 
     
     enviar_paquete(paquete_resize, socket);   
     printf("Tamaño resize solicitado: %d\n", proceso_resize->tamanio); 

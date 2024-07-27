@@ -22,7 +22,7 @@
 
 #define PUERTO "4444"
 
-typedef enum
+typedef  enum 
 {
  //----------------BASICOS--------------------------------
     HANDSHAKE = 1,
@@ -309,7 +309,6 @@ typedef struct{
 typedef struct {
     uint32_t pid;
     uint32_t tamanio;
-    char* valor;
 } t_resize;
 
 
