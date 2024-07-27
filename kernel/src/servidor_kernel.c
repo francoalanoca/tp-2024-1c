@@ -199,24 +199,7 @@ void procesar_conexion(void *void_args) {
 
 
 
-void Empezar_conexiones(){
 
-    //conexion con cpu-dispatch
-    conexion_cpu_dispatch = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);
-    
-    log_info(logger_kernel, "Socket de CP DISPATCH : %d\n",conexion_cpu_dispatch);  
-
-    //conexion con cpu-interrupt
-    conexion_cpu_interrupt = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_INTERRUPT);
-    
-    log_info(logger_kernel, "Socket de CPU INTERRUP : %d\n",conexion_cpu_interrupt);
-
-    //conexion con memoria
-    conexion_memoria = crear_conexion(logger_kernel, "MEMORIA", cfg_kernel->IP_MEMORIA, cfg_kernel->PUERTO_MEMORIA);
-    
-    log_info(logger_kernel, "Socket de MEMORIA : %d\n",conexion_memoria); 
-
-}
 
 t_pcb* buscar_pcb_en_lista_de_data(t_list* lista_de_data, uint32_t pid){
    t_proceso_data* pcb_data_de_lista = malloc(sizeof(t_proceso_data));
