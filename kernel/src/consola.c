@@ -365,8 +365,7 @@ void mostrar_procesos_bloqueados(char* key, void* value) {
     printf("\n");
 }
 void mostrar_estado_proceso(t_planificador *planificador) {  
-    log_info(logger_kernel,"grado de multiprogramacion actual %d",planificador->grado_multiprogramacion_actual );
-
+    
     mostrar_lista_procesos(planificador->cola_new, "New");
     mostrar_lista_procesos(planificador->cola_ready, "Ready");
     
