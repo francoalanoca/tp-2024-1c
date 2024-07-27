@@ -75,7 +75,7 @@ void procesar_conexion(void *v_args){
  
     while (cliente_socket != -1) {
    
-        if (recv(cliente_socket, &cop, sizeof(int32_t), MSG_WAITALL) != sizeof(int32_t)) {
+        if (recv(cliente_socket, &cop, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
             log_info(logger, "DISCONNECT! KERNEL");
 
             break;
@@ -200,14 +200,15 @@ void atender_memoria (int socket_memoria) {
                     }
                     case SOLICITUD_RESIZE_RTA:
                     {
-                        log_info(logger_cpu, "SOLICITUD_RESIZE_RTA");
-                        t_list* lista_paquete_rta_resize = recibir_paquete(socket_memoria);
-                        t_rta_resize* valor_rta_resize = deserealizar_rta_resize(lista_paquete_rta_resize);
-                        strcpy(rta_resize, valor_rta_resize->rta); 
-
-                        list_destroy_and_destroy_elements(lista_paquete_rta_resize,free);
-                        free(valor_rta_resize->rta);
-                        free(valor_rta_resize);
+                        log_info(logger_cpu, "SOLICITUD_RESIZE_RTA"); // RESIZE OK
+                        rta_resize = SOLICITUD_RESIZE_RTA;
+                        sem_post(&sem_valor_resize_recibido);
+                        break;
+                    }
+                    case OUT_OF_MEMORY:
+                    {
+                        log_info(logger_cpu, "SOLICITUD_RESIZE_RTA OUT OF MEMORY"); // RESIZE NO SE PUEDE HACER
+                        rta_resize = OUT_OF_MEMORY;
                         sem_post(&sem_valor_resize_recibido);
                         break;
                     }

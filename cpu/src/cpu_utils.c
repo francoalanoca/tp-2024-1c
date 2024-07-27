@@ -19,7 +19,7 @@ tipo_instruccion decode(instr_t* instr){
 }
 
 
-void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso){
+void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conexion){
     
     switch(tipo_inst){
         case SET:
@@ -54,7 +54,7 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
             char *endptr;
             uint32_t param2_num = (uint32_t)strtoul(inst->param2, &endptr, 10);// Convertir la cadena a uint32_t
             
-            io_gen_sleep(inst->param1, param2_num,proceso);
+            io_gen_sleep(inst->param1, param2_num,proceso, conexion);
             break;
         }
 
@@ -78,7 +78,7 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
             char *endptr;
             uint32_t param1_num = (uint32_t)strtoul(inst->param1, &endptr, 10);// Convertir la cadena a uint32_t
             
-            resize(param1_num);
+            resize(param1_num, conexion);
             break;
         }
 
@@ -408,7 +408,7 @@ void jnz(char* registro, uint32_t inst, t_pcb* proceso, t_log* logger){
     }
 }
 //void io_gen_sleep(Interfaz interfaz, int unidades_de_trabajo){ //TODO: VER PARAMETROS
-void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo, t_pcb* proceso){
+void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo, t_pcb* proceso , int conexion){
     printf("Entra a io_gen_sleep");
     uint32_t tamanio_nombre_interfaz = malloc(sizeof(uint32_t));
     tamanio_nombre_interfaz = string_length(nombre_interfaz) * sizeof(char);
@@ -774,19 +774,25 @@ void mov_out(char* registro_direccion, char* registro_datos, t_pcb* proceso, t_l
 
 }
 
-void resize(uint32_t tamanio){
+void resize(uint32_t tamanio, int conexion){
     //Solicitará a la Memoria ajustar el tamaño del proceso al tamaño pasado
     //por parámetro. En caso de que la respuesta de la memoria sea Out of Memory, se deberá
     //devolver el contexto de ejecución al Kernel informando de esta situación.
 
-    solicitar_resize_a_memoria(proceso_actual->pid,tamanio);
+    solicitar_resize_a_memoria(proceso_actual->pid,tamanio, conexion);
     //WAIT SEMAFORO
     sem_wait(&sem_valor_resize_recibido);
-    if(strcmp(rta_resize, "Out of memory") == 0){
+    if(rta_resize == OUT_OF_MEMORY){
+        log_info(logger_cpu, "Entro en caso de OUT_OF_MEMORY ANTES DEL MUTEX" );
         pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
-        proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
+        proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
+        proceso_interrumpido_actual->pcb = malloc(sizeof(t_pcb));
+        log_info(logger_cpu,"Asigno memoria al interrupido" );
+        proceso_interrumpido_actual->pcb = proceso_actual;
         proceso_interrumpido_actual->motivo_interrupcion = INTERRUPCION_OUT_OF_MEMORY;
+        log_info(logger_cpu,"cargo motivo de interrupcion" );
         pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
+        log_info(logger_cpu,"voy a enviar el interrumpido" );
         envia_error_de_memoria_a_kernel(proceso_interrumpido_actual);
         pthread_mutex_lock(&mutex_proceso_actual);
         proceso_actual = NULL;
@@ -880,8 +886,10 @@ void exit_inst(){
     // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
     //Contexto de Ejecución actualizado al Kernel para su finalización.
     log_info(logger_cpu, "Entro a exit_inst pid :%d", proceso_actual->pid); 
-
+    
     pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
+    t_proceso_interrumpido *proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
+    proceso_interrumpido_actual->pcb = malloc(sizeof(t_pcb));
     proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
     log_info(logger_cpu, "Pid asignado en proceo de interrupcion pid :%d", proceso_interrumpido_actual->pcb->pid ); 
     proceso_interrumpido_actual->motivo_interrupcion = INSTRUCCION_EXIT;
@@ -930,7 +938,7 @@ void guardar_en_direccion_fisica(uint32_t dir_fisica_result,uint32_t tamanio_val
 }
 
 
-void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio){
+void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio, int conexion){
        printf("entro a solicitar_resize_a_memoria\n");
         t_paquete* paquete_pedido_resize;
     paquete_pedido_resize = crear_paquete(SOLICITUD_RESIZE); 
@@ -938,10 +946,8 @@ void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio){
     agregar_a_paquete(paquete_pedido_resize,  &pid,  sizeof(uint32_t)); 
     agregar_a_paquete(paquete_pedido_resize,  &tamanio,  sizeof(uint32_t));  
         
-    enviar_paquete(paquete_pedido_resize, socket_memoria); 
-    free(paquete_pedido_resize->buffer->stream);
-    free(paquete_pedido_resize->buffer);
-    free(paquete_pedido_resize);
+    enviar_paquete(paquete_pedido_resize, conexion); 
+    eliminar_paquete(paquete_pedido_resize);
     
 }
 

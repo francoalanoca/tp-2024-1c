@@ -25,6 +25,8 @@ int iniciar_servidor_memoria()
             perror("Falló el socket");
             continue;
         }
+        int yes=1;
+         setsockopt(memoria_server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
         if (bind(memoria_server_fd, p->ai_addr, p->ai_addrlen) == -1) {
             close(memoria_server_fd);
             perror("Falló el bind");

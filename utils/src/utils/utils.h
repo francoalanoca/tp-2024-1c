@@ -22,45 +22,45 @@
 
 #define PUERTO "4444"
 
-typedef enum
+typedef  enum 
 {
  //----------------BASICOS--------------------------------
     HANDSHAKE = 1,
     HANDSHAKE_OK,
 	MENSAJE,
 	PAQUETE,
-	PCB = 30,
+	PCB,
  //---------------CPU-KERNEL-------------------
-	NUEVO_PROCESO = 35,
-    INTERRUPCION_CPU = 45, //CPU manda interrupcion a kernel
-    SOLICITUD_IO_GEN_SLEEP = 50, //CPU envia interfaz a kernel en caso de instruccion IO_GEN_SLEEP 
-    ENVIAR_ERROR_MEMORIA_A_KERNEL = 95, //CPU le manda a kernel el proceso loego de que memoria tire error de out of memory
-    ENVIO_WAIT_A_KERNEL =105, //CPU solicita a kernel que se asigne una instancia del recurso al proceso
-    ENVIO_SIGNAL_A_KERNEL =110, //CPU solicita a kernel que se libere una instancia del recurso al proceso
-    SOLICITUD_IO_STDIN_READ = 115, // CPU solicita a kernel hacer la operacion IO_STDIN_READ a partir de la interfaz, direccion y tamanio pasado
-    SOLICITUD_IO_STDOUT_WRITE = 120, // CPU solicita a kernel hacer la operacion IO_STDOUT_WRITE a partir de la interfaz, direccion y tamanio pasado
-    SOLICITUD_EXIT_KERNEL = 125, //CPU solicita a kernel la finalización del proceso
-    SOLICITUD_IO_FS_CREATE_A_KERNEL =140, //CPU envia a kernel la solicitud de IO_FS_CREATE
-    SOLICITUD_IO_FS_DELETE_A_KERNEL =145, //CPU envia a kernel la solicitud de IO_FS_DELETE
-    SOLICITUD_IO_FS_TRUNCATE_A_KERNEL =150, //CPU envia a kernel la solicitud de IO_FS_TRUNCATE
-    SOLICITUD_IO_FS_WRITE_A_KERNEL =155, //CPU envia a kernel la solicitud de IO_FS_WRITE
-    SOLICITUD_IO_FS_READ_A_KERNEL =160, //CPU envia a kernel la solicitud de IO_FS_READ
+	NUEVO_PROCESO ,
+    INTERRUPCION_CPU , //CPU manda interrupcion a kernel
+    SOLICITUD_IO_GEN_SLEEP, //CPU envia interfaz a kernel en caso de instruccion IO_GEN_SLEEP 
+    ENVIAR_ERROR_MEMORIA_A_KERNEL, //CPU le manda a kernel el proceso loego de que memoria tire error de out of memory
+    ENVIO_WAIT_A_KERNEL, //CPU solicita a kernel que se asigne una instancia del recurso al proceso
+    ENVIO_SIGNAL_A_KERNEL, //CPU solicita a kernel que se libere una instancia del recurso al proceso
+    SOLICITUD_IO_STDIN_READ , // CPU solicita a kernel hacer la operacion IO_STDIN_READ a partir de la interfaz, direccion y tamanio pasado
+    SOLICITUD_IO_STDOUT_WRITE , // CPU solicita a kernel hacer la operacion IO_STDOUT_WRITE a partir de la interfaz, direccion y tamanio pasado
+    SOLICITUD_EXIT_KERNEL, //CPU solicita a kernel la finalización del proceso
+    SOLICITUD_IO_FS_CREATE_A_KERNEL, //CPU envia a kernel la solicitud de IO_FS_CREATE
+    SOLICITUD_IO_FS_DELETE_A_KERNEL, //CPU envia a kernel la solicitud de IO_FS_DELETE
+    SOLICITUD_IO_FS_TRUNCATE_A_KERNEL, //CPU envia a kernel la solicitud de IO_FS_TRUNCATE
+    SOLICITUD_IO_FS_WRITE_A_KERNEL, //CPU envia a kernel la solicitud de IO_FS_WRITE
+    SOLICITUD_IO_FS_READ_A_KERNEL, //CPU envia a kernel la solicitud de IO_FS_READ
     INTERRUPCION_KERNEL, //kernel manda interrupcion a CPU
 
 
  //---------------CPU-MEMORIA-------------------
-    PROXIMA_INSTRUCCION = 40,   // Cpu le solicita a Memoria la proxima instruccion a ejecutar
-    INSTRUCCION_RECIBIDA = 55,  // Memoria envia a Cpu la instruccion solicitada
-    PEDIDO_MARCO_A_MEMORIA = 60,
-    MARCO_RECIBIDO = 65,
-    PETICION_VALOR_MEMORIA = 70, //CPU pide a memoria que le de el valor asociado a una direccion fisica
-    PETICION_VALOR_MEMORIA_RTA = 75, //Memoria envia a CPU el valor asociado a la direccion fisica 
-    GUARDAR_EN_DIRECCION_FISICA = 80, //CPU le manda a memoria dir fisica y valor y memoria debe guardar dicho valor en la dir fisica indicada
-    SOLICITUD_RESIZE = 85, // CPU pide a memora que haga un resize del proceso
-    SOLICITUD_RESIZE_RTA = 90, // Memoria responde el resultado de la operacion de resize
-    ENVIO_COPY_STRING_A_MEMORIA = 100, //CPU solicita a memoria que guarde el valor en la direccion pasada por parametro
-    SOLICITUD_TAMANIO_PAGINA =130,//CPU solicita a memoria el tamanio de pagina
-    SOLICITUD_TAMANIO_PAGINA_RTA =135,//Memoria envia a CPU el tamanio de pagina
+    PROXIMA_INSTRUCCION ,   // Cpu le solicita a Memoria la proxima instruccion a ejecutar
+    INSTRUCCION_RECIBIDA,  // Memoria envia a Cpu la instruccion solicitada
+    PEDIDO_MARCO_A_MEMORIA,
+    MARCO_RECIBIDO,
+    PETICION_VALOR_MEMORIA, //CPU pide a memoria que le de el valor asociado a una direccion fisica
+    PETICION_VALOR_MEMORIA_RTA , //Memoria envia a CPU el valor asociado a la direccion fisica 
+    GUARDAR_EN_DIRECCION_FISICA, //CPU le manda a memoria dir fisica y valor y memoria debe guardar dicho valor en la dir fisica indicada
+    SOLICITUD_RESIZE, // CPU pide a memora que haga un resize del proceso
+    SOLICITUD_RESIZE_RTA, // Memoria responde el resultado de la operacion de resize
+    ENVIO_COPY_STRING_A_MEMORIA, //CPU solicita a memoria que guarde el valor en la direccion pasada por parametro
+    SOLICITUD_TAMANIO_PAGINA,//CPU solicita a memoria el tamanio de pagina
+    SOLICITUD_TAMANIO_PAGINA_RTA,//Memoria envia a CPU el tamanio de pagina
     OUT_OF_MEMORY,
     GUARDAR_EN_DIRECCION_FISICA_RTA,
     ENVIO_COPY_STRING_A_MEMORIA_RTA,
@@ -228,8 +228,6 @@ typedef struct {
 
 typedef struct{
     t_pcb* pcb;
-    //uint32_t tamanio_motivo_interrupcion;
-    //char* motivo_interrupcion;
     motivo_interrupcion motivo_interrupcion;
 }t_proceso_interrumpido;
 
@@ -309,7 +307,6 @@ typedef struct{
 typedef struct {
     uint32_t pid;
     uint32_t tamanio;
-    char* valor;
 } t_resize;
 
 
