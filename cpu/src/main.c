@@ -33,7 +33,7 @@ pthread_t hilo_atender_memoria;
 int socket_memoria;
 
 char* valor_registro_obtenido;
-char* rta_resize;
+int rta_resize;
 
 
 
@@ -68,18 +68,23 @@ int main(int argc, char* argv[]) {
     log_info(logger_cpu, "empieza el programa");
 
     pthread_t servidor_dispatch;
-    pthread_create(&servidor_dispatch, NULL, crear_servidor_dispatch, ip_cpu);
+    pthread_create(&servidor_dispatch, NULL, (void*)crear_servidor_dispatch, ip_cpu);
     pthread_detach(servidor_dispatch);
 
     pthread_t servidor_interrupt;
-    pthread_create(&servidor_interrupt, NULL, crear_servidor_interrupt, ip_cpu);
+    pthread_create(&servidor_interrupt, NULL, (void*)crear_servidor_interrupt, ip_cpu);
     pthread_detach(servidor_interrupt);
     log_info(logger_cpu, "cree los hilos servidor");
 
 
+
+/*ANTERIOR
     proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
     proceso_interrumpido_actual->pcb = malloc(sizeof(t_pcb));
-    proceso_interrumpido_actual->pcb->pid = NULL;
+    proceso_interrumpido_actual->pcb->pid = NULL;*/
+
+
+
     prox_inst = malloc(sizeof(instr_t));
     printf("Creo prox_inst\n");
 
@@ -96,7 +101,7 @@ int main(int argc, char* argv[]) {
     
 
 
-    pthread_create(&hilo_atender_memoria, NULL,atender_memoria,socket_memoria);
+    pthread_create(&hilo_atender_memoria, NULL,(void*)atender_memoria,socket_memoria);
 
     sem_wait(&sem_servidor_creado);
      printf("Paso  sem_servidor_creado\n");
@@ -124,7 +129,7 @@ void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pcb
     log_info(logger, "Voy a entrar a decode");
     tipo_inst = decode(inst);
     log_info(logger, "Voy a entrar a execute");
-    execute(logger, config, inst, tipo_inst, proceso);
+    execute(logger, config, inst, tipo_inst, proceso, conexion);
     if(proceso_actual != NULL){// Si la instruccion que acaba de ejecutar no es EXIT
         pthread_mutex_lock(&mutex_proceso_actual);
         proceso_actual->program_counter += 1;

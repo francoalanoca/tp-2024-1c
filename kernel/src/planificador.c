@@ -299,7 +299,7 @@ void planificar_y_ejecutar(){
                 enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);
                 log_info(logger_kernel, "Proceso enviado pid: %d",siguiente_proceso->pid);            
                 list_add(planificador->cola_exec,siguiente_proceso);                             
-                log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EXECUTANDO",siguiente_proceso->pid); // LOG OBLIGATORIO
+                log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EJECUTANDO",siguiente_proceso->pid); // LOG OBLIGATORIO
             }else {
                 siguiente_proceso = obtener_proximo_proceso(planificador);
                 ejecutar_modo_round_robin(siguiente_proceso); 

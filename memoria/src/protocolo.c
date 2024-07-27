@@ -106,7 +106,11 @@ void memoria_atender_cliente(void* socket){
             t_resize* solicitud_resize = deserializar_solicitud_resize(valores);
             op_code respuesta_resize = administrar_resize(solicitud_resize->pid, solicitud_resize->tamanio);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
-            enviar_respuesta_resize(respuesta_resize, socket_cliente);
+            if (send(socket_cliente, &respuesta_resize, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+                log_error(logger_memoria, "Error al enviar respuesta de resize a cliente");
+                   
+                break;
+            }
             break;
 
         case ENVIO_COPY_STRING_A_MEMORIA:
