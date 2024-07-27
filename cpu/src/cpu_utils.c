@@ -19,7 +19,7 @@ tipo_instruccion decode(instr_t* instr){
 }
 
 
-void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conexion){
+void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conexion,t_list* tlb){
     
     switch(tipo_inst){
         case SET:
@@ -61,14 +61,14 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
         case MOV_IN:
         {
             log_info(logger, "PID: %u - Ejecutando: MOV_IN - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
-            mov_in(inst->param1, inst->param2,proceso,logger);
+            mov_in(inst->param1, inst->param2,proceso,logger,conexion,tlb);
             break;
         }
         
         case MOV_OUT:
         {
             log_info(logger, "PID: %u - Ejecutando: MOV_OUT - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
-            mov_out(inst->param1, inst->param2,proceso,logger);
+            mov_out(inst->param1, inst->param2,proceso,logger,conexion,tlb);
             break;
         }
 
@@ -88,7 +88,7 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
             char *endptr;
             uint32_t param1_num = (uint32_t)strtoul(inst->param1, &endptr, 10);// Convertir la cadena a uint32_t
             
-            copy_string(param1_num,logger);
+            copy_string(param1_num,logger,conexion,tlb);
             break;
         }
 
@@ -109,14 +109,14 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
         case IO_STDIN_READ:
         {
             log_info(logger, "PID: %u - Ejecutando: IO_STDIN_READ - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
-            io_stdin_read(inst->param1,inst->param2,inst->param3,proceso,logger);
+            io_stdin_read(inst->param1,inst->param2,inst->param3,proceso,logger,conexion,tlb);
             break;
         }
 
         case IO_STDOUT_WRITE:
         {
             log_info(logger, "PID: %u - Ejecutando: IO_STDOUT_WRITE - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
-            io_stdout_write(inst->param1,inst->param2,inst->param3,proceso,logger);
+            io_stdout_write(inst->param1,inst->param2,inst->param3,proceso,logger,conexion,tlb);
             break;
         }
 
@@ -151,14 +151,14 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
         case IO_FS_WRITE:
         {
             log_info(logger, "PID: %u - Ejecutando: IO_FS_WRITE - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
-            io_fs_write(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger);
+            io_fs_write(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger,conexion,tlb);
             break;
         }
 
         case IO_FS_READ:
         {
             log_info(logger, "PID: %u - Ejecutando: IO_FS_READ - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
-            io_fs_read(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger);
+            io_fs_read(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger,conexion,tlb);
             break;
         }
     }
@@ -465,12 +465,34 @@ void generar_interrupcion_a_kernel(int conexion){
     return nuevo_proceso;
 }*/
 
+void limpiarCadena(char* cadena) {
+    char* token;
+    char delimitadores[] = " \n\t"; // Espacio, salto de línea y tabulador
+    char cadenaLimpia[100] = ""; // Asegúrate de que esta cadena sea lo suficientemente grande
+
+    // Obtener el primer token
+    token = strtok(cadena, delimitadores);
+    
+    // Iterar sobre los siguientes tokens
+    while (token != NULL) {
+        strcat(cadenaLimpia, token);
+        token = strtok(NULL, delimitadores);
+    }
+
+    // Copiar la cadena limpia de vuelta a la cadena original
+    strcpy(cadena, cadenaLimpia);
+}
+
 
 registros identificarRegistro(char* registro){
+     printf("ENTRO A IDENTIFICAR_REGISTRO: %s\n",registro); 
+     limpiarCadena(registro);
     if(strcmp(registro,"PC") == 0){
+        
         return PC;
     }
     else if(strcmp(registro,"AX") == 0){
+         printf("Entro AX \n"); 
         return AX;
     }
     else if(strcmp(registro,"BX") == 0){
@@ -596,21 +618,21 @@ void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, ui
 }
 
 
-uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion, t_log* logger){
-    uint32_t direccion_resultado = malloc(sizeof(uint32_t));
+uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion, t_log* logger,t_list* tlb){
+    uint32_t direccion_resultado;// = malloc(sizeof(uint32_t));
     bool encontro_en_tlb = false;
-    uint32_t indice_encontrado = malloc(sizeof(uint32_t));
+    uint32_t indice_encontrado; //= malloc(sizeof(uint32_t));
    // char* valor_direccion_logica = concatenar_cadenas(uint32_to_string(direccion_logica->nro_pag),uint32_to_string(direccion_logica->nro_pag));
-    uint32_t nro_pagina = malloc(sizeof(uint32_t));
-    uint32_t desplazamiento = malloc(sizeof(uint32_t));
+    uint32_t nro_pagina;// = malloc(sizeof(uint32_t));
+    uint32_t desplazamiento;// = malloc(sizeof(uint32_t));
  //CALCULAR NRO DE PAGINA Y DESPLAZAMIENTO
     nro_pagina =  floor(direccion_logica / tamanio_pag);
     desplazamiento = direccion_logica - nro_pagina * tamanio_pag;
 
     //CHEQUEAR EN TLB
     //list_iterate(tlb, verificar_existencia_en_tlb(&encontro_en_tlb));
-
-       	  for(uint32_t i = 0; i < tlb->elements_count; i++){	
+         printf("La TLB tiene %d elementos\n", list_size(tlb));
+       	  for(uint32_t i = 0; i < list_size(tlb); i++){	
 			//if(verificar_existencia_en_tlb(proceso_actual->pcb->pid, direccion_logica->nro_pag, i)){
             if(verificar_existencia_en_tlb(proceso_actual->pid, nro_pagina, i)){
                 encontro_en_tlb = true;
@@ -620,11 +642,15 @@ uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion, t_lo
 	  }
 
       if(encontro_en_tlb){
+        printf("ENTRO IF ENCOTNRO EN TLB\n");
         t_registro_tlb* registro_tlb_encontrado = malloc(sizeof(t_registro_tlb));
+        printf("HAGO MALLOC\n");
         registro_tlb_encontrado = list_get(tlb,indice_encontrado);
+        printf("PASO LIST_GET\n");
         //direccion_resultado->nro_frame = registro_tlb_encontrado->nro_marco;
         //HACER CALCULO DIRECCION FISICA
         direccion_resultado = registro_tlb_encontrado->nro_marco * tamanio_pag;
+        printf("ASIGNO DIRECCION_RESULTADO\n");
       }
       else{//Si no esta, pedir a memoria el marco para esa pagina y proceso
         log_info(logger, "PID: %u - TLB MISS- Pagina: %u", proceso_actual->pid,nro_pagina); //LOG OBLIGATORIO
@@ -633,12 +659,13 @@ uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion, t_lo
         //WAIT SEMAFORO MARCO RECIBIDO
         sem_wait(&sem_marco_recibido);
         log_info(logger, "PID: %u - OBTENER MARCO- Página: %u - Marco: %u", proceso_actual->pid,nro_pagina,marco_recibido); //LOG OBLIGATORIO
-    if(tlb->elements_count = cfg_cpu->CANTIDAD_ENTRADAS_TLB){
-        usar_algoritmo_tlb(proceso_actual->pid,nro_pagina,marco_recibido); //TODO:IMPLEMENTAR FUNCION
+    if(list_size(tlb) == cfg_cpu->CANTIDAD_ENTRADAS_TLB){
+        usar_algoritmo_tlb(proceso_actual->pid,nro_pagina,marco_recibido,tlb); //TODO:IMPLEMENTAR FUNCION
         direccion_resultado = marco_recibido * tamanio_pag;
     }
     else{
-        agregar_a_tlb(proceso_actual->pid,nro_pagina,marco_recibido);
+        printf("ENTRO USAR AGREAGAR A TLB\n");
+        agregar_a_tlb(proceso_actual->pid,nro_pagina,marco_recibido,tlb);
         direccion_resultado = marco_recibido * tamanio_pag;
     }
       }
@@ -649,9 +676,7 @@ uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion, t_lo
 
 bool verificar_existencia_en_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t indice){
     //buscar por indice en la lista(tlb) si existe
-    t_registro_tlb* registro_tlb_actual = malloc(sizeof(t_registro_tlb));
-
-    registro_tlb_actual = list_get(tlb,indice);
+    t_registro_tlb* registro_tlb_actual = list_get(tlb,indice);
 
     if(registro_tlb_actual->pid = pid && registro_tlb_actual->nro_pagina == nro_pagina){
         return true;
@@ -721,7 +746,7 @@ void pedir_marco_a_memoria(uint32_t pid, uint32_t nro_pagina, int conexion){
 }
 
 
-void agregar_a_tlb(uint32_t pid, uint32_t nro_pag, uint32_t marco){
+void agregar_a_tlb(uint32_t pid, uint32_t nro_pag, uint32_t marco, t_list* tlb){
     t_registro_tlb* nuevo_registro = malloc(sizeof(t_registro_tlb));
     nuevo_registro->pid = pid;
     nuevo_registro->nro_pagina = nro_pag;
@@ -729,7 +754,7 @@ void agregar_a_tlb(uint32_t pid, uint32_t nro_pag, uint32_t marco){
     list_add(tlb,nuevo_registro);
 }
 
-void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_log* logger){
+void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb){
     // Lee el valor de memoria correspondiente a la Dirección Lógica que se encuentra en el 
     //Registro Dirección y lo almacena en el Registro Datos
     registros id_registro_direccion = identificarRegistro(registro_direccion);
@@ -738,9 +763,9 @@ void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_lo
     uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
 
     uint32_t dir_fisica_result = malloc(sizeof(uint32_t));
-    dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
+    dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
 
-    pedir_valor_a_memoria(dir_fisica_result,proceso->pid,socket_memoria);
+    pedir_valor_a_memoria(dir_fisica_result,proceso->pid,conexion);
     
     wait(&sem_valor_registro_recibido);
 
@@ -753,23 +778,29 @@ void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_lo
 
 }
 
-void mov_out(char* registro_direccion, char* registro_datos, t_pcb* proceso, t_log* logger){
+void mov_out(char* registro_direccion, char* registro_datos, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb){
     // Lee el valor del Registro Datos y lo escribe en la dirección física de
     // memoria obtenida a partir de la Dirección Lógica almacenada en el Registro Dirección.
+    printf("registro: %s\n",registro_datos);
     registros id_registro_datos = identificarRegistro(registro_datos);
+    printf("registro: %d\n",id_registro_datos);
     uint32_t valor_registro_datos = obtenerValorActualRegistro(id_registro_datos,proceso, logger);
-    
+    printf("manda %d a guardar en mem\n",valor_registro_datos);
     registros id_registro_direccion = identificarRegistro(registro_direccion);
     uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
 
-    uint32_t dir_fisica_result = malloc(sizeof(uint32_t));
-    dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
+    uint32_t dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
     //TODO: Si el tamanio de valor_registro_datos(es un int de 32 siempre?) es mayor a tamanio_pagina hay
     //que dividir ambos y tomar el floor para obtener cant de paginas, con eso dividir datos a enviar en *cant de paginas*, y
     //por cada pedacito de intfo llamar a mmu y agregar dir fisca obtenida en lista 
 
 
-    guardar_en_direccion_fisica(dir_fisica_result,sizeof(uint32_t),valor_registro_datos,proceso->pid,socket_memoria);//TODO
+// Calcular el tamaño necesario para el valor_str
+    int len = snprintf(NULL, 0, "%u", valor_registro_datos);
+    char* valor_str = malloc(len + 1);
+    snprintf(valor_str, len + 1, "%u", valor_registro_datos);
+
+    guardar_en_direccion_fisica(dir_fisica_result, len + 1, valor_str, proceso->pid, conexion);
     log_info(logger, "PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %u", proceso_actual->pid,dir_fisica_result,valor_registro_datos); //LOG OBLIGATORIO
 
 }
@@ -803,7 +834,7 @@ void resize(uint32_t tamanio, int conexion){
     }
 }
 
-void copy_string(uint32_t tamanio, t_log* logger){
+void copy_string(uint32_t tamanio, t_log* logger, int conexion, t_list* tlb){
     //Toma del string apuntado por el registro SI y copia la cantidad de bytes indicadas
     // en el parámetro tamaño a la posición de memoria apuntada por el registro DI
 
@@ -813,9 +844,9 @@ void copy_string(uint32_t tamanio, t_log* logger){
     //uint32_t valor_registro_SI = obtenerValorActualRegistro(id_registro_SI,proceso, logger);
 
     uint32_t dir_fisica_SI = malloc(sizeof(uint32_t));
-    dir_fisica_SI = mmu(proceso_actual->registros_cpu.SI,tamanio_pagina,socket_memoria,logger);
+    dir_fisica_SI = mmu(proceso_actual->registros_cpu.SI,tamanio_pagina,conexion,logger,tlb);
 
-    pedir_valor_a_memoria(dir_fisica_SI,proceso_actual->pid,socket_memoria);
+    pedir_valor_a_memoria(dir_fisica_SI,proceso_actual->pid,conexion);
     wait(&sem_valor_registro_recibido);
 
     log_info(logger, "PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", proceso_actual->pid,dir_fisica_SI,valor_registro_obtenido); //LOG OBLIGATORIO
@@ -825,9 +856,9 @@ void copy_string(uint32_t tamanio, t_log* logger){
     valor_a_enviar = string_substring_until(valor_registro_obtenido,tamanio); //VER BIEN QUE HACE LA FUNCION
 
     uint32_t dir_fisica_DI = malloc(sizeof(uint32_t));
-    dir_fisica_DI = mmu(proceso_actual->registros_cpu.DI,tamanio_pagina,socket_memoria,logger);
+    dir_fisica_DI = mmu(proceso_actual->registros_cpu.DI,tamanio_pagina,conexion,logger,tlb);
 
-    guardar_string_en_memoria(valor_a_enviar,tamanio,dir_fisica_DI,proceso_actual->pid);
+    guardar_string_en_memoria(valor_a_enviar,tamanio,dir_fisica_DI,proceso_actual->pid,conexion);
 }
 
 void wait_inst(char* recurso){
@@ -843,7 +874,7 @@ void signal_inst(char* recurso){
     solicitar_signal_kernel(proceso_actual,(strlen(recurso) + 1) * sizeof(char) ,recurso);
 }
 
-void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio, t_pcb* proceso, t_log* logger){
+void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio, t_pcb* proceso, t_log* logger, int conexion,t_list* tlb){
     //Esta instrucción solicita al Kernel que mediante la interfaz ingresada 
     //se lea desde el STDIN (Teclado) un valor cuyo tamaño está delimitado 
     //por el valor del Registro Tamaño y el mismo se guarde a partir de la
@@ -855,7 +886,7 @@ void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tama
     uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
     //TRADUCIR DIR LOGICA A FISICA?
     uint32_t dir_fisica = malloc(sizeof(uint32_t));
-    dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
+    dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
 
     registros id_registro_tamanio = identificarRegistro(registro_tamanio);
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
@@ -863,7 +894,7 @@ void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tama
     solicitar_io_stdin_read_a_kernel((strlen(interfaz) + 1) * sizeof(char) ,interfaz,dir_fisica,valor_registro_tamanio);
 }
 
-void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio, t_pcb* proceso, t_log* logger){
+void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb){
     //Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se lea 
     //desde la posición de memoria indicada por la Dirección Lógica almacenada
     // en el Registro Dirección, un tamaño indicadopor el Registro Tamaño y se imprima por pantalla.
@@ -874,7 +905,7 @@ void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_ta
     uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
     //TRADUCIR DIR LOGICA A FISICA?
     uint32_t dir_fisica = malloc(sizeof(uint32_t));
-    dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
+    dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
 
     registros id_registro_tamanio = identificarRegistro(registro_tamanio);
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
@@ -935,13 +966,17 @@ void pedir_valor_a_memoria(uint32_t dir_fisica, uint32_t pid, int conexion){
 
 void guardar_en_direccion_fisica(uint32_t dir_fisica_result,uint32_t tamanio_valor_datos,char* valor_registro_datos, uint32_t pid, int conexion){
         printf("entro a guardar_en_direccion_fisica\n");
-        t_paquete* paquete_guardar_df;
-        paquete_guardar_df = crear_paquete(GUARDAR_EN_DIRECCION_FISICA); 
-            
-        agregar_a_paquete(paquete_guardar_df,  &dir_fisica_result,  sizeof(uint32_t)); 
-        agregar_a_paquete(paquete_guardar_df,  &tamanio_valor_datos,  sizeof(uint32_t));
-        agregar_a_paquete(paquete_guardar_df,  valor_registro_datos,  tamanio_valor_datos); 
+        t_paquete* paquete_guardar_df = crear_paquete(GUARDAR_EN_DIRECCION_FISICA); 
+
         agregar_a_paquete(paquete_guardar_df,  &pid,  sizeof(uint32_t));   
+        printf("Agrega %d a paquete\n",pid);     
+        agregar_a_paquete(paquete_guardar_df,  &dir_fisica_result,  sizeof(uint32_t));
+        printf("Agrega %d a paquete\n",dir_fisica_result); 
+        agregar_a_paquete(paquete_guardar_df,  &tamanio_valor_datos,  sizeof(uint32_t));
+        printf("Agrega %d a paquete\n",tamanio_valor_datos); 
+        agregar_a_paquete(paquete_guardar_df,  valor_registro_datos,  tamanio_valor_datos); 
+        printf("Agrega %s a paquete\n",valor_registro_datos); 
+        
             
         enviar_paquete(paquete_guardar_df, conexion); 
         free(paquete_guardar_df->buffer->stream);
@@ -1000,7 +1035,7 @@ void envia_error_de_memoria_a_kernel(t_proceso_interrumpido* proceso){
 }
 
 
-void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint32_t direccion, uint32_t pid){
+void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint32_t direccion, uint32_t pid, int conexion){
         printf("entro a guardar_string_en_memoria\n");
         t_paquete* paquete_copy_string;
         paquete_copy_string = crear_paquete(ENVIO_COPY_STRING_A_MEMORIA); 
@@ -1010,7 +1045,7 @@ void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint3
         agregar_a_paquete(paquete_copy_string,  valor_a_enviar,  tamanio_valor);  
         agregar_a_paquete(paquete_copy_string,  &direccion,  sizeof(uint32_t));  
             
-        enviar_paquete(paquete_copy_string, socket_memoria); 
+        enviar_paquete(paquete_copy_string, conexion); 
         free(paquete_copy_string->buffer->stream);
         free(paquete_copy_string->buffer);
         free(paquete_copy_string);
@@ -1141,8 +1176,7 @@ void imprimir_contenido_paquete(t_paquete* paquete) {
 }
 void solicitar_exit_a_kernel(t_proceso_interrumpido* proceso){
         printf("entro a solicitar_exit_a_kernel\n");
-        t_paquete* paquete_exit_kernel;
-        paquete_exit_kernel = crear_paquete(INTERRUPCION_CPU); 
+        t_paquete* paquete_exit_kernel = crear_paquete(INTERRUPCION_CPU); 
        // proceso->pcb->path = malloc(proceso->pcb->path_length);
        // strcpy(proceso->pcb->path,"PATHPRUEBA");
         printf("PID: %u,PATH:%s MOTIVO:%u\n",proceso->pcb->pid,proceso->pcb->path,proceso->motivo_interrupcion);
@@ -1174,7 +1208,7 @@ void solicitar_exit_a_kernel(t_proceso_interrumpido* proceso){
     
 }
 
-void usar_algoritmo_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t nro_marco){
+void usar_algoritmo_tlb(uint32_t pid, uint32_t nro_pagina, uint32_t nro_marco, t_list* tlb){
     t_registro_tlb* nuevo_registro = malloc(sizeof(t_registro_tlb));
     nuevo_registro->pid = pid;
     nuevo_registro->nro_pagina = nro_pagina;
@@ -1272,7 +1306,7 @@ void io_fs_truncate(char* interfaz, char* nombre_archivo, char* registro_tamanio
     //free(interfaz_elegida);
 }
 
-void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_pcb* proceso, t_log* logger){
+void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb){
     //Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se
     //lea desde Memoria la cantidad de bytes indicadas por el Registro Tamaño a partir de la
     //dirección lógica que se encuentra en el Registro Dirección y se escriban en el archivo a partir
@@ -1283,7 +1317,7 @@ void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion,
         registros id_registro_direccion = identificarRegistro(registro_direccion);
         uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
         uint32_t dir_fisica = malloc(sizeof(uint32_t));
-        dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
+        dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
         //OBTENER VALOR DE LA DIR FISICA OBTENIDA? O PASO DIRECTAMENTE LA DIR FISICA?
         registros id_registro_tamanio = identificarRegistro(registro_tamanio);
         uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
@@ -1296,7 +1330,7 @@ void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion,
     //free(interfaz_elegida);
 }
 
-void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_pcb* proceso, t_log* logger){
+void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb){
     //Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se
     //lea desde el archivo a partir del valor del Registro Puntero Archivo la cantidad de bytes
     //indicada por Registro Tamaño y se escriban en la Memoria a partir de la dirección lógica
@@ -1306,7 +1340,7 @@ void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, 
         registros id_registro_direccion = identificarRegistro(registro_direccion);
         uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
         uint32_t dir_fisica = malloc(sizeof(uint32_t));
-        dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,socket_memoria,logger);
+        dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
         //OBTENER VALOR DE LA DIR FISICA OBTENIDA? O PASO DIRECTAMENTE LA DIR FISICA?
         registros id_registro_tamanio = identificarRegistro(registro_tamanio);
         uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);

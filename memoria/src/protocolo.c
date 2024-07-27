@@ -97,7 +97,7 @@ void memoria_atender_cliente(void* socket){
             free(peticion_escribir);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_resultado_guardar(respuesta_escribir, socket_cliente);
-            free(respuesta_escribir);
+            //free(respuesta_escribir);
             break;
 
         case SOLICITUD_RESIZE:
