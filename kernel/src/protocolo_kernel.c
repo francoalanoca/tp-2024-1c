@@ -6,26 +6,29 @@ t_pcb* pcb_actualizado_interrupcion;
 
 
 void Escuchar_Msj_De_Conexiones(){
-
+   sem_wait(&sem_crearServidor);
    log_info(logger_kernel, "ENTRO EN INICIAR CONEXIONES : %d\n",conexion_memoria); 
    conexion_memoria = crear_conexion(logger_kernel, "MEMORIA", cfg_kernel->IP_MEMORIA, cfg_kernel->PUERTO_MEMORIA);    
    log_info(logger_kernel, "Socket de MEMORIA : %d\n",conexion_memoria); 
    pthread_t hilo_kernel_memoria;
    pthread_create(&hilo_kernel_memoria, NULL, (void*)Kernel_escuchar_memoria, &conexion_memoria);
-   pthread_detach(hilo_kernel_memoria);
+  
 
 //Escuchar los msj de cpu - dispatch
    conexion_cpu_dispatch = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);    
    log_info(logger_kernel, "Socket de CP DISPATCH : %d\n",conexion_cpu_dispatch);  
    pthread_t hilo_cpu_dispatch;
    pthread_create(&hilo_cpu_dispatch, NULL, (void*)Kernel_escuchar_cpu_dispatch, &conexion_cpu_dispatch);
-   pthread_detach(hilo_cpu_dispatch);
+  
 
 //Escuchar los msj de cpu - interrupt
    conexion_cpu_interrupt = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_INTERRUPT);    
    log_info(logger_kernel, "Socket de CPU INTERRUP : %d\n",conexion_cpu_interrupt);
    pthread_t hilo_cpu_interrupt;
    pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt, &conexion_cpu_interrupt);
+   sem_post(&sem_EscucharMsj);
+   pthread_detach(hilo_cpu_dispatch);
+   pthread_detach(hilo_kernel_memoria);
    pthread_join(hilo_cpu_interrupt, NULL);
 
 }

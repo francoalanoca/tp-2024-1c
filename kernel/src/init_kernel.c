@@ -17,6 +17,8 @@ sem_t sem_cpu_libre;
 sem_t sem_prioridad_io;
 sem_t sem_interrupcion_atendida;
 sem_t sem_rta_crear_proceso;
+sem_t sem_crearServidor;
+sem_t sem_EscucharMsj;
 pthread_mutex_t mutex_cola_ready_prioridad; 
 pthread_mutex_t mutex_cola_ready;
 pthread_mutex_t mutex_envio_io;
