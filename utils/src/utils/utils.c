@@ -1057,7 +1057,8 @@ void enviar_resize_memoria(t_resize* proceso_resize, int socket){
     paquete_resize = crear_paquete(SOLICITUD_RESIZE);
  
     agregar_a_paquete(paquete_resize, &proceso_resize->pid,  sizeof(uint32_t));
-    agregar_a_paquete(paquete_resize, &proceso_resize->tamanio,  sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_resize, &proceso_resize->tamanio,  sizeof(uint32_t));
+    
     
     enviar_paquete(paquete_resize, socket);   
     printf("Tamaño resize solicitado: %d\n", proceso_resize->tamanio); 
