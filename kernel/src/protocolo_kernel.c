@@ -18,14 +18,17 @@ void Escuchar_Msj_De_Conexiones(){
    conexion_cpu_dispatch = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);    
    log_info(logger_kernel, "Socket de CP DISPATCH : %d\n",conexion_cpu_dispatch);  
    pthread_t hilo_cpu_dispatch;
-   pthread_create(&hilo_cpu_dispatch, NULL, (void*)Kernel_escuchar_cpu_dispatch, &conexion_cpu_dispatch);
+   t_kernel_escuchar_cpu* params = malloc(sizeof(t_kernel_escuchar_cpu));
+   params->conexion_cpu_dispatch = &conexion_cpu_dispatch;
+   params->conexion_cpu_interrupt = &conexion_cpu_interrupt;
+   pthread_create(&hilo_cpu_dispatch, NULL, (void*)Kernel_escuchar_cpu_dispatch,  (void*) params);
   
 
 //Escuchar los msj de cpu - interrupt
    conexion_cpu_interrupt = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_INTERRUPT);    
    log_info(logger_kernel, "Socket de CPU INTERRUP : %d\n",conexion_cpu_interrupt);
    pthread_t hilo_cpu_interrupt;
-   pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt, &conexion_cpu_interrupt);
+   pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt,&conexion_cpu_interrupt);
    sem_post(&sem_EscucharMsj);
    pthread_detach(hilo_cpu_dispatch);
    pthread_detach(hilo_kernel_memoria);
@@ -34,8 +37,10 @@ void Escuchar_Msj_De_Conexiones(){
 }
 
 
-void Kernel_escuchar_cpu_dispatch(int* conexion){
-int socket_dispatch = *conexion;
+void Kernel_escuchar_cpu_dispatch(void* args){
+    t_kernel_escuchar_cpu* params = (t_kernel_escuchar_cpu*) args;
+    int socket_dispatch = *(params->conexion_cpu_dispatch);
+    int socket_interrupt = *(params->conexion_cpu_interrupt);
 
 bool control_key = 1;
 t_list* lista_paquete;
@@ -156,7 +161,8 @@ t_list* lista_paquete;
             t_proceso_data* a_enviar_a_io_gen_sleep = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
             pthread_mutex_lock(&mutex_envio_io);
-            enviar_espera(a_enviar_a_io_gen_sleep->data,socket_servidor);
+            log_info(logger_kernel,"Fd entradasalida %d",interfaz_encontrada->conexion);
+            enviar_espera(a_enviar_a_io_gen_sleep->data,interfaz_encontrada->conexion);
             pthread_mutex_unlock(&mutex_envio_io);
 
             liberar_memoria_t_proceso_data(proceso_data_io_gen_sleep);
