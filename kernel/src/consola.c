@@ -212,6 +212,8 @@ t_pcb* crear_pcb(char* path) {
     contador_pid+=1;
     nuevo_pcb->program_counter = 0;
     nuevo_pcb->path = strdup(path);  // Guardar el path del proceso
+    printf("SE CREA NUEVO PCB CON PATH:%s, RECIBO%s\n",nuevo_pcb->path,path);
+    nuevo_pcb->path_length = strlen(nuevo_pcb->path);
     nuevo_pcb->estado = ESTADO_NEW;
 
     // Inicializar registros CPU

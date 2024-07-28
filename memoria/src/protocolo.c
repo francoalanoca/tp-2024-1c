@@ -23,7 +23,7 @@ void memoria_atender_cliente(void* socket){
     switch (cod_op) {
 		
 		case HANDSHAKE:
-			log_info(logger_memoria, "Handshake realizado con cliente");
+			log_info(logger_memoria, "Handshake realizado con cliente(%d)",socket_cliente);
             response = HANDSHAKE_OK;
             if (send(socket_cliente, &response, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
                 log_error(logger_memoria, "Error al enviar respuesta de handshake a cliente");
@@ -111,7 +111,8 @@ void memoria_atender_cliente(void* socket){
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             enviar_resultado_guardar(respuesta_escribir, socket_cliente);
             log_info(logger_memoria, "enviada respuesta de GUARDAR_EN_DIRECCION_FISICA_RTA \n");
-            free(respuesta_escribir);
+            //free(respuesta_escribir);
+
             break;
 
         case SOLICITUD_RESIZE:
@@ -248,7 +249,7 @@ void memoria_atender_cliente(void* socket){
         
         
         default:
-			log_warning(logger_memoria,"Operacion desconocida");
+			log_warning(logger_memoria,"Operacion desconocida: %d",cod_op );
 			break;  
         
         

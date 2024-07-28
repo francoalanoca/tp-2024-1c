@@ -252,10 +252,10 @@ void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
     agregar_a_paquete(paquete_archivo_nuevo, &(pcb->path_length), sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, (pcb->path), pcb->path_length);
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.PC, sizeof(uint32_t));
-    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.AX, sizeof(uint32_t)); 
-    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.BX, sizeof(uint32_t)); 
-    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.CX, sizeof(uint32_t)); 
-    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.DX, sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.AX, sizeof(uint8_t)); 
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.BX, sizeof(uint8_t)); 
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.CX, sizeof(uint8_t)); 
+    agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.DX, sizeof(uint8_t)); 
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.EAX, sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.EBX, sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->registros_cpu.ECX, sizeof(uint32_t));
@@ -265,6 +265,12 @@ void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->estado, sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->tiempo_ejecucion, sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->quantum, sizeof(uint32_t));
+     printf("PID SEREALIZADO:%u\n",pcb->pid);
+    printf("PATH PROC LENGTH:%u\n",pcb->path_length);
+    printf("PATH PROC SEREALIZADO:%s\n",pcb->path);
+    printf("ESTADO SEREALIZADO:%u\n",pcb->estado);
+    printf("TIEMPO EJ SEREALIZADO:%u\n",pcb->tiempo_ejecucion);
+    printf("QUANTUM SEREALIZADO:%u\n",pcb->quantum);
 
     enviar_paquete(paquete_archivo_nuevo, conexion); 
 

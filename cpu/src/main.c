@@ -57,6 +57,8 @@ int main(int argc, char* argv[]) {
 
     tlb = list_create();
 
+    printf("TLB size: %d\n", list_size(tlb));
+
     printf("iniciando ");
     if (!init(path_config) || !cargar_configuracion(path_config)) {
         //cerrar_programa();
@@ -75,6 +77,13 @@ int main(int argc, char* argv[]) {
     pthread_create(&servidor_interrupt, NULL, (void*)crear_servidor_interrupt, ip_cpu);
     pthread_detach(servidor_interrupt);
     log_info(logger_cpu, "cree los hilos servidor");
+
+
+
+/*ANTERIOR
+    proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
+    proceso_interrumpido_actual->pcb = malloc(sizeof(t_pcb));
+    proceso_interrumpido_actual->pcb->pid = NULL;*/
 
 
 
@@ -97,13 +106,14 @@ int main(int argc, char* argv[]) {
     pthread_create(&hilo_atender_memoria, NULL,(void*)atender_memoria,socket_memoria);
 
     sem_wait(&sem_servidor_creado);
+     printf("Paso  sem_servidor_creado\n");
         // Obtener tamaño de página
     obtenerTamanioPagina(socket_memoria);
     sem_wait(&sem_valor_tamanio_pagina);
    //proceso_actual = malloc(sizeof(t_pcb));
     while(1){
         if(proceso_actual != NULL){
-            ciclo_de_instrucciones(socket_memoria, logger_cpu, cfg_cpu, proceso_actual);
+            ciclo_de_instrucciones(socket_memoria, logger_cpu, cfg_cpu, proceso_actual, tlb);
         }
     }
 
@@ -112,7 +122,8 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pcb* proceso) {
+void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pcb* proceso, t_list* tlb) {
+    printf("TLB size ciclo: %d\n", list_size(tlb));
     log_info(logger, "Entro al ciclo");
     instr_t *inst = malloc(sizeof(instr_t));
     log_info(logger, "Voy a entrar a fetch");
@@ -121,7 +132,7 @@ void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pcb
     log_info(logger, "Voy a entrar a decode");
     tipo_inst = decode(inst);
     log_info(logger, "Voy a entrar a execute");
-    execute(logger, config, inst, tipo_inst, proceso, conexion);
+    execute(logger, config, inst, tipo_inst, proceso, conexion, tlb);
     if(proceso_actual != NULL){// Si la instruccion que acaba de ejecutar no es EXIT
         pthread_mutex_lock(&mutex_proceso_actual);
         proceso_actual->program_counter += 1;
