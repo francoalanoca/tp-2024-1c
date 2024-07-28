@@ -89,7 +89,9 @@ void memoria_atender_cliente(void* socket){
             log_info(logger_memoria, "Recibí PETICION_VALOR_MEMORIA \n");
             valores = recibir_paquete(socket_cliente);
             t_escribir_leer* peticion_leer = deserializar_peticion_valor(valores);     
-            void* respuesta_leer = leer_memoria(peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);          
+            void* respuesta_leer = leer_memoria(peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);
+            log_trace(logger_memoria, "Log Obligatorio: \n");
+            log_info(logger_memoria, "Acceso a espacio de usuario: \n");          
             log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d - Tamaño: %d", peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);    
             enviar_peticion_valor(respuesta_leer, socket_cliente);
@@ -102,6 +104,8 @@ void memoria_atender_cliente(void* socket){
             valores = recibir_paquete(socket_cliente);
             t_escribir_leer* peticion_escribir = deserializar_peticion_guardar(valores);   
             char* respuesta_escribir = escribir_memoria(peticion_escribir->pid, peticion_escribir->direccion_fisica, peticion_escribir->valor, peticion_escribir->tamanio);
+            log_trace(logger_memoria, "Log Obligatorio: \n");
+            log_info(logger_memoria, "Acceso a espacio de usuario: \n");
             log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Direccion fisica: %d - Tamaño: %d", peticion_escribir->pid, peticion_escribir->direccion_fisica, peticion_escribir->tamanio);
             free(peticion_escribir);
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
@@ -121,6 +125,7 @@ void memoria_atender_cliente(void* socket){
                    
                 break;
             }
+            log_info(logger_memoria, "enviada respuesta de SOLICITUD_RESIZE \n");
             break;
 
         case ENVIO_COPY_STRING_A_MEMORIA:

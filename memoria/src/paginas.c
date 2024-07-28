@@ -11,7 +11,7 @@ void crear_proceso(uint32_t proceso_pid){
 
     //Guardo en una varia de tipo struct la tabla creada
     t_tabla_de_paginas *tabla_de_paginas = crear_tabla_pagina(proceso_pid);
-
+    log_info(logger_memoria, "Creada tabla de paginas \n");
     list_add(lista_tablas_de_paginas, tabla_de_paginas);
 }
 
@@ -28,7 +28,8 @@ t_tabla_de_paginas *crear_tabla_pagina(uint32_t pid){
     //Le asigno valores a mi variable creada
     tabla_de_paginas->id = pid;
     tabla_de_paginas->lista_de_paginas = list_create();
-
+    log_trace(logger_memoria, "Log Obligatorio: \n");
+    log_info(logger_memoria, "Creacion de tabla de paginas: \n");
     log_info(logger_memoria, "PID: %i - Tamaño: %d", pid, 0);
 
     return tabla_de_paginas;
@@ -288,6 +289,9 @@ char* copiar_solicitud(uint32_t proceso_pid, uint32_t direccion_fisica, char* va
 
     copiado = escribir_memoria(proceso_pid, direccion_fisica, valor, strlen(valor));
 
+    log_trace(logger_memoria, "Log Obligatorio: \n");
+    log_info(logger_memoria, "Acceso a espacio de usuario: \n");
+    log_info(logger_memoria, "PID: %d - Acción: ESCRIBIR - Direccion fisica: %d - Tamaño: %ld", proceso_pid, direccion_fisica, strlen(valor));
     return copiado;
 }
 
@@ -298,8 +302,9 @@ uint32_t buscar_marco_pagina(uint32_t proceso_pid, uint32_t numero_de_pagina){
     t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
 
     t_pagina *pagina = list_get(tabla_de_paginas->lista_de_paginas, numero_de_pagina);
-
-    log_debug(logger_memoria, "ACCESO TABLA PAGINAS");
+    
+    log_trace(logger_memoria, "Log Obligatorio: \n");
+    log_debug(logger_memoria, "ACCESO TABLA PAGINAS: \n");
     log_info(logger_memoria, "PID: %d - Página: %d - Marco: %d", proceso_pid, numero_de_pagina, pagina->marco);
 
 
@@ -328,6 +333,8 @@ op_code administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
 
     t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
 
+    //Calculo el tamanio del proceso luego de ser encontrado
+    uint32_t tamanio_actual = list_size(tabla_de_paginas->lista_de_paginas) * cfg_memoria->TAM_PAGINA;
     int ultima_pagina = list_size(tabla_de_paginas->lista_de_paginas);
     uint32_t marcos_a_reservar = calcular_marcos(tamanio_proceso);
 
@@ -335,27 +342,60 @@ op_code administrar_resize(uint32_t proceso_pid, uint32_t tamanio_proceso){
 
     if(tamanio_proceso == 0){
         return SOLICITUD_RESIZE_RTA;
-    }else{    
-        if(tamanio_proceso <= espacio_disponible()){
-            //Recorro mientras sea menor a la cantidad de frames
-            for (int i = 0; i < marcos_a_reservar; i++){
-                t_pagina *pagina = malloc(sizeof(t_pagina));
-                int marco_libre = obtener_marco_libre();
-                pagina->marco = marco_libre;                 
-                pagina->posicion = ultima_pagina+i;                    
-                bitarray_set_bit(bitmap_frames, marco_libre);
-                list_add(tabla_de_paginas->lista_de_paginas, pagina);
-                //crear bitmap c/proceso donde seria: crear_bitmap(tamanio_proceso/cfg_memoria->TAM->PAGINA)
-                //a la struct pagina agregarle un atrivo mas, si fue escrito o no
-                
-            }
-            log_info(logger_memoria, "PID: %d - Tamaño: %d - Cantidad Marcos: %d", proceso_pid, tamanio_proceso, marcos_a_reservar);
-            return SOLICITUD_RESIZE_RTA;
+
+    }else{      // Ampliación del proceso
+
+        //Si el tamanio es ingresado es mayor al actual, ampliamos
+        if (tamanio_proceso > tamanio_actual) { 
+
+            //SI el tamanio ingresaso es menos al disponible
+            if(tamanio_proceso <= espacio_disponible()){
+
+                //Recorro desde la ultima pagina mientras sea menor a la cantidad de frames recein calculados
+                for (int i = ultima_pagina; i < marcos_a_reservar; i++){
+
+                    t_pagina *pagina = malloc(sizeof(t_pagina));
+                    int marco_libre = obtener_marco_libre();
+                    pagina->marco = marco_libre;                 
+                    pagina->posicion = ultima_pagina+i;                    
+                    bitarray_set_bit(bitmap_frames, marco_libre);
+                    list_add(tabla_de_paginas->lista_de_paginas, pagina);
+                    
+                }
+
+                log_trace(logger_memoria, "Log Obligatorio: \n");
+                log_info(logger_memoria, "Ampliación de Proceso: \n");
+                log_info(logger_memoria, "PID: %d - Tamaño Actual: %d - Tamaño a Ampliar: %d", proceso_pid, tamanio_actual, tamanio_proceso);
+                return SOLICITUD_RESIZE_RTA;
             
-        }else{
-            log_info(logger_memoria, "OUT OF MEMORY");
-            return OUT_OF_MEMORY;
+            }else{
+                log_info(logger_memoria, "OUT OF MEMORY");
+                return OUT_OF_MEMORY;
+            }
+
+
+        }else if (tamanio_proceso < tamanio_actual) {  // Reducción del proceso
+
+            int marcos_a_liberar = list_size(tabla_de_paginas->lista_de_paginas) - marcos_a_reservar;
+
+            //Recorro los marcos sobrantes y los libero
+            for (int i = 0; i < marcos_a_liberar; i++) {
+
+                t_pagina *pagina = list_remove(tabla_de_paginas->lista_de_paginas, list_size(tabla_de_paginas->lista_de_paginas) - 1);
+                bitarray_clean_bit(bitmap_frames, pagina->marco);
+                free(pagina);
+            }
+
+            log_trace(logger_memoria, "Log Obligatorio: \n");
+            log_info(logger_memoria, "Reducción de Proceso: \n");
+            log_info(logger_memoria, "PID: %d - Tamaño Actual: %d - Tamaño a Reducir: %d", proceso_pid, tamanio_actual, tamanio_proceso);
+            return SOLICITUD_RESIZE_RTA;
+
+        } else {  // No hay cambio en el tamaño
+            return SOLICITUD_RESIZE_RTA;
         }
+        
+
     }  
 }
 
@@ -415,7 +455,8 @@ void finalizar_proceso(uint32_t proceso_pid){
         bitarray_clean_bit(bitmap_frames, pagina->marco);
         
     }
-    
+    log_trace(logger_memoria, "Log Obligatorio: \n");
+    log_info(logger_memoria, "Destruccion de tabla de paginas: \n");
     log_info(logger_memoria, "PID: %d - Tamaño: %d", proceso_pid, list_size(tabla_de_paginas->lista_de_paginas));
 
     list_destroy_and_destroy_elements(tabla_de_paginas->lista_de_paginas, free);

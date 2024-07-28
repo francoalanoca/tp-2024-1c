@@ -7,11 +7,6 @@ t_config *file_cfg_memoria;
 
 t_config_memoria *cfg_memoria;
 
-int fd_memoria;
-int fd_cpu;
-int fd_kernel;
-int fd_entradasalida;
-
 void* memoria;
 t_list* lista_tablas_de_paginas;
 t_list* lista_miniPCBs;

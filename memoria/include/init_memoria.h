@@ -12,11 +12,6 @@
 extern t_log *logger_memoria;
 extern t_config *file_cfg_memoria;
 
-extern int fd_memoria;
-extern int fd_cpu;
-extern int fd_kernel;
-extern int fd_entradasalida;
-
 
 typedef struct
 {

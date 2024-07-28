@@ -25,6 +25,6 @@ int main(int argc, char* argv[]) {
 	//------------------Server------------------------
 	iniciar_servidor_memoria();
 
-	terminar_programa(fd_memoria, logger_memoria, file_cfg_memoria);
+	cerrar_programa();
 	return 0;
 }
