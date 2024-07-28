@@ -640,9 +640,10 @@ void enviar_peticion_valor(void* respuesta_leer ,int socket_cpu) {
     t_paquete* paquete_valor;
  
     paquete_valor = crear_paquete(PETICION_VALOR_MEMORIA_RTA);
- 
-    agregar_a_paquete(paquete_valor, &respuesta_leer,  sizeof(void*));          
-    
+    uint32_t tamanio_respuesta_leer = (strlen((char*) respuesta_leer) * sizeof(char));
+    agregar_a_paquete(paquete_valor, &tamanio_respuesta_leer,  sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_valor, respuesta_leer,  tamanio_respuesta_leer);          
+     printf("respuesta_leer: %s ,tamanio %d \n",(char*) respuesta_leer,tamanio_respuesta_leer); 
     enviar_paquete(paquete_valor, socket_cpu);   
     printf("Se envio respuesta de lectura \n"); 
     eliminar_paquete(paquete_valor);

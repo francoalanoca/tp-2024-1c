@@ -589,6 +589,67 @@ uint32_t obtenerValorActualRegistro(registros id_registro, t_pcb* proceso, t_log
     }
 }
 
+uint32_t obtenerTamanioRegistro(registros id_registro){
+    switch(id_registro){
+        case PC:
+        {
+           return sizeof(uint32_t);
+            break;
+        }
+        case AX:
+        {
+           return sizeof(uint8_t);
+            break;
+        }
+        case BX:
+        {
+           return sizeof(uint8_t);
+            break;
+        }
+        case CX:
+        {
+           return sizeof(uint8_t);
+            break;
+        }
+        case DX:
+        {
+           return sizeof(uint8_t);
+            break;
+        }
+        case EAX:
+        {
+           return sizeof(uint32_t);
+            break;
+        }
+        case EBX:
+        {
+           return sizeof(uint32_t);
+            break;
+        }
+        case ECX:
+        {
+           return sizeof(uint32_t);
+            break;
+        }
+        case EDX:
+        {
+           return sizeof(uint32_t);
+            break;
+        }
+        case SI:
+        {
+           return sizeof(uint32_t);
+            break;
+        }
+        case DI:
+        {
+           return sizeof(uint32_t);
+            break;
+        }
+        default:
+        printf("El registro no existe\n");
+    }
+}
 /*t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso){
     t_interfaz* interfaz_actual = malloc(sizeof(t_interfaz)); 
     for(int i = 0; i < proceso->interfaces->elements_count; i++){	 //REVISAR ELEMENTS_COUNT
@@ -765,16 +826,33 @@ void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_lo
     uint32_t dir_fisica_result = malloc(sizeof(uint32_t));
     dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
 
-    pedir_valor_a_memoria(dir_fisica_result,proceso->pid,conexion);
-    
+    registros id_registro_datos = identificarRegistro(registro_datos);
+
+    uint32_t tamanio_a_leer = obtenerTamanioRegistro(id_registro_datos);
+
+    pedir_valor_a_memoria(dir_fisica_result,proceso->pid,tamanio_a_leer,conexion);
+    int valor_sem;
+    sem_getvalue(&sem_valor_registro_recibido, &valor_sem);
+    printf("valor sem_valor_registro_recibido:%d\n", valor_sem);
     wait(&sem_valor_registro_recibido);
+    printf("paso sem_valor_registro_recibido\n");
 
     log_info(logger, "PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", proceso_actual->pid,dir_fisica_result,valor_registro_obtenido); //LOG OBLIGATORIO
     
     char *endptr;
-    uint32_t valor_dir_fisica = (uint32_t)strtoul(valor_registro_obtenido, &endptr, 10);// Convertir la cadena a uint32_t
-
-    set(registro_datos,valor_dir_fisica,proceso,logger);
+    printf("paso endptr\n");
+    uint32_t valor_dir_fisica_uint32;
+    uint8_t valor_dir_fisica_uint8t;
+    if(tamanio_a_leer == sizeof(uint32_t)){
+         valor_dir_fisica_uint32 = (uint32_t)strtoul(valor_registro_obtenido, &endptr, 10);// Convertir la cadena a uint32_t
+        set(registro_datos,valor_dir_fisica_uint32,proceso,logger);
+    }
+    else{
+         valor_dir_fisica_uint8t = (uint8_t)strtoul(valor_registro_obtenido, &endptr, 10);// Convertir la cadena a uint8_t
+        set(registro_datos,valor_dir_fisica_uint8t,proceso,logger);
+    }
+    
+    
 
 }
 
@@ -846,7 +924,7 @@ void copy_string(uint32_t tamanio, t_log* logger, int conexion, t_list* tlb){
     uint32_t dir_fisica_SI = malloc(sizeof(uint32_t));
     dir_fisica_SI = mmu(proceso_actual->registros_cpu.SI,tamanio_pagina,conexion,logger,tlb);
 
-    pedir_valor_a_memoria(dir_fisica_SI,proceso_actual->pid,conexion);
+    pedir_valor_a_memoria(dir_fisica_SI,proceso_actual->pid,tamanio,conexion);
     wait(&sem_valor_registro_recibido);
 
     log_info(logger, "PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", proceso_actual->pid,dir_fisica_SI,valor_registro_obtenido); //LOG OBLIGATORIO
@@ -933,9 +1011,12 @@ void exit_inst(){
 
     t_proceso_interrumpido *proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
     proceso_interrumpido_actual->pcb = malloc(sizeof(t_pcb));
-    proceso_interrumpido_actual->pcb->pid = proceso_actual->pid;
+    proceso_interrumpido_actual->pcb->path = malloc(proceso_actual->path_length);
+    proceso_interrumpido_actual->pcb = proceso_actual;
+    strcpy(proceso_interrumpido_actual->pcb->path, proceso_actual->path);
 
     log_info(logger_cpu, "Pid asignado en proceo de interrupcion pid :%d", proceso_interrumpido_actual->pcb->pid ); 
+    log_info(logger_cpu, "Pid asignado en proceo de interrupcion path :%s", proceso_interrumpido_actual->pcb->path );
     proceso_interrumpido_actual->motivo_interrupcion = INSTRUCCION_EXIT;
     pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
     solicitar_exit_a_kernel(proceso_interrumpido_actual);
@@ -948,13 +1029,15 @@ void exit_inst(){
     pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
 }
 
-void pedir_valor_a_memoria(uint32_t dir_fisica, uint32_t pid, int conexion){
+void pedir_valor_a_memoria(uint32_t dir_fisica, uint32_t pid, uint32_t tamanio, int conexion){
         printf("entro a pedir_valor_a_memoria\n");
         t_paquete* paquete_pedido_valor_memoria;
         paquete_pedido_valor_memoria = crear_paquete(PETICION_VALOR_MEMORIA); 
-            
+
+        agregar_a_paquete(paquete_pedido_valor_memoria,  &pid,  sizeof(uint32_t));     
         agregar_a_paquete(paquete_pedido_valor_memoria,  &dir_fisica,  sizeof(uint32_t)); 
-        agregar_a_paquete(paquete_pedido_valor_memoria,  &pid,  sizeof(uint32_t));  
+        agregar_a_paquete(paquete_pedido_valor_memoria,  &tamanio,  sizeof(uint32_t));
+         
             
         enviar_paquete(paquete_pedido_valor_memoria, conexion); 
         free(paquete_pedido_valor_memoria->buffer->stream);
@@ -1177,10 +1260,11 @@ void imprimir_contenido_paquete(t_paquete* paquete) {
 void solicitar_exit_a_kernel(t_proceso_interrumpido* proceso){
         printf("entro a solicitar_exit_a_kernel\n");
         t_paquete* paquete_exit_kernel = crear_paquete(INTERRUPCION_CPU); 
+        printf("CREO EL PAQUETE\n");
        // proceso->pcb->path = malloc(proceso->pcb->path_length);
        // strcpy(proceso->pcb->path,"PATHPRUEBA");
         printf("PID: %u,PATH:%s MOTIVO:%u\n",proceso->pcb->pid,proceso->pcb->path,proceso->motivo_interrupcion);
-        
+        printf("MOTIVO:%u\n",proceso->motivo_interrupcion);
         agregar_a_paquete(paquete_exit_kernel,  &proceso->pcb->pid,  sizeof(uint32_t));         
         agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->program_counter, sizeof(uint32_t));  
         agregar_a_paquete(paquete_exit_kernel, &proceso->pcb->path_length, sizeof(uint32_t)); 

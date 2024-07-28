@@ -63,7 +63,7 @@ void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tama
 
 void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb);
 void exit_inst();
-void pedir_valor_a_memoria(uint32_t dir_fisica, uint32_t pid, int conexion);
+void pedir_valor_a_memoria(uint32_t dir_fisica, uint32_t pid, uint32_t tamanio, int conexion);
 void guardar_en_direccion_fisica(uint32_t dir_fisica_result,uint32_t tamanio_valor_datos,char* valor_registro_datos, uint32_t pid, int conexion);
 void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio, int conexion);
 void envia_error_de_memoria_a_kernel(t_proceso_interrumpido* proceso);
@@ -87,4 +87,5 @@ void enviar_io_fs_truncate_a_kernel(uint32_t tamanio_interfaz_elegida,char* inte
 void enviar_io_fs_write_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t valor_tamanio,uint32_t direccion_fisica,uint32_t puntero_archivo,uint32_t pid);
 void enviar_io_fs_read_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t valor_tamanio,uint32_t direccion_fisica,uint32_t puntero_archivo,uint32_t pid);
 void limpiarCadena(char* cadena);
+uint32_t obtenerTamanioRegistro(registros id_registro);
 #endif //TP_2024_1C_PASARONCOSAS_CPU_UTILS_H

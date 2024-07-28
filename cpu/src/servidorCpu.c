@@ -192,7 +192,10 @@ void atender_memoria (int socket_memoria) {
                     {
                         log_info(logger_cpu, "PETICION_VALOR_MEMORIA_RTA");
                         t_list* lista_paquete_valor_memoria_rec = recibir_paquete(socket_memoria);
-                        char* valor_rec = deserealizar_valor_memoria(lista_paquete_valor_memoria_rec);
+                        char* valor_rec;
+                        strcpy(valor_rec,deserealizar_valor_memoria(lista_paquete_valor_memoria_rec)) ;
+
+                        printf("RECIBO: %s",valor_rec );
                     
                         valor_registro_obtenido = valor_rec; 
 
@@ -327,11 +330,14 @@ instr_t* instruccion_deserializar(t_list* lista_paquete_inst){
 }
 
 char* deserealizar_valor_memoria(t_list*  lista_paquete ){
+    //uint32_t tamanio_valor_recibido = *(uint32_t*)list_get(lista_paquete, 0);
+    //char* valor_recibido = malloc(tamanio_valor_recibido);
+    //valor_recibido = list_get(lista_paquete, 1);
     uint32_t tamanio_valor_recibido = *(uint32_t*)list_get(lista_paquete, 0);
-    char* valor_recibido = malloc(tamanio_valor_recibido);
-    valor_recibido = list_get(lista_paquete, 1);
-
-	return valor_recibido;
+    void* valor_recibido = list_get(lista_paquete, 1);
+    char* valor_recibido_a_retornar = malloc(tamanio_valor_recibido);
+    valor_recibido_a_retornar = (char*)valor_recibido;
+	return valor_recibido_a_retornar;
 }
 
 t_rta_resize* deserealizar_rta_resize(t_list*  lista_paquete ){
