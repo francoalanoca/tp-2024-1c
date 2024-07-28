@@ -130,11 +130,10 @@ t_list* lista_paquete;
 
       //Verifico que la interfaz exista y este conectada
       if(dictionary_has_key(interfaces,io_gen_sleep->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
-            interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->nombre_interfaz);
+         t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_GEN_SLEEP)){
             
-            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
+            enviar_interrupcion_a_cpu(io_gen_sleep->pid,INTERRUPCION_IO,conexion_cpu_interrupt);
             sem_wait(&sem_io_fs_libre);
 
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
@@ -841,7 +840,7 @@ while (control_key)
 
 
 t_pcb* buscar_pcb_en_lista(t_list* lista_de_pcb, uint32_t pid){
-   t_pcb* pcb_de_lista = malloc(sizeof(t_pcb));
+   t_pcb* pcb_de_lista;
    for (uint32_t i = 0; i < lista_de_pcb->elements_count; i++)
    {
       pcb_de_lista = list_get(lista_de_pcb,i);

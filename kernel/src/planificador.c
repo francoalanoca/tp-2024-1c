@@ -195,15 +195,13 @@ uint32_t encontrar_indice_proceso_data_pid(t_list * lista_procesos_data , t_pcb*
     return NULL;
 }
 
-void enviar_interrupcion_a_cpu(t_pcb* proceso,motivo_interrupcion motivo_interrupcion, int conexion){
+void enviar_interrupcion_a_cpu(int pid, motivo_interrupcion motivo_interrupcion, int conexion){
     // Enviar señal de interrupción a la CPU
         t_paquete* paquete = crear_paquete(INTERRUPCION_KERNEL);
 
-        agregar_a_paquete(paquete, &(proceso->pid), sizeof(uint32_t));
+        agregar_a_paquete(paquete, &pid, sizeof(uint32_t));
         agregar_a_paquete(paquete, &motivo_interrupcion, sizeof(uint32_t));
-
         enviar_paquete(paquete, conexion); 
-
         eliminar_paquete(paquete); 
 
 }
