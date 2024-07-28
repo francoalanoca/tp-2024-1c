@@ -8,7 +8,7 @@ void* crearServidor(){
         log_error(logger_kernel, "Fallo al crear el servidor, cerrando KERNEL");
         return EXIT_FAILURE;
     }
-
+    sem_post(&sem_crearServidor);
     while (server_escuchar(logger_kernel, "SERVER KERNEL", (uint32_t)socket_servidor));
 }
 

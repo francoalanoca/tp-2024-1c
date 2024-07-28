@@ -10,6 +10,7 @@ t_algoritmo_planificacion algortimo ;
 
 // Función que implementa el inicio de la consola interactiva
 void iniciar_consola_interactiva(int conexion) {
+    
     conexion_memoria = conexion;
     char* leido = malloc(sizeof(char) * 22);
 

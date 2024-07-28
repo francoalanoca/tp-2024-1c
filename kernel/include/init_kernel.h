@@ -44,7 +44,8 @@ extern t_pcb* pcb_actualizado_interrupcion;
 extern t_dictionary* procesos_recursos;
 extern t_list* recursos;
 extern uint32_t contador_pid;
-
+extern sem_t sem_crearServidor;
+extern sem_t sem_EscucharMsj;
 typedef struct {
     char* PUERTO_ESCUCHA;
     char* IP_MEMORIA;
