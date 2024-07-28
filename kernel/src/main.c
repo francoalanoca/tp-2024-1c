@@ -36,6 +36,8 @@ int main(char argc, char *argv[]) {
     sem_init(&sem_prioridad_io,1,1);
     sem_init(&sem_rta_crear_proceso,0,0);
     
+    sem_init(&sem_crearServidor, 0, 0);
+    sem_init(&sem_EscucharMsj, 0, 0);
 
     pthread_mutex_init(&mutex_cola_ready_prioridad, NULL);
     pthread_mutex_init(&mutex_cola_ready, NULL);
@@ -49,9 +51,10 @@ int main(char argc, char *argv[]) {
     pthread_t planificacion_largo_plazo,planificacion_corto_plazo;
 
 
-    pthread_create(&hilo2, NULL, (void*)crearServidor, NULL);
-    pthread_create(&hilo3, NULL, (void*)Escuchar_Msj_De_Conexiones, NULL);
-    pthread_create(&hilo1, NULL, (void*)iniciar_consola_interactiva,conexion_memoria);
+    pthread_create(&hilo1, NULL, (void*)crearServidor, NULL);
+    pthread_create(&hilo2, NULL, (void*)Escuchar_Msj_De_Conexiones, NULL);
+    sem_wait(&sem_EscucharMsj);
+    pthread_create(&hilo3, NULL, (void*)iniciar_consola_interactiva,conexion_memoria);
     
     int value;
     sem_getvalue(&sem_cpu_libre, &value);
