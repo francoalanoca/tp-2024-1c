@@ -15,7 +15,8 @@ bool interrupcion_kernel;
 instr_t *prox_inst;
 t_list* tlb;
 
-int conexion_kernel;
+int conexion_kernel_dispatch = -1; 
+int conexion_kernel_interrupt = -1;
 
 sem_t sem_valor_instruccion;
 uint32_t marco_recibido;
@@ -113,7 +114,7 @@ int main(int argc, char* argv[]) {
    //proceso_actual = malloc(sizeof(t_pcb));
     while(1){
         if(proceso_actual != NULL){
-            ciclo_de_instrucciones(socket_memoria, logger_cpu, cfg_cpu, proceso_actual, tlb);
+            ciclo_de_instrucciones(socket_memoria, logger_cpu, cfg_cpu, proceso_actual, tlb, conexion_kernel_dispatch, conexion_kernel_interrupt);
         }
     }
 
@@ -122,7 +123,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pcb* proceso, t_list* tlb) {
+void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pcb* proceso, t_list* tlb, int socket_dispatch, int socket_interrupt) {
     printf("TLB size ciclo: %d\n", list_size(tlb));
     log_info(logger, "Entro al ciclo");
     instr_t *inst = malloc(sizeof(instr_t));
@@ -132,13 +133,13 @@ void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pcb
     log_info(logger, "Voy a entrar a decode");
     tipo_inst = decode(inst);
     log_info(logger, "Voy a entrar a execute");
-    execute(logger, config, inst, tipo_inst, proceso, conexion, tlb);
+    execute(logger, config, inst, tipo_inst, proceso, conexion, tlb, socket_dispatch, socket_interrupt);
     if(proceso_actual != NULL){// Si la instruccion que acaba de ejecutar no es EXIT
         pthread_mutex_lock(&mutex_proceso_actual);
         proceso_actual->program_counter += 1;
         pthread_mutex_unlock(&mutex_proceso_actual);
         log_info(logger, "Voy a entrar a check_interrupt");
-        check_interrupt();
+        check_interrupt(socket_interrupt);
         log_info(logger, "Sale de check_interrupt");
     }
     

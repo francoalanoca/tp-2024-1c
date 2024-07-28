@@ -27,18 +27,18 @@ else{
         log_error(logger_cpu, "Fallo al crear el servidor, cerrando cpu");
         return EXIT_FAILURE;
     }
-    conexion_kernel = fd_mod2;
-log_info(logger_cpu, "va a escuchar a la conexion: %d",conexion_kernel);
+    
+
 //log_info(logger_cpu, "POST SEMAFORO");
   //     sem_post(&sem_valor_instruccion);
-    while (server_escuchar(logger_cpu, "SERVER CPU", (uint32_t)fd_mod2));
+    while (server_escuchar(logger_cpu, "SERVER CPU", (uint32_t)fd_mod2,&conexion_kernel_dispatch));
 }
 
-int server_escuchar(t_log *logger, char *server_name, int server_socket) {
+int server_escuchar(t_log *logger, char *server_name, int server_socket, int *global_socket) {
     log_info(logger_cpu, "entra a server escuchar");
     int cliente_socket = esperar_cliente(logger, server_name, server_socket);
     log_info(logger_cpu, "sale de esperar_cliente");
-
+    *global_socket = cliente_socket;
     if (cliente_socket != -1) {
         pthread_t atenderProcesoNuevo;
          t_procesar_conexion_args *args = malloc(sizeof(t_procesar_conexion_args));
@@ -298,7 +298,7 @@ else{
         return EXIT_FAILURE;
     }
 log_info(logger_cpu, "va a escuchar");
-    while (server_escuchar(logger_cpu, "SERVER CPU INTERRUPT", (uint32_t)fd_mod3));
+    while (server_escuchar(logger_cpu, "SERVER CPU INTERRUPT", (uint32_t)fd_mod3,&conexion_kernel_interrupt));
 }
 
 t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete_proceso_interrumpido) {

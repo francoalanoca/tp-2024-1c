@@ -11,7 +11,7 @@
 
 bool generar_conexiones();
 void* crear_servidor_dispatch(char* ip_cpu);
-int server_escuchar(t_log *logger, char *server_name, int server_socket);
+int server_escuchar(t_log *logger, char *server_name, int server_socket, int *global_socket) ;
 void procesar_conexion(void *v_args);
 int hacer_handshake (int socket_cliente);
 t_pcb *proceso_deserializar(t_list*  lista_paquete_proceso ) ;
