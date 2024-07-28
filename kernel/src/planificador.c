@@ -204,7 +204,7 @@ void enviar_interrupcion_a_cpu(t_pcb* proceso,motivo_interrupcion motivo_interru
 
         enviar_paquete(paquete, conexion); 
 
-        free(paquete); 
+        eliminar_paquete(paquete); 
 
 }
 
