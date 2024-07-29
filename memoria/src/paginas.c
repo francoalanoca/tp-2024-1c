@@ -201,10 +201,10 @@ char* escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* va
 
 
 //Funcion que lee algo de una tamaño en base a una df y un proceso(pid)
-void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tamanio_a_leer){
+char* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tamanio_a_leer){
 
     //Reservo espacio para la variable que voy a devolver
-    void* leido = malloc(tamanio_a_leer);
+    char* leido = (char*) malloc(tamanio_a_leer);
 
     //Aca se almacenara lo que ya fue leido como un contador
     uint32_t espacio_leido = 0;

@@ -15,7 +15,7 @@ t_tabla_de_paginas *busco_tabla_de_paginas_por_PID(uint32_t proceso_pid);
 t_pagina *busco_pagina_por_marco(t_list *lista_de_paginas, uint32_t marco);
 uint32_t obtener_numero_pagina(t_list* lista_de_paginas, uint32_t marco_buscado);
 char* escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor, uint32_t tamanio);
-void* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tamanio);
+char* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tamanio);
 char* copiar_solicitud(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor);
 uint32_t buscar_marco_pagina(uint32_t proceso_pid, uint32_t numero_de_pagina);
 t_miniPCB *busco_un_proceso_PID(uint32_t proceso_pid);

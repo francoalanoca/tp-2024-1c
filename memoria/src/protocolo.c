@@ -8,7 +8,7 @@ void memoria_atender_cliente(void* socket){
     t_list* valores =  malloc(sizeof(t_list));
     t_io_memo_escritura* input = malloc(sizeof(t_io_memo_escritura));
     
-	void* output;  
+	char* output;  
 
 
 
@@ -89,7 +89,7 @@ void memoria_atender_cliente(void* socket){
             log_info(logger_memoria, "Recibí PETICION_VALOR_MEMORIA \n");
             valores = recibir_paquete(socket_cliente);
             t_escribir_leer* peticion_leer = deserializar_peticion_valor(valores);     
-            void* respuesta_leer = leer_memoria(peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);
+            char* respuesta_leer = leer_memoria(peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);
             log_trace(logger_memoria, "Log Obligatorio: \n");
             log_info(logger_memoria, "Acceso a espacio de usuario: \n");          
             log_info(logger_memoria, "PID: %d - Acción: LEER - Direccion fisica: %d - Tamaño: %d", peticion_leer->pid, peticion_leer->direccion_fisica, peticion_leer->tamanio);
