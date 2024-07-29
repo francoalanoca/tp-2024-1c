@@ -290,13 +290,11 @@ void planificar_y_ejecutar(){
         }
        
         if (procesos_ready > 0  && !planificador->planificacion_detenida && cola_exec_vacia) {  
-            log_info(logger_kernel, "hay un proceso en ready"); //despues borrar
-            t_pcb* siguiente_proceso;// = malloc(sizeof(t_pcb));      
+           
+            t_pcb* siguiente_proceso;    
             if (planificador->algoritmo == FIFO) { 
-                siguiente_proceso = obtener_proximo_proceso(planificador);
-                log_info(logger_kernel, "Proximo pid a enviar: %d",siguiente_proceso->pid);
-                enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);
-                log_info(logger_kernel, "Proceso enviado pid: %d",siguiente_proceso->pid);            
+                siguiente_proceso = obtener_proximo_proceso(planificador);               
+                enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);                          
                 list_add(planificador->cola_exec,siguiente_proceso);                             
                 log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EJECUTANDO",siguiente_proceso->pid); // LOG OBLIGATORIO
             }else {

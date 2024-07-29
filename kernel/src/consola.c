@@ -19,20 +19,16 @@ void iniciar_consola_interactiva(int conexion) {
  
     printf("INICIA CONSOLA\n");
     leido = readline("> ");
-    log_info(logger_kernel, "CARACTER LEIDO: %s",leido);
+
     bool validacion_leido;
     
     // El resto, las vamos leyendo y logueando hasta recibir un string vacío
     while (strcmp(leido, "\0") != 0) {
-        printf("ME METI AL WHILE\n");
+
         // Dividir el comando en partes
         char** comando_consola = malloc(sizeof(char) * 22);
         comando_consola = string_split(leido, " ");
-        printf("DESPUES DE STRING SPLIT\n");
 
-        printf("COMANDO LEIDO: %s\n", comando_consola[0]);
-        printf("COMANDO LEIDO 1: %s\n", comando_consola[1]);
-        // Paso lo leído a validar
         validacion_leido = validacion_de_instruccion_de_consola(comando_consola);
 
         // Si lo validado no fue reconocido pasa por el if
@@ -61,9 +57,9 @@ void iniciar_consola_interactiva(int conexion) {
 
 // Función que evalúa lo ingresado por consola y verifica si es alguno de los protocolos
 bool validacion_de_instruccion_de_consola(char** comando_consola) {
-    printf("ME METI AL VALIDACION CONSOLA\n");
+
     bool resultado_validacion = false;
-    printf("COMANDO CONSOLA 0: %s\n",comando_consola[0]);
+
     // Comparo si lo leído coincide con alguno de los comandos
     if (strcmp(comando_consola[0], "EJECUTAR_SCRIPT") == 0) {
         resultado_validacion = true;

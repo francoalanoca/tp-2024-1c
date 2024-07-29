@@ -27,12 +27,12 @@ void Escuchar_Msj_De_Conexiones(){
 //Escuchar los msj de cpu - interrupt
    conexion_cpu_interrupt = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_INTERRUPT);    
    log_info(logger_kernel, "Socket de CPU INTERRUP : %d\n",conexion_cpu_interrupt);
-   pthread_t hilo_cpu_interrupt;
-   pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt,&conexion_cpu_interrupt);
+ //  pthread_t hilo_cpu_interrupt;
+  // pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt,&conexion_cpu_interrupt);
    sem_post(&sem_EscucharMsj);
    pthread_detach(hilo_cpu_dispatch);
    pthread_detach(hilo_kernel_memoria);
-   pthread_join(hilo_cpu_interrupt, NULL);
+  // pthread_join(hilo_cpu_interrupt, NULL);
 
 }
 
@@ -783,16 +783,6 @@ int socket_interrupt = *conexion;
         }   
    switch (cod_op)
    {
-   case MENSAJE:
-      //
-      break;
-   case PAQUETE:
-      //
-      break;
- /*  case -1:
-      log_error(logger_kernel, "Desconexion de cpu - interrupt");
-      control_key = 0;
-      break; */
    default:
       log_warning(logger_kernel, "Operacion desconocida de cpu - interrupt");
       break;
