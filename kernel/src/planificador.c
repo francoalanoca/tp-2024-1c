@@ -203,6 +203,7 @@ void enviar_interrupcion_a_cpu(int pid, motivo_interrupcion motivo_interrupcion,
         agregar_a_paquete(paquete, &motivo_interrupcion, sizeof(uint32_t));
         enviar_paquete(paquete, conexion); 
         eliminar_paquete(paquete); 
+        log_info(logger_kernel,"Envío interrupcion a CPU");
 
 }
 

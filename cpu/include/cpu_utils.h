@@ -28,22 +28,22 @@ typedef enum
     REG_NO_ENC
 }registros;
 
-instr_t* fetch(int conexion, t_log* logger, t_config* config, t_pcb* proceso);
+instr_t* fetch(int conexion, t_pcb* proceso);
 tipo_instruccion decode(instr_t* instr);
-void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conexion,t_list* tlb,  int socket_dispatch, int socket_interrupt);
+void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conexion,t_list* tlb,  int socket_dispatch, int socket_interrupt);
 void check_interrupt( int conexion_kernel);
-void pedir_instruccion(t_pcb* proceso,int conexion, t_log* logger);
-void set(char* registro, uint32_t valor, t_pcb* proceso, t_log *logger);
-void sum(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *logger);
-void sub(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *logger);
-void jnz(char* registro, uint32_t inst, t_pcb* proceso, t_log* logger);
+void pedir_instruccion(t_pcb* proceso,int conexion);
+void set(char* registro, uint32_t valor, t_pcb* proceso);
+void sum(char* registro_destino, char* registro_origen, t_pcb* proceso);
+void sub(char* registro_destino, char* registro_origen, t_pcb* proceso);
+void jnz(char* registro, uint32_t inst, t_pcb* proceso);
 void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo, t_pcb* proceso, int conexion_kernel );
 void generar_interrupcion_a_kernel(int conexion);
 //t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso);
 void* crear_servidor_dispatch(char* ip_cpu);//
 void* crear_servidor_interrupt(char* ip_cpu);//
 registros identificarRegistro(char* registro);
-uint32_t obtenerValorActualRegistro(registros id_registro, t_pcb* proceso, t_log* logger);
+uint32_t obtenerValorActualRegistro(registros id_registro, t_pcb* proceso);
 //t_interfaz* elegir_interfaz(char* interfaz, t_proceso* proceso);
 void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, uint32_t unidades_de_trabajo, int conexion);
 uint32_t mmu(uint32_t direccion_logica, uint32_t tamanio_pag, int conexion, t_log* logger,t_list* tlb);

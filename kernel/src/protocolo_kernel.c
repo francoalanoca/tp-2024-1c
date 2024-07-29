@@ -27,12 +27,12 @@ void Escuchar_Msj_De_Conexiones(){
 //Escuchar los msj de cpu - interrupt
    conexion_cpu_interrupt = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_INTERRUPT);    
    log_info(logger_kernel, "Socket de CPU INTERRUP : %d\n",conexion_cpu_interrupt);
- //  pthread_t hilo_cpu_interrupt;
-  // pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt,&conexion_cpu_interrupt);
+ pthread_t hilo_cpu_interrupt;
+   pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt,&conexion_cpu_interrupt);
    sem_post(&sem_EscucharMsj);
    pthread_detach(hilo_cpu_dispatch);
    pthread_detach(hilo_kernel_memoria);
-  // pthread_join(hilo_cpu_interrupt, NULL);
+   pthread_join(hilo_cpu_interrupt, NULL);
 
 }
 
@@ -112,7 +112,7 @@ t_list* lista_paquete;
          proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
          list_add_in_index(planificador->cola_exec,0,proceso_interrumpido->pcb);
 
-         sem_post(&sem_interrupcion_atendida);
+         sem_post(&sem_interrupcion_atendida); // solo para actualizaar el contexto
       default:
       printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
       mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
@@ -134,6 +134,9 @@ t_list* lista_paquete;
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_GEN_SLEEP)){
             
             enviar_interrupcion_a_cpu(io_gen_sleep->pid,INTERRUPCION_IO,conexion_cpu_interrupt);
+            int valor_sem;
+            sem_getvalue(&sem_io_fs_libre, &valor_sem);
+            log_info(logger_kernel, "Valor de sem intarface libre %d",valor_sem);
             sem_wait(&sem_io_fs_libre);
 
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
@@ -147,12 +150,14 @@ t_list* lista_paquete;
             proceso_data_io_gen_sleep->data = io_espera_a_bloquear;
             
             
-            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
-
-            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
-            
-               actualizar_quantum(proceso_data_io_gen_sleep->pcb);
-            } 
+            //sem_wait(&sem_interrupcion_atendida);// se traba el hilo a si mismo
+            if(cronometro != NULL){
+               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+               
+                  actualizar_quantum(proceso_data_io_gen_sleep->pcb);
+               } 
+            }
+               
             log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_gen_sleep->pcb->pid);
                      
             bloquear_proceso(planificador,proceso_data_io_gen_sleep,interfaz_encontrada->nombre);
@@ -161,7 +166,7 @@ t_list* lista_paquete;
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
             pthread_mutex_lock(&mutex_envio_io);
             log_info(logger_kernel,"Fd entradasalida %d",interfaz_encontrada->conexion);
-            enviar_espera(a_enviar_a_io_gen_sleep->data,interfaz_encontrada->conexion);
+            enviar_espera(io_espera_a_bloquear,interfaz_encontrada->conexion);
             pthread_mutex_unlock(&mutex_envio_io);
 
             liberar_memoria_t_proceso_data(proceso_data_io_gen_sleep);

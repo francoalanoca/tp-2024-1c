@@ -31,14 +31,16 @@ else{
 
 //log_info(logger_cpu, "POST SEMAFORO");
   //     sem_post(&sem_valor_instruccion);
-    while (server_escuchar(logger_cpu, "SERVER CPU", (uint32_t)fd_mod2,&conexion_kernel_dispatch));
+    while (server_escuchar_dispatch(logger_cpu, "DISPATCH", (uint32_t)fd_mod2,&conexion_kernel_dispatch));
 }
 
-int server_escuchar(t_log *logger, char *server_name, int server_socket, int *global_socket) {
+int server_escuchar_dispatch(t_log *logger, char *server_name, int server_socket, int *global_socket) {
     log_info(logger_cpu, "entra a server escuchar");
     int cliente_socket = esperar_cliente(logger, server_name, server_socket);
     log_info(logger_cpu, "sale de esperar_cliente");
     *global_socket = cliente_socket;
+    
+    sem_post(&sem_conexion_dispatch_iniciado);
     if (cliente_socket != -1) {
         pthread_t atenderProcesoNuevo;
          t_procesar_conexion_args *args = malloc(sizeof(t_procesar_conexion_args));
@@ -46,7 +48,7 @@ int server_escuchar(t_log *logger, char *server_name, int server_socket, int *gl
         args->fd = cliente_socket;
         args->server_name = server_name;
         //pthread_create(&atenderProcesoNuevo, NULL,procesar_conexion,cliente_socket);//TODO:Redefinir procesar_conexion para que reciba un PCB
-        pthread_create(&atenderProcesoNuevo, NULL,procesar_conexion,args);
+        pthread_create(&atenderProcesoNuevo, NULL,(void*)procesar_conexion_dispatch,(void*)args);
         pthread_detach(atenderProcesoNuevo);
         return 1;
     }
@@ -58,20 +60,15 @@ void procesar_conexion(int cliente_socket){
     printf("El socket del cliente es: %d", cliente_socket);
 }*/
 
-void procesar_conexion(void *v_args){
+void procesar_conexion_dispatch(void *v_args){
      t_procesar_conexion_args *args = (t_procesar_conexion_args *) v_args;
     t_log *logger = malloc(sizeof(t_log));
     logger = args->log;
     int cliente_socket = args->fd;
-    //char *server_name = args->server_name;
+    char *server_name = args->server_name;
     free(args);
 
      op_code cop;
-
-     ///
-   
-   // t_paquete* paquete = malloc(sizeof(t_paquete));
-
  
     while (cliente_socket != -1) {
    
@@ -97,23 +94,65 @@ void procesar_conexion(void *v_args){
                 //free(proceso);
                 printf("pase free proceso\n");
                 break;
-            }
-             case INTERRUPCION_KERNEL:
+            }       
+            
+            default:
             {
+                printf("Codigo de operacion no identifcado\n");
+                break;
+            }
+            
+           
+        }   
+ 
+    }
+}
+void procesar_conexion_interrupt(void *v_args){
+     t_procesar_conexion_args *args = (t_procesar_conexion_args *) v_args;
+    t_log *logger = malloc(sizeof(t_log));
+    logger = args->log;
+    int cliente_socket = args->fd;
+    char *server_name = args->server_name;
+    free(args);
+
+     op_code cop;
+
+    while (cliente_socket != -1) {
+    
+ 
+        if (recv(cliente_socket, &cop, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+            log_info(logger, "DISCONNECT! KERNEL");
+
+            break;
+        }
+           printf("COP:%d\n",cop);
+
+
+        switch (cop){       
+             case INTERRUPCION_KERNEL:
+            {   //pthread_mutex_lock(&mutex_interrupcion_kernel);
                 t_list* lista_paquete_proceso_interrumpido = recibir_paquete(cliente_socket);
-                t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido)); //REVISAR
+                
                 log_info(logger_cpu, "SE RECIBE INTERRUPCION DE KERNEL");
-                proceso_interrumpido = proceso_interrumpido_deserializar(lista_paquete_proceso_interrumpido); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
-                if(proceso_interrumpido->pcb->pid == proceso_actual->pid){
+                proceso_interrumpido_actual = proceso_interrumpido_deserializar(lista_paquete_proceso_interrumpido); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
+                 
+                if(proceso_interrumpido_actual->pcb->pid == proceso_actual->pid){
                     pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
-                    proceso_interrumpido_actual = proceso_interrumpido;
+                    proceso_interrumpido_actual->pcb = proceso_actual;
+                    log_info(logger_cpu, "asignado DE PROCESO INTERRUMPIDO");
                     pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
+                  
+                                   
                     pthread_mutex_lock(&mutex_interrupcion_kernel);
                     interrupcion_kernel = true;
                     pthread_mutex_unlock(&mutex_interrupcion_kernel);
+                    log_info(logger_cpu, "FINALIZADA LA ASIGNACION DE PROCESO INTERRUMPIDO");
+                   
+                     
                 }
+               
                 list_destroy_and_destroy_elements(lista_paquete_proceso_interrumpido,free);
-                free(proceso_interrumpido);
+                //pthread_mutex_unlock(&mutex_interrupcion_kernel);
                 break;
             }
             
@@ -124,20 +163,22 @@ void procesar_conexion(void *v_args){
             }
             
            
-    }   
-//free(paquete->buffer->stream);
-//free(paquete->buffer);
-//free(paquete);
-}
+        }   
+    printf("Codigo de operacion no identifcado\n");    
+    sem_post(&sem_check_interrupcion_kernel);
+    }
+
+ //   sem_post(&sem_interrupcion_kernel);
 }
 
-void atender_memoria (int socket_memoria) {
-
+void atender_memoria (int *socket_mr) {
+   int socket_memoria_server = *socket_mr;
+  // free(socket);
     op_code cop;
   
-    while (socket_memoria != -1) {
+    while (socket_memoria_server != -1) {
 
-        if (recv(socket_memoria, &cop, sizeof(int32_t), MSG_WAITALL) != sizeof(int32_t)) {
+        if (recv(socket_memoria_server, &cop, sizeof(int32_t), MSG_WAITALL) != sizeof(int32_t)) {
             log_info(logger_cpu, "DISCONNECT! Atender memoria");
 
             break;
@@ -148,7 +189,7 @@ void atender_memoria (int socket_memoria) {
                     {
                         log_info(logger_cpu, "SE RECIBE INSTRUCCION DE MEMORIA");
                          
-                        t_list* lista_paquete_instruccion_rec = recibir_paquete(socket_memoria);
+                        t_list* lista_paquete_instruccion_rec = recibir_paquete(socket_memoria_server);
                          log_info(logger_cpu, "Paquete recibido");
                         instr_t* instruccion_recibida = instruccion_deserializar(lista_paquete_instruccion_rec);
                          log_info(logger_cpu, "EL codigo de instrucción es %d ",instruccion_recibida->id);
@@ -181,7 +222,7 @@ void atender_memoria (int socket_memoria) {
                     case MARCO_RECIBIDO:
                     {
                         log_info(logger_cpu, "MARCO RECIBIDO");
-                        t_list* lista_paquete_marco_rec = recibir_paquete(socket_memoria);
+                        t_list* lista_paquete_marco_rec = recibir_paquete(socket_memoria_server);
                         uint32_t marco_rec = deserealizar_marco(lista_paquete_marco_rec);
                         marco_recibido = marco_rec;
                         list_destroy_and_destroy_elements(lista_paquete_marco_rec,free);
@@ -191,7 +232,7 @@ void atender_memoria (int socket_memoria) {
                     case PETICION_VALOR_MEMORIA_RTA:
                     {
                         log_info(logger_cpu, "PETICION_VALOR_MEMORIA_RTA");
-                        t_list* lista_paquete_valor_memoria_rec = recibir_paquete(socket_memoria);
+                        t_list* lista_paquete_valor_memoria_rec = recibir_paquete(socket_memoria_server);
                         char* valor_rec = deserealizar_valor_memoria(lista_paquete_valor_memoria_rec);
                     
                         valor_registro_obtenido = valor_rec; 
@@ -217,7 +258,7 @@ void atender_memoria (int socket_memoria) {
                     case SOLICITUD_TAMANIO_PAGINA_RTA:
                     {
                         log_info(logger_cpu, "SOLICITUD_TAMANIO_PAGINA_RTA");
-                        t_list* lista_paquete_tamanio_pag = recibir_paquete(socket_memoria);
+                        t_list* lista_paquete_tamanio_pag = recibir_paquete(socket_memoria_server);
                         uint32_t valor_tamanio_pag = deserealizar_tamanio_pag(lista_paquete_tamanio_pag); 
                         tamanio_pagina = valor_tamanio_pag; 
 
@@ -273,6 +314,25 @@ t_pcb *proceso_deserializar(t_list*  lista_paquete_proceso ) {
 	return proceso_nuevo;
 }
 
+int server_escuchar_interrupt(t_log *logger, char *server_name, int server_socket, int *global_socket) {
+    log_info(logger_cpu, "entra a server escuchar");
+    int cliente_socket = esperar_cliente(logger, server_name, server_socket);
+    log_info(logger_cpu, "sale de esperar_cliente");
+    *global_socket = cliente_socket;
+    sem_post(&sem_conexion_interrupt_iniciado);
+    if (cliente_socket != -1) {
+        pthread_t atenderProcesoNuevo;
+         t_procesar_conexion_args *args = malloc(sizeof(t_procesar_conexion_args));
+        args->log = logger;
+        args->fd = cliente_socket;
+        args->server_name = server_name;
+        //pthread_create(&atenderProcesoNuevo, NULL,procesar_conexion,cliente_socket);//TODO:Redefinir procesar_conexion para que reciba un PCB
+        pthread_create(&atenderProcesoNuevo, NULL,(void*)procesar_conexion_interrupt,(void*)args);
+        pthread_detach(atenderProcesoNuevo);
+        return 1;
+    }
+    return 0;
+}
 
 
 void* crear_servidor_interrupt(char* ip_cpu){
@@ -298,12 +358,12 @@ else{
         return EXIT_FAILURE;
     }
 log_info(logger_cpu, "va a escuchar");
-    while (server_escuchar(logger_cpu, "SERVER CPU INTERRUPT", (uint32_t)fd_mod3,&conexion_kernel_interrupt));
+    while (server_escuchar_interrupt(logger_cpu, "INTERRUPT", (uint32_t)fd_mod3,&conexion_kernel_interrupt));
 }
 
 t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete_proceso_interrumpido) {
     t_proceso_interrumpido *proceso_interrumpido_nuevo = malloc(sizeof(t_proceso_interrumpido));
-
+    proceso_interrumpido_nuevo->pcb =  malloc(sizeof(t_pcb));
     proceso_interrumpido_nuevo->pcb->pid = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 0);
     proceso_interrumpido_nuevo->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 1);	
     return proceso_interrumpido_nuevo;
@@ -342,8 +402,8 @@ t_rta_resize* deserealizar_rta_resize(t_list*  lista_paquete ){
 }
 
 uint32_t deserealizar_tamanio_pag(t_list*  lista_paquete ){
-    uint32_t valor_tam_pag = malloc(sizeof(uint32_t));
-    valor_tam_pag = *(uint32_t*)list_get(lista_paquete, 0);
+   
+   uint32_t valor_tam_pag = *(uint32_t*)list_get(lista_paquete, 0);
 
 	return valor_tam_pag;
 }
