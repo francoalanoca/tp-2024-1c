@@ -636,19 +636,39 @@ void enviar_solicitud_tamanio(uint32_t tamanio_pagina ,int socket_cpu) {
 
 
 
-void enviar_peticion_valor(void* respuesta_leer ,int socket_cpu) {
+void enviar_peticion_valor(void* respuesta_leer, int socket_cpu) {
     t_paquete* paquete_valor;
- 
+
+    // Verificar que respuesta_leer no sea NULL
+    if (respuesta_leer == NULL) {
+        fprintf(stderr, "Error: respuesta_leer es NULL\n");
+        return;
+    }
+
+    // Asegurarse de que respuesta_leer está terminada en nulo
+    char* cadena = (char*) respuesta_leer;
+    size_t longitud = strlen(cadena);
+    if (cadena[longitud] != '\0') {
+        fprintf(stderr, "Error: la cadena no está correctamente terminada en nulo\n");
+        return;
+    }
+
+
     paquete_valor = crear_paquete(PETICION_VALOR_MEMORIA_RTA);
-    uint32_t tamanio_respuesta_leer = (strlen((char*) respuesta_leer) * sizeof(char));
-    agregar_a_paquete(paquete_valor, &tamanio_respuesta_leer,  sizeof(uint32_t)); 
-    agregar_a_paquete(paquete_valor, respuesta_leer,  tamanio_respuesta_leer);          
-     printf("respuesta_leer: %s ,tamanio %d \n",(char*) respuesta_leer,tamanio_respuesta_leer); 
-    enviar_paquete(paquete_valor, socket_cpu);   
-    printf("Se envio respuesta de lectura \n"); 
-    eliminar_paquete(paquete_valor);
+
+    uint32_t tamanio_respuesta_leer = (longitud * sizeof(char)) + 1;
+
+    agregar_a_paquete(paquete_valor, &tamanio_respuesta_leer, sizeof(uint32_t)); 
+    agregar_a_paquete(paquete_valor, respuesta_leer, tamanio_respuesta_leer);          
+
+    printf("respuesta_leer: %s , tamanio %d \n", (char*) respuesta_leer, tamanio_respuesta_leer); 
     
+    enviar_paquete(paquete_valor, socket_cpu);   
+    printf("Se envió respuesta de lectura \n"); 
+
+    eliminar_paquete(paquete_valor);
 }
+
 
 
 
@@ -657,7 +677,7 @@ void enviar_resultado_guardar(char* respuesta_escribir, int socket_cliente){
 
     paquete_valor = crear_paquete(GUARDAR_EN_DIRECCION_FISICA_RTA);
 
-    agregar_a_paquete(paquete_valor, &respuesta_escribir,  sizeof(void*));
+    //agregar_a_paquete(paquete_valor, &respuesta_escribir,  sizeof(void*));
 
     enviar_paquete(paquete_valor, socket_cliente);
     printf("Se envio respuesta de guardado \n"); 

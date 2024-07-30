@@ -834,7 +834,7 @@ void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_lo
     int valor_sem;
     sem_getvalue(&sem_valor_registro_recibido, &valor_sem);
     printf("valor sem_valor_registro_recibido:%d\n", valor_sem);
-    wait(&sem_valor_registro_recibido);
+    sem_wait(&sem_valor_registro_recibido);
     printf("paso sem_valor_registro_recibido\n");
 
     log_info(logger, "PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", proceso_actual->pid,dir_fisica_result,valor_registro_obtenido); //LOG OBLIGATORIO

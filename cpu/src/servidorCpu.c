@@ -192,10 +192,8 @@ void atender_memoria (int socket_memoria) {
                     {
                         log_info(logger_cpu, "PETICION_VALOR_MEMORIA_RTA");
                         t_list* lista_paquete_valor_memoria_rec = recibir_paquete(socket_memoria);
-                        char* valor_rec;
-                        strcpy(valor_rec,deserealizar_valor_memoria(lista_paquete_valor_memoria_rec)) ;
-
-                        printf("RECIBO: %s",valor_rec );
+                        char* valor_rec = deserealizar_valor_memoria(lista_paquete_valor_memoria_rec);
+                        //strcpy(valor_rec,deserealizar_valor_memoria(lista_paquete_valor_memoria_rec)) ;
                     
                         valor_registro_obtenido = valor_rec; 
 
@@ -203,6 +201,9 @@ void atender_memoria (int socket_memoria) {
                         sem_post(&sem_valor_registro_recibido);
                         break;
                     }
+                    case GUARDAR_EN_DIRECCION_FISICA_RTA:
+                        printf("Recibo GUARDAR_EN_DIRECCION_FISICA_RTA de memoria\n");
+                        break;
                     case SOLICITUD_RESIZE_RTA:
                     {
                         log_info(logger_cpu, "SOLICITUD_RESIZE_RTA"); // RESIZE OK
@@ -230,7 +231,7 @@ void atender_memoria (int socket_memoria) {
                     }
                     default:
                     {
-                        log_error(logger_cpu, "Operacion invalida enviada desde kernel");
+                        log_error(logger_cpu, "Operacion invalida enviada desde Memoria:%d",cop);
                         break;
                     }
                     break;
@@ -334,10 +335,12 @@ char* deserealizar_valor_memoria(t_list*  lista_paquete ){
     //char* valor_recibido = malloc(tamanio_valor_recibido);
     //valor_recibido = list_get(lista_paquete, 1);
     uint32_t tamanio_valor_recibido = *(uint32_t*)list_get(lista_paquete, 0);
-    void* valor_recibido = list_get(lista_paquete, 1);
-    char* valor_recibido_a_retornar = malloc(tamanio_valor_recibido);
-    valor_recibido_a_retornar = (char*)valor_recibido;
-	return valor_recibido_a_retornar;
+    printf("Recibo tamanio_valor_recibido:%u\n",tamanio_valor_recibido);
+    char* valor_recibido = malloc(tamanio_valor_recibido);
+    valor_recibido = strdup(list_get(lista_paquete, 1));
+    printf("Recibo valor_recibido:%s\n",valor_recibido);
+    printf("Devuelvo valor_recibido\n");
+	return valor_recibido;
 }
 
 t_rta_resize* deserealizar_rta_resize(t_list*  lista_paquete ){
