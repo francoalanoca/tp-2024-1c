@@ -225,7 +225,8 @@ t_pcb* crear_pcb(char* path) {
     nuevo_pcb->registros_cpu.SI = 0;
     nuevo_pcb->registros_cpu.DI = 0;
     nuevo_pcb->registros_cpu.PC = nuevo_pcb->program_counter;
-
+    nuevo_pcb->tiempo_ejecucion = 0;
+    nuevo_pcb->quantum = NULL; 
     printf("PCB creado exitosamente\n");
     return nuevo_pcb;
 }

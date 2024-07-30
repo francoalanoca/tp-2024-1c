@@ -243,9 +243,7 @@ void poner_en_cola_exit(t_pcb* proceso){
 
 void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
 
-   t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
-    
-    paquete_archivo_nuevo = crear_paquete(NUEVO_PROCESO);
+   t_paquete* paquete_archivo_nuevo = crear_paquete(NUEVO_PROCESO);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(pcb->pid), sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, &(pcb->program_counter), sizeof(uint32_t));

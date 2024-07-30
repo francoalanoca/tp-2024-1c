@@ -604,7 +604,7 @@ uint32_t obtenerValorActualRegistro(registros id_registro, t_pcb* proceso){
 }*/
 
 void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, uint32_t unidades_de_trabajo, int conexion){
-    printf("entro a enviar_interfaz_a_kernel\n");
+    printf("entro a enviar_interfaz_a_kernel %s\n", nombre_interfaz);
     t_paquete* paquete_interfaz_kernel;
    
     paquete_interfaz_kernel = crear_paquete(SOLICITUD_IO_GEN_SLEEP); 
