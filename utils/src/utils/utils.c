@@ -1066,18 +1066,17 @@ void enviar_resize_memoria(t_resize* proceso_resize, int socket){
 
 }
 
-void enviar_respuesta_io ( int socket, op_code respuesta, uint32_t pid, char* nombre_intefaz){
+void enviar_respuesta_io ( int socket, op_code respuesta, uint32_t pidi, char* nombre_intefaz){
 
-    t_paquete* paquete; 
-    paquete = crear_paquete(respuesta);
+    t_paquete* paquete_enviar_respuesta_io = crear_paquete(respuesta);
+    printf("entro enviar respiuesta de io ");
+    uint32_t nombre_length = strlen(nombre_intefaz) + 1;
+    agregar_a_paquete(paquete_enviar_respuesta_io,pidi,  sizeof(uint32_t));   
+    agregar_a_paquete(paquete_enviar_respuesta_io, nombre_length, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_enviar_respuesta_io, nombre_intefaz, nombre_length);
     
-    uint32_t nombre_length = string_length(nombre_intefaz) + 1;
-    agregar_a_paquete(paquete,pid,  sizeof(uint32_t));   
-    agregar_a_paquete(paquete, nombre_length, sizeof(uint32_t));  
-    agregar_a_paquete(paquete, nombre_intefaz, nombre_length);
-    
-    enviar_paquete(paquete, socket); 
-    eliminar_paquete(paquete); 
+    enviar_paquete(paquete_enviar_respuesta_io, socket); 
+    eliminar_paquete(paquete_enviar_respuesta_io); 
 
 }
 

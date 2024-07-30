@@ -3,7 +3,7 @@
 
 void iniciar_interfaz_generica (int socket_kernel) {
     
-    uint32_t response;
+    op_code response;
     op_code cop;
  
    
@@ -39,17 +39,16 @@ void iniciar_interfaz_generica (int socket_kernel) {
             case IO_K_GEN_SLEEP :
                 
                 log_info(logger_entrada_salida, "IO_K_GEN_SLEEP recibida desde Kernel");
-                t_list* lista_paquete = list_create();   
-                lista_paquete = recibir_paquete(socket_kernel);
+                t_list* lista_paquete = recibir_paquete(socket_kernel);
                 t_io_espera* io_espera = deserializar_espera (lista_paquete);
                 esperar(io_espera->pid, io_espera->tiempo_espera);
-                list_destroy_and_destroy_elements(lista_paquete, free);
-                free(io_espera);
+
                 response = IO_K_GEN_SLEEP_FIN;
 
-                enviar_respuesta_io (socket_kernel,response,io_espera->pid, cfg_entrada_salida->NOMBRE_INTERFAZ);
-                list_destroy_and_destroy_elements(lista_paquete, free);
-
+                enviar_respuesta_io (socket_kernel,response, io_espera->pid, cfg_entrada_salida->NOMBRE_INTERFAZ);
+                log_info(logger_entrada_salida, "IO_K_GEN_SLEEP RESPUESTA ENVIADAl");
+                //list_destroy_and_destroy_elements(lista_paquete, free);
+                //free(io_espera);
                 break;
 
             default:

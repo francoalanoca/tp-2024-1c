@@ -158,10 +158,11 @@ t_list* lista_paquete;
                } 
             }
                
-            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_gen_sleep->pcb->pid);
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_gen_sleep->pcb->pid); // LOG OBLIGATORIO
                      
             bloquear_proceso(planificador,proceso_data_io_gen_sleep,interfaz_encontrada->nombre);
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+             sem_wait(&sem_cpu_libre);
             t_proceso_data* a_enviar_a_io_gen_sleep = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
             pthread_mutex_lock(&mutex_envio_io);
@@ -169,9 +170,9 @@ t_list* lista_paquete;
             enviar_espera(io_espera_a_bloquear,interfaz_encontrada->conexion);
             pthread_mutex_unlock(&mutex_envio_io);
 
-            liberar_memoria_t_proceso_data(proceso_data_io_gen_sleep);
-            liberar_memoria_t_io_espera(io_espera_a_bloquear);
-            liberar_memoria_t_proceso_data(a_enviar_a_io_gen_sleep);
+            //liberar_memoria_t_proceso_data(proceso_data_io_gen_sleep);
+            //liberar_memoria_t_io_espera(io_espera_a_bloquear);
+            //liberar_memoria_t_proceso_data(a_enviar_a_io_gen_sleep);
             
          }
          else{
@@ -189,9 +190,9 @@ t_list* lista_paquete;
 
      // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid));
       
-      liberar_memoria_t_io_gen_sleep(io_gen_sleep);
+      //liberar_memoria_t_io_gen_sleep(io_gen_sleep);
 
-      
+       log_info(logger_kernel, "FIN DE ENVIAR SLEEP GEN");
       break;
 
    case ENVIO_WAIT_A_KERNEL:

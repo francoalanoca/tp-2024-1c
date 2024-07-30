@@ -100,6 +100,7 @@ void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
 
 //Bloquea un proceso y lo mueve a la cola de bloqueados
 void bloquear_proceso(t_planificador* planificador, t_proceso_data* proceso_data, char* nombre_lista) {
+      
     list_remove(planificador->cola_exec, proceso_data->pcb);
     dictionary_put(planificador->cola_blocked,nombre_lista,proceso_data);
     sem_post(&sem_cpu_libre);
