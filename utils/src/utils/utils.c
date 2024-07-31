@@ -1158,24 +1158,30 @@ t_list* char_array_to_list(char** array) {
 }
 
 tipo_instruccion str_to_tipo_instruccion(const char *str) {
-    if (strcmp(str, "SET") == 0) return SET;
-    if (strcmp(str, "SUM") == 0) return SUM;
-    if (strcmp(str, "SUB") == 0) return SUB;
-    if (strcmp(str, "MOV_IN") == 0) return MOV_IN;
-    if (strcmp(str, "MOV_OUT") == 0) return MOV_OUT;
-    if (strcmp(str, "RESIZE") == 0) return RESIZE;
-    if (strcmp(str, "JNZ") == 0) return JNZ;
-    if (strcmp(str, "COPY_STRING") == 0) return COPY_STRING;
-    if (strcmp(str, "IO_GEN_SLEEP") == 0) return IO_GEN_SLEEP;
-    if (strcmp(str, "IO_STDIN_READ") == 0) return IO_STDIN_READ;
-    if (strcmp(str, "IO_STDOUT_WRITE") == 0) return IO_STDOUT_WRITE;
-    if (strcmp(str, "IO_FS_CREATE") == 0) return IO_FS_CREATE;
-    if (strcmp(str, "IO_FS_DELETE") == 0) return IO_FS_DELETE;
-    if (strcmp(str, "IO_FS_TRUNCATE") == 0) return IO_FS_TRUNCATE;
-    if (strcmp(str, "IO_FS_WRITE") == 0) return IO_FS_WRITE;
-    if (strcmp(str, "IO_FS_READ") == 0) return IO_FS_READ;
-    if (strcmp(str, "WAIT") == 0) return WAIT;
-    if (strcmp(str, "SIGNAL") == 0) return SIGNAL;
-    if (strcmp(str, "EXIT") == 0) return EXIT;
-   
+    printf("Entro al funcion a testear \n");
+    tipo_instruccion instruccion_a_devolver = -1;
+    if (strcmp(str, "SET") == 0) instruccion_a_devolver = SET;
+    else if (strcmp(str, "SUM") == 0) instruccion_a_devolver = SUM;
+    else if (strcmp(str, "SUB") == 0) instruccion_a_devolver = SUB;
+    else if (strcmp(str, "MOV_IN") == 0) instruccion_a_devolver = MOV_IN;
+    else if (strcmp(str, "MOV_OUT") == 0) instruccion_a_devolver = MOV_OUT;
+    else if (strcmp(str, "RESIZE") == 0) instruccion_a_devolver = RESIZE;
+    else if (strcmp(str, "JNZ") == 0) instruccion_a_devolver = JNZ;
+    else if (strcmp(str, "COPY_STRING") == 0) instruccion_a_devolver = COPY_STRING;
+    else if (strcmp(str, "IO_GEN_SLEEP") == 0) instruccion_a_devolver = IO_GEN_SLEEP;
+    else if (strcmp(str, "IO_STDIN_READ") == 0) instruccion_a_devolver = IO_STDIN_READ;
+    else if (strcmp(str, "IO_STDOUT_WRITE") == 0) instruccion_a_devolver = IO_STDOUT_WRITE;
+    else if (strcmp(str, "IO_FS_CREATE") == 0) instruccion_a_devolver = IO_FS_CREATE;
+    else if (strcmp(str, "IO_FS_DELETE") == 0) instruccion_a_devolver = IO_FS_DELETE;
+    else if (strcmp(str, "IO_FS_TRUNCATE") == 0) instruccion_a_devolver = IO_FS_TRUNCATE;
+    else if (strcmp(str, "IO_FS_WRITE") == 0) instruccion_a_devolver = IO_FS_WRITE;
+    else if (strcmp(str, "IO_FS_READ") == 0) instruccion_a_devolver = IO_FS_READ;
+    else if (strcmp(str, "WAIT") == 0) instruccion_a_devolver = WAIT;
+    else if (strcmp(str, "SIGNAL") == 0) instruccion_a_devolver = SIGNAL;
+    else if (strcmp(str, "EXIT") == 0) instruccion_a_devolver = EXIT;
+    else printf("Entro en el default de str_to_tipo_instruccion \n");
+
+    printf("imprimo instruccion_a_devolver: %d \n", instruccion_a_devolver);
+    printf("Saliendo de la funcion a testear \n");
+    return instruccion_a_devolver;
 }

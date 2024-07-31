@@ -161,6 +161,8 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
             io_fs_read(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger,conexion,tlb);
             break;
         }
+        default:
+        	log_warning(logger, "Huvo un error: instruccion no encontrada");
     }
 
 }
