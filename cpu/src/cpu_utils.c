@@ -163,7 +163,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
             break;
         }
         default:
-        	log_warning(logger, "Huvo un error: instruccion no encontrada");
+        	log_warning(logger_cpu, "Huvo un error: instruccion no encontrada");
     }
 
 }
