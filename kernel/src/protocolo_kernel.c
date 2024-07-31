@@ -106,7 +106,7 @@ t_list* lista_paquete;
          sem_post(&sem_contexto_ejecucion_recibido);
          break;
       case INTERRUPCION_IO:
-         printf("Se recibió una interrupción de IO");    
+          log_info(logger_kernel, "Se recibió una interrupción de IO");  
                  
          lista_paquete = recibir_paquete(socket_dispatch);       
          proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
