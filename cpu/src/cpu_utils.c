@@ -848,11 +848,11 @@ void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_lo
     uint8_t valor_dir_fisica_uint8t;
     if(tamanio_a_leer == sizeof(uint32_t)){
          valor_dir_fisica_uint32 = (uint32_t)strtoul(valor_registro_obtenido, &endptr, 10);// Convertir la cadena a uint32_t
-        set(registro_datos,valor_dir_fisica_uint32,proceso,logger);
+        set(registro_datos,valor_dir_fisica_uint32,proceso);
     }
     else{
          valor_dir_fisica_uint8t = (uint8_t)strtoul(valor_registro_obtenido, &endptr, 10);// Convertir la cadena a uint8_t
-        set(registro_datos,valor_dir_fisica_uint8t,proceso,logger);
+        set(registro_datos,valor_dir_fisica_uint8t,proceso);
     }
     
     
