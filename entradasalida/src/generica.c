@@ -44,7 +44,11 @@ void iniciar_interfaz_generica (int socket_kernel) {
                 esperar(io_espera->pid, io_espera->tiempo_espera);
 
                 response = IO_K_GEN_SLEEP_FIN;
-
+                printf("valor : %d\n",socket_kernel );
+                 printf("valor : %d\n", io_espera->pid );
+                printf("valor : %d\n", io_espera->pid );
+                printf("valor : %d\n",response);
+                printf("valor : %s\n",cfg_entrada_salida->NOMBRE_INTERFAZ);
                 enviar_respuesta_io (socket_kernel,response, io_espera->pid, cfg_entrada_salida->NOMBRE_INTERFAZ);
                 printf("IO_K_GEN_SLEEP RESPUESTA ENVIADAl\n");
                 //list_destroy_and_destroy_elements(lista_paquete, free);

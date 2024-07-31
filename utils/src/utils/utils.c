@@ -1066,13 +1066,13 @@ void enviar_resize_memoria(t_resize* proceso_resize, int socket){
 
 }
 
-void enviar_respuesta_io ( int socket, op_code respuesta, uint32_t pidi, char* nombre_intefaz){
+void enviar_respuesta_io ( int socket, op_code respuesta, uint32_t* pidi, char* nombre_intefaz){
 
     t_paquete* paquete_enviar_respuesta_io = crear_paquete(respuesta);
     printf("entro enviar respiuesta de io ");
     uint32_t nombre_length = strlen(nombre_intefaz) + 1;
-    agregar_a_paquete(paquete_enviar_respuesta_io,pidi,  sizeof(uint32_t));   
-    agregar_a_paquete(paquete_enviar_respuesta_io, nombre_length, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_enviar_respuesta_io,&pidi,  sizeof(uint32_t));   
+    agregar_a_paquete(paquete_enviar_respuesta_io, &nombre_length, sizeof(uint32_t));  
     agregar_a_paquete(paquete_enviar_respuesta_io, nombre_intefaz, nombre_length);
     
     enviar_paquete(paquete_enviar_respuesta_io, socket); 
@@ -1156,4 +1156,14 @@ tipo_instruccion str_to_tipo_instruccion(const char *str) {
     if (strcmp(str, "SIGNAL") == 0) return SIGNAL;
     if (strcmp(str, "EXIT") == 0) return EXIT;
    
+}
+
+int buscar_indice_pcb_por_pid(t_list* lista, int pid) {
+    for (int i = 0; i < list_size(lista); i++) {
+        t_pcb* pcb = list_get(lista, i);
+        if (pcb->pid == pid) {
+            return i;
+        }
+    }
+    return -1; 
 }

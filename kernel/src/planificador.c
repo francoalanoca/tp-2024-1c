@@ -94,14 +94,15 @@ t_pcb* obtener_proximo_proceso(t_planificador* planificador) {
 
 // Desaloja un proceso de la cola de ejecución y lo pone en la cola de listos
 void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
-    list_remove(planificador->cola_exec, proceso);
+    
+    list_remove(planificador->cola_exec, buscar_indice_pcb_por_pid(planificador->cola_exec,proceso->pid));
     list_add(planificador->cola_ready, proceso);
 }
 
 //Bloquea un proceso y lo mueve a la cola de bloqueados
 void bloquear_proceso(t_planificador* planificador, t_proceso_data* proceso_data, char* nombre_lista) {
       
-    list_remove(planificador->cola_exec, proceso_data->pcb);
+    list_remove(planificador->cola_exec,buscar_indice_pcb_por_pid(planificador->cola_exec,proceso_data->pcb->pid) );
     dictionary_put(planificador->cola_blocked,nombre_lista,proceso_data);
     sem_post(&sem_cpu_libre);
 }

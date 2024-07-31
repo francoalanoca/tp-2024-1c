@@ -157,7 +157,7 @@ t_list* lista_paquete;
                   actualizar_quantum(proceso_data_io_gen_sleep->pcb);
                } 
             }
-               
+               log_info(logger_kernel, "INTERFAZ: %s",interfaz_encontrada->nombre); 
             log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_gen_sleep->pcb->pid); // LOG OBLIGATORIO
                      
             bloquear_proceso(planificador,proceso_data_io_gen_sleep,interfaz_encontrada->nombre);

@@ -95,13 +95,13 @@ void procesar_conexion(void *void_args) {
                 //list_destroy_and_destroy_elements(lista_paquete_interfaz,free);
             break;
             case IO_K_GEN_SLEEP_FIN:
-                log_info(logger_kernel, "SLEEP GEN TERMINADA");
+                
                 t_list* lista_paquete_interfaz_pid_sleep = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_sleep = deserializar_interfaz_pid(lista_paquete_interfaz_pid_sleep);
 
                 list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_sleep,free);
-                liberar_memoria_t_interfaz_pid(interfaz_pid_sleep);
-               log_info(logger_kernel, "SLEEP GEN TERMINADA RESPUESTA PROCESADA");
+                free(interfaz_pid_sleep);
+               
             break;
             case IO_K_FS_CREATE_FIN:
                 printf("Received IO_K_FS_CREATE_FIN request\n");
