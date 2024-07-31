@@ -167,13 +167,13 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
 }
 
 void check_interrupt(int conexion_kernel){
-    log_info(logger_cpu,"ENTRO EN CHECK INTERRUPT\n");
+     printf("ENTRO EN CHECK INTERRUPT\n");
     //sem_wait(&sem_check_interrupcion_kernel);
   
     pthread_mutex_lock(&mutex_interrupcion_kernel);
     if(interrupcion_kernel){
         proceso_actual= NULL;   
-        log_info(logger_cpu,"ENTRO EN IF DEL  CHECK INTERRUPT\n");
+        printf("ENTRO EN IF DEL  CHECK INTERRUPT\n");
         generar_interrupcion_a_kernel(conexion_kernel); 
         interrupcion_kernel = false;
     }
@@ -183,7 +183,7 @@ void check_interrupt(int conexion_kernel){
 
 void pedir_instruccion(t_pcb* proceso,int conexion){
   
-    log_info(logger_cpu," la xonexion es %d",conexion);
+    
     t_paquete* paquete_pedido_instruccion;
     paquete_pedido_instruccion = crear_paquete(PROXIMA_INSTRUCCION); 
         

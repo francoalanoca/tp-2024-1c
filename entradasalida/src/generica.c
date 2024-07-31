@@ -32,13 +32,13 @@ void iniciar_interfaz_generica (int socket_kernel) {
 
             case HANDSHAKE_OK :
 
-                log_info(logger_entrada_salida, "Handshake recibido handshake exitosamente con Kernel");
+                printf("Handshake recibido handshake exitosamente con Kernel");
                 
                 break;                
             
             case IO_K_GEN_SLEEP :
                 
-                log_info(logger_entrada_salida, "IO_K_GEN_SLEEP recibida desde Kernel");
+                printf("IO_K_GEN_SLEEP recibida desde Kernel\n");
                 t_list* lista_paquete = recibir_paquete(socket_kernel);
                 t_io_espera* io_espera = deserializar_espera (lista_paquete);
                 esperar(io_espera->pid, io_espera->tiempo_espera);
@@ -46,7 +46,7 @@ void iniciar_interfaz_generica (int socket_kernel) {
                 response = IO_K_GEN_SLEEP_FIN;
 
                 enviar_respuesta_io (socket_kernel,response, io_espera->pid, cfg_entrada_salida->NOMBRE_INTERFAZ);
-                log_info(logger_entrada_salida, "IO_K_GEN_SLEEP RESPUESTA ENVIADAl");
+                printf("IO_K_GEN_SLEEP RESPUESTA ENVIADAl\n");
                 //list_destroy_and_destroy_elements(lista_paquete, free);
                 //free(io_espera);
                 break;
@@ -75,8 +75,7 @@ void iniciar_interfaz_generica (int socket_kernel) {
 void esperar(int32_t pid, int32_t unidades ){
 
     log_info(logger_entrada_salida, "PID: %d - Operacion: IO_GEN_SLEEP ",pid);
-    log_info(logger_entrada_salida, "Se solicitaron  %d unidades de trabajo",unidades);
     sleep (unidades * cfg_entrada_salida->TIEMPO_UNIDAD_TRABAJO / 1000);
-    log_info(logger_entrada_salida, "Se completaron  %d unidades de trabajo",unidades);
+    printf("Se completaron  %d unidades de trabajo\n",unidades);
 }
 

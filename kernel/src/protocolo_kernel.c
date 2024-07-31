@@ -123,7 +123,7 @@ t_list* lista_paquete;
       break;
    case SOLICITUD_IO_GEN_SLEEP:
       //Recibo PID, interfaz y unidades de trabajo de cpu, debo pedir a kernel que realice la instruccion IO_GEN_SLEEP (comprobar interfaz en diccionaro de interfaces antes)         
-      log_info(logger_kernel,"Recibo IO_GEN_SLEEP desde CPU");
+      
       lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_gen_sleep* io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
@@ -136,7 +136,7 @@ t_list* lista_paquete;
             enviar_interrupcion_a_cpu(io_gen_sleep->pid,INTERRUPCION_IO,conexion_cpu_interrupt);
             int valor_sem;
             sem_getvalue(&sem_io_fs_libre, &valor_sem);
-            log_info(logger_kernel, "Valor de sem intarface libre %d",valor_sem);
+            
             sem_wait(&sem_io_fs_libre);
 
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
