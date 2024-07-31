@@ -11,8 +11,10 @@
 
 bool generar_conexiones();
 void* crear_servidor_dispatch(char* ip_cpu);
-int server_escuchar(t_log *logger, char *server_name, int server_socket);
-void procesar_conexion(void *v_args);
+int server_escuchar_interrupt(t_log *logger, char *server_name, int server_socket, int *global_socket);
+int server_escuchar_dispatch(t_log *logger, char *server_name, int server_socket, int *global_socket);
+void procesar_conexion_interrupt(void *v_args);
+void procesar_conexion_dispatch(void *v_args);
 int hacer_handshake (int socket_cliente);
 t_pcb *proceso_deserializar(t_list*  lista_paquete_proceso ) ;
 void* crear_servidor_interrupt(char* ip_cpu);
@@ -22,7 +24,7 @@ uint32_t deserealizar_marco(t_list*  lista_paquete );
 char* deserealizar_valor_memoria(t_list*  lista_paquete );
 uint32_t deserealizar_tamanio_pag(t_list*  lista_paquete );
 t_rta_resize* deserealizar_rta_resize(t_list*  lista_paquete );
-void atender_memoria (int socket_memoria);
+void atender_memoria (int *socket);
 void armar_instr(instr_t *instr, const char *input);
 //void *conectarConMemoria();
 //void cortar_conexiones();

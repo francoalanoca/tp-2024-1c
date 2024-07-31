@@ -469,7 +469,7 @@ void enviar_crear_proceso_memoria(t_m_crear_proceso* proceso_nuevo, int socket);
 //Kernel le envía a memoria para solicitar el resize de un proceso 
 void enviar_resize_memoria(t_resize* proceso_resize, int socket);
 //IO envía respuestas a kernel.
-void enviar_respuesta_io ( int socket, op_code respuesta, uint32_t pid, char* nombre_intefaz);
+void enviar_respuesta_io ( int socket, op_code respuesta, uint32_t* pidi, char* nombre_intefaz);
 //Funciones para liberar memoria de IO
 void free_io_readwrite_archivo(t_io_readwrite_archivo* io_rw); 
 void free_io_gestion_archivo(t_io_gestion_archivo* io_gestion);
@@ -479,4 +479,5 @@ void free_io_memo_escritura(t_io_memo_escritura* io_memo_escritura) ;
 void free_t_interfaz(t_interfaz* interfaz);
 t_list* char_array_to_list(char** array);
 tipo_instruccion str_to_tipo_instruccion(const char *str);
+int buscar_indice_pcb_por_pid(t_list* lista, int pid) ;
 #endif /* UTILS_H_ */

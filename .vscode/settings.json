@@ -13,6 +13,15 @@
         "initializer_list": "c",
         "utility": "c",
         "protocolo.h": "c",
-        "protocolo_kernel.h": "c"
+        "protocolo_kernel.h": "c",
+        "*.tcc": "c",
+        "random": "c",
+        "functional": "c",
+        "limits": "c",
+        "ostream": "c",
+        "streambuf": "c",
+        "tuple": "c",
+        "system_error": "c",
+        "type_traits": "c"
     }
 }

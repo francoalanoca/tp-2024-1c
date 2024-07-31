@@ -94,13 +94,15 @@ t_pcb* obtener_proximo_proceso(t_planificador* planificador) {
 
 // Desaloja un proceso de la cola de ejecución y lo pone en la cola de listos
 void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
-    list_remove(planificador->cola_exec, proceso);
+    
+    list_remove(planificador->cola_exec, buscar_indice_pcb_por_pid(planificador->cola_exec,proceso->pid));
     list_add(planificador->cola_ready, proceso);
 }
 
 //Bloquea un proceso y lo mueve a la cola de bloqueados
 void bloquear_proceso(t_planificador* planificador, t_proceso_data* proceso_data, char* nombre_lista) {
-    list_remove(planificador->cola_exec, proceso_data->pcb);
+      
+    list_remove(planificador->cola_exec,buscar_indice_pcb_por_pid(planificador->cola_exec,proceso_data->pcb->pid) );
     dictionary_put(planificador->cola_blocked,nombre_lista,proceso_data);
     sem_post(&sem_cpu_libre);
 }
@@ -195,16 +197,15 @@ uint32_t encontrar_indice_proceso_data_pid(t_list * lista_procesos_data , t_pcb*
     return NULL;
 }
 
-void enviar_interrupcion_a_cpu(t_pcb* proceso,motivo_interrupcion motivo_interrupcion, int conexion){
+void enviar_interrupcion_a_cpu(int pid, motivo_interrupcion motivo_interrupcion, int conexion){
     // Enviar señal de interrupción a la CPU
         t_paquete* paquete = crear_paquete(INTERRUPCION_KERNEL);
 
-        agregar_a_paquete(paquete, &(proceso->pid), sizeof(uint32_t));
+        agregar_a_paquete(paquete, &pid, sizeof(uint32_t));
         agregar_a_paquete(paquete, &motivo_interrupcion, sizeof(uint32_t));
-
         enviar_paquete(paquete, conexion); 
-
-        free(paquete); 
+        eliminar_paquete(paquete); 
+        log_info(logger_kernel,"Envío interrupcion a CPU");
 
 }
 
@@ -243,9 +244,7 @@ void poner_en_cola_exit(t_pcb* proceso){
 
 void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
 
-   t_paquete* paquete_archivo_nuevo = malloc(sizeof(t_paquete));
-    
-    paquete_archivo_nuevo = crear_paquete(NUEVO_PROCESO);
+   t_paquete* paquete_archivo_nuevo = crear_paquete(NUEVO_PROCESO);
     
     agregar_a_paquete(paquete_archivo_nuevo, &(pcb->pid), sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, &(pcb->program_counter), sizeof(uint32_t));
@@ -292,13 +291,11 @@ void planificar_y_ejecutar(){
         }
        
         if (procesos_ready > 0  && !planificador->planificacion_detenida && cola_exec_vacia) {  
-            log_info(logger_kernel, "hay un proceso en ready"); //despues borrar
-            t_pcb* siguiente_proceso;// = malloc(sizeof(t_pcb));      
+           
+            t_pcb* siguiente_proceso;    
             if (planificador->algoritmo == FIFO) { 
-                siguiente_proceso = obtener_proximo_proceso(planificador);
-                log_info(logger_kernel, "Proximo pid a enviar: %d",siguiente_proceso->pid);
-                enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);
-                log_info(logger_kernel, "Proceso enviado pid: %d",siguiente_proceso->pid);            
+                siguiente_proceso = obtener_proximo_proceso(planificador);               
+                enviar_proceso_a_cpu(siguiente_proceso,conexion_cpu_dispatch);                          
                 list_add(planificador->cola_exec,siguiente_proceso);                             
                 log_info(logger_kernel, "PID: %d - Estado Anterior: READY - Estado Actual: EJECUTANDO",siguiente_proceso->pid); // LOG OBLIGATORIO
             }else {

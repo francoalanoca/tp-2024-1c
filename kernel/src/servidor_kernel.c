@@ -14,7 +14,7 @@ void* crearServidor(){
 
 int server_escuchar(t_log *logger, char *server_name, int server_socket) {
     int cliente_socket = esperar_cliente(logger, server_name, server_socket);
-
+    
     if (cliente_socket != -1) {
         pthread_t atenderNuevaConexion;
         t_procesar_conexion_args *args = malloc(sizeof(t_procesar_conexion_args));
@@ -78,6 +78,7 @@ void procesar_conexion(void *void_args) {
                 t_interfaz_diccionario* interfaz_nueva = malloc(sizeof(t_interfaz_diccionario));
                 interfaz_nueva->nombre = interfaz_recibida->nombre;
                 interfaz_nueva->tipo = interfaz_recibida->tipo;
+                log_info(logger_kernel, "Cliente socket entradasalida %d",cliente_socket); //despues borrar
                 interfaz_nueva->conexion = cliente_socket;
 			    
                 dictionary_put(interfaces,interfaz_recibida->nombre,interfaz_nueva);
@@ -92,6 +93,15 @@ void procesar_conexion(void *void_args) {
                 //liberar_memoria_t_interfaz(interfaz_recibida);
                 //liberar_memoria_t_interfaz_diccionario(interfaz_nueva);  
                 //list_destroy_and_destroy_elements(lista_paquete_interfaz,free);
+            break;
+            case IO_K_GEN_SLEEP_FIN:
+                
+                t_list* lista_paquete_interfaz_pid_sleep = recibir_paquete(cliente_socket);
+                t_interfaz_pid* interfaz_pid_sleep = deserializar_interfaz_pid(lista_paquete_interfaz_pid_sleep);
+
+                list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_sleep,free);
+                free(interfaz_pid_sleep);
+               
             break;
             case IO_K_FS_CREATE_FIN:
                 printf("Received IO_K_FS_CREATE_FIN request\n");

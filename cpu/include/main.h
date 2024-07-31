@@ -10,8 +10,17 @@
 #include "../include/servidorCpu.h"
 
 
+typedef struct {
+    int socket_memoria;
+    t_pcb *proceso_actual;
+    t_list *tlb;
+    int conexion_kernel_dispatch;
+    int conexion_kernel_interrupt;
+} ciclo_params_t;
 
-void ciclo_de_instrucciones(int conexion, t_log* logger, t_config* config, t_pcb* proceso, t_list* tlb);
+
+void ejecutar_ciclo() ;
+void ciclo_de_instrucciones(int *conexion, t_pcb* proceso, t_list* tlb, int *socket_dispatch, int *socket_interrupt);
 
 
 
