@@ -3,10 +3,11 @@
 int tamanioParams;
 int tamanioInterfaces;
 
-instr_t* fetch(int conexion, t_log* logger, t_config* config, t_pcb* proceso){
-    log_info(logger, "PID: %u- FETCH- Program Counter: %u", proceso->pid,proceso->program_counter); //LOG OBLIGATORIO
-    log_info(logger, "Voy a entrar a pedir_instruccion");
-    pedir_instruccion(proceso, conexion,logger); 
+instr_t* fetch(int conexion, t_pcb* proceso){
+    log_info(logger_cpu, "Voy a entrar a pedir_instruccion");
+    log_info(logger_cpu, "PID: %u- FETCH- Program Counter: %u", proceso->pid,proceso->program_counter); //LOG OBLIGATORIO
+    log_info(logger_cpu, "Voy a entrar a pedir_instruccion");
+    pedir_instruccion(proceso, conexion); 
     //TODO:WAIT semaforo
     sem_wait(&sem_valor_instruccion);
     return prox_inst;
@@ -19,146 +20,146 @@ tipo_instruccion decode(instr_t* instr){
 }
 
 
-void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conexion,t_list* tlb){
+void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conexion,t_list* tlb,  int socket_dispatch, int socket_interrupt){
     
     switch(tipo_inst){
         case SET:
-        {   log_info(logger, "ENTRO EN SET ");
-            log_info(logger, "PID: %u - Ejecutando: SET - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
+        {   log_info(logger_cpu, "ENTRO EN SET ");
+            log_info(logger_cpu, "PID: %u - Ejecutando: SET - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             char *endptr;
             uint32_t param2_num = (uint32_t)strtoul(inst->param2, &endptr, 10);// Convertir la cadena a uint32_t
-            set(inst->param1, param2_num, proceso, logger);
+            set(inst->param1, param2_num, proceso);
             break;
         }
         case SUM:
         {
-            log_info(logger, "PID: %u - Ejecutando: SUM - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
-            sum(inst->param1, inst->param2,proceso,logger);
+            log_info(logger_cpu, "PID: %u - Ejecutando: SUM - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
+            sum(inst->param1, inst->param2,proceso);
             break;
         }
         case SUB:
         {
-            log_info(logger, "PID: %u - Ejecutando: SUB - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
-            sub(inst->param1, inst->param2,proceso,logger);
+            log_info(logger_cpu, "PID: %u - Ejecutando: SUB - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
+            sub(inst->param1, inst->param2,proceso);
             break;
         }
         case JNZ:
         {
-            log_info(logger, "PID: %u - Ejecutando: JNZ - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
-            jnz(inst->param1, inst->param2,proceso,logger);
+            log_info(logger_cpu, "PID: %u - Ejecutando: JNZ - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
+            jnz(inst->param1, inst->param2,proceso);
             break;
         }
         case IO_GEN_SLEEP:
         {
-            log_info(logger, "PID: %u - Ejecutando: IO_GEN_SLEEP - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
+            log_info(logger_cpu, "PID: %u - Ejecutando: IO_GEN_SLEEP - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             char *endptr;
             uint32_t param2_num = (uint32_t)strtoul(inst->param2, &endptr, 10);// Convertir la cadena a uint32_t
             
-            io_gen_sleep(inst->param1, param2_num,proceso, conexion);
+            io_gen_sleep(inst->param1, param2_num,proceso,socket_dispatch);
             break;
         }
 
         case MOV_IN:
         {
-            log_info(logger, "PID: %u - Ejecutando: MOV_IN - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
-            mov_in(inst->param1, inst->param2,proceso,logger,conexion,tlb);
+            log_info(logger_cpu, "PID: %u - Ejecutando: MOV_IN - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
+            mov_in(inst->param1, inst->param2,proceso,logger_cpu,conexion,tlb);
             break;
         }
         
         case MOV_OUT:
         {
-            log_info(logger, "PID: %u - Ejecutando: MOV_OUT - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
-            mov_out(inst->param1, inst->param2,proceso,logger,conexion,tlb);
+            log_info(logger_cpu, "PID: %u - Ejecutando: MOV_OUT - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
+            mov_out(inst->param1, inst->param2,proceso,logger_cpu,conexion,tlb);
             break;
         }
 
         case RESIZE:
         {
-            log_info(logger, "PID: %u - Ejecutando: RESIZE - %s", proceso->pid,inst->param1); //LOG OBLIGATORIO
+            log_info(logger_cpu, "PID: %u - Ejecutando: RESIZE - %s", proceso->pid,inst->param1); //LOG OBLIGATORIO
             char *endptr;
             uint32_t param1_num = (uint32_t)strtoul(inst->param1, &endptr, 10);// Convertir la cadena a uint32_t
             
-            resize(param1_num, conexion);
+            resize(param1_num, conexion,socket_dispatch);
             break;
         }
 
         case COPY_STRING:
         {
-            log_info(logger, "PID: %u - Ejecutando: COPY_STRING - %s ", proceso->pid,inst->param1); //LOG OBLIGATORIO
+            log_info(logger_cpu, "PID: %u - Ejecutando: COPY_STRING - %s ", proceso->pid,inst->param1); //LOG OBLIGATORIO
             char *endptr;
             uint32_t param1_num = (uint32_t)strtoul(inst->param1, &endptr, 10);// Convertir la cadena a uint32_t
             
-            copy_string(param1_num,logger,conexion,tlb);
+            copy_string(param1_num,logger_cpu,conexion,tlb);
             break;
         }
 
         case WAIT:
         {
-            log_info(logger, "PID: %u - Ejecutando: WAIT - %s ", proceso->pid,inst->param1); //LOG OBLIGATORIO
-            wait_inst(inst->param1);
+            log_info(logger_cpu, "PID: %u - Ejecutando: WAIT - %s ", proceso->pid,inst->param1); //LOG OBLIGATORIO
+            wait_inst(inst->param1,socket_dispatch);
             break;
         }
 
         case SIGNAL:
         {
-            log_info(logger, "PID: %u - Ejecutando: SIGNAL - %s ", proceso->pid,inst->param1); //LOG OBLIGATORIO
-            signal_inst(inst->param1);
+            log_info(logger_cpu, "PID: %u - Ejecutando: SIGNAL - %s ", proceso->pid,inst->param1); //LOG OBLIGATORIO
+            signal_inst(inst->param1,socket_dispatch);
             break;
         }
 
         case IO_STDIN_READ:
         {
-            log_info(logger, "PID: %u - Ejecutando: IO_STDIN_READ - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
-            io_stdin_read(inst->param1,inst->param2,inst->param3,proceso,logger,conexion,tlb);
+            log_info(logger_cpu, "PID: %u - Ejecutando: IO_STDIN_READ - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
+            io_stdin_read(inst->param1,inst->param2,inst->param3,proceso,logger_cpu,conexion,tlb,socket_dispatch);
             break;
         }
 
         case IO_STDOUT_WRITE:
         {
-            log_info(logger, "PID: %u - Ejecutando: IO_STDOUT_WRITE - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
-            io_stdout_write(inst->param1,inst->param2,inst->param3,proceso,logger,conexion,tlb);
+            log_info(logger_cpu, "PID: %u - Ejecutando: IO_STDOUT_WRITE - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
+            io_stdout_write(inst->param1,inst->param2,inst->param3,proceso,logger_cpu,conexion,tlb,socket_dispatch);
             break;
         }
 
         case EXIT:
         {
-            log_info(logger, "PID: %u - Ejecutando: EXIT", proceso->pid); //LOG OBLIGATORIO
-            exit_inst();
+            log_info(logger_cpu, "PID: %u - Ejecutando: EXIT", proceso->pid); //LOG OBLIGATORIO
+            exit_inst(socket_dispatch);
             break;
         }
 
         case IO_FS_CREATE:
         {
-            log_info(logger, "PID: %u - Ejecutando: IO_FS_CREATE - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
-            io_fs_create(inst->param1,inst->param2,proceso,logger);
+            log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_CREATE - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
+            io_fs_create(inst->param1,inst->param2,proceso,logger_cpu,socket_dispatch);
             break;
         }
 
         case IO_FS_DELETE:
         {
-            log_info(logger, "PID: %u - Ejecutando: IO_FS_DELETE - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
-            io_fs_delete(inst->param1,inst->param2,proceso,logger);
+            log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_DELETE - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
+            io_fs_delete(inst->param1,inst->param2,proceso,logger_cpu,socket_dispatch);
             break;
         }
 
         case IO_FS_TRUNCATE:
         {
-            log_info(logger, "PID: %u - Ejecutando: IO_FS_TRUNCATE - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
-            io_fs_truncate(inst->param1,inst->param2,inst->param3,proceso,logger);
+            log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_TRUNCATE - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
+            io_fs_truncate(inst->param1,inst->param2,inst->param3,proceso,logger_cpu,socket_dispatch);
             break;
         }
 
         case IO_FS_WRITE:
         {
-            log_info(logger, "PID: %u - Ejecutando: IO_FS_WRITE - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
-            io_fs_write(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger,conexion,tlb);
+            log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_WRITE - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
+            io_fs_write(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger_cpu,conexion,tlb,socket_dispatch);
             break;
         }
 
         case IO_FS_READ:
         {
-            log_info(logger, "PID: %u - Ejecutando: IO_FS_READ - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
-            io_fs_read(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger,conexion,tlb);
+            log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_READ - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
+            io_fs_read(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger_cpu,conexion,tlb,socket_dispatch);
             break;
         }
         default:
@@ -167,16 +168,24 @@ void execute(t_log* logger, t_config* config, instr_t* inst,tipo_instruccion tip
 
 }
 
-void check_interrupt(){
-    printf("Entro checkinterrupt\n");
-    if(interrupcion_kernel){//en esta funcion no se usara dispatch sino interrupt
-         printf("Entro if checkinterrupt\n");
-        generar_interrupcion_a_kernel(conexion_kernel); //TODO:VER COMO MANDAR CONEXION A KERNEL
+void check_interrupt(int conexion_kernel){
+     printf("ENTRO EN CHECK INTERRUPT\n");
+    //sem_wait(&sem_check_interrupcion_kernel);
+  
+    pthread_mutex_lock(&mutex_interrupcion_kernel);
+    if(interrupcion_kernel){
+        proceso_actual= NULL;   
+        printf("ENTRO EN IF DEL  CHECK INTERRUPT\n");
+        generar_interrupcion_a_kernel(conexion_kernel); 
+        interrupcion_kernel = false;
     }
+    pthread_mutex_unlock(&mutex_interrupcion_kernel);
+    
 }
 
-void pedir_instruccion(t_pcb* proceso,int conexion, t_log* logger){
-    printf("entro a pedir_instruccion\n");
+void pedir_instruccion(t_pcb* proceso,int conexion){
+  
+    
     t_paquete* paquete_pedido_instruccion;
     paquete_pedido_instruccion = crear_paquete(PROXIMA_INSTRUCCION); 
         
@@ -184,15 +193,13 @@ void pedir_instruccion(t_pcb* proceso,int conexion, t_log* logger){
     agregar_a_paquete(paquete_pedido_instruccion,  &proceso->program_counter,  sizeof(uint32_t));  
         
     enviar_paquete(paquete_pedido_instruccion, conexion); 
-    free(paquete_pedido_instruccion->buffer->stream);
-    free(paquete_pedido_instruccion->buffer);
-    free(paquete_pedido_instruccion);
+    eliminar_paquete(paquete_pedido_instruccion);
 }
 
-void set(char* registro, uint32_t valor, t_pcb* proceso, t_log *logger){
+void set(char* registro, uint32_t valor, t_pcb* proceso){
     //printf("El valor del set es : %d ", valor);
     registros registro_elegido = identificarRegistro(registro);
-    pthread_mutex_lock(&mutex_proceso_actual);
+    //pthread_mutex_lock(&mutex_proceso_actual);
     switch(registro_elegido){
         case PC:
         {
@@ -250,20 +257,20 @@ void set(char* registro, uint32_t valor, t_pcb* proceso, t_log *logger){
             break;
         }
         default:
-        log_info(logger, "El registro no existe");
+        log_info(logger_cpu, "El registro no existe");
     }
-    pthread_mutex_unlock(&mutex_proceso_actual);
+   // pthread_mutex_unlock(&mutex_proceso_actual);
 
     //proceso->pcb->registros_cpu.AX;
    // registro = valor;
 }
 
-void sum(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *logger){
+void sum(char* registro_destino, char* registro_origen, t_pcb* proceso){
     registros id_registro_destino = identificarRegistro(registro_destino);
     registros id_registro_origen = identificarRegistro(registro_origen);
 
-    uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso,logger);
-    uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso,logger);
+    uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso);
+    uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso);
     pthread_mutex_lock(&mutex_proceso_actual);
     switch(id_registro_destino){
         case PC:
@@ -322,7 +329,7 @@ void sum(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *l
             break;
         }
         default:
-        log_info(logger, "El registro no existe");
+        log_info(logger_cpu, "El registro no existe");
     }
     pthread_mutex_unlock(&mutex_proceso_actual);
 
@@ -330,12 +337,12 @@ void sum(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *l
     //registro_destino = registro_destino + registro_origen;
 }
 
-void sub(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *logger){
+void sub(char* registro_destino, char* registro_origen, t_pcb* proceso){
     registros id_registro_destino = identificarRegistro(registro_destino);
     registros id_registro_origen = identificarRegistro(registro_origen);
 
-    uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso,logger);
-    uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso,logger);
+    uint32_t valor_reg_destino = obtenerValorActualRegistro(id_registro_destino,proceso);
+    uint32_t valor_reg_origen = obtenerValorActualRegistro(id_registro_origen,proceso);
     pthread_mutex_lock(&mutex_proceso_actual);
     switch(id_registro_destino){
         case PC:
@@ -394,15 +401,15 @@ void sub(char* registro_destino, char* registro_origen, t_pcb* proceso, t_log *l
             break;
         }
         default:
-        log_info(logger, "El registro no existe");
+        log_info(logger_cpu, "El registro no existe");
     }
     pthread_mutex_unlock(&mutex_proceso_actual);
     //registro_destino = registro_destino - registro_origen;
 }
 
-void jnz(char* registro, uint32_t inst, t_pcb* proceso, t_log* logger){
+void jnz(char* registro, uint32_t inst, t_pcb* proceso){
     registros id_registro = identificarRegistro(registro);
-    uint32_t valor_registro = obtenerValorActualRegistro(id_registro,proceso, logger);
+    uint32_t valor_registro = obtenerValorActualRegistro(id_registro,proceso);
     if(valor_registro != 0){
         pthread_mutex_lock(&mutex_proceso_actual);
         proceso->program_counter = inst;
@@ -411,14 +418,12 @@ void jnz(char* registro, uint32_t inst, t_pcb* proceso, t_log* logger){
 }
 //void io_gen_sleep(Interfaz interfaz, int unidades_de_trabajo){ //TODO: VER PARAMETROS
 void io_gen_sleep(char* nombre_interfaz, uint32_t unidades_de_trabajo, t_pcb* proceso , int conexion){
-    printf("Entra a io_gen_sleep");
-    uint32_t tamanio_nombre_interfaz = malloc(sizeof(uint32_t));
-    tamanio_nombre_interfaz = string_length(nombre_interfaz) * sizeof(char);
+    printf("Entra a io_gen_sleep");    
+    uint32_t tamanio_nombre_interfaz = string_length(nombre_interfaz) * sizeof(char);
     if(nombre_interfaz != NULL){
-enviar_interfaz_a_kernel(nombre_interfaz,tamanio_nombre_interfaz, unidades_de_trabajo,conexion_kernel);//VER IMPLEMENTACION
+    enviar_interfaz_a_kernel(nombre_interfaz,tamanio_nombre_interfaz, unidades_de_trabajo,conexion);//VER IMPLEMENTACION
     }
-    
-    
+        
 }
 
 
@@ -426,7 +431,7 @@ enviar_interfaz_a_kernel(nombre_interfaz,tamanio_nombre_interfaz, unidades_de_tr
 
 
 void generar_interrupcion_a_kernel(int conexion){
-    printf("entro a generar_interrupcion_a_kernel\n");
+    log_info(logger_cpu,"entro a generar_interrupcion_a_kernel\n");
     t_paquete* paquete_interrupcion_kernel;
     
  
@@ -453,10 +458,8 @@ void generar_interrupcion_a_kernel(int conexion){
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->motivo_interrupcion, sizeof(uint32_t));
 
     enviar_paquete(paquete_interrupcion_kernel, conexion);   
-    free(paquete_interrupcion_kernel->buffer->stream);
-    free(paquete_interrupcion_kernel->buffer);
-    free(paquete_interrupcion_kernel);
-    
+    eliminar_paquete(paquete_interrupcion_kernel);
+    log_info(logger_cpu,"Interrupcion kernel enviada a %d", conexion);
 }
 
 /*t_proceso_memoria* crear_proceso_memoria(t_proceso* proceso){
@@ -529,7 +532,7 @@ registros identificarRegistro(char* registro){
     }
 }
 
-uint32_t obtenerValorActualRegistro(registros id_registro, t_pcb* proceso, t_log* logger){
+uint32_t obtenerValorActualRegistro(registros id_registro, t_pcb* proceso){
     switch(id_registro){
         case PC:
         {
@@ -587,7 +590,7 @@ uint32_t obtenerValorActualRegistro(registros id_registro, t_pcb* proceso, t_log
             break;
         }
         default:
-        log_info(logger, "El registro no existe");
+        log_info(logger_cpu, "El registro no existe");
     }
 }
 
@@ -664,7 +667,7 @@ uint32_t obtenerTamanioRegistro(registros id_registro){
 }*/
 
 void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, uint32_t unidades_de_trabajo, int conexion){
-    printf("entro a enviar_interfaz_a_kernel\n");
+    printf("entro a enviar_interfaz_a_kernel %s\n", nombre_interfaz);
     t_paquete* paquete_interfaz_kernel;
    
     paquete_interfaz_kernel = crear_paquete(SOLICITUD_IO_GEN_SLEEP); 
@@ -823,7 +826,7 @@ void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_lo
     registros id_registro_direccion = identificarRegistro(registro_direccion);
     
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
-    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
+    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso);
 
     uint32_t dir_fisica_result = malloc(sizeof(uint32_t));
     dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
@@ -847,11 +850,11 @@ void mov_in(char* registro_datos, char* registro_direccion, t_pcb* proceso, t_lo
     uint8_t valor_dir_fisica_uint8t;
     if(tamanio_a_leer == sizeof(uint32_t)){
          valor_dir_fisica_uint32 = (uint32_t)strtoul(valor_registro_obtenido, &endptr, 10);// Convertir la cadena a uint32_t
-        set(registro_datos,valor_dir_fisica_uint32,proceso,logger);
+        set(registro_datos,valor_dir_fisica_uint32,proceso);
     }
     else{
          valor_dir_fisica_uint8t = (uint8_t)strtoul(valor_registro_obtenido, &endptr, 10);// Convertir la cadena a uint8_t
-        set(registro_datos,valor_dir_fisica_uint8t,proceso,logger);
+        set(registro_datos,valor_dir_fisica_uint8t,proceso);
     }
     
     
@@ -864,10 +867,10 @@ void mov_out(char* registro_direccion, char* registro_datos, t_pcb* proceso, t_l
     printf("registro: %s\n",registro_datos);
     registros id_registro_datos = identificarRegistro(registro_datos);
     printf("registro: %d\n",id_registro_datos);
-    uint32_t valor_registro_datos = obtenerValorActualRegistro(id_registro_datos,proceso, logger);
+    uint32_t valor_registro_datos = obtenerValorActualRegistro(id_registro_datos,proceso);
     printf("manda %d a guardar en mem\n",valor_registro_datos);
     registros id_registro_direccion = identificarRegistro(registro_direccion);
-    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
+    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso);
 
     uint32_t dir_fisica_result = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
     //TODO: Si el tamanio de valor_registro_datos(es un int de 32 siempre?) es mayor a tamanio_pagina hay
@@ -885,7 +888,7 @@ void mov_out(char* registro_direccion, char* registro_datos, t_pcb* proceso, t_l
 
 }
 
-void resize(uint32_t tamanio, int conexion){
+void resize(uint32_t tamanio, int conexion, int conexion_kernel){
     //Solicitará a la Memoria ajustar el tamaño del proceso al tamaño pasado
     //por parámetro. En caso de que la respuesta de la memoria sea Out of Memory, se deberá
     //devolver el contexto de ejecución al Kernel informando de esta situación.
@@ -904,7 +907,7 @@ void resize(uint32_t tamanio, int conexion){
         log_info(logger_cpu,"cargo motivo de interrupcion" );
         pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
         log_info(logger_cpu,"voy a enviar el interrumpido" );
-        envia_error_de_memoria_a_kernel(proceso_interrumpido_actual);
+        envia_error_de_memoria_a_kernel(proceso_interrumpido_actual, conexion_kernel);
         pthread_mutex_lock(&mutex_proceso_actual);
         proceso_actual = NULL;
         pthread_mutex_unlock(&mutex_proceso_actual);
@@ -941,20 +944,20 @@ void copy_string(uint32_t tamanio, t_log* logger, int conexion, t_list* tlb){
     guardar_string_en_memoria(valor_a_enviar,tamanio,dir_fisica_DI,proceso_actual->pid,conexion);
 }
 
-void wait_inst(char* recurso){
+void wait_inst(char* recurso, int conexion_kernel){
     // Esta instrucción solicita al Kernel que se asigne una instancia del recurso
     //indicado por parámetro.
 
-    solicitar_wait_kernel(proceso_actual,(strlen(recurso) + 1) * sizeof(char),recurso); 
+    solicitar_wait_kernel(proceso_actual,(strlen(recurso) + 1) * sizeof(char),recurso, conexion_kernel); 
 }
 
-void signal_inst(char* recurso){
+void signal_inst(char* recurso, int conexion_kernel){
     //Esta instrucción solicita al Kernel que se libere una instancia del recurso
     //indicado por parámetro
-    solicitar_signal_kernel(proceso_actual,(strlen(recurso) + 1) * sizeof(char) ,recurso);
+    solicitar_signal_kernel(proceso_actual,(strlen(recurso) + 1) * sizeof(char) ,recurso, conexion_kernel);
 }
 
-void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio, t_pcb* proceso, t_log* logger, int conexion,t_list* tlb){
+void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tamanio, t_pcb* proceso, t_log* logger, int conexion,t_list* tlb, int conexion_kernel){
     //Esta instrucción solicita al Kernel que mediante la interfaz ingresada 
     //se lea desde el STDIN (Teclado) un valor cuyo tamaño está delimitado 
     //por el valor del Registro Tamaño y el mismo se guarde a partir de la
@@ -963,18 +966,18 @@ void io_stdin_read(char* interfaz, char* registro_direccion, char* registro_tama
     //obtener valores de los parametros, luego guardalos en una struct nueva, serializar y mandar
     registros id_registro_direccion = identificarRegistro(registro_direccion);
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
-    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
+    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso);
     //TRADUCIR DIR LOGICA A FISICA?
     uint32_t dir_fisica = malloc(sizeof(uint32_t));
     dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
 
     registros id_registro_tamanio = identificarRegistro(registro_tamanio);
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
-    uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
-    solicitar_io_stdin_read_a_kernel((strlen(interfaz) + 1) * sizeof(char) ,interfaz,dir_fisica,valor_registro_tamanio);
+    uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso);
+    solicitar_io_stdin_read_a_kernel((strlen(interfaz) + 1) * sizeof(char) ,interfaz,dir_fisica,valor_registro_tamanio, conexion_kernel);
 }
 
-void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb){
+void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_tamanio, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb, int conexion_kernel){
     //Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se lea 
     //desde la posición de memoria indicada por la Dirección Lógica almacenada
     // en el Registro Dirección, un tamaño indicadopor el Registro Tamaño y se imprima por pantalla.
@@ -982,18 +985,18 @@ void io_stdout_write(char* interfaz, char* registro_direccion, char* registro_ta
     //obtener valores de los parametros, luego guardalos en una struct nueva, serializar y mandar
     registros id_registro_direccion = identificarRegistro(registro_direccion);
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
-    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
+    uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso);
     //TRADUCIR DIR LOGICA A FISICA?
     uint32_t dir_fisica = malloc(sizeof(uint32_t));
     dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
 
     registros id_registro_tamanio = identificarRegistro(registro_tamanio);
     //uint32_t valor_registro_direccion = malloc(sizeof(uint32_t));
-    uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
-    solicitar_io_stdout_write_a_kernel((strlen(interfaz) + 1) * sizeof(char),interfaz,dir_fisica,valor_registro_tamanio);
+    uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso);
+    solicitar_io_stdout_write_a_kernel((strlen(interfaz) + 1) * sizeof(char),interfaz,dir_fisica,valor_registro_tamanio, conexion_kernel);
 }
 
-void exit_inst(){
+void exit_inst( int conexion_kernel){
     // Esta instrucción representa la syscall de finalización del proceso. Se deberá devolver el
     //Contexto de Ejecución actualizado al Kernel para su finalización.
     log_info(logger_cpu, "Entro a exit_inst pid :%d", proceso_actual->pid); 
@@ -1021,7 +1024,7 @@ void exit_inst(){
     log_info(logger_cpu, "Pid asignado en proceo de interrupcion path :%s", proceso_interrumpido_actual->pcb->path );
     proceso_interrumpido_actual->motivo_interrupcion = INSTRUCCION_EXIT;
     pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
-    solicitar_exit_a_kernel(proceso_interrumpido_actual);
+    solicitar_exit_a_kernel(proceso_interrumpido_actual, conexion_kernel);
    //solicitar_exit_a_kernel(proceso_interrumpido_a_enviar);
     pthread_mutex_lock(&mutex_proceso_actual);
     proceso_actual = NULL;
@@ -1086,7 +1089,7 @@ void solicitar_resize_a_memoria(uint32_t* pid, uint32_t tamanio, int conexion){
 }
 
 
-void envia_error_de_memoria_a_kernel(t_proceso_interrumpido* proceso){
+void envia_error_de_memoria_a_kernel(t_proceso_interrumpido* proceso, int conexion_kernel){
         printf("entro a envia_error_de_memoria_a_kernel\n");
         t_paquete* paquete_error_memoria;
    
@@ -1138,7 +1141,7 @@ void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint3
 }
 
 
-void solicitar_wait_kernel(t_pcb* pcb,uint32_t recurso_tamanio ,char* recurso){
+void solicitar_wait_kernel(t_pcb* pcb,uint32_t recurso_tamanio ,char* recurso, int conexion_kernel){
         printf("entro a solicitar_wait_kernel\n");
         
         t_paquete* paquete_wait_kernel;
@@ -1173,7 +1176,7 @@ void solicitar_wait_kernel(t_pcb* pcb,uint32_t recurso_tamanio ,char* recurso){
 
 }
 
-void solicitar_signal_kernel(t_pcb* pcb,uint32_t recurso_tamanio,char* recurso){
+void solicitar_signal_kernel(t_pcb* pcb,uint32_t recurso_tamanio,char* recurso, int conexion_kernel){
         printf("entro a solicitar_wait_kernel\n");
         t_paquete* paquete_signal_kernel;
    
@@ -1206,7 +1209,7 @@ void solicitar_signal_kernel(t_pcb* pcb,uint32_t recurso_tamanio,char* recurso){
         free(paquete_signal_kernel);
 }
 
-void solicitar_io_stdin_read_a_kernel(uint32_t tamanio_nombre_interfaz,char* nombre_interfaz, uint32_t direccion, uint32_t tamanio){
+void solicitar_io_stdin_read_a_kernel(uint32_t tamanio_nombre_interfaz,char* nombre_interfaz, uint32_t direccion, uint32_t tamanio, int conexion_kernel){
       printf("entro a solicitar_io_stdin_read_a_kernel\n");
     
     t_paquete* paquete_io_stdin_read;
@@ -1228,7 +1231,7 @@ void solicitar_io_stdin_read_a_kernel(uint32_t tamanio_nombre_interfaz,char* nom
 }
 
 
-void solicitar_io_stdout_write_a_kernel(uint32_t tamanio_nombre_interfaz, char* nombre_interfaz, uint32_t direccion, uint32_t tamanio){
+void solicitar_io_stdout_write_a_kernel(uint32_t tamanio_nombre_interfaz, char* nombre_interfaz, uint32_t direccion, uint32_t tamanio,  int conexion_kernel){
           printf("entro a solicitar_io_stdout_write_a_kernel\n");
     
         t_paquete* paquete_io_stdout_write;
@@ -1259,7 +1262,7 @@ void imprimir_contenido_paquete(t_paquete* paquete) {
     }
     printf("\n");
 }
-void solicitar_exit_a_kernel(t_proceso_interrumpido* proceso){
+void solicitar_exit_a_kernel(t_proceso_interrumpido* proceso, int conexion_kernel){
         printf("entro a solicitar_exit_a_kernel\n");
         t_paquete* paquete_exit_kernel = crear_paquete(INTERRUPCION_CPU); 
         printf("CREO EL PAQUETE\n");
@@ -1350,33 +1353,33 @@ void obtenerTamanioPagina(int conexion){
 
 }
 
-void io_fs_create(char* interfaz, char* nombre_archivo, t_pcb* proceso, t_log* logger){
+void io_fs_create(char* interfaz, char* nombre_archivo, t_pcb* proceso, t_log* logger, int conexion_kernel){
     //Esta instrucción solicita al Kernel que mediante la
     //interfaz seleccionada, se cree un archivo en el FS montado en dicha interfaz
     
     //t_interfaz* interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
 
-    enviar_io_fs_create_a_kernel((strlen(interfaz) + 1) * sizeof(char),interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,proceso->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_CREATE_A_KERNEL
+    enviar_io_fs_create_a_kernel((strlen(interfaz) + 1) * sizeof(char),interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,proceso->pid, conexion_kernel);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_CREATE_A_KERNEL
    
     //free(interfaz_elegida->nombre);
     //free(interfaz_elegida);
     printf("Sale de io_fs_create");
 }
 
-void io_fs_delete(char* interfaz, char* nombre_archivo, t_pcb* proceso, t_log* logger){
+void io_fs_delete(char* interfaz, char* nombre_archivo, t_pcb* proceso, t_log* logger, int conexion_kernel){
     //Esta instrucción solicita al Kernel que mediante la
     //interfaz seleccionada, se elimine un archivo en el FS montado en dicha interfaz
 
     //t_interfaz* interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
 
-    enviar_io_fs_delete_a_kernel((strlen(interfaz) + 1) * sizeof(char) ,interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,proceso->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_DELETE_A_KERNEL
+    enviar_io_fs_delete_a_kernel((strlen(interfaz) + 1) * sizeof(char) ,interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,proceso->pid,  conexion_kernel);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_DELETE_A_KERNEL
    
     //free(interfaz_elegida->nombre);
     //free(interfaz_elegida);
     printf("Sale de io_fs_delete");
 }
 
-void io_fs_truncate(char* interfaz, char* nombre_archivo, char* registro_tamanio, t_pcb* proceso, t_log* logger){
+void io_fs_truncate(char* interfaz, char* nombre_archivo, char* registro_tamanio, t_pcb* proceso, t_log* logger, int conexion_kernel){
     //Esta instrucción solicita al
     //Kernel que mediante la interfaz seleccionada, se modifique el tamaño del archivo en el FS
     //montado en dicha interfaz, actualizando al valor que se encuentra en el registro indicado por
@@ -1385,14 +1388,14 @@ void io_fs_truncate(char* interfaz, char* nombre_archivo, char* registro_tamanio
    // t_interfaz* interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
 
         registros id_registro_tamanio = identificarRegistro(registro_tamanio);
-        uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
-        enviar_io_fs_truncate_a_kernel((strlen(interfaz) + 1) * sizeof(char),interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,proceso->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_TRUNCATE_A_KERNEL
+        uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso);
+        enviar_io_fs_truncate_a_kernel((strlen(interfaz) + 1) * sizeof(char),interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,proceso->pid, conexion_kernel);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_TRUNCATE_A_KERNEL
   
     //free(interfaz_elegida->nombre);
     //free(interfaz_elegida);
 }
 
-void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb){
+void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb, int conexion_kernel){
     //Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se
     //lea desde Memoria la cantidad de bytes indicadas por el Registro Tamaño a partir de la
     //dirección lógica que se encuentra en el Registro Dirección y se escriban en el archivo a partir
@@ -1401,22 +1404,22 @@ void io_fs_write(char* interfaz, char* nombre_archivo, char* registro_direccion,
     //t_interfaz* interfaz_elegida = elegir_interfaz(interfaz, proceso); //Esta funcion recorre la lista de interfaces del proceso y se fija cual coincide con la que pasa por parametro(compara nombres y si encuentra devuelve la interfaz)
 
         registros id_registro_direccion = identificarRegistro(registro_direccion);
-        uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
+        uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso);
         uint32_t dir_fisica = malloc(sizeof(uint32_t));
         dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
         //OBTENER VALOR DE LA DIR FISICA OBTENIDA? O PASO DIRECTAMENTE LA DIR FISICA?
         registros id_registro_tamanio = identificarRegistro(registro_tamanio);
-        uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
+        uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso);
         registros id_registro_puntero_archivo = identificarRegistro(registro_puntero_archivo);
-        uint32_t valor_registro_puntero_archivo = obtenerValorActualRegistro(id_registro_puntero_archivo,proceso, logger);
+        uint32_t valor_registro_puntero_archivo = obtenerValorActualRegistro(id_registro_puntero_archivo,proceso);
 
-        enviar_io_fs_write_a_kernel((strlen(interfaz) + 1) * sizeof(char) ,interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,dir_fisica,valor_registro_puntero_archivo, proceso->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_WRITE_A_KERNEL
+        enviar_io_fs_write_a_kernel((strlen(interfaz) + 1) * sizeof(char) ,interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,dir_fisica,valor_registro_puntero_archivo, proceso->pid, conexion_kernel);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_WRITE_A_KERNEL
    
     //free(interfaz_elegida->nombre);
     //free(interfaz_elegida);
 }
 
-void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb){
+void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, char* registro_tamanio, char* registro_puntero_archivo, t_pcb* proceso, t_log* logger, int conexion, t_list* tlb, int conexion_kernel){
     //Esta instrucción solicita al Kernel que mediante la interfaz seleccionada, se
     //lea desde el archivo a partir del valor del Registro Puntero Archivo la cantidad de bytes
     //indicada por Registro Tamaño y se escriban en la Memoria a partir de la dirección lógica
@@ -1424,22 +1427,22 @@ void io_fs_read(char* interfaz, char* nombre_archivo, char* registro_direccion, 
 
   
         registros id_registro_direccion = identificarRegistro(registro_direccion);
-        uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso, logger);
+        uint32_t valor_registro_direccion = obtenerValorActualRegistro(id_registro_direccion,proceso);
         uint32_t dir_fisica = malloc(sizeof(uint32_t));
         dir_fisica = mmu(valor_registro_direccion,tamanio_pagina,conexion,logger,tlb);
         //OBTENER VALOR DE LA DIR FISICA OBTENIDA? O PASO DIRECTAMENTE LA DIR FISICA?
         registros id_registro_tamanio = identificarRegistro(registro_tamanio);
-        uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso, logger);
+        uint32_t valor_registro_tamanio = obtenerValorActualRegistro(id_registro_tamanio,proceso);
         registros id_registro_puntero_archivo = identificarRegistro(registro_puntero_archivo);
-        uint32_t valor_registro_puntero_archivo = obtenerValorActualRegistro(id_registro_puntero_archivo,proceso, logger);
+        uint32_t valor_registro_puntero_archivo = obtenerValorActualRegistro(id_registro_puntero_archivo,proceso);
 
-        enviar_io_fs_read_a_kernel((strlen(interfaz) + 1) * sizeof(char),interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,dir_fisica,valor_registro_puntero_archivo, proceso->pid);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_READ_A_KERNEL
+        enviar_io_fs_read_a_kernel((strlen(interfaz) + 1) * sizeof(char),interfaz,(strlen(nombre_archivo) + 1) * sizeof(char) ,nombre_archivo,valor_registro_tamanio,dir_fisica,valor_registro_puntero_archivo, proceso->pid, conexion_kernel);//VER IMPLEMENTACION, op:SOLICITUD_IO_FS_READ_A_KERNEL
 
     //free(interfaz_elegida->nombre);
     //free(interfaz_elegida);
 }
 
-void enviar_io_fs_create_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t pid){
+void enviar_io_fs_create_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t pid, int conexion_kernel){
     printf("entro a enviar_io_fs_create_a_kernel\n");
     t_paquete* paquete_io_fs_create;
         
@@ -1458,7 +1461,7 @@ void enviar_io_fs_create_a_kernel(uint32_t tamanio_interfaz_elegida,char* interf
         free(paquete_io_fs_create);
 }
 
-void enviar_io_fs_delete_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t pid){
+void enviar_io_fs_delete_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t pid, int conexion_kernel){
     printf("entro a enviar_io_fs_delete_a_kernel\n");
     t_paquete* paquete_io_fs_delete;
         
@@ -1477,7 +1480,7 @@ void enviar_io_fs_delete_a_kernel(uint32_t tamanio_interfaz_elegida,char* interf
         free(paquete_io_fs_delete);
 }
 
-void enviar_io_fs_truncate_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t tamanio,uint32_t pid){
+void enviar_io_fs_truncate_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t tamanio,uint32_t pid, int conexion_kernel){
     printf("entro a enviar_io_fs_truncate_a_kernel\n");
     t_paquete* paquete_io_fs_truncate;
         
@@ -1497,7 +1500,7 @@ void enviar_io_fs_truncate_a_kernel(uint32_t tamanio_interfaz_elegida,char* inte
         free(paquete_io_fs_truncate);
 }
 
-void enviar_io_fs_write_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t valor_tamanio,uint32_t direccion_fisica,uint32_t puntero_archivo,uint32_t pid){
+void enviar_io_fs_write_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t valor_tamanio,uint32_t direccion_fisica,uint32_t puntero_archivo,uint32_t pid, int conexion_kernel){
     printf("entro a enviar_io_fs_write_a_kernel\n");
     t_paquete* paquete_io_fs_write;
         
@@ -1520,7 +1523,7 @@ void enviar_io_fs_write_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfa
    
 }
 
-void enviar_io_fs_read_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t valor_tamanio,uint32_t direccion_fisica,uint32_t puntero_archivo,uint32_t pid){
+void enviar_io_fs_read_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t valor_tamanio,uint32_t direccion_fisica,uint32_t puntero_archivo,uint32_t pid , int conexion_kernel){
     printf("entro a enviar_io_fs_read_a_kernel\n");
     
    t_paquete* paquete_io_fs_read;
@@ -1537,8 +1540,46 @@ void enviar_io_fs_read_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz
         agregar_a_paquete(paquete_io_fs_read,  &valor_tamanio,  sizeof(uint32_t));
         agregar_a_paquete(paquete_io_fs_read,  &puntero_archivo,  sizeof(uint32_t));
         
-        enviar_paquete(paquete_io_fs_read, conexion_kernel); 
-        free(paquete_io_fs_read->buffer->stream);
-        free(paquete_io_fs_read->buffer);
-        free(paquete_io_fs_read);
+        enviar_paquete(paquete_io_fs_read, conexion_kernel);       
+        eliminar_paquete(paquete_io_fs_read);
+}
+
+ 
+
+void ciclo_de_instrucciones(int *conexion_mer, t_pcb *proceso, t_list *tlb, int *socket_dispatch, int *socket_interrupt)
+{   log_info(logger_cpu, "Entro al ciclo");
+    int conexion_mem = *conexion_mer;
+    int dispatch = *socket_dispatch;
+    int interrupt = *socket_interrupt;
+    //free(conexion_mer);
+    //free(socket_dispatch);
+    //free(socket_interrupt);
+    
+    log_info(logger_cpu, "Entro al ciclo");
+    log_info(logger_cpu, "TLB size ciclo: %d\n", list_size(tlb));
+    instr_t *inst = malloc(sizeof(instr_t));
+    log_info(logger_cpu, "Voy a entrar a fetch");
+    inst = fetch(conexion_mem,proceso);
+    tipo_instruccion tipo_inst;
+    log_info(logger_cpu, "Voy a entrar a decode");
+    tipo_inst = decode(inst);
+    log_info(logger_cpu, "Voy a entrar a execute");
+    execute(inst, tipo_inst, proceso, conexion_mem, tlb, dispatch, interrupt);
+    if (tipo_inst != EXIT)
+    {
+        proceso_actual->program_counter += 1;
+    }
+    log_info(logger_cpu, "Voy a entrar a check_interrupt");
+    check_interrupt(dispatch);
+    log_info(logger_cpu, "Sale de check_interrupt");
+    log_info(logger_cpu, "Termino ciclo de instrucciones");
+
+    // interrupcion_kernel = false;
+
+    free(inst->param1);
+    free(inst->param2);
+    free(inst->param3);
+    free(inst->param4);
+    free(inst->param5);
+    free(inst);
 }

@@ -31,9 +31,9 @@ int main(char argc, char *argv[]) {
 
     sem_init(&sem_confirmacion_memoria,0,0);
     sem_init(&sem_interrupcion_atendida,0,0);
-    sem_init(&sem_io_fs_libre,1,1);
-    sem_init(&sem_cpu_libre,1,1);
-    sem_init(&sem_prioridad_io,1,1);
+    sem_init(&sem_io_fs_libre,0,1);
+    sem_init(&sem_cpu_libre,0,1);
+    sem_init(&sem_prioridad_io,0,1);
     sem_init(&sem_rta_crear_proceso,0,0);
     
     sem_init(&sem_crearServidor, 0, 0);

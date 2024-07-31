@@ -18,14 +18,17 @@ void Escuchar_Msj_De_Conexiones(){
    conexion_cpu_dispatch = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);    
    log_info(logger_kernel, "Socket de CP DISPATCH : %d\n",conexion_cpu_dispatch);  
    pthread_t hilo_cpu_dispatch;
-   pthread_create(&hilo_cpu_dispatch, NULL, (void*)Kernel_escuchar_cpu_dispatch, &conexion_cpu_dispatch);
+   t_kernel_escuchar_cpu* params = malloc(sizeof(t_kernel_escuchar_cpu));
+   params->conexion_cpu_dispatch = &conexion_cpu_dispatch;
+   params->conexion_cpu_interrupt = &conexion_cpu_interrupt;
+   pthread_create(&hilo_cpu_dispatch, NULL, (void*)Kernel_escuchar_cpu_dispatch,  (void*) params);
   
 
 //Escuchar los msj de cpu - interrupt
    conexion_cpu_interrupt = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_INTERRUPT);    
    log_info(logger_kernel, "Socket de CPU INTERRUP : %d\n",conexion_cpu_interrupt);
-   pthread_t hilo_cpu_interrupt;
-   pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt, &conexion_cpu_interrupt);
+ pthread_t hilo_cpu_interrupt;
+   pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt,&conexion_cpu_interrupt);
    sem_post(&sem_EscucharMsj);
    pthread_detach(hilo_cpu_dispatch);
    pthread_detach(hilo_kernel_memoria);
@@ -34,8 +37,10 @@ void Escuchar_Msj_De_Conexiones(){
 }
 
 
-void Kernel_escuchar_cpu_dispatch(int* conexion){
-int socket_dispatch = *conexion;
+void Kernel_escuchar_cpu_dispatch(void* args){
+    t_kernel_escuchar_cpu* params = (t_kernel_escuchar_cpu*) args;
+    int socket_dispatch = *(params->conexion_cpu_dispatch);
+    int socket_interrupt = *(params->conexion_cpu_interrupt);
 
 bool control_key = 1;
 t_list* lista_paquete;
@@ -107,7 +112,7 @@ t_list* lista_paquete;
          proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
          list_add_in_index(planificador->cola_exec,0,proceso_interrumpido->pcb);
 
-         sem_post(&sem_interrupcion_atendida);
+         sem_post(&sem_interrupcion_atendida); // solo para actualizaar el contexto
       default:
       printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
       mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
@@ -118,18 +123,20 @@ t_list* lista_paquete;
       break;
    case SOLICITUD_IO_GEN_SLEEP:
       //Recibo PID, interfaz y unidades de trabajo de cpu, debo pedir a kernel que realice la instruccion IO_GEN_SLEEP (comprobar interfaz en diccionaro de interfaces antes)         
-      log_info(logger_kernel,"Recibo IO_GEN_SLEEP desde CPU");
+      
       lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_gen_sleep* io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
 
       //Verifico que la interfaz exista y este conectada
       if(dictionary_has_key(interfaces,io_gen_sleep->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
-            interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->nombre_interfaz);
+         t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_GEN_SLEEP)){
             
-            enviar_interrupcion_a_cpu(buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid),INTERRUPCION_IO,conexion_cpu_interrupt);
+            enviar_interrupcion_a_cpu(io_gen_sleep->pid,INTERRUPCION_IO,conexion_cpu_interrupt);
+            int valor_sem;
+            sem_getvalue(&sem_io_fs_libre, &valor_sem);
+            
             sem_wait(&sem_io_fs_libre);
 
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
@@ -143,25 +150,29 @@ t_list* lista_paquete;
             proceso_data_io_gen_sleep->data = io_espera_a_bloquear;
             
             
-            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
-
-            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
-            
-               actualizar_quantum(proceso_data_io_gen_sleep->pcb);
-            } 
-            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_gen_sleep->pcb->pid);
+            //sem_wait(&sem_interrupcion_atendida);// se traba el hilo a si mismo
+            if(cronometro != NULL){
+               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+               
+                  actualizar_quantum(proceso_data_io_gen_sleep->pcb);
+               } 
+            }
+               log_info(logger_kernel, "INTERFAZ: %s",interfaz_encontrada->nombre); 
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_gen_sleep->pcb->pid); // LOG OBLIGATORIO
                      
             bloquear_proceso(planificador,proceso_data_io_gen_sleep,interfaz_encontrada->nombre);
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+             sem_wait(&sem_cpu_libre);
             t_proceso_data* a_enviar_a_io_gen_sleep = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
             pthread_mutex_lock(&mutex_envio_io);
-            enviar_espera(a_enviar_a_io_gen_sleep->data,socket_servidor);
+            log_info(logger_kernel,"Fd entradasalida %d",interfaz_encontrada->conexion);
+            enviar_espera(io_espera_a_bloquear,interfaz_encontrada->conexion);
             pthread_mutex_unlock(&mutex_envio_io);
 
-            liberar_memoria_t_proceso_data(proceso_data_io_gen_sleep);
-            liberar_memoria_t_io_espera(io_espera_a_bloquear);
-            liberar_memoria_t_proceso_data(a_enviar_a_io_gen_sleep);
+            //liberar_memoria_t_proceso_data(proceso_data_io_gen_sleep);
+            //liberar_memoria_t_io_espera(io_espera_a_bloquear);
+            //liberar_memoria_t_proceso_data(a_enviar_a_io_gen_sleep);
             
          }
          else{
@@ -179,9 +190,9 @@ t_list* lista_paquete;
 
      // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid));
       
-      liberar_memoria_t_io_gen_sleep(io_gen_sleep);
+      //liberar_memoria_t_io_gen_sleep(io_gen_sleep);
 
-      
+       log_info(logger_kernel, "FIN DE ENVIAR SLEEP GEN");
       break;
 
    case ENVIO_WAIT_A_KERNEL:
@@ -778,16 +789,6 @@ int socket_interrupt = *conexion;
         }   
    switch (cod_op)
    {
-   case MENSAJE:
-      //
-      break;
-   case PAQUETE:
-      //
-      break;
- /*  case -1:
-      log_error(logger_kernel, "Desconexion de cpu - interrupt");
-      control_key = 0;
-      break; */
    default:
       log_warning(logger_kernel, "Operacion desconocida de cpu - interrupt");
       break;
@@ -835,7 +836,7 @@ while (control_key)
 
 
 t_pcb* buscar_pcb_en_lista(t_list* lista_de_pcb, uint32_t pid){
-   t_pcb* pcb_de_lista = malloc(sizeof(t_pcb));
+   t_pcb* pcb_de_lista;
    for (uint32_t i = 0; i < lista_de_pcb->elements_count; i++)
    {
       pcb_de_lista = list_get(lista_de_pcb,i);

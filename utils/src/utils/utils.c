@@ -1087,18 +1087,17 @@ void enviar_resize_memoria(t_resize* proceso_resize, int socket){
 
 }
 
-void enviar_respuesta_io ( int socket, op_code respuesta, uint32_t pid, char* nombre_intefaz){
+void enviar_respuesta_io ( int socket, op_code respuesta, uint32_t* pidi, char* nombre_intefaz){
 
-    t_paquete* paquete; 
-    paquete = crear_paquete(respuesta);
+    t_paquete* paquete_enviar_respuesta_io = crear_paquete(respuesta);
+    printf("entro enviar respiuesta de io ");
+    uint32_t nombre_length = strlen(nombre_intefaz) + 1;
+    agregar_a_paquete(paquete_enviar_respuesta_io,&pidi,  sizeof(uint32_t));   
+    agregar_a_paquete(paquete_enviar_respuesta_io, &nombre_length, sizeof(uint32_t));  
+    agregar_a_paquete(paquete_enviar_respuesta_io, nombre_intefaz, nombre_length);
     
-    uint32_t nombre_length = string_length(nombre_intefaz) + 1;
-    agregar_a_paquete(paquete,pid,  sizeof(uint32_t));   
-    agregar_a_paquete(paquete, nombre_length, sizeof(uint32_t));  
-    agregar_a_paquete(paquete, nombre_intefaz, nombre_length);
-    
-    enviar_paquete(paquete, socket); 
-    eliminar_paquete(paquete); 
+    enviar_paquete(paquete_enviar_respuesta_io, socket); 
+    eliminar_paquete(paquete_enviar_respuesta_io); 
 
 }
 
@@ -1158,6 +1157,7 @@ t_list* char_array_to_list(char** array) {
 }
 
 tipo_instruccion str_to_tipo_instruccion(const char *str) {
+
     printf("Entro al funcion a testear \n");
     tipo_instruccion instruccion_a_devolver = -1;
     if (strcmp(str, "SET") == 0) instruccion_a_devolver = SET;
@@ -1184,4 +1184,16 @@ tipo_instruccion str_to_tipo_instruccion(const char *str) {
     printf("imprimo instruccion_a_devolver: %d \n", instruccion_a_devolver);
     printf("Saliendo de la funcion a testear \n");
     return instruccion_a_devolver;
+}
+
+    
+
+int buscar_indice_pcb_por_pid(t_list* lista, int pid) {
+    for (int i = 0; i < list_size(lista); i++) {
+        t_pcb* pcb = list_get(lista, i);
+        if (pcb->pid == pid) {
+            return i;
+        }
+    }
+    return -1; 
 }
