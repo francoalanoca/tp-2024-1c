@@ -100,7 +100,7 @@ void procesar_conexion(void *void_args) {
                 t_interfaz_pid* interfaz_pid_sleep = deserializar_interfaz_pid(lista_paquete_interfaz_pid_sleep);
                  wait(&sem_interrupcion_atendida);
                  log_info(logger_kernel, "PID: %u - nombre interfaz:%s", interfaz_pid_sleep->pid,interfaz_pid_sleep->nombre_interfaz); // RE
-                 desbloquear_y_agregar_a_ready(interfaz_pid_sleep,interfaz_pid_sleep->pid);
+                 desbloquear_y_agregar_a_ready(planificador,interfaz_pid_sleep->pid, interfaz_pid_sleep->nombre_interfaz);
                  log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", interfaz_pid_sleep->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
                
                 //list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_sleep,free);
@@ -115,7 +115,7 @@ void procesar_conexion(void *void_args) {
                 t_pcb* proceso_create = malloc(sizeof(t_pcb));
                 proceso_create = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_create->nombre_interfaz),interfaz_pid_create->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
 
-                desbloquear_y_agregar_a_ready(interfaz_pid_create,proceso_create);
+                //desbloquear_y_agregar_a_ready(interfaz_pid_create,proceso_create);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_create->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
                 sem_post(&sem_io_fs_libre); 
@@ -132,7 +132,7 @@ void procesar_conexion(void *void_args) {
                 t_pcb* proceso_delete = malloc(sizeof(t_pcb));
                 proceso_delete = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_delete->nombre_interfaz),interfaz_pid_delete->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
 
-                desbloquear_y_agregar_a_ready(interfaz_pid_delete,proceso_delete);
+                //desbloquear_y_agregar_a_ready(interfaz_pid_delete,proceso_delete);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_delete->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
                 sem_post(&sem_io_fs_libre);  
@@ -151,7 +151,7 @@ void procesar_conexion(void *void_args) {
                 t_pcb* proceso_truncate = malloc(sizeof(t_pcb));
                 proceso_truncate = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_truncate->nombre_interfaz),interfaz_pid_truncate->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
 
-                desbloquear_y_agregar_a_ready(interfaz_pid_truncate,proceso_truncate);
+                //desbloquear_y_agregar_a_ready(interfaz_pid_truncate,proceso_truncate);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_truncate->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
                 sem_post(&sem_io_fs_libre);  
@@ -169,7 +169,7 @@ void procesar_conexion(void *void_args) {
                 t_pcb* proceso_read = malloc(sizeof(t_pcb));
                 proceso_read = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_read->nombre_interfaz),interfaz_pid_read->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
 
-                desbloquear_y_agregar_a_ready(interfaz_pid_read,proceso_read);
+                //desbloquear_y_agregar_a_ready(interfaz_pid_read,proceso_read);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_read->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
                 sem_post(&sem_io_fs_libre); 
@@ -187,7 +187,7 @@ void procesar_conexion(void *void_args) {
                 t_pcb* proceso_write = malloc(sizeof(t_pcb));
                 proceso_write = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_write->nombre_interfaz),interfaz_pid_write->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
 
-                desbloquear_y_agregar_a_ready(interfaz_pid_write,proceso_write);
+                //desbloquear_y_agregar_a_ready(interfaz_pid_write,proceso_write);
                
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", proceso_write->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
                 sem_post(&sem_io_fs_libre);  
@@ -237,9 +237,9 @@ t_interfaz_pid* deserializar_interfaz_pid(t_list*  lista_paquete ){
 	return interfaz_pid;
 }
 
-void desbloquear_y_agregar_a_ready(t_interfaz_pid* interfaz_pid, int pid){
+void desbloquear_y_agregar_a_ready(t_planificador* planificador,int pid,char* nombre_interfaz){
   
-             t_pcb* proceso =  desbloquear_proceso_io(planificador,pid,interfaz_pid->nombre_interfaz);
+             t_pcb* proceso =  desbloquear_proceso_io(planificador,pid,nombre_interfaz);
                 
                if  ( planificador->algoritmo = VIRTUAL_ROUND_ROBIN ) { // meterlo en una funcion y repetirlo en trodas las respuestas de interface yyyyyy agregar mutex
                     if  (proceso->tiempo_ejecucion !=cfg_kernel->QUANTUM) {
@@ -257,10 +257,11 @@ void desbloquear_y_agregar_a_ready(t_interfaz_pid* interfaz_pid, int pid){
     }
 }
 
-t_pcb * desbloquear_proceso_io(t_planificador* planificador,int* pid,char* nombre_interfaz){
-   t_pcb* proceso_desbloqueado =malloc(sizeof(t_pcb));
-     proceso_desbloqueado =  list_remove(dictionary_get(planificador->cola_blocked,nombre_interfaz),0); // en teoria el header de la lista es el proceso bloqueado actual
-   if (&pid == proceso_desbloqueado->pid ){
-    return proceso_desbloqueado;
+t_pcb * desbloquear_proceso_io(t_planificador* planificador,int pid,char* nombre_interfaz){
+   
+   t_list* list_io = dictionary_get(planificador->cola_blocked,nombre_interfaz);
+    t_proceso_data*  proceso_desbloqueado =  list_remove(list_io,0); // en teoria el header de la lista es el proceso bloqueado actual
+   if (pid == proceso_desbloqueado->pcb->pid ){
+    return proceso_desbloqueado->pcb;
     }
 }
