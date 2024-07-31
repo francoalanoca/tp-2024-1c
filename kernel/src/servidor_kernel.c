@@ -98,9 +98,13 @@ void procesar_conexion(void *void_args) {
                 
                 t_list* lista_paquete_interfaz_pid_sleep = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_sleep = deserializar_interfaz_pid(lista_paquete_interfaz_pid_sleep);
-
-                list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_sleep,free);
-                free(interfaz_pid_sleep);
+                 wait(&sem_interrupcion_atendida);
+                 log_info(logger_kernel, "PID: %u - nombre interfaz:%s", interfaz_pid_sleep->pid,interfaz_pid_sleep->nombre_interfaz); // RE
+                 desbloquear_y_agregar_a_ready(interfaz_pid_sleep,interfaz_pid_sleep->pid);
+                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", interfaz_pid_sleep->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
+               
+                //list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_sleep,free);
+               // free(interfaz_pid_sleep);
                
             break;
             case IO_K_FS_CREATE_FIN:
@@ -233,9 +237,9 @@ t_interfaz_pid* deserializar_interfaz_pid(t_list*  lista_paquete ){
 	return interfaz_pid;
 }
 
-void desbloquear_y_agregar_a_ready(t_interfaz_pid* interfaz_pid,t_pcb* proceso){
-    //TODO: Sacar el pcb de la lista de bloqueados.
-                desbloquear_proceso(planificador,proceso,interfaz_pid->nombre_interfaz);
+void desbloquear_y_agregar_a_ready(t_interfaz_pid* interfaz_pid, int pid){
+  
+             t_pcb* proceso =  desbloquear_proceso_io(planificador,pid,interfaz_pid->nombre_interfaz);
                 
                if  ( planificador->algoritmo = VIRTUAL_ROUND_ROBIN ) { // meterlo en una funcion y repetirlo en trodas las respuestas de interface yyyyyy agregar mutex
                     if  (proceso->tiempo_ejecucion !=cfg_kernel->QUANTUM) {
@@ -250,5 +254,13 @@ void desbloquear_y_agregar_a_ready(t_interfaz_pid* interfaz_pid,t_pcb* proceso){
                         pthread_mutex_unlock(&mutex_cola_ready);
                         sem_post(&sem_prioridad_io);
                 }	 
+    }
+}
+
+t_pcb * desbloquear_proceso_io(t_planificador* planificador,int* pid,char* nombre_interfaz){
+   t_pcb* proceso_desbloqueado =malloc(sizeof(t_pcb));
+     proceso_desbloqueado =  list_remove(dictionary_get(planificador->cola_blocked,nombre_interfaz),0); // en teoria el header de la lista es el proceso bloqueado actual
+   if (&pid == proceso_desbloqueado->pid ){
+    return proceso_desbloqueado;
     }
 }
