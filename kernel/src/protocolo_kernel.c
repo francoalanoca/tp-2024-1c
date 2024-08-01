@@ -66,69 +66,69 @@ t_list* lista_paquete;
       
       //Detecto motivo de interrupcion y dependiendo de este se decide que es lo que se hace 
       switch (proceso_interrumpido->motivo_interrupcion)
-      {
-      case INTERRUPCION_OUT_OF_MEMORY:
-         if(proceso_interrumpido->pcb != NULL){
-            poner_en_cola_exit(proceso_interrumpido->pcb);                     
-            mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
-            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: OUT_OF_MEMORY ", proceso_interrumpido->pcb->pid);
-         }
-         else{
-            log_info(logger_kernel,"El proceso recibido es nulo");
-         }
-      case INSTRUCCION_EXIT:
-         log_info(logger_kernel,"EXIT RECIBIDO");
-         if(proceso_interrumpido->pcb != NULL){
-            poner_en_cola_exit(proceso_interrumpido->pcb);                     
-            mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
-            log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCCESS", proceso_interrumpido->pcb->pid);
-         }
-         else{
-            log_info(logger_kernel,"El proceso recibido es nulo");
-         }
-         break;
-      
-      case FIN_QUANTUM:
-         printf("Se recibió una interrupción de FIN DE QUANTUM");  
-         if(proceso_interrumpido->pcb != NULL){
-            log_info(logger_kernel, "PID: %U - Desalojado por fin de Quantum", proceso_interrumpido->pcb->pid); 
-            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
-            pthread_mutex_lock(&mutex_cola_ready);
-            list_add(planificador->cola_ready,  proceso_interrumpido->pcb); // envolver con mutex 
-            pthread_mutex_unlock(&mutex_cola_ready);
-            free(proceso_interrumpido);// crear funcion para liberar pcb
-         }         
-         break;
-
-      
-      case ELIMINAR_PROCESO:
-         pcb_actualizado_interrupcion = proceso_interrumpido->pcb;
-         sem_post(&sem_contexto_ejecucion_recibido);
-         break;
-      case INTERRUPCION_IO:
-          log_info(logger_kernel, "Se recibió una interrupción de IO");  
+         {
+         case INTERRUPCION_OUT_OF_MEMORY:
             if(proceso_interrumpido->pcb != NULL){
-               list_add_in_index(planificador->cola_exec,0,proceso_interrumpido->pcb); // actualiza el contexto
-               //log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
-               sem_post(&sem_interrupcion_atendida); // solo para actualizaar el contexto
-               log_info(logger_kernel, "Contexto actualizado pid %d;",proceso_interrumpido->pcb->pid);  
-               }
+               poner_en_cola_exit(proceso_interrumpido->pcb);                     
+               mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
+               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: OUT_OF_MEMORY ", proceso_interrumpido->pcb->pid);
+            }
             else{
                log_info(logger_kernel,"El proceso recibido es nulo");
-            }      
+            }
+         case INSTRUCCION_EXIT:
+            log_info(logger_kernel,"EXIT RECIBIDO");
+            if(proceso_interrumpido->pcb != NULL){
+               poner_en_cola_exit(proceso_interrumpido->pcb);                     
+               mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
+               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCCESS", proceso_interrumpido->pcb->pid);
+            }
+            else{
+               log_info(logger_kernel,"El proceso recibido es nulo");
+            }
+            break;
+         
+         case FIN_QUANTUM:
+            printf("Se recibió una interrupción de FIN DE QUANTUM");  
+            if(proceso_interrumpido->pcb != NULL){
+               log_info(logger_kernel, "PID: %U - Desalojado por fin de Quantum", proceso_interrumpido->pcb->pid); 
+               log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
+               pthread_mutex_lock(&mutex_cola_ready);
+               list_add(planificador->cola_ready,  proceso_interrumpido->pcb); // envolver con mutex 
+               pthread_mutex_unlock(&mutex_cola_ready);
+               free(proceso_interrumpido);// crear funcion para liberar pcb
+            }         
+            break;
+
+         
+         case ELIMINAR_PROCESO:
+            pcb_actualizado_interrupcion = proceso_interrumpido->pcb;
+            sem_post(&sem_contexto_ejecucion_recibido);
+            break;
+         case INTERRUPCION_IO:
+            log_info(logger_kernel, "Se recibió una interrupción de IO");  
+               if(proceso_interrumpido->pcb != NULL){
+                  list_add_in_index(planificador->cola_exec,0,proceso_interrumpido->pcb); // actualiza el contexto
+                  //log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
+                  sem_post(&sem_interrupcion_atendida); // solo para actualizaar el contexto
+                  log_info(logger_kernel, "Contexto actualizado pid %d;",proceso_interrumpido->pcb->pid);  
+                  }
+               else{
+                  log_info(logger_kernel,"El proceso recibido es nulo");
+               }      
 
 
 
-        
-      default:
-      printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
-      mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
-      
+         
+         default:
+            //printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
+            //mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
+            
+            break;
+         }
+         //liberar_proceso_interrumpido(proceso_interrumpido); hay que liberarlo?
+
          break;
-      }
-      //liberar_proceso_interrumpido(proceso_interrumpido); hay que liberarlo?
-
-      break;
    case SOLICITUD_IO_GEN_SLEEP:
       //Recibo PID, interfaz y unidades de trabajo de cpu, debo pedir a kernel que realice la instruccion IO_GEN_SLEEP (comprobar interfaz en diccionaro de interfaces antes)         
       

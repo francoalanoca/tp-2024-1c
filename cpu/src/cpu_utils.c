@@ -681,6 +681,7 @@ void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, ui
     enviar_paquete(paquete_interfaz_kernel, conexion); 
     eliminar_paquete(paquete_interfaz_kernel);
     printf("ENVIO SOLICITUD_IO_GEN_SLEEP a KERNEL %d\n", conexion);
+    sem_wait(&sem_interrupcion_kernel);
 }
 
 

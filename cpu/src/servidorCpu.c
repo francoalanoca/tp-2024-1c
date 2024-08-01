@@ -136,7 +136,7 @@ void procesar_conexion_interrupt(void *v_args){
                 t_list* lista_paquete_proceso_interrumpido = recibir_paquete(cliente_socket);
                 
                 log_info(logger_cpu, "SE RECIBE INTERRUPCION DE KERNEL");
-                proceso_interrumpido_actual = proceso_interrumpido_deserializar(lista_paquete_proceso_interrumpido); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
+                proceso_interrumpido_actual = proceso_interrumpido_deserializar(lista_paquete_proceso_interrumpido); 
                  
                 if(proceso_interrumpido_actual->pcb->pid == proceso_actual->pid){
                     pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
@@ -149,7 +149,7 @@ void procesar_conexion_interrupt(void *v_args){
                    
                     log_info(logger_cpu, "FINALIZADA LA ASIGNACION DE PROCESO INTERRUMPIDO");
                    
-                     //sem_post(&sem_interrupcion_kernel);  
+                     sem_post(&sem_interrupcion_kernel);  
                 }
                
                 list_destroy_and_destroy_elements(lista_paquete_proceso_interrumpido,free);
