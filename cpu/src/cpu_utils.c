@@ -170,7 +170,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
 
 void check_interrupt(int conexion_kernel){
      printf("ENTRO EN CHECK INTERRUPT\n");
-    //sem_wait(&sem_check_interrupcion_kernel);
+    
   
     pthread_mutex_lock(&mutex_interrupcion_kernel);
     if(interrupcion_kernel){

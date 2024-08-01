@@ -69,7 +69,7 @@ void procesar_conexion(void *void_args) {
 
                 
                 t_interfaz* interfaz_recibida = deserializar_interfaz(lista_paquete_interfaz);
-                log_info(logger_kernel, "Deseralizo la interfaz recibida"); //despues borrar
+             
                 if (lista_paquete_interfaz == NULL || list_size(lista_paquete_interfaz) == 0) {
                     printf("Failed to receive data or empty list\n");
                     break;
@@ -78,7 +78,7 @@ void procesar_conexion(void *void_args) {
                 t_interfaz_diccionario* interfaz_nueva = malloc(sizeof(t_interfaz_diccionario));
                 interfaz_nueva->nombre = interfaz_recibida->nombre;
                 interfaz_nueva->tipo = interfaz_recibida->tipo;
-                log_info(logger_kernel, "Cliente socket entradasalida %d",cliente_socket); //despues borrar
+               
                 interfaz_nueva->conexion = cliente_socket;
 			    
                 dictionary_put(interfaces,interfaz_recibida->nombre,interfaz_nueva);

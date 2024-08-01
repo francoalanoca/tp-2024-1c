@@ -32,7 +32,7 @@ void Escuchar_Msj_De_Conexiones(){
    sem_post(&sem_EscucharMsj);
    pthread_detach(hilo_cpu_dispatch);
    pthread_detach(hilo_kernel_memoria);
-   pthread_join(hilo_cpu_interrupt, NULL);
+   pthread_detach(hilo_cpu_interrupt); //, NULL);
 
 }
 
@@ -62,8 +62,7 @@ t_list* lista_paquete;
       log_info(logger_kernel,"Recibo INTERRUPCION_CPU desde CPU");
       lista_paquete = recibir_paquete(socket_dispatch);
       
-      t_proceso_interrumpido* proceso_interrumpido = malloc(sizeof(t_proceso_interrumpido));
-      proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
+      t_proceso_interrumpido* proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
       
       //Detecto motivo de interrupcion y dependiendo de este se decide que es lo que se hace 
       switch (proceso_interrumpido->motivo_interrupcion)
@@ -78,6 +77,7 @@ t_list* lista_paquete;
             log_info(logger_kernel,"El proceso recibido es nulo");
          }
       case INSTRUCCION_EXIT:
+         log_info(logger_kernel,"EXIT RECIBIDO");
          if(proceso_interrumpido->pcb != NULL){
             poner_en_cola_exit(proceso_interrumpido->pcb);                     
             mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
@@ -111,6 +111,7 @@ t_list* lista_paquete;
                list_add_in_index(planificador->cola_exec,0,proceso_interrumpido->pcb); // actualiza el contexto
                //log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
                sem_post(&sem_interrupcion_atendida); // solo para actualizaar el contexto
+               log_info(logger_kernel, "Contexto actualizado pid %d;",proceso_interrumpido->pcb->pid);  
                }
             else{
                log_info(logger_kernel,"El proceso recibido es nulo");
@@ -134,13 +135,13 @@ t_list* lista_paquete;
       lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_gen_sleep* io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
-
+      enviar_interrupcion_a_cpu(io_gen_sleep->pid,INTERRUPCION_IO,conexion_cpu_interrupt);
       //Verifico que la interfaz exista y este conectada
       if(dictionary_has_key(interfaces,io_gen_sleep->nombre_interfaz)){
          t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_GEN_SLEEP)){
             
-            enviar_interrupcion_a_cpu(io_gen_sleep->pid,INTERRUPCION_IO,conexion_cpu_interrupt);
+          
             int valor_sem;
             sem_getvalue(&sem_io_fs_libre, &valor_sem);
             
