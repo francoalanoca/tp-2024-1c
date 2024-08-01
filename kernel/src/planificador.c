@@ -80,12 +80,18 @@ bool agregar_proceso(t_planificador* planificador, t_pcb* proceso) {
 t_pcb* obtener_proximo_proceso(t_planificador* planificador) {
     t_pcb* proceso;
     if (planificador->algoritmo != VIRTUAL_ROUND_ROBIN) {
-        proceso = list_remove(planificador->cola_ready, 0);        
+         pthread_mutex_lock(&mutex_cola_ready);
+        proceso = list_remove(planificador->cola_ready, 0);  
+         pthread_mutex_unlock(&mutex_cola_ready);      
     } else { // Virtual Round Robin
        if (list_size(planificador->cola_ready_prioridad) > 0) {
-            proceso = list_remove(planificador->cola_ready_prioridad, 0); 
+            pthread_mutex_lock(&mutex_cola_ready_prioridad);
+            proceso = list_remove(planificador->cola_ready_prioridad, 0);
+             pthread_mutex_unlock(&mutex_cola_ready_prioridad); 
         }else {
+             pthread_mutex_lock(&mutex_cola_ready);
             proceso = list_remove(planificador->cola_ready, 0); 
+             pthread_mutex_unlock(&mutex_cola_ready);
         } 
     }   
 
@@ -107,8 +113,7 @@ void bloquear_proceso(t_planificador* planificador, t_proceso_data* proceso_data
     pthread_mutex_unlock(&mutex_cola_exec);
     t_list* bloqueados = dictionary_get(planificador->cola_blocked,nombre_lista);
     list_add(bloqueados,proceso_data);
-    dictionary_put(planificador->cola_blocked,nombre_lista,bloqueados);
-    /// log_info(logger_kernel,"tamaño lista %d",planificador->cola_blocked);
+    dictionary_put(planificador->cola_blocked,nombre_lista,bloqueados); // bnloquea el que lo envuelve por ahora
     sem_post(&sem_cpu_libre);
 }
 

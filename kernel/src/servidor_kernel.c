@@ -254,13 +254,13 @@ void desbloquear_y_agregar_a_ready(t_planificador* planificador,int pid,char* no
                         pthread_mutex_unlock(&mutex_cola_ready_prioridad);
                         sem_post(&sem_prioridad_io);
                     }
-                else {
+                }else {
                         pthread_mutex_lock(&mutex_cola_ready);
-                        list_add(planificador->cola_ready, proceso);
+                        list_add(planificador->cola_ready, proceso);                     
                         pthread_mutex_unlock(&mutex_cola_ready);
                         sem_post(&sem_prioridad_io);
                 }	 
-    }
+    
 }
 
 t_pcb * desbloquear_proceso_io(t_planificador* planificadorloco,int pid,char* nombre_interfaz){
