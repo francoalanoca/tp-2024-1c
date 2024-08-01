@@ -789,7 +789,7 @@ t_list* lista_paquete;
       break;
    }
 
-   list_destroy_and_destroy_elements(lista_paquete,free);
+   list_destroy(lista_paquete); // 0j0 CON EESTA LINEA
 }
 
 }
