@@ -133,17 +133,17 @@ void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nom
 void finalizar_proceso(t_planificador* planificador, t_pcb* proceso) {
     //Liberar los recursos del proceso
     char* pid_string = malloc(sizeof(proceso->pid));
-    pid_string = sprintf(pid_string, "%u", proceso->pid);
-    t_proceso_recurso_diccionario* proceso_recurso = malloc(sizeof(t_proceso_recurso_diccionario));
-    proceso_recurso = dictionary_get(procesos_recursos,pid_string);
-    for (size_t i = 0; i < proceso_recurso->nombres_recursos->elements_count; i++)
+     sprintf(pid_string, "%d", proceso->pid); //itoa(proceso->pid, pid_string, 10);
+     log_info(logger_kernel, "PID: %s -proceso a liberar recursos",pid_string);
+    t_proceso_recurso_diccionario* proceso_recurso  = dictionary_get(procesos_recursos,pid_string);
+    for (int i = 0; i < list_size(proceso_recurso->nombres_recursos); i++)
     {
         //buscar en que indice de la tabla general de recursos esta
         uint32_t indice_recurso_buscado = buscar_indice_recurso(cfg_kernel->RECURSOS,list_get(proceso_recurso->nombres_recursos,i)); 
         
         //sumo cant instancias correspondientes a lista de instancias global del recurso correspondiente
-        uint32_t instancias_generales_actuales = malloc(sizeof(uint32_t));
-        uint32_t instancias_proceso = malloc(sizeof(uint32_t));
+        uint32_t instancias_generales_actuales ;
+        uint32_t instancias_proceso ;
         instancias_generales_actuales = list_get(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_buscado);
         instancias_proceso = list_get(proceso_recurso->instancias_recursos,i);
         list_replace(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_buscado,instancias_generales_actuales + instancias_proceso);
@@ -240,14 +240,15 @@ bool list_contains(t_list* lista_de_procesos, uint32_t pid){
 
 void poner_en_cola_exit(t_pcb* proceso){
     uint32_t indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
+    log_info(logger_kernel, "entro en poner A COLA EXIT"); //despues borra
     pthread_mutex_lock(&mutex_cola_exec);
     list_remove(planificador->cola_exec, indice_proceso_a_finalizar);
     pthread_mutex_unlock(&mutex_cola_ready);
     
     pthread_mutex_lock(&mutex_cola_exit);
     list_add(planificador->cola_exit, proceso);
-    pthread_mutex_lock(&mutex_cola_exit);
-    sem_post(&sem_contexto_ejecucion_recibido);
+    pthread_mutex_unlock(&mutex_cola_exit);
+     log_info(logger_kernel, "PROCESO AGREGADO A COLA EXIT"); //despues borra
 }
 
 void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
@@ -364,7 +365,7 @@ void actualizar_quantum(t_pcb* proceso){ // recibo contexto actualizado desde cp
 	proceso->quantum = cfg_kernel->QUANTUM - proceso->tiempo_ejecucion; // actualizo el nuevo quantum restante
 }
 
-void largo_plazo_nuevo_ready() {
+void largo_plazo() {
    log_info(logger_kernel, "PLANIFICADOR LARGO PLAZO INICIADO"); //Despues borrar
    
     while (1) {
@@ -381,11 +382,12 @@ void largo_plazo_nuevo_ready() {
         }
 
         if (list_size(planificador->cola_exit) > 0  && !planificador->planificacion_detenida){
-            log_info(logger_kernel, "ESPERANDO CONTEXTO"); // LOG OBLIGATORIO
+            
             sem_wait(&sem_contexto_ejecucion_recibido);
             pthread_mutex_lock(&mutex_cola_exit);
             t_pcb* proceso_exit = list_remove(planificador->cola_exit,0);
              pthread_mutex_unlock(&mutex_cola_exit);
+             log_info(logger_kernel, "PID: %d - proceso a finalizar",proceso_exit->pid); // LOG OBLIGATORIO
             mandar_proceso_a_finalizar(proceso_exit);
             
         }

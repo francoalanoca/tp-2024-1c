@@ -1017,7 +1017,7 @@ void exit_inst( int conexion_kernel){
     proceso_interrumpido_a_enviar->motivo_interrupcion = INSTRUCCION_EXIT;*/
 
     t_proceso_interrumpido *proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
-    proceso_interrumpido_actual->pcb = malloc(sizeof(t_pcb));
+    proceso_interrumpido_actual->pcb = proceso_actual;
     proceso_interrumpido_actual->pcb->path = malloc(proceso_actual->path_length);   
     proceso_interrumpido_actual->interfaz = "none";
     strcpy(proceso_interrumpido_actual->pcb->path, proceso_actual->path);

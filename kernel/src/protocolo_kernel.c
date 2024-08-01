@@ -63,7 +63,7 @@ t_list* lista_paquete;
       lista_paquete = recibir_paquete(socket_dispatch);
       
       t_proceso_interrumpido* proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
-      
+       log_info(logger_kernel, "PROCESO INTERRUMPIDO PID %u ", proceso_interrumpido->pcb->pid);
       //Detecto motivo de interrupcion y dependiendo de este se decide que es lo que se hace 
       switch (proceso_interrumpido->motivo_interrupcion)
          {
@@ -80,7 +80,7 @@ t_list* lista_paquete;
             log_info(logger_kernel,"EXIT RECIBIDO");
             if(proceso_interrumpido->pcb != NULL){
                poner_en_cola_exit(proceso_interrumpido->pcb); 
-                sem_post(&sem_contexto_ejecucion_recibido);                    
+               sem_post(&sem_contexto_ejecucion_recibido);                    
                log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCCESS", proceso_interrumpido->pcb->pid);
             }
             else{
@@ -830,6 +830,7 @@ void Kernel_escuchar_memoria(int *conexion){
          control_key = 0;
          break;
       case FINALIZAR_PROCESO_FIN:
+         t_list* valores = recibir_paquete(socket_memoria);
          sem_post(&sem_confirmacion_memoria);
          break;
       case CREAR_PROCESO_KERNEL_FIN:
