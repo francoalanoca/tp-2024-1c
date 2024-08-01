@@ -84,7 +84,9 @@ void procesar_conexion(void *void_args) {
                 dictionary_put(interfaces,interfaz_recibida->nombre,interfaz_nueva);
                
                 //agrego la nueva cola blocked de la interfaz conectada
+                  pthread_mutex_lock(&mutex_cola_blocked);
                 dictionary_put(planificador->cola_blocked ,interfaz_recibida->nombre,list_create());
+                  pthread_mutex_unlock(&mutex_cola_blocked);
                 log_info(logger_kernel,"cola de bloqueados agregada a interfaz %s\n", interfaz_recibida->nombre);//despues borrar
                 uint32_t response_interfaz = INTERFAZ_RECIBIDA;
                 if (send(cliente_socket, &response_interfaz, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
@@ -98,17 +100,11 @@ void procesar_conexion(void *void_args) {
                 
                 t_list* lista_paquete_interfaz_pid_sleep = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_sleep = deserializar_interfaz_pid(lista_paquete_interfaz_pid_sleep);
-                // sem_wait(&sem_interrupcion_atendida);
-                 log_info(logger_kernel, "PID: %u - nombre interfaz:%s", interfaz_pid_sleep->pid,interfaz_pid_sleep->nombre_interfaz); // 
-                 t_list*list_io = malloc(sizeof(t_list)); //elements_amount
-                list_io = dictionary_get(planificador->cola_blocked,interfaz_pid_sleep->nombre_interfaz); 
-                  log_info(logger_kernel, "tamaño lista: %d - ", list_io->elements_count);
-                 t_proceso_data*  proceso_desbloqueado = malloc(sizeof(t_proceso_data));
-                  proceso_desbloqueado =  list_get(list_io,0);
-                  log_info(logger_kernel, "PID del pcb dentro: %d - ", proceso_desbloqueado->pcb->pid);
+                // sem_wait(&sem_interrupcion_atendida);          
+                
                  desbloquear_y_agregar_a_ready(planificador,interfaz_pid_sleep->pid, interfaz_pid_sleep->nombre_interfaz);
                  log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", interfaz_pid_sleep->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
-               
+ 
                 //list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_sleep,free);
                // free(interfaz_pid_sleep);
                
@@ -155,7 +151,7 @@ void procesar_conexion(void *void_args) {
                 t_list* lista_paquete_interfaz_pid_truncate = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_truncate = deserializar_interfaz_pid(lista_paquete_interfaz_pid_truncate);
                 t_pcb* proceso_truncate = malloc(sizeof(t_pcb));
-                 log_info(logger_kernel, "size lista: %d",list_size(list_io) );
+               
 
                 proceso_truncate = buscar_pcb_en_lista_de_data(dictionary_get(planificador->cola_blocked, interfaz_pid_truncate->nombre_interfaz),interfaz_pid_truncate->pid); //TODO: crear funcion para encontrar pcb en una lista de t_data
 
@@ -246,12 +242,14 @@ t_interfaz_pid* deserializar_interfaz_pid(t_list*  lista_paquete ){
 }
 
 void desbloquear_y_agregar_a_ready(t_planificador* planificador,int pid,char* nombre_interfaz){
-  
+            log_info(logger_kernel, "PLANIFICADOR ALGORITMO %d", planificador->algoritmo);
+            pthread_mutex_lock(&mutex_cola_blocked);
              t_pcb* proceso =  desbloquear_proceso_io(planificador,pid,nombre_interfaz);
-                
-               if  ( planificador->algoritmo = VIRTUAL_ROUND_ROBIN ) { // meterlo en una funcion y repetirlo en trodas las respuestas de interface yyyyyy agregar mutex
-                    if  (proceso->tiempo_ejecucion !=cfg_kernel->QUANTUM) {
+            pthread_mutex_unlock(&mutex_cola_blocked);    
+               if  ( planificador->algoritmo == VIRTUAL_ROUND_ROBIN ) {
+                    if  (proceso->tiempo_ejecucion != cfg_kernel->QUANTUM) {
                         pthread_mutex_lock(&mutex_cola_ready_prioridad);
+                        log_info(logger_kernel, "me meti en  if vrr %d", planificador->algoritmo);
                         list_add(planificador->cola_ready_prioridad, proceso); // como todavia le queda por ejecutar se asigna a la cola de prioridad
                         pthread_mutex_unlock(&mutex_cola_ready_prioridad);
                         sem_post(&sem_prioridad_io);
@@ -266,14 +264,12 @@ void desbloquear_y_agregar_a_ready(t_planificador* planificador,int pid,char* no
 }
 
 t_pcb * desbloquear_proceso_io(t_planificador* planificadorloco,int pid,char* nombre_interfaz){
-    log_info(logger_kernel, "pid parametro: %d", pid);
-    log_info(logger_kernel, "nombre interfaz: %s",nombre_interfaz );
-    t_list*list_io = malloc(sizeof(t_list)); //elements_amount
-     list_io = dictionary_get(planificadorloco->cola_blocked,nombre_interfaz);
-       log_info(logger_kernel, "size lista: %d",list_size(list_io) );
-   
-    t_proceso_data*  proceso_desbloqueado =  list_remove(list_io,0); // en teoria el header de la lista es el proceso bloqueado actual
-   if (pid == proceso_desbloqueado->pcb->pid ){
+    
+    t_list*list_io = dictionary_get(planificadorloco->cola_blocked,nombre_interfaz);
+    int indice = encontrar_indice_proceso_data_por_pid(list_io,pid);
+    t_proceso_data*  proceso_desbloqueado =  list_remove(list_io,indice); // en teoria el header de la lista es el proceso bloqueado actual
+    dictionary_put(planificadorloco->cola_blocked,nombre_interfaz,list_io); // actualizo la lista
+
     return proceso_desbloqueado->pcb;
-    }
+    
 }

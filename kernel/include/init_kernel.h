@@ -40,6 +40,8 @@ extern sem_t sem_rta_crear_proceso;
 extern pthread_mutex_t mutex_cola_ready_prioridad; 
 extern pthread_mutex_t mutex_cola_ready;
 extern pthread_mutex_t mutex_envio_io;
+extern pthread_mutex_t mutex_cola_exec;
+extern pthread_mutex_t mutex_cola_blocked;
 extern t_pcb* pcb_actualizado_interrupcion;
 extern t_dictionary* procesos_recursos;
 extern t_list* recursos;

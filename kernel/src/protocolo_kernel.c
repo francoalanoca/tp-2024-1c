@@ -142,7 +142,9 @@ t_list* lista_paquete;
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
             t_proceso_data* proceso_data_io_gen_sleep = malloc(sizeof(t_proceso_data));
             proceso_data_io_gen_sleep->op = IO_K_GEN_SLEEP;
+            pthread_mutex_lock(&mutex_cola_exec);
             proceso_data_io_gen_sleep->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid);
+            pthread_mutex_unlock(&mutex_cola_exec);
             //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
             t_io_espera* io_espera_a_bloquear = malloc(sizeof(t_io_espera));
             io_espera_a_bloquear->pid = io_gen_sleep->pid;
@@ -159,11 +161,14 @@ t_list* lista_paquete;
             }
                log_info(logger_kernel, "INTERFAZ: %s",interfaz_encontrada->nombre); 
             log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_gen_sleep->pcb->pid); // LOG OBLIGATORIO
-                     
+            pthread_mutex_lock(&mutex_cola_blocked);          
             bloquear_proceso(planificador,proceso_data_io_gen_sleep,interfaz_encontrada->nombre);
+          
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
              sem_wait(&sem_cpu_libre);
-            t_proceso_data* a_enviar_a_io_gen_sleep = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+            t_list* lista_bloqueo = dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre);
+            t_proceso_data* a_enviar_a_io_gen_sleep = list_get(lista_bloqueo,0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+              pthread_mutex_unlock(&mutex_cola_blocked);
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
             pthread_mutex_lock(&mutex_envio_io);
             log_info(logger_kernel,"Fd entradasalida %d",interfaz_encontrada->conexion);
@@ -180,7 +185,7 @@ t_list* lista_paquete;
             mandar_proceso_a_finalizar(io_gen_sleep->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_gen_sleep->pid);
          }
-         liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
+         //liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
@@ -771,6 +776,7 @@ t_list* lista_paquete;
       log_warning(logger_kernel, "Operacion desconocida de cpu - Dispatch");
       break;
    }
+
    list_destroy_and_destroy_elements(lista_paquete,free);
 }
 

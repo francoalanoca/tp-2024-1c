@@ -34,6 +34,7 @@ t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, in
     printf("creo planificador\n");
     planificador->cola_new = list_create();
     planificador->cola_ready = list_create();
+    planificador->cola_ready_prioridad = list_create(); // la creo igual 
     planificador->cola_exec = list_create();
      printf("creo cola_exec\n");
     planificador->cola_blocked = dictionary_create();
@@ -101,16 +102,20 @@ void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
 
 //Bloquea un proceso y lo mueve a la cola de bloqueados
 void bloquear_proceso(t_planificador* planificador, t_proceso_data* proceso_data, char* nombre_lista) {
-      
+    pthread_mutex_lock(&mutex_cola_exec); 
     list_remove(planificador->cola_exec,buscar_indice_pcb_por_pid(planificador->cola_exec,proceso_data->pcb->pid) );
-    dictionary_put(planificador->cola_blocked,nombre_lista,proceso_data);
+    pthread_mutex_unlock(&mutex_cola_exec);
+    t_list* bloqueados = dictionary_get(planificador->cola_blocked,nombre_lista);
+    list_add(bloqueados,proceso_data);
+    dictionary_put(planificador->cola_blocked,nombre_lista,bloqueados);
+    /// log_info(logger_kernel,"tamaño lista %d",planificador->cola_blocked);
     sem_post(&sem_cpu_libre);
 }
 
 //  Desbloquea un proceso y lo mueve a la cola de listos
 void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nombre_lista) {
     t_list* lista_a_desbloquear = malloc(sizeof(t_list));
-    lista_a_desbloquear = dictionary_remove(planificador->cola_blocked,nombre_lista);
+    lista_a_desbloquear = dictionary_get(planificador->cola_blocked,nombre_lista);
     uint32_t indice_a_desbloquear = encontrar_indice_proceso_data_pid(lista_a_desbloquear,proceso);
     list_remove_and_destroy_element(lista_a_desbloquear,indice_a_desbloquear,list_destroy);
     dictionary_put(planificador->cola_blocked,nombre_lista,lista_a_desbloquear);
@@ -428,4 +433,14 @@ uint32_t buscar_indice_recurso(t_list* lista_recursos,char* nombre_recurso){
       }
    }
    return indice_encontrado;
+}
+
+int encontrar_indice_proceso_data_por_pid(t_list * lista_procesos_data , int pid ) {
+    for (int i = 0; i < list_size(lista_procesos_data); i++) {
+        t_proceso_data* proceso = list_get(lista_procesos_data, i);
+        if (proceso->pcb->pid == pid) {
+            return i;
+        }
+    }
+    return NULL;
 }

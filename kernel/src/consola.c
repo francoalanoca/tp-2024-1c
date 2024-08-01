@@ -6,7 +6,7 @@
 
 int process_id = 0; // Definición
  t_pcb* pcb2;
-t_algoritmo_planificacion algortimo ;
+
 
 // Función que implementa el inicio de la consola interactiva
 void iniciar_consola_interactiva(int conexion) {
@@ -14,8 +14,6 @@ void iniciar_consola_interactiva(int conexion) {
     conexion_memoria = conexion;
     char* leido = malloc(sizeof(char) * 22);
 
-    algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
-    planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
  
     printf("INICIA CONSOLA\n");
     leido = readline("> ");

@@ -48,4 +48,5 @@ void lanzar_interrupcion_fin_quantum (void* args);
 void crear_listas_recursos();
 void actualizar_quantum(t_pcb* proceso);
 uint32_t buscar_indice_recurso(t_list* lista_recursos,char* nombre_recurso);
+int encontrar_indice_proceso_data_por_pid(t_list * lista_procesos_data , int pid );
 #endif /* PLANIFICADORES_H_ */

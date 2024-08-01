@@ -3,7 +3,7 @@
 #include <utils/utils.h>
 #include <pthread.h>
 #include <commons/string.h>
-//#include "../include/init_kernel.h"
+#include "../include/init_kernel.h"
 #include "../include/consola.h"
 //#include "../include/planificador.h"
 

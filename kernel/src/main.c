@@ -7,9 +7,9 @@
 
 char *path_config;
 
-
-
-
+t_algoritmo_planificacion algortimo ;
+pthread_mutex_t mutex_cola_exec;
+pthread_mutex_t mutex_cola_blocked;
 int main(char argc, char *argv[]) {
     path_config = argv[1];
 
@@ -26,9 +26,10 @@ int main(char argc, char *argv[]) {
 
     contador_pid = 1;
 
+
     sem_init(&sem_planificar, 1, 1);
     sem_init(&sem_contexto_ejecucion_recibido,0,0);
-
+   // sem_init(&sem_planificador_inicializado, 1, 1);
     sem_init(&sem_confirmacion_memoria,0,0);
     sem_init(&sem_interrupcion_atendida,0,0);
     sem_init(&sem_io_fs_libre,0,1);
@@ -42,7 +43,11 @@ int main(char argc, char *argv[]) {
     pthread_mutex_init(&mutex_cola_ready_prioridad, NULL);
     pthread_mutex_init(&mutex_cola_ready, NULL);
     pthread_mutex_init(&mutex_envio_io, NULL);
+    pthread_mutex_init(&mutex_cola_exec, NULL);
+    pthread_mutex_init(&mutex_cola_blocked, NULL);
 
+    algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
+    planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
 
 
 //INICIAR SERVIDOR Y CONSOLA INTERACTIVA 
