@@ -10,6 +10,7 @@ char *path_config;
 t_algoritmo_planificacion algortimo ;
 pthread_mutex_t mutex_cola_exec;
 pthread_mutex_t mutex_cola_blocked;
+pthread_mutex_t mutex_cola_exit;
 int main(char argc, char *argv[]) {
     path_config = argv[1];
 
@@ -45,6 +46,7 @@ int main(char argc, char *argv[]) {
     pthread_mutex_init(&mutex_envio_io, NULL);
     pthread_mutex_init(&mutex_cola_exec, NULL);
     pthread_mutex_init(&mutex_cola_blocked, NULL);
+    pthread_mutex_init(&mutex_cola_exit, NULL);
 
     algortimo = obtener_algoritmo_planificador(cfg_kernel->ALGORITMO_PLANIFICACION);
     planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 

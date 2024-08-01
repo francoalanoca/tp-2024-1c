@@ -168,20 +168,10 @@ void crear_proceso(t_planificador* planificador, char* path_pseudocodigo) {
 }
 
 void eliminar_proceso(t_planificador* planificador, t_pcb* proceso) {
-    if (list_contains(planificador->cola_exec, proceso->pid)) {
-        enviar_interrupcion_a_cpu(proceso,ELIMINAR_PROCESO,"none",conexion_cpu_interrupt);
-        
-        // Esperar a que la CPU retorne el Contexto de Ejecución
-        sem_wait(&sem_contexto_ejecucion_recibido);
-
-        proceso = pcb_actualizado_interrupcion;
-    }
-
-   liberar_proceso_memoria(proceso->pid);
-
+  
+    liberar_proceso_memoria(proceso->pid);
     // Esperar confirmación de la memoria
     sem_wait(&sem_confirmacion_memoria);
-
     // Finalizar el proceso en el planificador
     finalizar_proceso(planificador, proceso);
     log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: EXIT", proceso->pid);
@@ -226,7 +216,6 @@ void enviar_interrupcion_a_cpu(int pid, motivo_interrupcion motivo_interrupcion,
 void liberar_proceso_memoria(uint32_t pid){
      // Notificar a la memoria para liberar las estructuras del proceso
     t_paquete* paquete_memoria = crear_paquete(FINALIZAR_PROCESO);
-
     // Serializar el PID del proceso a liberar
     agregar_a_paquete(paquete_memoria, &pid, sizeof(uint32_t));
 
@@ -250,10 +239,15 @@ bool list_contains(t_list* lista_de_procesos, uint32_t pid){
 }
 
 void poner_en_cola_exit(t_pcb* proceso){
-    uint32_t indice_proceso_a_finalizar = malloc(sizeof(uint32_t));
-    indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
+    uint32_t indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
+    pthread_mutex_lock(&mutex_cola_exec);
     list_remove(planificador->cola_exec, indice_proceso_a_finalizar);
+    pthread_mutex_unlock(&mutex_cola_ready);
+    
+    pthread_mutex_lock(&mutex_cola_exit);
     list_add(planificador->cola_exit, proceso);
+    pthread_mutex_lock(&mutex_cola_exit);
+    sem_post(&sem_contexto_ejecucion_recibido);
 }
 
 void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
@@ -385,6 +379,18 @@ void largo_plazo_nuevo_ready() {
                 log_info(logger_kernel, "PID: %d - Estado Anterior: NEW - Estado Actual: READY",proceso_nuevo->pid); // LOG OBLIGATORIO
             }
         }
+
+        if (list_size(planificador->cola_exit) > 0  && !planificador->planificacion_detenida){
+            log_info(logger_kernel, "ESPERANDO CONTEXTO"); // LOG OBLIGATORIO
+            sem_wait(&sem_contexto_ejecucion_recibido);
+            pthread_mutex_lock(&mutex_cola_exit);
+            t_pcb* proceso_exit = list_remove(planificador->cola_exit,0);
+             pthread_mutex_unlock(&mutex_cola_exit);
+            mandar_proceso_a_finalizar(proceso_exit);
+            
+        }
+
+
     }
 }
 
@@ -414,14 +420,13 @@ t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid) {
     return NULL;
 }
 
-void mandar_proceso_a_finalizar(uint32_t pid){
-    printf("ME METI AL mandar_proceso_a_finalizar\n");
-   t_pcb* pcb_a_procesar = malloc(sizeof(t_pcb));
-   pcb_a_procesar = encontrar_proceso_pid(planificador->cola_exec,pid);
-   printf("ENCONTRE PCB A PROCESAR\n");
-   eliminar_proceso(planificador,pcb_a_procesar);
+void mandar_proceso_a_finalizar(t_pcb* proceso_finalizar){
+   printf("ME METI AL mandar_proceso_a_finalizar\n");
+  
+
+   eliminar_proceso(planificador,proceso_finalizar);
    printf("ELIMINE PROCESO\n");
-   liberar_memoria_pcb(pcb_a_procesar);
+   liberar_memoria_pcb(proceso_finalizar);
    printf("LIBERE MEMORIA PCB\n");
 }
 

@@ -69,8 +69,8 @@ t_list* lista_paquete;
          {
          case INTERRUPCION_OUT_OF_MEMORY:
             if(proceso_interrumpido->pcb != NULL){
-               poner_en_cola_exit(proceso_interrumpido->pcb);                     
-               mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
+               poner_en_cola_exit(proceso_interrumpido->pcb);                   
+              
                log_info(logger_kernel, "Finaliza el proceso %u - Motivo: OUT_OF_MEMORY ", proceso_interrumpido->pcb->pid);
             }
             else{
@@ -79,8 +79,8 @@ t_list* lista_paquete;
          case INSTRUCCION_EXIT:
             log_info(logger_kernel,"EXIT RECIBIDO");
             if(proceso_interrumpido->pcb != NULL){
-               poner_en_cola_exit(proceso_interrumpido->pcb);                     
-               mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
+               poner_en_cola_exit(proceso_interrumpido->pcb); 
+                sem_post(&sem_contexto_ejecucion_recibido);                    
                log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCCESS", proceso_interrumpido->pcb->pid);
             }
             else{
