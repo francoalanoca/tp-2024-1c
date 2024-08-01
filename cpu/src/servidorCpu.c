@@ -153,6 +153,7 @@ void procesar_conexion_interrupt(void *v_args){
                
                 list_destroy_and_destroy_elements(lista_paquete_proceso_interrumpido,free);
                 //pthread_mutex_unlock(&mutex_interrupcion_kernel);
+                sem_post(&sem_check_interrupcion_kernel);
                 break;
             }
             
@@ -165,7 +166,7 @@ void procesar_conexion_interrupt(void *v_args){
            
         }   
     printf("Codigo de operacion no identifcado\n");    
-    sem_post(&sem_check_interrupcion_kernel);
+    //sem_post(&sem_check_interrupcion_kernel);
     }
 
  //   sem_post(&sem_interrupcion_kernel);

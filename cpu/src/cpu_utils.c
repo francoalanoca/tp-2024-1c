@@ -2,6 +2,7 @@
 
 int tamanioParams;
 int tamanioInterfaces;
+bool operacion_io = false;
 
 instr_t* fetch(int conexion, t_pcb* proceso){
     log_info(logger_cpu, "Voy a entrar a pedir_instruccion");
@@ -56,6 +57,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
             uint32_t param2_num = (uint32_t)strtoul(inst->param2, &endptr, 10);// Convertir la cadena a uint32_t
             
             io_gen_sleep(inst->param1, param2_num,proceso,socket_dispatch);
+            operacion_io = true;
             break;
         }
 
@@ -111,6 +113,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_STDIN_READ - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
             io_stdin_read(inst->param1,inst->param2,inst->param3,proceso,logger_cpu,conexion,tlb,socket_dispatch);
+            operacion_io = true;
             break;
         }
 
@@ -118,6 +121,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_STDOUT_WRITE - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
             io_stdout_write(inst->param1,inst->param2,inst->param3,proceso,logger_cpu,conexion,tlb,socket_dispatch);
+            operacion_io = true;
             break;
         }
 
@@ -132,6 +136,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_CREATE - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             io_fs_create(inst->param1,inst->param2,proceso,logger_cpu,socket_dispatch);
+            operacion_io = true;
             break;
         }
 
@@ -139,6 +144,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_DELETE - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             io_fs_delete(inst->param1,inst->param2,proceso,logger_cpu,socket_dispatch);
+            operacion_io = true;
             break;
         }
 
@@ -146,6 +152,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_TRUNCATE - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
             io_fs_truncate(inst->param1,inst->param2,inst->param3,proceso,logger_cpu,socket_dispatch);
+            operacion_io = true;
             break;
         }
 
@@ -153,6 +160,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_WRITE - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
             io_fs_write(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger_cpu,conexion,tlb,socket_dispatch);
+            operacion_io = true;
             break;
         }
 
@@ -160,6 +168,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_READ - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
             io_fs_read(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger_cpu,conexion,tlb,socket_dispatch);
+            operacion_io = true;
             break;
         }
         default:
@@ -171,7 +180,10 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
 void check_interrupt(int conexion_kernel){
      printf("ENTRO EN CHECK INTERRUPT\n");
     //sem_wait(&sem_check_interrupcion_kernel);
-  
+    if(operacion_io){
+        sem_wait(&sem_check_interrupcion_kernel);
+        operacion_io = false;
+    }
     pthread_mutex_lock(&mutex_interrupcion_kernel);
     if(interrupcion_kernel){
         proceso_actual= NULL;   
@@ -1045,9 +1057,7 @@ void pedir_valor_a_memoria(uint32_t dir_fisica, uint32_t pid, uint32_t tamanio, 
          
             
         enviar_paquete(paquete_pedido_valor_memoria, conexion); 
-        free(paquete_pedido_valor_memoria->buffer->stream);
-        free(paquete_pedido_valor_memoria->buffer);
-        free(paquete_pedido_valor_memoria);
+        eliminar_paquete(paquete_pedido_valor_memoria);
 
 }
 
@@ -1067,9 +1077,7 @@ void guardar_en_direccion_fisica(uint32_t dir_fisica_result,uint32_t tamanio_val
         
             
         enviar_paquete(paquete_guardar_df, conexion); 
-        free(paquete_guardar_df->buffer->stream);
-        free(paquete_guardar_df->buffer);
-        free(paquete_guardar_df);
+        eliminar_paquete(paquete_guardar_df);
         
     
 }
@@ -1116,9 +1124,7 @@ void envia_error_de_memoria_a_kernel(t_proceso_interrumpido* proceso, int conexi
     agregar_a_paquete(paquete_error_memoria, &proceso->motivo_interrupcion, sizeof(uint32_t));
        
     enviar_paquete(paquete_error_memoria, conexion_kernel); 
-    free(paquete_error_memoria->buffer->stream);
-    free(paquete_error_memoria->buffer);
-    free(paquete_error_memoria);
+    eliminar_paquete(paquete_error_memoria);
    
 }
 
@@ -1134,9 +1140,7 @@ void guardar_string_en_memoria(char* valor_a_enviar,uint32_t tamanio_valor,uint3
         agregar_a_paquete(paquete_copy_string,  &direccion,  sizeof(uint32_t));  
             
         enviar_paquete(paquete_copy_string, conexion); 
-        free(paquete_copy_string->buffer->stream);
-        free(paquete_copy_string->buffer);
-        free(paquete_copy_string);
+        eliminar_paquete(paquete_copy_string);
     
 }
 
@@ -1170,9 +1174,7 @@ void solicitar_wait_kernel(t_pcb* pcb,uint32_t recurso_tamanio ,char* recurso, i
         agregar_a_paquete(paquete_wait_kernel, recurso, recurso_tamanio);
         
         enviar_paquete(paquete_wait_kernel, conexion_kernel); 
-        free(paquete_wait_kernel->buffer->stream);
-        free(paquete_wait_kernel->buffer);
-        free(paquete_wait_kernel);
+        eliminar_paquete(paquete_wait_kernel);
 
 }
 
@@ -1204,9 +1206,7 @@ void solicitar_signal_kernel(t_pcb* pcb,uint32_t recurso_tamanio,char* recurso, 
         agregar_a_paquete(paquete_signal_kernel, recurso, recurso_tamanio);
         
         enviar_paquete(paquete_signal_kernel, conexion_kernel); 
-        free(paquete_signal_kernel->buffer->stream);
-        free(paquete_signal_kernel->buffer);
-        free(paquete_signal_kernel);
+        eliminar_paquete(paquete_signal_kernel);
 }
 
 void solicitar_io_stdin_read_a_kernel(uint32_t tamanio_nombre_interfaz,char* nombre_interfaz, uint32_t direccion, uint32_t tamanio, int conexion_kernel){
@@ -1224,9 +1224,7 @@ void solicitar_io_stdin_read_a_kernel(uint32_t tamanio_nombre_interfaz,char* nom
         agregar_a_paquete(paquete_io_stdin_read, &tamanio, sizeof(uint32_t)); 
         
         enviar_paquete(paquete_io_stdin_read, conexion_kernel); 
-        free(paquete_io_stdin_read->buffer->stream);
-        free(paquete_io_stdin_read->buffer);
-        free(paquete_io_stdin_read);
+        eliminar_paquete(paquete_io_stdin_read);
         
 }
 
@@ -1246,9 +1244,7 @@ void solicitar_io_stdout_write_a_kernel(uint32_t tamanio_nombre_interfaz, char* 
         agregar_a_paquete(paquete_io_stdout_write, &tamanio, sizeof(uint32_t)); 
         
         enviar_paquete(paquete_io_stdout_write, conexion_kernel); 
-        free(paquete_io_stdout_write->buffer->stream);
-        free(paquete_io_stdout_write->buffer);
-        free(paquete_io_stdout_write);
+        eliminar_paquete(paquete_io_stdout_write);
 }
 void imprimir_contenido_paquete(t_paquete* paquete);
 void imprimir_contenido_paquete(t_paquete* paquete) {
@@ -1291,9 +1287,7 @@ void solicitar_exit_a_kernel(t_proceso_interrumpido* proceso, int conexion_kerne
         agregar_a_paquete(paquete_exit_kernel, &proceso->motivo_interrupcion, sizeof(uint32_t));
         imprimir_contenido_paquete(paquete_exit_kernel);
         enviar_paquete(paquete_exit_kernel, conexion_kernel); 
-        free(paquete_exit_kernel->buffer->stream);
-        free(paquete_exit_kernel->buffer);
-        free(paquete_exit_kernel);
+        eliminar_paquete(paquete_exit_kernel);
     
 }
 
@@ -1456,9 +1450,7 @@ void enviar_io_fs_create_a_kernel(uint32_t tamanio_interfaz_elegida,char* interf
         agregar_a_paquete(paquete_io_fs_create,  interfaz_elegida,  tamanio_interfaz_elegida); 
         
         enviar_paquete(paquete_io_fs_create, conexion_kernel); 
-        free(paquete_io_fs_create->buffer->stream);
-        free(paquete_io_fs_create->buffer);
-        free(paquete_io_fs_create);
+        eliminar_paquete(paquete_io_fs_create);
 }
 
 void enviar_io_fs_delete_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t pid, int conexion_kernel){
@@ -1475,9 +1467,7 @@ void enviar_io_fs_delete_a_kernel(uint32_t tamanio_interfaz_elegida,char* interf
         agregar_a_paquete(paquete_io_fs_delete,  interfaz_elegida,  tamanio_interfaz_elegida); 
         
         enviar_paquete(paquete_io_fs_delete, conexion_kernel); 
-        free(paquete_io_fs_delete->buffer->stream);
-        free(paquete_io_fs_delete->buffer);
-        free(paquete_io_fs_delete);
+        eliminar_paquete(paquete_io_fs_delete);
 }
 
 void enviar_io_fs_truncate_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t tamanio,uint32_t pid, int conexion_kernel){
@@ -1495,9 +1485,7 @@ void enviar_io_fs_truncate_a_kernel(uint32_t tamanio_interfaz_elegida,char* inte
         agregar_a_paquete(paquete_io_fs_truncate,  &tamanio,  sizeof(uint32_t));
         
         enviar_paquete(paquete_io_fs_truncate, conexion_kernel); 
-        free(paquete_io_fs_truncate->buffer->stream);
-        free(paquete_io_fs_truncate->buffer);
-        free(paquete_io_fs_truncate);
+        eliminar_paquete(paquete_io_fs_truncate);
 }
 
 void enviar_io_fs_write_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t valor_tamanio,uint32_t direccion_fisica,uint32_t puntero_archivo,uint32_t pid, int conexion_kernel){
@@ -1517,9 +1505,7 @@ void enviar_io_fs_write_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfa
         agregar_a_paquete(paquete_io_fs_write,  &puntero_archivo,  sizeof(uint32_t));
         
         enviar_paquete(paquete_io_fs_write, conexion_kernel); 
-        free(paquete_io_fs_write->buffer->stream);
-        free(paquete_io_fs_write->buffer);
-        free(paquete_io_fs_write);
+        eliminar_paquete(paquete_io_fs_write);
    
 }
 
