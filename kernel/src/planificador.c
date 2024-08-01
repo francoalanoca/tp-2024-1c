@@ -209,15 +209,16 @@ uint32_t encontrar_indice_proceso_data_pid(t_list * lista_procesos_data , t_pcb*
 
 void enviar_interrupcion_a_cpu(int pid, motivo_interrupcion motivo_interrupcion,char* nombre_interface, int conexion){
     // Enviar señal de interrupción a la CPU
+   
         t_paquete* paquete = crear_paquete(INTERRUPCION_KERNEL);
-        uint32_t size_nombre_interfaz = string_length(nombre_interface)+1;
+        uint32_t size_nombre_interfaz = strlen(nombre_interface)+1;
         agregar_a_paquete(paquete, &pid, sizeof(uint32_t));
         agregar_a_paquete(paquete, &motivo_interrupcion, sizeof(uint32_t));
-        agregar_a_paquete(paquete, size_nombre_interfaz, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &size_nombre_interfaz, sizeof(uint32_t));
         agregar_a_paquete(paquete, nombre_interface, size_nombre_interfaz);
         enviar_paquete(paquete, conexion); 
         eliminar_paquete(paquete); 
-        log_info(logger_kernel,"Envío interrupcion a CPU");
+        log_info(logger_kernel,"Envío interrupcion a CPU %s", nombre_interface);
 
 }
 

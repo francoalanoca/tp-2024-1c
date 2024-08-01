@@ -434,7 +434,7 @@ void generar_interrupcion_a_kernel(int conexion){
     log_info(logger_cpu,"entro a generar_interrupcion_a_kernel\n");
     t_paquete* paquete_interrupcion_kernel;
     
- 
+    uint32_t interfaz_len = strlen(proceso_interrumpido_actual->interfaz)+1;
     paquete_interrupcion_kernel = crear_paquete(INTERRUPCION_CPU);
  
     agregar_a_paquete(paquete_interrupcion_kernel,  &proceso_interrumpido_actual->pcb->pid,  sizeof(uint32_t));         
@@ -456,7 +456,8 @@ void generar_interrupcion_a_kernel(int conexion){
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->tiempo_ejecucion, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->quantum, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->motivo_interrupcion, sizeof(uint32_t));
-
+    agregar_a_paquete(paquete_interrupcion_kernel, &interfaz_len, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, proceso_interrumpido_actual->interfaz, interfaz_len);
     enviar_paquete(paquete_interrupcion_kernel, conexion);   
     eliminar_paquete(paquete_interrupcion_kernel);
     log_info(logger_cpu,"Interrupcion kernel enviada a %d", conexion);

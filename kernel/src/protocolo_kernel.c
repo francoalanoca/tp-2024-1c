@@ -136,6 +136,7 @@ t_list* lista_paquete;
       lista_paquete = recibir_paquete(socket_dispatch);
       
       t_io_gen_sleep* io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
+      log_info(logger_kernel,"OPERAR INTERFAZ %s",io_gen_sleep->nombre_interfaz);
       enviar_interrupcion_a_cpu(io_gen_sleep->pid,INTERRUPCION_IO,io_gen_sleep->nombre_interfaz,conexion_cpu_interrupt);
       //Verifico que la interfaz exista y este conectada
       if(dictionary_has_key(interfaces,io_gen_sleep->nombre_interfaz)){
@@ -931,6 +932,7 @@ uint32_t buscar_indice_primer_valor_no_nulo(t_list* lista){
 
 void actualizar_pcb_proceso_bloqueado(t_planificador* planificador,char* interface, t_pcb* proceso_bloqueado) {
    int pid = proceso_bloqueado->pid;
+   log_info(logger_kernel,"Interfaz de proceso bloqueado: %s",interface);
    t_list* list_io = dictionary_get(planificador->cola_blocked,interface);
    int indice = encontrar_indice_proceso_data_por_pid(list_io,pid);
    t_proceso_data*  proceso_data =  list_remove(list_io,indice); 
