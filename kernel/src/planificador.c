@@ -169,7 +169,7 @@ void crear_proceso(t_planificador* planificador, char* path_pseudocodigo) {
 
 void eliminar_proceso(t_planificador* planificador, t_pcb* proceso) {
     if (list_contains(planificador->cola_exec, proceso->pid)) {
-        enviar_interrupcion_a_cpu(proceso,ELIMINAR_PROCESO,conexion_cpu_interrupt);
+        enviar_interrupcion_a_cpu(proceso,ELIMINAR_PROCESO,"none",conexion_cpu_interrupt);
         
         // Esperar a que la CPU retorne el Contexto de Ejecución
         sem_wait(&sem_contexto_ejecucion_recibido);
@@ -207,17 +207,20 @@ uint32_t encontrar_indice_proceso_data_pid(t_list * lista_procesos_data , t_pcb*
     return NULL;
 }
 
-void enviar_interrupcion_a_cpu(int pid, motivo_interrupcion motivo_interrupcion, int conexion){
+void enviar_interrupcion_a_cpu(int pid, motivo_interrupcion motivo_interrupcion,char* nombre_interface, int conexion){
     // Enviar señal de interrupción a la CPU
         t_paquete* paquete = crear_paquete(INTERRUPCION_KERNEL);
-
+        uint32_t size_nombre_interfaz = string_length(nombre_interface)+1;
         agregar_a_paquete(paquete, &pid, sizeof(uint32_t));
         agregar_a_paquete(paquete, &motivo_interrupcion, sizeof(uint32_t));
+        agregar_a_paquete(paquete, size_nombre_interfaz, sizeof(uint32_t));
+        agregar_a_paquete(paquete, nombre_interface, size_nombre_interfaz);
         enviar_paquete(paquete, conexion); 
         eliminar_paquete(paquete); 
         log_info(logger_kernel,"Envío interrupcion a CPU");
 
 }
+
 
 void liberar_proceso_memoria(uint32_t pid){
      // Notificar a la memoria para liberar las estructuras del proceso

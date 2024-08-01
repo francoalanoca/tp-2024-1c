@@ -371,6 +371,7 @@ t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete
     proceso_interrumpido_nuevo->pcb =  malloc(sizeof(t_pcb));
     proceso_interrumpido_nuevo->pcb->pid = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 0);
     proceso_interrumpido_nuevo->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 1);	
+    proceso_interrumpido_nuevo->interfaz = list_get(lista_paquete_proceso_interrumpido, 2);	
     return proceso_interrumpido_nuevo;
 }
 
