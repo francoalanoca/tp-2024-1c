@@ -125,35 +125,35 @@ void procesar_conexion_interrupt(void *v_args){
 
             break;
         }
+        pthread_mutex_lock(&mutex_interrupcion_kernel);  
            printf("COP:%d\n",cop);
 
 
         switch (cop){       
              case INTERRUPCION_KERNEL:
-            {   //pthread_mutex_lock(&mutex_interrupcion_kernel);
+            {    
+                interrupcion_kernel = true;
                 t_list* lista_paquete_proceso_interrumpido = recibir_paquete(cliente_socket);
                 
                 log_info(logger_cpu, "SE RECIBE INTERRUPCION DE KERNEL");
-                proceso_interrumpido_actual = proceso_interrumpido_deserializar(lista_paquete_proceso_interrumpido); //QUE ES LO QUE RECIBO DE KERNEL? UN PROCESO?
+                proceso_interrumpido_actual = proceso_interrumpido_deserializar(lista_paquete_proceso_interrumpido); 
                  
                 if(proceso_interrumpido_actual->pcb->pid == proceso_actual->pid){
                     pthread_mutex_lock(&mutex_proceso_interrumpido_actual);
                     proceso_interrumpido_actual->pcb = proceso_actual;
                     log_info(logger_cpu, "asignado DE PROCESO INTERRUMPIDO");
-                    pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);
-                  
+                    pthread_mutex_unlock(&mutex_proceso_interrumpido_actual);   
                                    
-                    pthread_mutex_lock(&mutex_interrupcion_kernel);
-                    interrupcion_kernel = true;
-                    pthread_mutex_unlock(&mutex_interrupcion_kernel);
+                   
+                    
+                   
                     log_info(logger_cpu, "FINALIZADA LA ASIGNACION DE PROCESO INTERRUMPIDO");
                    
-                     
+                     sem_post(&sem_interrupcion_kernel);  
                 }
                
                 list_destroy_and_destroy_elements(lista_paquete_proceso_interrumpido,free);
-                //pthread_mutex_unlock(&mutex_interrupcion_kernel);
-                sem_post(&sem_check_interrupcion_kernel);
+             
                 break;
             }
             
@@ -165,11 +165,11 @@ void procesar_conexion_interrupt(void *v_args){
             
            
         }   
-    printf("Codigo de operacion no identifcado\n");    
-    //sem_post(&sem_check_interrupcion_kernel);
+        pthread_mutex_unlock(&mutex_interrupcion_kernel);  
+  
     }
 
- //   sem_post(&sem_interrupcion_kernel);
+ 
 }
 
 void atender_memoria (int *socket_mr) {
@@ -371,6 +371,9 @@ t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete
     proceso_interrumpido_nuevo->pcb =  malloc(sizeof(t_pcb));
     proceso_interrumpido_nuevo->pcb->pid = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 0);
     proceso_interrumpido_nuevo->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 1);	
+    proceso_interrumpido_nuevo->interfaz = list_get(lista_paquete_proceso_interrumpido, 3);	
+    log_info(logger_cpu, "interfaz recibida %s",list_get(lista_paquete_proceso_interrumpido, 3));
+     log_info(logger_cpu, "interfaz recibida y guardada %s",proceso_interrumpido_nuevo->interfaz);
     return proceso_interrumpido_nuevo;
 }
 

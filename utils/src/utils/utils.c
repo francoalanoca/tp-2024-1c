@@ -1054,7 +1054,10 @@ void  enviar_io_gen_sleep(t_io_gen_sleep* io_gen_sleep, int socket ){
     proceso_interrumpido->pcb = deserializar_pcb(lista_paquete);
     //proceso_interrumpido->tamanio_motivo_interrupcion = *(uint32_t*)list_get(lista_paquete, 18); //ver posicion en la lista
     proceso_interrumpido->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete, 18); //ver posicion en la lista
-
+    if( proceso_interrumpido->motivo_interrupcion != INSTRUCCION_EXIT){
+        proceso_interrumpido->interfaz = list_get(lista_paquete, 20); //ver posicion en la lista
+    }
+    
 	return proceso_interrumpido;
 }
 

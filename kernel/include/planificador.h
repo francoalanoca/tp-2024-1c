@@ -36,7 +36,7 @@ void eliminar_proceso(t_planificador* planificador, t_pcb* proceso);
 void detener_planificacion(t_planificador* planificador);
 uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb);
 uint32_t encontrar_indice_proceso_data_pid(t_list * lista_procesos_data , t_pcb* pcb);
-void enviar_interrupcion_a_cpu(int pid, motivo_interrupcion motivo_interrupcion, int conexion);
+void enviar_interrupcion_a_cpu(int pid, motivo_interrupcion motivo_interrupcion,char* nombre_interface, int conexion);
 void liberar_proceso_memoria(uint32_t pid);
 bool list_contains(t_list* lista_de_procesos, uint32_t pid);
 void poner_en_cola_exit(t_pcb* proceso);
@@ -48,4 +48,6 @@ void lanzar_interrupcion_fin_quantum (void* args);
 void crear_listas_recursos();
 void actualizar_quantum(t_pcb* proceso);
 uint32_t buscar_indice_recurso(t_list* lista_recursos,char* nombre_recurso);
+int encontrar_indice_proceso_data_por_pid(t_list * lista_procesos_data , int pid );
+void mandar_proceso_a_finalizar(t_pcb* proceso_finalizar);
 #endif /* PLANIFICADORES_H_ */

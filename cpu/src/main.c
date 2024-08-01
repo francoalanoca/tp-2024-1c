@@ -155,12 +155,6 @@ void ejecutar_ciclo(void* arg) {
        
         if (proceso_actual != NULL) {
             pthread_mutex_unlock(&mutex_proceso_actual);
-            log_info(logger_cpu,"me meto en while");
-            log_info(logger_cpu,"conexion memoria %d",socket_memoria);
-            log_info(logger_cpu,"conexion dispatch %d",conexion_kernel_dispatch);
-            log_info(logger_cpu,"conexion interrupt %d",conexion_kernel_interrupt);
-            log_info(logger_cpu,"conexion pid proceso %d",proceso_actual->pid);
-            log_info(logger_cpu,"conexion pid proceso %d",list_size(tlb));
             ciclo_de_instrucciones( &socket_memoria, proceso_actual, tlb, &conexion_kernel_dispatch, &conexion_kernel_interrupt);
         } else {
             pthread_mutex_unlock(&mutex_proceso_actual);

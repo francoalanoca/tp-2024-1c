@@ -40,6 +40,9 @@ extern sem_t sem_rta_crear_proceso;
 extern pthread_mutex_t mutex_cola_ready_prioridad; 
 extern pthread_mutex_t mutex_cola_ready;
 extern pthread_mutex_t mutex_envio_io;
+extern pthread_mutex_t mutex_cola_exec;
+extern pthread_mutex_t mutex_cola_blocked;
+extern pthread_mutex_t mutex_cola_exit;
 extern t_pcb* pcb_actualizado_interrupcion;
 extern t_dictionary* procesos_recursos;
 extern t_list* recursos;
@@ -163,6 +166,6 @@ void liberar_memoria_t_interfaz_pid(t_interfaz_pid* interfaz_pid);
 
 t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid);
 
-void mandar_proceso_a_finalizar(uint32_t pid);
+//void mandar_proceso_a_finalizar(uint32_t pid);
 
 #endif /* INIT_KERNEL_H_ */

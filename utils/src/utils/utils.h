@@ -229,6 +229,7 @@ typedef struct {
 typedef struct{
     t_pcb* pcb;
     motivo_interrupcion motivo_interrupcion;
+    char* interfaz;
 }t_proceso_interrumpido;
 
 typedef struct{

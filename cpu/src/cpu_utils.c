@@ -170,7 +170,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
 
 void check_interrupt(int conexion_kernel){
      printf("ENTRO EN CHECK INTERRUPT\n");
-    //sem_wait(&sem_check_interrupcion_kernel);
+    
   
     pthread_mutex_lock(&mutex_interrupcion_kernel);
     if(interrupcion_kernel){
@@ -434,7 +434,7 @@ void generar_interrupcion_a_kernel(int conexion){
     log_info(logger_cpu,"entro a generar_interrupcion_a_kernel\n");
     t_paquete* paquete_interrupcion_kernel;
     
- 
+    uint32_t interfaz_len = strlen(proceso_interrumpido_actual->interfaz)+1;
     paquete_interrupcion_kernel = crear_paquete(INTERRUPCION_CPU);
  
     agregar_a_paquete(paquete_interrupcion_kernel,  &proceso_interrumpido_actual->pcb->pid,  sizeof(uint32_t));         
@@ -456,7 +456,8 @@ void generar_interrupcion_a_kernel(int conexion){
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->tiempo_ejecucion, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->quantum, sizeof(uint32_t));
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->motivo_interrupcion, sizeof(uint32_t));
-
+    agregar_a_paquete(paquete_interrupcion_kernel, &interfaz_len, sizeof(uint32_t));
+    agregar_a_paquete(paquete_interrupcion_kernel, proceso_interrumpido_actual->interfaz, interfaz_len);
     enviar_paquete(paquete_interrupcion_kernel, conexion);   
     eliminar_paquete(paquete_interrupcion_kernel);
     log_info(logger_cpu,"Interrupcion kernel enviada a %d", conexion);
@@ -681,6 +682,7 @@ void enviar_interfaz_a_kernel(char* nombre_interfaz, uint32_t tamanio_nombre, ui
     enviar_paquete(paquete_interfaz_kernel, conexion); 
     eliminar_paquete(paquete_interfaz_kernel);
     printf("ENVIO SOLICITUD_IO_GEN_SLEEP a KERNEL %d\n", conexion);
+    sem_wait(&sem_interrupcion_kernel);
 }
 
 
@@ -1016,8 +1018,8 @@ void exit_inst( int conexion_kernel){
 
     t_proceso_interrumpido *proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
     proceso_interrumpido_actual->pcb = malloc(sizeof(t_pcb));
-    proceso_interrumpido_actual->pcb->path = malloc(proceso_actual->path_length);
-    proceso_interrumpido_actual->pcb = proceso_actual;
+    proceso_interrumpido_actual->pcb->path = malloc(proceso_actual->path_length);   
+    proceso_interrumpido_actual->interfaz = "none";
     strcpy(proceso_interrumpido_actual->pcb->path, proceso_actual->path);
 
     log_info(logger_cpu, "Pid asignado en proceo de interrupcion pid :%d", proceso_interrumpido_actual->pcb->pid ); 

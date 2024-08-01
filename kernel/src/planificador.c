@@ -34,6 +34,7 @@ t_planificador* inicializar_planificador(t_algoritmo_planificacion algoritmo, in
     printf("creo planificador\n");
     planificador->cola_new = list_create();
     planificador->cola_ready = list_create();
+    planificador->cola_ready_prioridad = list_create(); // la creo igual 
     planificador->cola_exec = list_create();
      printf("creo cola_exec\n");
     planificador->cola_blocked = dictionary_create();
@@ -79,12 +80,18 @@ bool agregar_proceso(t_planificador* planificador, t_pcb* proceso) {
 t_pcb* obtener_proximo_proceso(t_planificador* planificador) {
     t_pcb* proceso;
     if (planificador->algoritmo != VIRTUAL_ROUND_ROBIN) {
-        proceso = list_remove(planificador->cola_ready, 0);        
+         pthread_mutex_lock(&mutex_cola_ready);
+        proceso = list_remove(planificador->cola_ready, 0);  
+         pthread_mutex_unlock(&mutex_cola_ready);      
     } else { // Virtual Round Robin
        if (list_size(planificador->cola_ready_prioridad) > 0) {
-            proceso = list_remove(planificador->cola_ready_prioridad, 0); 
+            pthread_mutex_lock(&mutex_cola_ready_prioridad);
+            proceso = list_remove(planificador->cola_ready_prioridad, 0);
+             pthread_mutex_unlock(&mutex_cola_ready_prioridad); 
         }else {
+             pthread_mutex_lock(&mutex_cola_ready);
             proceso = list_remove(planificador->cola_ready, 0); 
+             pthread_mutex_unlock(&mutex_cola_ready);
         } 
     }   
 
@@ -101,16 +108,19 @@ void desalojar_proceso(t_planificador* planificador, t_pcb* proceso) {
 
 //Bloquea un proceso y lo mueve a la cola de bloqueados
 void bloquear_proceso(t_planificador* planificador, t_proceso_data* proceso_data, char* nombre_lista) {
-      
+    pthread_mutex_lock(&mutex_cola_exec); 
     list_remove(planificador->cola_exec,buscar_indice_pcb_por_pid(planificador->cola_exec,proceso_data->pcb->pid) );
-    dictionary_put(planificador->cola_blocked,nombre_lista,proceso_data);
+    pthread_mutex_unlock(&mutex_cola_exec);
+    t_list* bloqueados = dictionary_get(planificador->cola_blocked,nombre_lista);
+    list_add(bloqueados,proceso_data);
+    dictionary_put(planificador->cola_blocked,nombre_lista,bloqueados); // bnloquea el que lo envuelve por ahora
     sem_post(&sem_cpu_libre);
 }
 
 //  Desbloquea un proceso y lo mueve a la cola de listos
 void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nombre_lista) {
     t_list* lista_a_desbloquear = malloc(sizeof(t_list));
-    lista_a_desbloquear = dictionary_remove(planificador->cola_blocked,nombre_lista);
+    lista_a_desbloquear = dictionary_get(planificador->cola_blocked,nombre_lista);
     uint32_t indice_a_desbloquear = encontrar_indice_proceso_data_pid(lista_a_desbloquear,proceso);
     list_remove_and_destroy_element(lista_a_desbloquear,indice_a_desbloquear,list_destroy);
     dictionary_put(planificador->cola_blocked,nombre_lista,lista_a_desbloquear);
@@ -158,20 +168,10 @@ void crear_proceso(t_planificador* planificador, char* path_pseudocodigo) {
 }
 
 void eliminar_proceso(t_planificador* planificador, t_pcb* proceso) {
-    if (list_contains(planificador->cola_exec, proceso->pid)) {
-        enviar_interrupcion_a_cpu(proceso,ELIMINAR_PROCESO,conexion_cpu_interrupt);
-        
-        // Esperar a que la CPU retorne el Contexto de Ejecución
-        sem_wait(&sem_contexto_ejecucion_recibido);
-
-        proceso = pcb_actualizado_interrupcion;
-    }
-
-   liberar_proceso_memoria(proceso->pid);
-
+  
+    liberar_proceso_memoria(proceso->pid);
     // Esperar confirmación de la memoria
     sem_wait(&sem_confirmacion_memoria);
-
     // Finalizar el proceso en el planificador
     finalizar_proceso(planificador, proceso);
     log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: EXIT", proceso->pid);
@@ -197,22 +197,25 @@ uint32_t encontrar_indice_proceso_data_pid(t_list * lista_procesos_data , t_pcb*
     return NULL;
 }
 
-void enviar_interrupcion_a_cpu(int pid, motivo_interrupcion motivo_interrupcion, int conexion){
+void enviar_interrupcion_a_cpu(int pid, motivo_interrupcion motivo_interrupcion,char* nombre_interface, int conexion){
     // Enviar señal de interrupción a la CPU
+   
         t_paquete* paquete = crear_paquete(INTERRUPCION_KERNEL);
-
+        uint32_t size_nombre_interfaz = strlen(nombre_interface)+1;
         agregar_a_paquete(paquete, &pid, sizeof(uint32_t));
         agregar_a_paquete(paquete, &motivo_interrupcion, sizeof(uint32_t));
+        agregar_a_paquete(paquete, &size_nombre_interfaz, sizeof(uint32_t));
+        agregar_a_paquete(paquete, nombre_interface, size_nombre_interfaz);
         enviar_paquete(paquete, conexion); 
         eliminar_paquete(paquete); 
-        log_info(logger_kernel,"Envío interrupcion a CPU");
+        log_info(logger_kernel,"Envío interrupcion a CPU %s", nombre_interface);
 
 }
+
 
 void liberar_proceso_memoria(uint32_t pid){
      // Notificar a la memoria para liberar las estructuras del proceso
     t_paquete* paquete_memoria = crear_paquete(FINALIZAR_PROCESO);
-
     // Serializar el PID del proceso a liberar
     agregar_a_paquete(paquete_memoria, &pid, sizeof(uint32_t));
 
@@ -236,10 +239,15 @@ bool list_contains(t_list* lista_de_procesos, uint32_t pid){
 }
 
 void poner_en_cola_exit(t_pcb* proceso){
-    uint32_t indice_proceso_a_finalizar = malloc(sizeof(uint32_t));
-    indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
+    uint32_t indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
+    pthread_mutex_lock(&mutex_cola_exec);
     list_remove(planificador->cola_exec, indice_proceso_a_finalizar);
+    pthread_mutex_unlock(&mutex_cola_ready);
+    
+    pthread_mutex_lock(&mutex_cola_exit);
     list_add(planificador->cola_exit, proceso);
+    pthread_mutex_lock(&mutex_cola_exit);
+    sem_post(&sem_contexto_ejecucion_recibido);
 }
 
 void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
@@ -264,17 +272,11 @@ void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->estado, sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->tiempo_ejecucion, sizeof(uint32_t));
     agregar_a_paquete(paquete_archivo_nuevo, &pcb->quantum, sizeof(uint32_t));
-     printf("PID SEREALIZADO:%u\n",pcb->pid);
-    printf("PATH PROC LENGTH:%u\n",pcb->path_length);
-    printf("PATH PROC SEREALIZADO:%s\n",pcb->path);
-    printf("ESTADO SEREALIZADO:%u\n",pcb->estado);
-    printf("TIEMPO EJ SEREALIZADO:%u\n",pcb->tiempo_ejecucion);
-    printf("QUANTUM SEREALIZADO:%u\n",pcb->quantum);
-
+   
     enviar_paquete(paquete_archivo_nuevo, conexion); 
 
     eliminar_paquete(paquete_archivo_nuevo);
-    log_info(logger_kernel, "llamo enviar_proceso_a_cpu"); //despues borrar
+
 
 }
 
@@ -333,15 +335,14 @@ void  ejecutar_modo_round_robin( t_pcb* proceso){
     }
      pthread_detach(hilo_cronometro);
 	
-	free(args);
-}
+  }	
 
 
 void lanzar_interrupcion_fin_quantum (void* args) {
     t_args_fin_q* args_fin_q = (t_args_fin_q*) args;
     int quantum = args_fin_q->quantum;
     int pid = args_fin_q->pid;
-    t_paquete* paquete = malloc(sizeof(t_paquete));
+    t_paquete* paquete;
     uint32_t motivo = FIN_QUANTUM;
    
     sleep(quantum / 1000);   
@@ -350,7 +351,8 @@ void lanzar_interrupcion_fin_quantum (void* args) {
     agregar_a_paquete(paquete, &motivo, sizeof(uint32_t));   
     enviar_paquete(paquete, conexion_cpu_interrupt);  
     log_info(logger_kernel, "Enviando interrupcion FIN de QUANTUM\n");
-    free(paquete);
+     eliminar_paquete(paquete);
+     free(args);
 }
 
 void actualizar_quantum(t_pcb* proceso){ // recibo contexto actualizado desde cpu TODO: Cambiar nombre
@@ -377,6 +379,18 @@ void largo_plazo_nuevo_ready() {
                 log_info(logger_kernel, "PID: %d - Estado Anterior: NEW - Estado Actual: READY",proceso_nuevo->pid); // LOG OBLIGATORIO
             }
         }
+
+        if (list_size(planificador->cola_exit) > 0  && !planificador->planificacion_detenida){
+            log_info(logger_kernel, "ESPERANDO CONTEXTO"); // LOG OBLIGATORIO
+            sem_wait(&sem_contexto_ejecucion_recibido);
+            pthread_mutex_lock(&mutex_cola_exit);
+            t_pcb* proceso_exit = list_remove(planificador->cola_exit,0);
+             pthread_mutex_unlock(&mutex_cola_exit);
+            mandar_proceso_a_finalizar(proceso_exit);
+            
+        }
+
+
     }
 }
 
@@ -406,14 +420,13 @@ t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid) {
     return NULL;
 }
 
-void mandar_proceso_a_finalizar(uint32_t pid){
-    printf("ME METI AL mandar_proceso_a_finalizar\n");
-   t_pcb* pcb_a_procesar = malloc(sizeof(t_pcb));
-   pcb_a_procesar = encontrar_proceso_pid(planificador->cola_exec,pid);
-   printf("ENCONTRE PCB A PROCESAR\n");
-   eliminar_proceso(planificador,pcb_a_procesar);
+void mandar_proceso_a_finalizar(t_pcb* proceso_finalizar){
+   printf("ME METI AL mandar_proceso_a_finalizar\n");
+  
+
+   eliminar_proceso(planificador,proceso_finalizar);
    printf("ELIMINE PROCESO\n");
-   liberar_memoria_pcb(pcb_a_procesar);
+   liberar_memoria_pcb(proceso_finalizar);
    printf("LIBERE MEMORIA PCB\n");
 }
 
@@ -428,4 +441,14 @@ uint32_t buscar_indice_recurso(t_list* lista_recursos,char* nombre_recurso){
       }
    }
    return indice_encontrado;
+}
+
+int encontrar_indice_proceso_data_por_pid(t_list * lista_procesos_data , int pid ) {
+    for (int i = 0; i < list_size(lista_procesos_data); i++) {
+        t_proceso_data* proceso = list_get(lista_procesos_data, i);
+        if (proceso->pcb->pid == pid) {
+            return i;
+        }
+    }
+    return NULL;
 }
