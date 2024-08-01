@@ -1018,8 +1018,8 @@ void exit_inst( int conexion_kernel){
 
     t_proceso_interrumpido *proceso_interrumpido_actual = malloc(sizeof(t_proceso_interrumpido));
     proceso_interrumpido_actual->pcb = malloc(sizeof(t_pcb));
-    proceso_interrumpido_actual->pcb->path = malloc(proceso_actual->path_length);
-    proceso_interrumpido_actual->pcb = proceso_actual;
+    proceso_interrumpido_actual->pcb->path = malloc(proceso_actual->path_length);   
+    proceso_interrumpido_actual->interfaz = "none";
     strcpy(proceso_interrumpido_actual->pcb->path, proceso_actual->path);
 
     log_info(logger_cpu, "Pid asignado en proceo de interrupcion pid :%d", proceso_interrumpido_actual->pcb->pid ); 
