@@ -111,7 +111,7 @@ t_list* lista_paquete;
                   pthread_mutex_lock(&mutex_cola_blocked);
                   actualizar_pcb_proceso_bloqueado(planificador,proceso_interrumpido->interfaz,proceso_interrumpido->pcb) ;
                   pthread_mutex_unlock(&mutex_cola_blocked);
-                 // sem_post(&sem_interrupcion_atendida); // solo para actualizaar el contexto
+                  sem_post(&sem_interrupcion_atendida); // solo para actualizaar el contexto
                   log_info(logger_kernel, "Contexto actualizado pid %d;",proceso_interrumpido->pcb->pid);  
                   }
                else{
