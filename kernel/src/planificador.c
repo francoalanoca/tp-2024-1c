@@ -343,15 +343,14 @@ void  ejecutar_modo_round_robin( t_pcb* proceso){
     }
      pthread_detach(hilo_cronometro);
 	
-	free(args);
-}
+  }	
 
 
 void lanzar_interrupcion_fin_quantum (void* args) {
     t_args_fin_q* args_fin_q = (t_args_fin_q*) args;
     int quantum = args_fin_q->quantum;
     int pid = args_fin_q->pid;
-    t_paquete* paquete = malloc(sizeof(t_paquete));
+    t_paquete* paquete;
     uint32_t motivo = FIN_QUANTUM;
    
     sleep(quantum / 1000);   
@@ -360,7 +359,8 @@ void lanzar_interrupcion_fin_quantum (void* args) {
     agregar_a_paquete(paquete, &motivo, sizeof(uint32_t));   
     enviar_paquete(paquete, conexion_cpu_interrupt);  
     log_info(logger_kernel, "Enviando interrupcion FIN de QUANTUM\n");
-    free(paquete);
+     eliminar_paquete(paquete);
+     free(args);
 }
 
 void actualizar_quantum(t_pcb* proceso){ // recibo contexto actualizado desde cpu TODO: Cambiar nombre
