@@ -133,17 +133,17 @@ void desbloquear_proceso(t_planificador* planificador, t_pcb* proceso, char* nom
 void finalizar_proceso(t_planificador* planificador, t_pcb* proceso) {
     //Liberar los recursos del proceso
     char* pid_string = malloc(sizeof(proceso->pid));
-    pid_string = sprintf(pid_string, "%u", proceso->pid);
-    t_proceso_recurso_diccionario* proceso_recurso = malloc(sizeof(t_proceso_recurso_diccionario));
-    proceso_recurso = dictionary_get(procesos_recursos,pid_string);
-    for (size_t i = 0; i < proceso_recurso->nombres_recursos->elements_count; i++)
+     sprintf(pid_string, "%d", proceso->pid); //itoa(proceso->pid, pid_string, 10);
+     log_info(logger_kernel, "PID: %s -proceso a liberar recursos",pid_string);
+    t_proceso_recurso_diccionario* proceso_recurso  = dictionary_get(procesos_recursos,pid_string);
+    for (int i = 0; i < list_size(proceso_recurso->nombres_recursos); i++)
     {
         //buscar en que indice de la tabla general de recursos esta
         uint32_t indice_recurso_buscado = buscar_indice_recurso(cfg_kernel->RECURSOS,list_get(proceso_recurso->nombres_recursos,i)); 
         
         //sumo cant instancias correspondientes a lista de instancias global del recurso correspondiente
-        uint32_t instancias_generales_actuales = malloc(sizeof(uint32_t));
-        uint32_t instancias_proceso = malloc(sizeof(uint32_t));
+        uint32_t instancias_generales_actuales ;
+        uint32_t instancias_proceso ;
         instancias_generales_actuales = list_get(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_buscado);
         instancias_proceso = list_get(proceso_recurso->instancias_recursos,i);
         list_replace(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_buscado,instancias_generales_actuales + instancias_proceso);

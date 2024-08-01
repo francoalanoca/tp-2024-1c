@@ -9,7 +9,7 @@
 #include <commons/collections/list.h>
 #include <pthread.h>
 #include <semaphore.h>
-
+#include <stdio.h>
 
 extern sem_t sem_planificar;
 extern t_temporal* cronometro;
