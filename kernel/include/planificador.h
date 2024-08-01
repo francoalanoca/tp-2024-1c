@@ -43,7 +43,7 @@ void poner_en_cola_exit(t_pcb* proceso);
 void enviar_proceso_a_cpu(t_pcb* pcb, int conexion);
 void replanificar_y_ejecutar(t_pcb* proceso_ejecutando);
 void planificar_y_ejecutar();
-void largo_plazo_nuevo_ready();
+void largo_plazo();
 void lanzar_interrupcion_fin_quantum (void* args);
 void crear_listas_recursos();
 void actualizar_quantum(t_pcb* proceso);

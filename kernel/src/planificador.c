@@ -365,7 +365,7 @@ void actualizar_quantum(t_pcb* proceso){ // recibo contexto actualizado desde cp
 	proceso->quantum = cfg_kernel->QUANTUM - proceso->tiempo_ejecucion; // actualizo el nuevo quantum restante
 }
 
-void largo_plazo_nuevo_ready() {
+void largo_plazo() {
    log_info(logger_kernel, "PLANIFICADOR LARGO PLAZO INICIADO"); //Despues borrar
    
     while (1) {
@@ -382,11 +382,12 @@ void largo_plazo_nuevo_ready() {
         }
 
         if (list_size(planificador->cola_exit) > 0  && !planificador->planificacion_detenida){
-            log_info(logger_kernel, "ESPERANDO CONTEXTO"); // LOG OBLIGATORIO
+            
             sem_wait(&sem_contexto_ejecucion_recibido);
             pthread_mutex_lock(&mutex_cola_exit);
             t_pcb* proceso_exit = list_remove(planificador->cola_exit,0);
              pthread_mutex_unlock(&mutex_cola_exit);
+             log_info(logger_kernel, "PID: %d - proceso a finalizar",proceso_exit->pid); // LOG OBLIGATORIO
             mandar_proceso_a_finalizar(proceso_exit);
             
         }

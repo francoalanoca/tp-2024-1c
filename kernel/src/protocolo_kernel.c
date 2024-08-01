@@ -63,7 +63,7 @@ t_list* lista_paquete;
       lista_paquete = recibir_paquete(socket_dispatch);
       
       t_proceso_interrumpido* proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
-      
+       log_info(logger_kernel, "PROCESO INTERRUMPIDO PID %u ", proceso_interrumpido->pcb->pid);
       //Detecto motivo de interrupcion y dependiendo de este se decide que es lo que se hace 
       switch (proceso_interrumpido->motivo_interrupcion)
          {
