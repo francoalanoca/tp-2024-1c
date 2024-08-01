@@ -89,15 +89,15 @@ t_list* lista_paquete;
          break;
       
       case FIN_QUANTUM:
-         printf("Se recibió una interrupción de FIN DE QUANTUM");              
-         lista_paquete = recibir_paquete(socket_dispatch);       
-         proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
-         log_info(logger_kernel, "PID: %U - Desalojado por fin de Quantum", proceso_interrumpido->pcb->pid); 
-         log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
-         pthread_mutex_lock(&mutex_cola_ready);
-         list_add(planificador->cola_ready,  proceso_interrumpido->pcb); // envolver con mutex 
-         pthread_mutex_unlock(&mutex_cola_ready);
-         free(proceso_interrumpido);// crear funcion para liberar pcb
+         printf("Se recibió una interrupción de FIN DE QUANTUM");  
+         if(proceso_interrumpido->pcb != NULL){
+            log_info(logger_kernel, "PID: %U - Desalojado por fin de Quantum", proceso_interrumpido->pcb->pid); 
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
+            pthread_mutex_lock(&mutex_cola_ready);
+            list_add(planificador->cola_ready,  proceso_interrumpido->pcb); // envolver con mutex 
+            pthread_mutex_unlock(&mutex_cola_ready);
+            free(proceso_interrumpido);// crear funcion para liberar pcb
+         }         
          break;
 
       
@@ -107,19 +107,26 @@ t_list* lista_paquete;
          break;
       case INTERRUPCION_IO:
           log_info(logger_kernel, "Se recibió una interrupción de IO");  
-                 
-         lista_paquete = recibir_paquete(socket_dispatch);       
-         proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
-         list_add_in_index(planificador->cola_exec,0,proceso_interrumpido->pcb);
+            if(proceso_interrumpido->pcb != NULL){
+               list_add_in_index(planificador->cola_exec,0,proceso_interrumpido->pcb); // actualiza el contexto
+               //log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
+               sem_post(&sem_interrupcion_atendida); // solo para actualizaar el contexto
+               }
+            else{
+               log_info(logger_kernel,"El proceso recibido es nulo");
+            }      
 
-         sem_post(&sem_interrupcion_atendida); // solo para actualizaar el contexto
+
+
+        
       default:
       printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
       mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
       
          break;
       }
-      liberar_proceso_interrumpido(proceso_interrumpido);
+      //liberar_proceso_interrumpido(proceso_interrumpido); hay que liberarlo?
+
       break;
    case SOLICITUD_IO_GEN_SLEEP:
       //Recibo PID, interfaz y unidades de trabajo de cpu, debo pedir a kernel que realice la instruccion IO_GEN_SLEEP (comprobar interfaz en diccionaro de interfaces antes)         
@@ -342,15 +349,17 @@ t_list* lista_paquete;
             proceso_data_stdin_read->data = io_direcciones_fisicas_a_bloquear;
             
             
-            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+            //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
                
-            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
-            
-               actualizar_quantum(proceso_data_stdin_read->pcb);
-            } 
-            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_stdin_read->pcb->pid);
+            if(cronometro != NULL){
+               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+               
+                  actualizar_quantum(proceso_data_stdin_read->pcb);
+               } 
+            }
                      
             bloquear_proceso(planificador,proceso_data_stdin_read,interfaz_encontrada->nombre);
+            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_stdin_read->pcb->pid);
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
             t_proceso_data* a_enviar_a_io = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);

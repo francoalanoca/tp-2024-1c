@@ -100,10 +100,10 @@ void procesar_conexion(void *void_args) {
                 
                 t_list* lista_paquete_interfaz_pid_sleep = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_sleep = deserializar_interfaz_pid(lista_paquete_interfaz_pid_sleep);
-                // sem_wait(&sem_interrupcion_atendida);          
+                sem_wait(&sem_interrupcion_atendida);          
                 
-                 desbloquear_y_agregar_a_ready(planificador,interfaz_pid_sleep->pid, interfaz_pid_sleep->nombre_interfaz);
-                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", interfaz_pid_sleep->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
+                desbloquear_y_agregar_a_ready(planificador,interfaz_pid_sleep->pid, interfaz_pid_sleep->nombre_interfaz);
+                log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", interfaz_pid_sleep->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
  
                 //list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_sleep,free);
                // free(interfaz_pid_sleep);
