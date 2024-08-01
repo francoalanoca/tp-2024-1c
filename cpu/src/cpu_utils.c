@@ -2,7 +2,6 @@
 
 int tamanioParams;
 int tamanioInterfaces;
-bool operacion_io = false;
 
 instr_t* fetch(int conexion, t_pcb* proceso){
     log_info(logger_cpu, "Voy a entrar a pedir_instruccion");
@@ -57,7 +56,6 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
             uint32_t param2_num = (uint32_t)strtoul(inst->param2, &endptr, 10);// Convertir la cadena a uint32_t
             
             io_gen_sleep(inst->param1, param2_num,proceso,socket_dispatch);
-            operacion_io = true;
             break;
         }
 
@@ -113,7 +111,6 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_STDIN_READ - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
             io_stdin_read(inst->param1,inst->param2,inst->param3,proceso,logger_cpu,conexion,tlb,socket_dispatch);
-            operacion_io = true;
             break;
         }
 
@@ -121,7 +118,6 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_STDOUT_WRITE - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
             io_stdout_write(inst->param1,inst->param2,inst->param3,proceso,logger_cpu,conexion,tlb,socket_dispatch);
-            operacion_io = true;
             break;
         }
 
@@ -136,7 +132,6 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_CREATE - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             io_fs_create(inst->param1,inst->param2,proceso,logger_cpu,socket_dispatch);
-            operacion_io = true;
             break;
         }
 
@@ -144,7 +139,6 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_DELETE - %s %s", proceso->pid,inst->param1,inst->param2); //LOG OBLIGATORIO
             io_fs_delete(inst->param1,inst->param2,proceso,logger_cpu,socket_dispatch);
-            operacion_io = true;
             break;
         }
 
@@ -152,7 +146,6 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_TRUNCATE - %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3); //LOG OBLIGATORIO
             io_fs_truncate(inst->param1,inst->param2,inst->param3,proceso,logger_cpu,socket_dispatch);
-            operacion_io = true;
             break;
         }
 
@@ -160,7 +153,6 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_WRITE - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
             io_fs_write(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger_cpu,conexion,tlb,socket_dispatch);
-            operacion_io = true;
             break;
         }
 
@@ -168,7 +160,6 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
         {
             log_info(logger_cpu, "PID: %u - Ejecutando: IO_FS_READ - %s %s %s %s %s", proceso->pid,inst->param1,inst->param2,inst->param3,inst->param4,inst->param5); //LOG OBLIGATORIO
             io_fs_read(inst->param1,inst->param2,inst->param3,inst->param4,inst->param5,proceso,logger_cpu,conexion,tlb,socket_dispatch);
-            operacion_io = true;
             break;
         }
         default:
@@ -180,10 +171,7 @@ void execute(instr_t* inst,tipo_instruccion tipo_inst, t_pcb* proceso, int conex
 void check_interrupt(int conexion_kernel){
      printf("ENTRO EN CHECK INTERRUPT\n");
     //sem_wait(&sem_check_interrupcion_kernel);
-    if(operacion_io){
-        sem_wait(&sem_check_interrupcion_kernel);
-        operacion_io = false;
-    }
+  
     pthread_mutex_lock(&mutex_interrupcion_kernel);
     if(interrupcion_kernel){
         proceso_actual= NULL;   
