@@ -830,6 +830,7 @@ void Kernel_escuchar_memoria(int *conexion){
          control_key = 0;
          break;
       case FINALIZAR_PROCESO_FIN:
+         t_list* valores = recibir_paquete(socket_memoria);
          sem_post(&sem_confirmacion_memoria);
          break;
       case CREAR_PROCESO_KERNEL_FIN:
