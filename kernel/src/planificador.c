@@ -240,14 +240,15 @@ bool list_contains(t_list* lista_de_procesos, uint32_t pid){
 
 void poner_en_cola_exit(t_pcb* proceso){
     uint32_t indice_proceso_a_finalizar = encontrar_indice_proceso_pid(planificador->cola_exec,proceso);
+    log_info(logger_kernel, "entro en poner A COLA EXIT"); //despues borra
     pthread_mutex_lock(&mutex_cola_exec);
     list_remove(planificador->cola_exec, indice_proceso_a_finalizar);
     pthread_mutex_unlock(&mutex_cola_ready);
     
     pthread_mutex_lock(&mutex_cola_exit);
     list_add(planificador->cola_exit, proceso);
-    pthread_mutex_lock(&mutex_cola_exit);
-    sem_post(&sem_contexto_ejecucion_recibido);
+    pthread_mutex_unlock(&mutex_cola_exit);
+     log_info(logger_kernel, "PROCESO AGREGADO A COLA EXIT"); //despues borra
 }
 
 void enviar_proceso_a_cpu(t_pcb* pcb, int conexion){

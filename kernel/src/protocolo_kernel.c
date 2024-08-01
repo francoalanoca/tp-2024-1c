@@ -80,7 +80,7 @@ t_list* lista_paquete;
             log_info(logger_kernel,"EXIT RECIBIDO");
             if(proceso_interrumpido->pcb != NULL){
                poner_en_cola_exit(proceso_interrumpido->pcb); 
-                sem_post(&sem_contexto_ejecucion_recibido);                    
+               sem_post(&sem_contexto_ejecucion_recibido);                    
                log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCCESS", proceso_interrumpido->pcb->pid);
             }
             else{
