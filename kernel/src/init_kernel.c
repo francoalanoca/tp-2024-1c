@@ -6,6 +6,7 @@ t_config *file_cfg_kernel;
 t_pcb* pcb;
 int conexion_cpu_dispatch;
 int conexion_cpu_interrupt;
+int conexion_cpu_dispatch_interrupciones;
 int conexion_memoria;
 int socket_servidor;
 t_dictionary* interfaces; //Diccionario donde se encuentran las interfaces que van llegando de IO

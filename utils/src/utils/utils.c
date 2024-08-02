@@ -751,6 +751,7 @@ void enviar_io_df(t_io_direcciones_fisicas* io_df, int socket, op_code codigo_op
     io_df->direcciones_fisicas = *(uint32_t*)list_get(lista_paquete, 1);   
     io_df->tamanio_operacion = *(uint32_t*)list_get(lista_paquete,2);
     printf("Tamanio operacion: %d \n",io_df->tamanio_operacion);
+    printf("direccion operacion: %d \n",io_df->direcciones_fisicas);
     return io_df;
 
 }

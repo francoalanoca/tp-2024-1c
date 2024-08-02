@@ -431,6 +431,21 @@ void mandar_proceso_a_finalizar(t_pcb* proceso_finalizar){
    
 }
 
+void mandar_proceso_a_finalizar_comando(int pid){
+    printf("ME METI AL mandar_proceso_a_finalizar comando\n");
+     pthread_mutex_lock(&mutex_cola_exec);
+     t_pcb* proceso_finalizar = encontrar_proceso_pid(planificador->cola_exec, pid);
+     pthread_mutex_unlock(&mutex_cola_exec);  
+    if (proceso_finalizar == NULL) {
+        printf("No encontre el proceso\n");
+    } 
+    else {
+        eliminar_proceso(planificador,proceso_finalizar);
+
+    } 
+   
+}
+
 uint32_t buscar_indice_recurso(t_list* lista_recursos,char* nombre_recurso){
    uint32_t indice_encontrado = malloc(sizeof(uint32_t));
    indice_encontrado = NULL;

@@ -14,7 +14,7 @@ t_proceso_interrumpido *proceso_interrumpido_actual;
 bool interrupcion_kernel;
 instr_t *prox_inst;
 t_list *tlb;
-
+t_list* lista_sockets_global;
 int conexion_kernel_dispatch = -1;
 int conexion_kernel_interrupt = -1;
 
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     path_config = argv[1];
     ip_cpu = argv[2];
     proceso_actual= NULL;
-
+    lista_sockets_global = list_create();
 
     sem_init(&sem_valor_instruccion, 0, 0);
     sem_init(&sem_marco_recibido, 0, 0);
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     params->socket_memoria = socket_memoria;
     params->proceso_actual = proceso_actual;
     params->tlb = tlb;
-    params->conexion_kernel_dispatch = conexion_kernel_dispatch;
+    params->lista_conexion_kernel_dispatch = lista_sockets_global;
     params->conexion_kernel_interrupt = conexion_kernel_interrupt;
 
    pthread_t hilo_ejecutar_ciclo;
@@ -148,14 +148,15 @@ int main(int argc, char *argv[])
 void ejecutar_ciclo(void* arg) {
     ciclo_params_t* params = (ciclo_params_t*)arg;
    
-
+    int dispatch = list_get(lista_sockets_global,0);
+    int dispatch_interrup = list_get(lista_sockets_global,1);
     while (1) {
       
         pthread_mutex_lock(&mutex_proceso_actual);
        
         if (proceso_actual != NULL) {
             pthread_mutex_unlock(&mutex_proceso_actual);
-            ciclo_de_instrucciones( &socket_memoria, proceso_actual, tlb, &conexion_kernel_dispatch, &conexion_kernel_interrupt);
+            ciclo_de_instrucciones( &socket_memoria, proceso_actual, tlb, dispatch,dispatch_interrup, &conexion_kernel_interrupt);
         } else {
             pthread_mutex_unlock(&mutex_proceso_actual);
            

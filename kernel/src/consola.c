@@ -109,7 +109,7 @@ void atender_instruccion_validada(char** comando_consola){
        printf("ME METI AL FINALIZAR_PROCESO\n");
         uint32_t pid = atoi(comando_consola[1]);
        printf("OBTENGO PID: %u\n",pid);
-        mandar_proceso_a_finalizar(pid);
+        mandar_proceso_a_finalizar_comando(pid);
         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INTERRUPTED_BY_USER ", pid);
 
        

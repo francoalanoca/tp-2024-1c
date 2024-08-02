@@ -50,8 +50,8 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
 
                 //armo la estructura input para enviar                
                 io_input->pid =io_stdin->pid;
-                io_input->direcciones_fisicas =list_create();
-                list_add_all(io_input->direcciones_fisicas,io_stdin->direcciones_fisicas);
+                io_input->direcciones_fisicas =io_stdin->direcciones_fisicas;
+               
                 io_input->input_length =io_stdin->tamanio_operacion;
                 io_input->input = input;
                 
@@ -96,17 +96,17 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
     fflush(stdout); // Asegúrate de que la salida se vacíe
 
     // levanta caracter a caracter hasta que encuentra un "enter" de la variable stdin
-    for (i; i < tamanio_operacion-1; i++){
+    for (i; i < tamanio_operacion; i++){
         ch = getchar();
         printf("Caracter leído: %c (Código ASCII: %d)\n", ch, ch); // Depuración
         input[i] = ch;
 
     }
 
-    input[tamanio_operacion] = '\0'; // Agrega el terminador nulo al final de la cadena
+    //input[tamanio_operacion] = '\0'; // Agrega el terminador nulo al final de la cadena
     log_info(logger_entrada_salida, "Se ingresó la cadena: %s\n", input);
 
-    free(input);
+    //free(input);
     return 0;
     
 }

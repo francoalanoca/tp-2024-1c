@@ -118,7 +118,7 @@ uint32_t obtener_numero_pagina(t_list* lista_de_paginas, uint32_t marco_buscado)
 
 //Funcion que escribe una valor con un tamaño, de un proceso con la df
 char* escribir_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, char* valor, uint32_t tamanio_a_escribir){
-
+ log_info(logger_memoria, "Valor a escribir %s ",valor);
     char* escrito;
 
     //Aca se almacenara lo que ya fue escrito como un contador
@@ -210,10 +210,10 @@ char* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
     uint32_t espacio_leido = 0;
 
     t_tabla_de_paginas *tabla_de_paginas = busco_tabla_de_paginas_por_PID(proceso_pid);
-
+ log_info(logger_memoria,"direccion : %d, tamanio leer:%d, valor leido: %s",direccion_fisica,tamanio_a_leer,leido);
     //Mientras haya algo para leer
     if (tamanio_a_leer > 0){
-        
+         log_info(logger_memoria,"direccion : %d, tamanio leer:%d, valor leido: %s",direccion_fisica,tamanio_a_leer,leido);
         //Creamos las variables necesarias para la algrebra de punteros (frame|offset)
         uint32_t marco = floor(direccion_fisica / cfg_memoria->TAM_PAGINA);
         uint32_t offset = direccion_fisica % cfg_memoria->TAM_PAGINA;
@@ -229,7 +229,7 @@ char* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
 
             //Procedemos a copiar (donde se va guardar, que se va guardar(desde donde), tamanio de lo que se va a guardar)
             memcpy(leido, memoria + direccion_fisica, tamanio_a_leer);
-
+            log_info(logger_memoria,"direccion : %d, tamanio leer:%d, valor leido: %s",direccion_fisica,tamanio_a_leer,leido);
             return leido;
         }
         else{   //Si es > ocupamos lo que quede y luego buscamos otro espacio
@@ -276,7 +276,7 @@ char* leer_memoria(uint32_t proceso_pid, uint32_t direccion_fisica, uint32_t tam
 
         
     }
-    
+     log_info(logger_memoria,"direccion : %d, tamanio leer:%d, valor leido: %s",direccion_fisica,tamanio_a_leer,leido);
     return leido;
 }
 

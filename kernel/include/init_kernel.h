@@ -26,6 +26,7 @@ extern t_log *logger_kernel;
 extern t_config* file_cfg_kernel;
 extern t_pcb* pcb;
 extern int conexion_cpu_dispatch;
+extern int conexion_cpu_dispatch_interrupciones;
 extern int conexion_cpu_interrupt;
 extern int conexion_memoria;
 extern int socket_servidor;
@@ -166,6 +167,6 @@ void liberar_memoria_t_interfaz_pid(t_interfaz_pid* interfaz_pid);
 
 t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid);
 
-//void mandar_proceso_a_finalizar(uint32_t pid);
+
 
 #endif /* INIT_KERNEL_H_ */

@@ -14,13 +14,13 @@ typedef struct {
     int socket_memoria;
     t_pcb *proceso_actual;
     t_list *tlb;
-    int conexion_kernel_dispatch;
+    t_list* lista_conexion_kernel_dispatch;
     int conexion_kernel_interrupt;
 } ciclo_params_t;
 
 
 void ejecutar_ciclo() ;
-void ciclo_de_instrucciones(int *conexion, t_pcb* proceso, t_list* tlb, int *socket_dispatch, int *socket_interrupt);
+void ciclo_de_instrucciones(int *conexion, t_pcb* proceso, t_list* tlb, int *socket_dispatch,int *socket_dispatch_interrupciones, int *socket_interrupt);
 
 
 
