@@ -96,7 +96,7 @@ void iniciar_interfaz_stdin (int socket_kernel, int socket_memoria) {
     fflush(stdout); // Asegúrate de que la salida se vacíe
 
     // levanta caracter a caracter hasta que encuentra un "enter" de la variable stdin
-    for (i; i < tamanio_operacion-1; i++){
+    for (i; i < tamanio_operacion; i++){
         ch = getchar();
         printf("Caracter leído: %c (Código ASCII: %d)\n", ch, ch); // Depuración
         input[i] = ch;

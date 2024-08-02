@@ -196,14 +196,14 @@ t_list* lista_paquete;
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
-            mandar_proceso_a_finalizar(io_gen_sleep->pid);
+            mandar_proceso_a_finalizar_comando(io_gen_sleep->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_gen_sleep->pid);
          }
          //liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
       }
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
-         mandar_proceso_a_finalizar(io_gen_sleep->pid);
+         mandar_proceso_a_finalizar_comando(io_gen_sleep->pid);
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_gen_sleep->pid);
       }
 
@@ -262,7 +262,7 @@ t_list* lista_paquete;
       }
       else{
          //NO EXISTE RECURSO, MANDAR A EXIT
-         mandar_proceso_a_finalizar(recurso_recibido_wait->pcb->pid);
+         mandar_proceso_a_finalizar_comando(recurso_recibido_wait->pcb->pid);
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_RESOURCE  ", recurso_recibido_wait->pcb->pid);
         // replanificar_y_ejecutar(recurso_recibido_wait->pcb);
       }
@@ -322,7 +322,7 @@ t_list* lista_paquete;
       }
       else{
          //NO EXISTE RECURSO, MANDAR A EXIT
-         mandar_proceso_a_finalizar(recurso_recibido_signal->pcb->pid);
+         mandar_proceso_a_finalizar_comando(recurso_recibido_signal->pcb->pid);
       }
       liberar_memoria_t_recurso(recurso_recibido_signal);
       break;
@@ -335,8 +335,7 @@ t_list* lista_paquete;
       io_stdin_read = deserializar_io_stdin_stdout(lista_paquete);
       enviar_interrupcion_a_cpu(io_stdin_read->pid,INTERRUPCION_IO,io_stdin_read->nombre_interfaz,conexion_cpu_interrupt);
       if(dictionary_has_key(interfaces,io_stdin_read->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
-         interfaz_encontrada = dictionary_get(interfaces,io_stdin_read->nombre_interfaz);
+         t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_stdin_read->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDIN_READ)){
             
             
@@ -385,7 +384,7 @@ t_list* lista_paquete;
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
-            mandar_proceso_a_finalizar(io_stdin_read->pid);
+            mandar_proceso_a_finalizar_comando(io_stdin_read->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdin_read->pid);
          }
 
@@ -396,7 +395,7 @@ t_list* lista_paquete;
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
-         mandar_proceso_a_finalizar(io_stdin_read->pid);
+         mandar_proceso_a_finalizar_comando(io_stdin_read->pid);
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdin_read->pid);
       }
      // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid));
@@ -407,15 +406,18 @@ t_list* lista_paquete;
       //Recibo pid, interfaz, direccion y tamanio desde cpu, se solicita a IO que haga la operacion IO_STDOUT_WRITE(hay que bloquear el porceso)
       log_info(logger_kernel,"Recibo SOLICITUD_IO_STDOUT_WRITE desde CPU");
       lista_paquete = recibir_paquete(socket_dispatch);
-      
-      t_io_stdin_stdout* io_stdout_write = malloc(sizeof(t_io_stdin_stdout));
-      io_stdout_write = deserializar_io_stdin_stdout(lista_paquete);
+     
+
+      t_io_stdin_stdout* io_stdout_write = deserializar_io_stdin_stdout(lista_paquete);
+       enviar_interrupcion_a_cpu(io_stdout_write->pid,INTERRUPCION_IO,io_stdout_write->nombre_interfaz,conexion_cpu_interrupt);
       if(dictionary_has_key(interfaces,io_stdout_write->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
-            interfaz_encontrada = dictionary_get(interfaces,io_stdout_write->nombre_interfaz);
+         t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_stdout_write->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDOUT_WRITE)){
 
-            enviar_interrupcion_a_cpu(io_stdout_write->pid,INTERRUPCION_IO,io_stdout_write->nombre_interfaz,conexion_cpu_interrupt);
+            int valor_sem;
+            sem_getvalue(&sem_io_fs_libre, &valor_sem);   
+            log_info(logger_kernel,"VALOR SEMAFORO sem_io_fs_libre %d",valor_sem);
+          
             sem_wait(&sem_io_fs_libre);
 
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
@@ -425,14 +427,13 @@ t_list* lista_paquete;
             //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
             t_io_direcciones_fisicas* io_direcciones_fisicas_a_bloquear_write = malloc(sizeof(t_io_direcciones_fisicas));
             io_direcciones_fisicas_a_bloquear_write->pid = io_stdout_write->pid;
-            io_direcciones_fisicas_a_bloquear_write->tamanio_operacion = io_stdout_write->tamanio;
-            t_list* lista_nueva_write = list_create();
-            list_add(lista_nueva_write,io_stdout_write->direccion);
-            io_direcciones_fisicas_a_bloquear_write->direcciones_fisicas = lista_nueva_write; 
+            io_direcciones_fisicas_a_bloquear_write->tamanio_operacion = io_stdout_write->tamanio;         
+            
+            io_direcciones_fisicas_a_bloquear_write->direcciones_fisicas = io_stdout_write->direccion;
             proceso_data_stdout_write->data = io_direcciones_fisicas_a_bloquear_write;
             
             
-            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+            //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
 
             if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
             
@@ -445,19 +446,17 @@ t_list* lista_paquete;
             t_proceso_data* a_enviar_a_io_write = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
             pthread_mutex_lock(&mutex_envio_io);
-            enviar_io_df(a_enviar_a_io_write->data,socket_servidor,a_enviar_a_io_write->op);
+            enviar_io_df(io_direcciones_fisicas_a_bloquear_write,interfaz_encontrada->conexion,a_enviar_a_io_write->op);
             pthread_mutex_unlock(&mutex_envio_io);
 
-            liberar_memoria_t_proceso_data(proceso_data_stdout_write);
-            liberar_memoria_t_io_direcciones_fisicas(io_direcciones_fisicas_a_bloquear_write);
-            list_destroy_and_destroy_elements(lista_nueva_write,free);
-            liberar_memoria_t_proceso_data(a_enviar_a_io_write);
+            //liberar_memoria_t_proceso_data(proceso_data_stdout_write;                  
+            //liberar_memoria_t_proceso_data(a_enviar_a_io_write);
             
          }
          else{
             log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
             //ENVIAR PROCESO A EXIT
-            mandar_proceso_a_finalizar(io_stdout_write->pid);
+            mandar_proceso_a_finalizar_comando(io_stdout_write->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdout_write->pid);
          }
          liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
@@ -465,7 +464,7 @@ t_list* lista_paquete;
       else{
          log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
          //ENVIAR PROCESO A EXIT?
-         mandar_proceso_a_finalizar(io_stdout_write->pid);
+         mandar_proceso_a_finalizar_comando(io_stdout_write->pid);
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdout_write->pid);
       }
       //mandar_interrupcion_a_cpu();
@@ -497,7 +496,7 @@ t_list* lista_paquete;
             proceso_data_io_crear_archivo->data = io_create_archivo_a_bloquear;
             
             
-            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+            //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
 
             if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
             
@@ -557,7 +556,7 @@ t_list* lista_paquete;
             proceso_data_io_delete_archivo->data = io_delete_archivo_a_bloquear;
             
             
-            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+            //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
 
             if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
             
@@ -618,7 +617,7 @@ t_list* lista_paquete;
             proceso_data_io_truncate_archivo->data = io_truncate_archivo_a_bloquear;
             
             
-            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+            //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
 
             if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
             
@@ -681,7 +680,7 @@ t_list* lista_paquete;
             proceso_data_io_write_archivo->data = io_write_archivo_a_bloquear;
             
             
-            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+            //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
 
             if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
             
@@ -746,7 +745,7 @@ t_list* lista_paquete;
             proceso_data_io_read_archivo->data = io_read_archivo_a_bloquear;
             
             
-            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+            //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
 
             if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
             
