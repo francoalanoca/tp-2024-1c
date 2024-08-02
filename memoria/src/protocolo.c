@@ -171,7 +171,7 @@ void memoria_atender_cliente(void* socket){
             log_info(logger_memoria, "Recibida IO_M_STDOUT \n");
 
             t_io_output* io_output = malloc(sizeof(t_io_output));
-            t_io_direcciones_fisicas* io_stdout = malloc(sizeof(t_io_direcciones_fisicas));
+            t_io_direcciones_fisicas* io_stdout;
                 
             valores = recibir_paquete(socket_cliente);
             io_stdout = deserializar_io_df(valores);

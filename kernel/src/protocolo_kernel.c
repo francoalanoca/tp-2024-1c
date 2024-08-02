@@ -16,13 +16,19 @@ void Escuchar_Msj_De_Conexiones(){
 
 //Escuchar los msj de cpu - dispatch
    conexion_cpu_dispatch = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);    
-   log_info(logger_kernel, "Socket de CP DISPATCH : %d\n",conexion_cpu_dispatch);  
+   log_info(logger_kernel, "Socket de  DISPATCH : %d\n",conexion_cpu_dispatch);  
    pthread_t hilo_cpu_dispatch;
    t_kernel_escuchar_cpu* params = malloc(sizeof(t_kernel_escuchar_cpu));
    params->conexion_cpu_dispatch = &conexion_cpu_dispatch;
    params->conexion_cpu_interrupt = &conexion_cpu_interrupt;
+   params->conexion_cpu_dispatch_interrupciones = &conexion_cpu_dispatch_interrupciones;
    pthread_create(&hilo_cpu_dispatch, NULL, (void*)Kernel_escuchar_cpu_dispatch,  (void*) params);
-  
+
+
+   conexion_cpu_dispatch_interrupciones = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_DISPATCH);    
+   log_info(logger_kernel, "Socket de  DISPATCH interrupciones: %d\n",conexion_cpu_dispatch_interrupciones); 
+   pthread_t hilo_cpu_dispatch_interrupciones;
+   pthread_create(&hilo_cpu_dispatch_interrupciones, NULL, (void*)Kernel_escuchar_cpu_dispatch_interrupciones,  (void*) params); 
 
 //Escuchar los msj de cpu - interrupt
    conexion_cpu_interrupt = crear_conexion(logger_kernel, "CPU", cfg_kernel->IP_CPU, cfg_kernel->PUERTO_CPU_INTERRUPT);    
@@ -31,6 +37,7 @@ void Escuchar_Msj_De_Conexiones(){
    pthread_create(&hilo_cpu_interrupt, NULL, (void*)Kernel_escuchar_cpu_interrupt,&conexion_cpu_interrupt);
    sem_post(&sem_EscucharMsj);
    pthread_detach(hilo_cpu_dispatch);
+   pthread_detach(hilo_cpu_dispatch_interrupciones);
    pthread_detach(hilo_kernel_memoria);
    pthread_detach(hilo_cpu_interrupt); //, NULL);
 
@@ -44,9 +51,7 @@ void Kernel_escuchar_cpu_dispatch(void* args){
 
 bool control_key = 1;
 t_list* lista_paquete;
-/*while (control_key)
-{
-   op_code cod_op = recibir_operacion(conexion_cpu_dispatch);*/
+
    uint32_t cod_op;
     while (socket_dispatch != -1) {
 
@@ -55,84 +60,8 @@ t_list* lista_paquete;
             return;
         }
   
-   switch (cod_op)
-   {
-   case INTERRUPCION_CPU:
-      //Recibo t_proceso_interrumpido(pcb y motivo) desde cpu(funcion check_interrupt)
-      log_info(logger_kernel,"Recibo INTERRUPCION_CPU desde CPU");
-      lista_paquete = recibir_paquete(socket_dispatch);
-      
-      t_proceso_interrumpido* proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
-       log_info(logger_kernel, "PROCESO INTERRUMPIDO PID %u ", proceso_interrumpido->pcb->pid);
-      //Detecto motivo de interrupcion y dependiendo de este se decide que es lo que se hace 
-       if  ( planificador->planificacion_detenida == false ) {  
-               switch (proceso_interrumpido->motivo_interrupcion)
-                  {
-                  case INTERRUPCION_OUT_OF_MEMORY:
-                     if(proceso_interrumpido->pcb != NULL){
-                        poner_en_cola_exit(proceso_interrumpido->pcb);                   
-                     
-                        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: OUT_OF_MEMORY ", proceso_interrumpido->pcb->pid);
-                     }
-                     else{
-                        log_info(logger_kernel,"El proceso recibido es nulo");
-                     }
-                  case INSTRUCCION_EXIT:
-                     log_info(logger_kernel,"EXIT RECIBIDO");
-                     if(proceso_interrumpido->pcb != NULL){
-                        poner_en_cola_exit(proceso_interrumpido->pcb); 
-                        sem_post(&sem_contexto_ejecucion_recibido);                    
-                        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCCESS", proceso_interrumpido->pcb->pid);
-                     }
-                     else{
-                        log_info(logger_kernel,"El proceso recibido es nulo");
-                     }
-                     break;
-                  
-                  case FIN_QUANTUM:
-                     printf("Se recibió una interrupción de FIN DE QUANTUM");  
-                     if(proceso_interrumpido->pcb != NULL){
-                        log_info(logger_kernel, "PID: %U - Desalojado por fin de Quantum", proceso_interrumpido->pcb->pid); 
-                        log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
-                        pthread_mutex_lock(&mutex_cola_ready);
-                        list_add(planificador->cola_ready,  proceso_interrumpido->pcb); // envolver con mutex 
-                        pthread_mutex_unlock(&mutex_cola_ready);
-                        free(proceso_interrumpido);// crear funcion para liberar pcb
-                     }         
-                     break;
-
-                  
-                  case ELIMINAR_PROCESO:
-                     pcb_actualizado_interrupcion = proceso_interrumpido->pcb;
-                     sem_post(&sem_contexto_ejecucion_recibido);
-                     break;
-                  case INTERRUPCION_IO:
-                     log_info(logger_kernel, "Se recibió una interrupción de IO");  
-                        if(proceso_interrumpido->pcb != NULL){
-                           pthread_mutex_lock(&mutex_cola_blocked);
-                           actualizar_pcb_proceso_bloqueado(planificador,proceso_interrumpido->interfaz,proceso_interrumpido->pcb) ;
-                           pthread_mutex_unlock(&mutex_cola_blocked);
-                           sem_post(&sem_interrupcion_atendida); // solo para actualizaar el contexto
-                           log_info(logger_kernel, "Contexto actualizado pid %d;",proceso_interrumpido->pcb->pid);  
-                           }
-                        else{
-                           log_info(logger_kernel,"El proceso recibido es nulo");
-                        }      
-
-
-
-                  
-                  default:
-                     //printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
-                     //mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
-                     
-                     break;
-                  }
-                  //liberar_proceso_interrumpido(proceso_interrumpido); hay que liberarlo?
-
-                  break;
-
-      } // fin de if de detener planificacion
+   switch (cod_op)   {
+   
    case SOLICITUD_IO_GEN_SLEEP:
       //Recibo PID, interfaz y unidades de trabajo de cpu, debo pedir a kernel que realice la instruccion IO_GEN_SLEEP (comprobar interfaz en diccionaro de interfaces antes)         
       
@@ -141,77 +70,79 @@ t_list* lista_paquete;
       t_io_gen_sleep* io_gen_sleep = deserializar_io_gen_sleep(lista_paquete);
       log_info(logger_kernel,"OPERAR INTERFAZ %s",io_gen_sleep->nombre_interfaz);
       enviar_interrupcion_a_cpu(io_gen_sleep->pid,INTERRUPCION_IO,io_gen_sleep->nombre_interfaz,conexion_cpu_interrupt);
-      //Verifico que la interfaz exista y este conectada
-      if(dictionary_has_key(interfaces,io_gen_sleep->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->nombre_interfaz);
-         if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_GEN_SLEEP)){
-            
-          
-            int valor_sem;
-            sem_getvalue(&sem_io_fs_libre, &valor_sem);
-             log_info(logger_kernel,"VALOR SEMAFORO sem_io_fs_libre %d",valor_sem);
-            sem_wait(&sem_io_fs_libre);
-
-            // preparo la estructura para mandar a  cola de bloqueados correspondiente
-            t_proceso_data* proceso_data_io_gen_sleep = malloc(sizeof(t_proceso_data));
-            proceso_data_io_gen_sleep->op = IO_K_GEN_SLEEP;
-            pthread_mutex_lock(&mutex_cola_exec);
-             log_info(logger_kernel, "me meto en mutex: "); 
-            proceso_data_io_gen_sleep->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid);
-            pthread_mutex_unlock(&mutex_cola_exec);
-            //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
-            t_io_espera* io_espera_a_bloquear = malloc(sizeof(t_io_espera));
-            io_espera_a_bloquear->pid = io_gen_sleep->pid;
-            io_espera_a_bloquear->tiempo_espera = io_gen_sleep->unidades_de_trabajo;
-            proceso_data_io_gen_sleep->data = io_espera_a_bloquear;
-            
-            
-            //sem_wait(&sem_interrupcion_atendida);// se traba el hilo a si mismo
-            if(cronometro != NULL){
-               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+     
+         //Verifico que la interfaz exista y este conectada
+         if(dictionary_has_key(interfaces,io_gen_sleep->nombre_interfaz)){
+            t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_gen_sleep->nombre_interfaz);
+            if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_GEN_SLEEP)){
                
-                  actualizar_quantum(proceso_data_io_gen_sleep->pcb);
-               } 
-            }
-               log_info(logger_kernel, "INTERFAZ: %s",interfaz_encontrada->nombre); 
-            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_gen_sleep->pcb->pid); // LOG OBLIGATORIO
-            pthread_mutex_lock(&mutex_cola_blocked);          
-            bloquear_proceso(planificador,proceso_data_io_gen_sleep,interfaz_encontrada->nombre);
-          
-            //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
-             sem_wait(&sem_cpu_libre);
-            t_list* lista_bloqueo = dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre);
-            t_proceso_data* a_enviar_a_io_gen_sleep = list_get(lista_bloqueo,0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
-              pthread_mutex_unlock(&mutex_cola_blocked);
-            //enviar_io_stdin_read(io_stdin_read,socket_servidor);
-            pthread_mutex_lock(&mutex_envio_io);
-            log_info(logger_kernel,"Fd entradasalida %d",interfaz_encontrada->conexion);
-            enviar_espera(io_espera_a_bloquear,interfaz_encontrada->conexion);
-            pthread_mutex_unlock(&mutex_envio_io);
-
-            //liberar_memoria_t_proceso_data(proceso_data_io_gen_sleep);
-            //liberar_memoria_t_io_espera(io_espera_a_bloquear);
-            //liberar_memoria_t_proceso_data(a_enviar_a_io_gen_sleep);
             
+               int valor_sem;
+               sem_getvalue(&sem_io_fs_libre, &valor_sem);
+               log_info(logger_kernel,"VALOR SEMAFORO sem_io_fs_libre %d",valor_sem);
+               sem_wait(&sem_io_fs_libre);
+               sem_wait(&sem_interrupcion_atendida);
+               // preparo la estructura para mandar a  cola de bloqueados correspondiente
+               t_proceso_data* proceso_data_io_gen_sleep = malloc(sizeof(t_proceso_data));
+               proceso_data_io_gen_sleep->op = IO_K_GEN_SLEEP;
+               pthread_mutex_lock(&mutex_cola_exec);
+               log_info(logger_kernel, "me meto en mutex: "); 
+               proceso_data_io_gen_sleep->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid);
+               pthread_mutex_unlock(&mutex_cola_exec);
+               //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
+               t_io_espera* io_espera_a_bloquear = malloc(sizeof(t_io_espera));
+               io_espera_a_bloquear->pid = io_gen_sleep->pid;
+               io_espera_a_bloquear->tiempo_espera = io_gen_sleep->unidades_de_trabajo;
+               proceso_data_io_gen_sleep->data = io_espera_a_bloquear;
+               
+               
+
+               if(cronometro != NULL){
+                  if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+                  
+                     actualizar_quantum(proceso_data_io_gen_sleep->pcb);
+                  } 
+               }
+                  log_info(logger_kernel, "INTERFAZ: %s",interfaz_encontrada->nombre); 
+               log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_gen_sleep->pcb->pid); // LOG OBLIGATORIO
+               pthread_mutex_lock(&mutex_cola_blocked);          
+               bloquear_proceso(planificador,proceso_data_io_gen_sleep,interfaz_encontrada->nombre);
+            
+               //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+               sem_wait(&sem_cpu_libre);
+               t_list* lista_bloqueo = dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre);
+               t_proceso_data* a_enviar_a_io_gen_sleep = list_get(lista_bloqueo,0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+               pthread_mutex_unlock(&mutex_cola_blocked);
+               //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+               pthread_mutex_lock(&mutex_envio_io);
+               log_info(logger_kernel,"Fd entradasalida %d",interfaz_encontrada->conexion);
+               enviar_espera(io_espera_a_bloquear,interfaz_encontrada->conexion);
+               pthread_mutex_unlock(&mutex_envio_io);
+
+               //liberar_memoria_t_proceso_data(proceso_data_io_gen_sleep);
+               //liberar_memoria_t_io_espera(io_espera_a_bloquear);
+               //liberar_memoria_t_proceso_data(a_enviar_a_io_gen_sleep);
+               
+            }
+            else{
+               log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
+               mandar_proceso_a_finalizar_comando(io_gen_sleep->pid);
+               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_gen_sleep->pid);
+            }
+            //liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
          }
          else{
-            log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
+            log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
             mandar_proceso_a_finalizar_comando(io_gen_sleep->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_gen_sleep->pid);
          }
-         //liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
-      }
-      else{
-         log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
-         mandar_proceso_a_finalizar_comando(io_gen_sleep->pid);
-         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_gen_sleep->pid);
-      }
 
-     // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid));
-      
-      //liberar_memoria_t_io_gen_sleep(io_gen_sleep);
+      // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid));
+         
+         //liberar_memoria_t_io_gen_sleep(io_gen_sleep);
 
-       log_info(logger_kernel, "FIN DE ENVIAR SLEEP GEN");
+         log_info(logger_kernel, "FIN DE ENVIAR SLEEP GEN");
+       
       break;
 
    case ENVIO_WAIT_A_KERNEL:
@@ -334,72 +265,74 @@ t_list* lista_paquete;
       t_io_stdin_stdout* io_stdin_read = malloc(sizeof(t_io_stdin_stdout));
       io_stdin_read = deserializar_io_stdin_stdout(lista_paquete);
       enviar_interrupcion_a_cpu(io_stdin_read->pid,INTERRUPCION_IO,io_stdin_read->nombre_interfaz,conexion_cpu_interrupt);
-      if(dictionary_has_key(interfaces,io_stdin_read->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_stdin_read->nombre_interfaz);
-         if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDIN_READ)){
-            
-            
-            sem_wait(&sem_io_fs_libre);// USAR SEMAFOROS para ordenar el envio a la interfaz, ya que solo atiende de a 1 pedido.
-            
-            // preparo la estructura para mandar a  cola de bloqueados correspondiente
-            t_proceso_data* proceso_data_stdin_read = malloc(sizeof(t_proceso_data));
-            proceso_data_stdin_read->op = IO_K_STDIN;
-            pthread_mutex_lock(&mutex_cola_exec);
-            proceso_data_stdin_read->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
-            pthread_mutex_unlock(&mutex_cola_exec);
-            //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
-            t_io_direcciones_fisicas* io_direcciones_fisicas_a_bloquear = malloc(sizeof(t_io_direcciones_fisicas));
-            io_direcciones_fisicas_a_bloquear->pid = io_stdin_read->pid;
-            io_direcciones_fisicas_a_bloquear->tamanio_operacion = io_stdin_read->tamanio;    
-            io_direcciones_fisicas_a_bloquear->direcciones_fisicas = io_stdin_read->direccion; 
-            proceso_data_stdin_read->data = io_direcciones_fisicas_a_bloquear;
-            
+    
+         if(dictionary_has_key(interfaces,io_stdin_read->nombre_interfaz)){
+            t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_stdin_read->nombre_interfaz);
+            if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDIN_READ)){
+               
+               
+               sem_wait(&sem_io_fs_libre);// USAR SEMAFOROS para ordenar el envio a la interfaz, ya que solo atiende de a 1 pedido.
+               sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+               // preparo la estructura para mandar a  cola de bloqueados correspondiente
+               t_proceso_data* proceso_data_stdin_read = malloc(sizeof(t_proceso_data));
+               proceso_data_stdin_read->op = IO_K_STDIN;
+               pthread_mutex_lock(&mutex_cola_exec);
+               proceso_data_stdin_read->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
+               pthread_mutex_unlock(&mutex_cola_exec);
+               //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
+               t_io_direcciones_fisicas* io_direcciones_fisicas_a_bloquear = malloc(sizeof(t_io_direcciones_fisicas));
+               io_direcciones_fisicas_a_bloquear->pid = io_stdin_read->pid;
+               io_direcciones_fisicas_a_bloquear->tamanio_operacion = io_stdin_read->tamanio;    
+               io_direcciones_fisicas_a_bloquear->direcciones_fisicas = io_stdin_read->direccion; 
+               proceso_data_stdin_read->data = io_direcciones_fisicas_a_bloquear;
+               
 
-            //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
-               
-            if(cronometro != NULL){
-               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
-               
-                  actualizar_quantum(proceso_data_stdin_read->pcb);
-               } 
+   
+                  
+               if(cronometro != NULL){
+                  if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+                  
+                     actualizar_quantum(proceso_data_stdin_read->pcb);
+                  } 
+               }
+                        
+               bloquear_proceso(planificador,proceso_data_stdin_read,interfaz_encontrada->nombre);
+               log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_stdin_read->pcb->pid);
+               pthread_mutex_lock(&mutex_cola_blocked);  
+               //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+               t_proceso_data* a_enviar_a_io = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+               pthread_mutex_unlock(&mutex_cola_blocked);
+               pthread_mutex_lock(&mutex_envio_io);
+               enviar_io_df(io_direcciones_fisicas_a_bloquear,interfaz_encontrada->conexion,a_enviar_a_io->op);
+               pthread_mutex_unlock(&mutex_envio_io);
+               //liberar_memoria_t_proceso_data(proceso_data_stdin_read);
+               //liberar_memoria_t_io_direcciones_fisicas(io_direcciones_fisicas_a_bloquear);
+               //list_destroy_and_destroy_elements(lista_nueva_read,free);
+               //liberar_memoria_t_proceso_data(a_enviar_a_io);
+
+
+
             }
-                     
-            bloquear_proceso(planificador,proceso_data_stdin_read,interfaz_encontrada->nombre);
-            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_stdin_read->pcb->pid);
-            pthread_mutex_lock(&mutex_cola_blocked);  
-            //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
-            t_proceso_data* a_enviar_a_io = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
-            pthread_mutex_unlock(&mutex_cola_blocked);
-            pthread_mutex_lock(&mutex_envio_io);
-            enviar_io_df(io_direcciones_fisicas_a_bloquear,interfaz_encontrada->conexion,a_enviar_a_io->op);
-            pthread_mutex_unlock(&mutex_envio_io);
-            //liberar_memoria_t_proceso_data(proceso_data_stdin_read);
-            //liberar_memoria_t_io_direcciones_fisicas(io_direcciones_fisicas_a_bloquear);
-            //list_destroy_and_destroy_elements(lista_nueva_read,free);
-            //liberar_memoria_t_proceso_data(a_enviar_a_io);
+            else{
+               log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
+               //ENVIAR PROCESO A EXIT
+               mandar_proceso_a_finalizar_comando(io_stdin_read->pid);
+               log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdin_read->pid);
+            }
 
+            liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
 
-
+            
          }
          else{
-            log_info(logger_kernel,"ERROR: LA INTERFAZ NO PERMITE EL TIPO DE OPERACION");
-            //ENVIAR PROCESO A EXIT
+            log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
+            //ENVIAR PROCESO A EXIT?
             mandar_proceso_a_finalizar_comando(io_stdin_read->pid);
             log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdin_read->pid);
          }
+      // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid));
+         liberar_memoria_t_io_stdin_stdout(io_stdin_read);
 
-         liberar_memoria_t_interfaz_diccionario(interfaz_encontrada);
-
-         
-      }
-      else{
-         log_info(logger_kernel,"ERROR: LA INTERFAZ NO EXISTE O NO ESTA CONECTADA");
-         //ENVIAR PROCESO A EXIT?
-         mandar_proceso_a_finalizar_comando(io_stdin_read->pid);
-         log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdin_read->pid);
-      }
-     // replanificar_y_ejecutar(buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid));
-      liberar_memoria_t_io_stdin_stdout(io_stdin_read);
       break;
    case SOLICITUD_IO_STDOUT_WRITE:
 
@@ -410,49 +343,52 @@ t_list* lista_paquete;
 
       t_io_stdin_stdout* io_stdout_write = deserializar_io_stdin_stdout(lista_paquete);
        enviar_interrupcion_a_cpu(io_stdout_write->pid,INTERRUPCION_IO,io_stdout_write->nombre_interfaz,conexion_cpu_interrupt);
-      if(dictionary_has_key(interfaces,io_stdout_write->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_stdout_write->nombre_interfaz);
-         if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDOUT_WRITE)){
+  
+         if(dictionary_has_key(interfaces,io_stdout_write->nombre_interfaz)){
+            t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_stdout_write->nombre_interfaz);
+            if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDOUT_WRITE)){
 
-            int valor_sem;
-            sem_getvalue(&sem_io_fs_libre, &valor_sem);   
-            log_info(logger_kernel,"VALOR SEMAFORO sem_io_fs_libre %d",valor_sem);
-          
-            sem_wait(&sem_io_fs_libre);
-
-            // preparo la estructura para mandar a  cola de bloqueados correspondiente
-            t_proceso_data* proceso_data_stdout_write = malloc(sizeof(t_proceso_data));
-            proceso_data_stdout_write->op = IO_K_STDOUT;
-            proceso_data_stdout_write->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_stdout_write->pid);
-            //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
-            t_io_direcciones_fisicas* io_direcciones_fisicas_a_bloquear_write = malloc(sizeof(t_io_direcciones_fisicas));
-            io_direcciones_fisicas_a_bloquear_write->pid = io_stdout_write->pid;
-            io_direcciones_fisicas_a_bloquear_write->tamanio_operacion = io_stdout_write->tamanio;         
-            
-            io_direcciones_fisicas_a_bloquear_write->direcciones_fisicas = io_stdout_write->direccion;
-            proceso_data_stdout_write->data = io_direcciones_fisicas_a_bloquear_write;
-            
-            
-            //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
-
-             if(cronometro != NULL){
-               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
                
-                  actualizar_quantum(proceso_data_stdout_write->pcb);
-               } 
-            }
-            log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_stdout_write->pcb->pid);
-                     
-            bloquear_proceso(planificador,proceso_data_stdout_write,interfaz_encontrada->nombre);
-            //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
-            t_proceso_data* a_enviar_a_io_write = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
-            //enviar_io_stdin_read(io_stdin_read,socket_servidor);
-            pthread_mutex_lock(&mutex_envio_io);
-            enviar_io_df(io_direcciones_fisicas_a_bloquear_write,interfaz_encontrada->conexion,a_enviar_a_io_write->op);
-            pthread_mutex_unlock(&mutex_envio_io);
+                  int valor_sem;
+                  sem_getvalue(&sem_io_fs_libre, &valor_sem);   
+                  log_info(logger_kernel,"VALOR SEMAFORO sem_io_fs_libre %d",valor_sem);
+               
+                  sem_wait(&sem_io_fs_libre);
+                  sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
+                  // preparo la estructura para mandar a  cola de bloqueados correspondiente
+                  t_proceso_data* proceso_data_stdout_write = malloc(sizeof(t_proceso_data));
+                  proceso_data_stdout_write->op = IO_K_STDOUT;
+                  proceso_data_stdout_write->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_stdout_write->pid);
+                  //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
+                  t_io_direcciones_fisicas* io_direcciones_fisicas_a_bloquear_write = malloc(sizeof(t_io_direcciones_fisicas));
+                  io_direcciones_fisicas_a_bloquear_write->pid = io_stdout_write->pid;
+                  io_direcciones_fisicas_a_bloquear_write->tamanio_operacion = io_stdout_write->tamanio;         
+                  
+                  io_direcciones_fisicas_a_bloquear_write->direcciones_fisicas = io_stdout_write->direccion;
+                  proceso_data_stdout_write->data = io_direcciones_fisicas_a_bloquear_write;
+                  log_info(logger_kernel, " %u - tamanio operacion",  io_stdout_write->tamanio);
+                  log_info(logger_kernel, " %u - direcciin operacion ",  io_stdout_write->direccion);
+                
 
-            //liberar_memoria_t_proceso_data(proceso_data_stdout_write;                  
-            //liberar_memoria_t_proceso_data(a_enviar_a_io_write);
+                  if(cronometro != NULL){
+                     if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+                     
+                        actualizar_quantum(proceso_data_stdout_write->pcb);
+                     } 
+                  }
+                  log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_stdout_write->pcb->pid);
+                           
+                  bloquear_proceso(planificador,proceso_data_stdout_write,interfaz_encontrada->nombre);
+                  //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
+                  t_proceso_data* a_enviar_a_io_write = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
+                  //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+                  pthread_mutex_lock(&mutex_envio_io);
+                  enviar_io_df(io_direcciones_fisicas_a_bloquear_write,interfaz_encontrada->conexion,a_enviar_a_io_write->op);
+                  pthread_mutex_unlock(&mutex_envio_io);
+
+                  //liberar_memoria_t_proceso_data(proceso_data_stdout_write;                  
+                  //liberar_memoria_t_proceso_data(a_enviar_a_io_write);
+                 
             
          }
          else{
@@ -469,8 +405,10 @@ t_list* lista_paquete;
          mandar_proceso_a_finalizar_comando(io_stdout_write->pid);
          log_info(logger_kernel, "Finaliza el proceso %u - Motivo: INVALID_INTERFACE ", io_stdout_write->pid);
       }
+      
       //mandar_interrupcion_a_cpu();
       liberar_memoria_t_io_stdin_stdout(io_stdout_write);
+
       break;
    
    case SOLICITUD_IO_FS_CREATE_A_KERNEL:
@@ -946,12 +884,114 @@ uint32_t buscar_indice_primer_valor_no_nulo(t_list* lista){
 void actualizar_pcb_proceso_bloqueado(t_planificador* planificador,char* interface, t_pcb* proceso_bloqueado) {
    int pid = proceso_bloqueado->pid;
    log_info(logger_kernel,"Interfaz de proceso bloqueado: %s",interface);
-   t_list* list_io = dictionary_get(planificador->cola_blocked,interface);
-   int indice = encontrar_indice_proceso_data_por_pid(list_io,pid);
-   t_proceso_data*  proceso_data =  list_remove(list_io,indice); 
-   proceso_data->pcb = proceso_bloqueado;
-   list_add_in_index(list_io, indice,proceso_data ); 
-   dictionary_put(planificador->cola_blocked,interface,list_io); // mutex por afuera
+   pthread_mutex_lock(&mutex_cola_exec);
+   list_remove(planificador->cola_exec,0);
+   list_add_in_index(planificador->cola_exec,0,proceso_bloqueado);
+   pthread_mutex_unlock(&mutex_cola_exec);
+   //t_list* list_io = dictionary_get(planificador->cola_blocked,interface);
+   //int indice = encontrar_indice_proceso_data_por_pid(list_io,pid);
+   //t_proceso_data*  proceso_data =  list_remove(list_io,indice); 
+   //proceso_data->pcb = proceso_bloqueado;
+   //list_add_in_index(list_io, indice,proceso_data ); 
+   //dictionary_put(planificador->cola_blocked,interface,list_io); // mutex por afuera
 
 }
 
+void Kernel_escuchar_cpu_dispatch_interrupciones(void* args){
+    t_kernel_escuchar_cpu* params = (t_kernel_escuchar_cpu*) args;
+    int socket_dispatch = *(params->conexion_cpu_dispatch_interrupciones);
+    int socket_interrupt = *(params->conexion_cpu_interrupt);
+
+bool control_key = 1;
+t_list* lista_paquete;
+
+   uint32_t cod_op;
+    while (socket_dispatch != -1) {
+
+        if (recv(socket_dispatch, &cod_op, sizeof(uint32_t), MSG_WAITALL) != sizeof(uint32_t)) {
+            log_info(logger_kernel, "DISCONNECT! DISPATCH INTERRUPCIONES");
+            return;
+        }
+ 
+   switch (cod_op)
+   {
+   case INTERRUPCION_CPU:
+      //Recibo t_proceso_interrumpido(pcb y motivo) desde cpu(funcion check_interrupt)
+      log_info(logger_kernel,"Recibo INTERRUPCION_CPU desde CPU");
+      lista_paquete = recibir_paquete(socket_dispatch);
+      
+      t_proceso_interrumpido* proceso_interrumpido = deserializar_proceso_interrumpido(lista_paquete);
+       log_info(logger_kernel, "PROCESO INTERRUMPIDO PID %u ", proceso_interrumpido->pcb->pid);
+      //Detecto motivo de interrupcion y dependiendo de este se decide que es lo que se hace 
+       if  ( planificador->planificacion_detenida == false ) {  
+               switch (proceso_interrumpido->motivo_interrupcion)
+                  {
+                  case INTERRUPCION_OUT_OF_MEMORY:
+                     if(proceso_interrumpido->pcb != NULL){
+                        poner_en_cola_exit(proceso_interrumpido->pcb);                   
+                     
+                        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: OUT_OF_MEMORY ", proceso_interrumpido->pcb->pid);
+                     }
+                     else{
+                        log_info(logger_kernel,"El proceso recibido es nulo");
+                     }
+                  case INSTRUCCION_EXIT:
+                     log_info(logger_kernel,"EXIT RECIBIDO");
+                     if(proceso_interrumpido->pcb != NULL){
+                        poner_en_cola_exit(proceso_interrumpido->pcb); 
+                        sem_post(&sem_contexto_ejecucion_recibido);                    
+                        log_info(logger_kernel, "Finaliza el proceso %u - Motivo: SUCCESS", proceso_interrumpido->pcb->pid);
+                     }
+                     else{
+                        log_info(logger_kernel,"El proceso recibido es nulo");
+                     }
+                     break;
+                  
+                  case FIN_QUANTUM:
+                     printf("Se recibió una interrupción de FIN DE QUANTUM");  
+                     if(proceso_interrumpido->pcb != NULL){
+                        log_info(logger_kernel, "PID: %U - Desalojado por fin de Quantum", proceso_interrumpido->pcb->pid); 
+                        log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: READY", proceso_interrumpido->pcb->pid);
+                        pthread_mutex_lock(&mutex_cola_ready);
+                        list_add(planificador->cola_ready,  proceso_interrumpido->pcb); // envolver con mutex 
+                        pthread_mutex_unlock(&mutex_cola_ready);
+                        free(proceso_interrumpido);// crear funcion para liberar pcb
+                     }         
+                     break;
+
+                  
+                  case ELIMINAR_PROCESO:
+                     pcb_actualizado_interrupcion = proceso_interrumpido->pcb;
+                     sem_post(&sem_contexto_ejecucion_recibido);
+                     break;
+                  case INTERRUPCION_IO:
+                     log_info(logger_kernel, "Se recibió una interrupción de IO");  
+                        if(proceso_interrumpido->pcb != NULL){
+                           pthread_mutex_lock(&mutex_cola_blocked);
+                           actualizar_pcb_proceso_bloqueado(planificador,proceso_interrumpido->interfaz,proceso_interrumpido->pcb) ;
+                           pthread_mutex_unlock(&mutex_cola_blocked);                       
+                           sem_post(&sem_interrupcion_atendida); // solo para actualizaar el contexto
+                           log_info(logger_kernel, "Contexto actualizado pid %d;",proceso_interrumpido->pcb->pid);  
+                           }
+                        else{
+                           log_info(logger_kernel,"El proceso recibido es nulo");
+                        }      
+
+
+
+                  
+                  default:
+                     //printf("Motivo de interrupcion desconocido. Se finaliza el proceso");
+                     //mandar_proceso_a_finalizar(proceso_interrumpido->pcb->pid);
+                     
+                     break;
+                  }
+                  //liberar_proceso_interrumpido(proceso_interrumpido); hay que liberarlo?
+
+                  break;
+
+      } // fin de if de detener planificacion
+      
+       }// case
+    }// while
+ }// funcion    

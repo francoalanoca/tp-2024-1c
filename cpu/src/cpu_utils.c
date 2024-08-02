@@ -436,7 +436,7 @@ void generar_interrupcion_a_kernel(int conexion){
     
     uint32_t interfaz_len = strlen(proceso_interrumpido_actual->interfaz)+1;
     paquete_interrupcion_kernel = crear_paquete(INTERRUPCION_CPU);
- 
+  log_info(logger_cpu,"PROGRAM COUNTER ACTUAL %d", &proceso_interrumpido_actual->pcb->registros_cpu.PC);
     agregar_a_paquete(paquete_interrupcion_kernel,  &proceso_interrumpido_actual->pcb->pid,  sizeof(uint32_t));         
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->program_counter, sizeof(uint32_t));  
     agregar_a_paquete(paquete_interrupcion_kernel, &proceso_interrumpido_actual->pcb->path_length, sizeof(uint32_t)); 
@@ -1222,9 +1222,9 @@ void solicitar_io_stdin_read_a_kernel(uint32_t tamanio_nombre_interfaz,char* nom
         agregar_a_paquete(paquete_io_stdin_read,  nombre_interfaz,  tamanio_nombre_interfaz);       
         agregar_a_paquete(paquete_io_stdin_read, &direccion, sizeof(uint32_t));  
         agregar_a_paquete(paquete_io_stdin_read, &tamanio, sizeof(uint32_t)); 
-        
+         log_info(logger_cpu,"voy a enviar al siguiente socket %d",conexion_kernel );
         enviar_paquete(paquete_io_stdin_read, conexion_kernel); 
-         sem_wait(&sem_interrupcion_kernel);
+        sem_wait(&sem_interrupcion_kernel);
         eliminar_paquete(paquete_io_stdin_read);
         
 }
@@ -1490,9 +1490,8 @@ void enviar_io_fs_truncate_a_kernel(uint32_t tamanio_interfaz_elegida,char* inte
         agregar_a_paquete(paquete_io_fs_truncate,  &tamanio,  sizeof(uint32_t));
         
         enviar_paquete(paquete_io_fs_truncate, conexion_kernel); 
-        free(paquete_io_fs_truncate->buffer->stream);
-        free(paquete_io_fs_truncate->buffer);
-        free(paquete_io_fs_truncate);
+        sem_wait(&sem_interrupcion_kernel);
+        eliminar_paquete(paquete_io_fs_truncate);
 }
 
 void enviar_io_fs_write_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz_elegida,uint32_t tamanio_nombre_archivo,char* nombre_archivo,uint32_t valor_tamanio,uint32_t direccion_fisica,uint32_t puntero_archivo,uint32_t pid, int conexion_kernel){
@@ -1541,11 +1540,12 @@ void enviar_io_fs_read_a_kernel(uint32_t tamanio_interfaz_elegida,char* interfaz
 
  
 
-void ciclo_de_instrucciones(int *conexion_mer, t_pcb *proceso, t_list *tlb, int *socket_dispatch, int *socket_interrupt)
+void ciclo_de_instrucciones(int *conexion_mer, t_pcb *proceso, t_list *tlb, int *socket_dispatch, int*socket_dispatch_interrupciones ,int *socket_interrupt)
 {   log_info(logger_cpu, "Entro al ciclo");
     int conexion_mem = *conexion_mer;
     int dispatch = *socket_dispatch;
     int interrupt = *socket_interrupt;
+    int dispatch_interrupt = *socket_dispatch_interrupciones;
     //free(conexion_mer);
     //free(socket_dispatch);
     //free(socket_interrupt);
@@ -1565,7 +1565,7 @@ void ciclo_de_instrucciones(int *conexion_mer, t_pcb *proceso, t_list *tlb, int 
         proceso_actual->program_counter += 1;
     }
     log_info(logger_cpu, "Voy a entrar a check_interrupt");
-    check_interrupt(dispatch);
+    check_interrupt(dispatch_interrupt);
     log_info(logger_cpu, "Sale de check_interrupt");
     log_info(logger_cpu, "Termino ciclo de instrucciones");
 

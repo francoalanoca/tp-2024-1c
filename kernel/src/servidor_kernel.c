@@ -97,10 +97,10 @@ void procesar_conexion(void *void_args) {
                 //list_destroy_and_destroy_elements(lista_paquete_interfaz,free);
             break;
             case IO_K_GEN_SLEEP_FIN:
-                
+                log_info(logger_kernel, "RECIBO IO_K_GEN_SLEEP_FIN" ); 
                 t_list* lista_paquete_interfaz_pid_sleep = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_sleep = deserializar_interfaz_pid(lista_paquete_interfaz_pid_sleep);
-                sem_wait(&sem_interrupcion_atendida);          
+                //sem_wait(&sem_interrupcion_atendida);          
                 
                 desbloquear_y_agregar_a_ready(planificador,interfaz_pid_sleep->pid, interfaz_pid_sleep->nombre_interfaz);
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", interfaz_pid_sleep->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
@@ -110,10 +110,10 @@ void procesar_conexion(void *void_args) {
                
             break;
             case IO_K_STDIN_FIN:
-                
+                log_info(logger_kernel, "RECIBO IO_K_STDIN_FIN" ); 
                 t_list* lista_paquete_interfaz_STDIN = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_STDIN = deserializar_interfaz_pid(lista_paquete_interfaz_STDIN);
-                sem_wait(&sem_interrupcion_atendida);          
+                //sem_wait(&sem_interrupcion_atendida);          
                 
                 desbloquear_y_agregar_a_ready(planificador,interfaz_pid_STDIN->pid, interfaz_pid_STDIN->nombre_interfaz);
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", interfaz_pid_STDIN->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
@@ -126,7 +126,7 @@ void procesar_conexion(void *void_args) {
                 
                 t_list* lista_paquete_interfaz_stdout = recibir_paquete(cliente_socket);
                 t_interfaz_pid* interfaz_pid_stdout = deserializar_interfaz_pid(lista_paquete_interfaz_stdout);
-                sem_wait(&sem_interrupcion_atendida);          
+                //sem_wait(&sem_interrupcion_atendida);          
                 
                 desbloquear_y_agregar_a_ready(planificador,interfaz_pid_stdout->pid, interfaz_pid_stdout->nombre_interfaz);
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", interfaz_pid_stdout->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	

@@ -26,6 +26,7 @@ extern t_log *logger_kernel;
 extern t_config* file_cfg_kernel;
 extern t_pcb* pcb;
 extern int conexion_cpu_dispatch;
+extern int conexion_cpu_dispatch_interrupciones;
 extern int conexion_cpu_interrupt;
 extern int conexion_memoria;
 extern int socket_servidor;

@@ -12,6 +12,7 @@
 extern t_pcb* proceso_actual;
 extern t_proceso_interrumpido* proceso_interrumpido_actual;
 extern bool interrupcion_kernel;
+extern t_list* lista_sockets_global;
 extern int conexion_kernel_dispatch;
 extern int conexion_kernel_interrupt;
 extern instr_t *prox_inst;
