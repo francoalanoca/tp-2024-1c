@@ -333,29 +333,29 @@ t_list* lista_paquete;
       
       t_io_stdin_stdout* io_stdin_read = malloc(sizeof(t_io_stdin_stdout));
       io_stdin_read = deserializar_io_stdin_stdout(lista_paquete);
+      enviar_interrupcion_a_cpu(io_stdin_read->pid,INTERRUPCION_IO,io_stdin_read->nombre_interfaz,conexion_cpu_interrupt);
       if(dictionary_has_key(interfaces,io_stdin_read->nombre_interfaz)){
          t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
          interfaz_encontrada = dictionary_get(interfaces,io_stdin_read->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDIN_READ)){
             
-            enviar_interrupcion_a_cpu(io_stdin_read->pid,INTERRUPCION_IO,io_stdin_read->nombre_interfaz,conexion_cpu_interrupt);
-
+            
             sem_wait(&sem_io_fs_libre);// USAR SEMAFOROS para ordenar el envio a la interfaz, ya que solo atiende de a 1 pedido.
             
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
             t_proceso_data* proceso_data_stdin_read = malloc(sizeof(t_proceso_data));
             proceso_data_stdin_read->op = IO_K_STDIN;
+            pthread_mutex_lock(&mutex_cola_exec);
             proceso_data_stdin_read->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_stdin_read->pid);
+            pthread_mutex_unlock(&mutex_cola_exec);
             //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data
             t_io_direcciones_fisicas* io_direcciones_fisicas_a_bloquear = malloc(sizeof(t_io_direcciones_fisicas));
             io_direcciones_fisicas_a_bloquear->pid = io_stdin_read->pid;
-            io_direcciones_fisicas_a_bloquear->tamanio_operacion = io_stdin_read->tamanio;
-            t_list* lista_nueva_read = list_create();
-            list_add(lista_nueva_read,io_stdin_read->direccion);
-            io_direcciones_fisicas_a_bloquear->direcciones_fisicas = lista_nueva_read; 
+            io_direcciones_fisicas_a_bloquear->tamanio_operacion = io_stdin_read->tamanio;    
+            io_direcciones_fisicas_a_bloquear->direcciones_fisicas = io_stdin_read->direccion; 
             proceso_data_stdin_read->data = io_direcciones_fisicas_a_bloquear;
             
-            
+
             //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
                
             if(cronometro != NULL){
@@ -367,16 +367,17 @@ t_list* lista_paquete;
                      
             bloquear_proceso(planificador,proceso_data_stdin_read,interfaz_encontrada->nombre);
             log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_stdin_read->pcb->pid);
+            pthread_mutex_lock(&mutex_cola_blocked);  
             //obtener proximo proceso en la lista de bloqueados de esa interfaz y enviar ese a IO
             t_proceso_data* a_enviar_a_io = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
-            //enviar_io_stdin_read(io_stdin_read,socket_servidor);
+            pthread_mutex_unlock(&mutex_cola_blocked);
             pthread_mutex_lock(&mutex_envio_io);
-            enviar_io_df(a_enviar_a_io->data,socket_servidor,a_enviar_a_io->op);
+            enviar_io_df(io_direcciones_fisicas_a_bloquear,interfaz_encontrada->conexion,a_enviar_a_io->op);
             pthread_mutex_unlock(&mutex_envio_io);
-            liberar_memoria_t_proceso_data(proceso_data_stdin_read);
-            liberar_memoria_t_io_direcciones_fisicas(io_direcciones_fisicas_a_bloquear);
-            list_destroy_and_destroy_elements(lista_nueva_read,free);
-            liberar_memoria_t_proceso_data(a_enviar_a_io);
+            //liberar_memoria_t_proceso_data(proceso_data_stdin_read);
+            //liberar_memoria_t_io_direcciones_fisicas(io_direcciones_fisicas_a_bloquear);
+            //list_destroy_and_destroy_elements(lista_nueva_read,free);
+            //liberar_memoria_t_proceso_data(a_enviar_a_io);
 
 
 
