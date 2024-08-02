@@ -33,7 +33,7 @@ t_recurso* deserializar_recurso(t_list*  lista_paquete );
 uint32_t buscar_indice_primer_valor_no_nulo(t_list* lista);
 void actualizar_pcb_proceso_bloqueado(t_planificador* planificador,char* interface, t_pcb* proceso_bloqueado); 
 void actualizar_pcb_en_lista(char* key, void* value, void* pcb_nuevo);
-//void mandar_proceso_a_finalizar(uint32_t pid);
+
 //void enviar_proceso_a_cpu(t_pcb* pcb, int conexion);
 //void replanificar_y_ejecutar();
 

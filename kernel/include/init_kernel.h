@@ -166,6 +166,6 @@ void liberar_memoria_t_interfaz_pid(t_interfaz_pid* interfaz_pid);
 
 t_pcb* encontrar_proceso_pid(t_list * lista_procesos , uint32_t pid);
 
-//void mandar_proceso_a_finalizar(uint32_t pid);
+
 
 #endif /* INIT_KERNEL_H_ */
