@@ -109,6 +109,19 @@ void procesar_conexion(void *void_args) {
                // free(interfaz_pid_sleep);
                
             break;
+            case IO_K_STDIN_FIN:
+                
+                t_list* lista_paquete_interfaz_STDIN = recibir_paquete(cliente_socket);
+                t_interfaz_pid* interfaz_pid_STDIN = deserializar_interfaz_pid(lista_paquete_interfaz_STDIN);
+                sem_wait(&sem_interrupcion_atendida);          
+                
+                desbloquear_y_agregar_a_ready(planificador,interfaz_pid_STDIN->pid, interfaz_pid_STDIN->nombre_interfaz);
+                log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", interfaz_pid_STDIN->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
+                sem_post(&sem_io_fs_libre);
+                //list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_sleep,free);
+               // free(interfaz_pid_sleep);
+               
+            break;
             case IO_K_FS_CREATE_FIN:
                 printf("Received IO_K_FS_CREATE_FIN request\n");
                 //TODO: deserealizar paquete. nombre interfaz, pid.(LISTO)
