@@ -104,7 +104,7 @@ void procesar_conexion(void *void_args) {
                 
                 desbloquear_y_agregar_a_ready(planificador,interfaz_pid_sleep->pid, interfaz_pid_sleep->nombre_interfaz);
                 log_info(logger_kernel, "PID: %u - Estado Anterior: BLOQUEADO - Estado Actual: READY", interfaz_pid_sleep->pid); // REPETIR EN TODAS LAS REPSUESTAS DE IO	
- 
+                sem_post(&sem_io_fs_libre);
                 //list_destroy_and_destroy_elements(lista_paquete_interfaz_pid_sleep,free);
                // free(interfaz_pid_sleep);
                

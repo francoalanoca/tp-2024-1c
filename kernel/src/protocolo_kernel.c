@@ -146,7 +146,7 @@ t_list* lista_paquete;
           
             int valor_sem;
             sem_getvalue(&sem_io_fs_libre, &valor_sem);
-            
+             log_info(logger_kernel,"VALOR SEMAFORO sem_io_fs_libre %d",valor_sem);
             sem_wait(&sem_io_fs_libre);
 
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
