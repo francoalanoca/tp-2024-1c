@@ -20,6 +20,7 @@ void memoria_atender_cliente(void* socket){
 
             break;
         }
+     char* output = NULL;   
     switch (cod_op) {
 		
 		case HANDSHAKE:
@@ -155,7 +156,7 @@ void memoria_atender_cliente(void* socket){
             }        
             
             int dir = (int) input->direcciones_fisicas;
-            escribir_memoria(input->pid, dir , input->input, input->input_length);    //ver
+            escribir_memoria(input->pid,  input->direcciones_fisicas , input->input, input->input_length);    //ver
             response = IO_M_STDIN_FIN;
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
             if (send(socket_cliente, &response, sizeof(uint32_t), 0) != sizeof(uint32_t)) {
@@ -182,7 +183,7 @@ void memoria_atender_cliente(void* socket){
             }
 
              
-            output =  leer_memoria(io_stdout->pid, (int) input->direcciones_fisicas, io_stdout->tamanio_operacion);
+            output =  leer_memoria(io_stdout->pid,  io_stdout->direcciones_fisicas, io_stdout->tamanio_operacion);
             uint32_t tamanio_output = string_length(output)+1;
             io_output->pid = io_stdout->pid;
             io_output->output_length = tamanio_output;
