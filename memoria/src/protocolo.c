@@ -156,6 +156,7 @@ void memoria_atender_cliente(void* socket){
             }        
             
             int dir = (int) input->direcciones_fisicas;
+            log_info(logger_memoria, "direccion fisica a escribir %d", input->direcciones_fisicas);
             escribir_memoria(input->pid,  input->direcciones_fisicas , input->input, input->input_length);    //ver
             response = IO_M_STDIN_FIN;
             usleep(cfg_memoria->RETARDO_RESPUESTA * 1000);
