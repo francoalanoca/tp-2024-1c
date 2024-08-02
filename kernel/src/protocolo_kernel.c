@@ -153,6 +153,7 @@ t_list* lista_paquete;
             t_proceso_data* proceso_data_io_gen_sleep = malloc(sizeof(t_proceso_data));
             proceso_data_io_gen_sleep->op = IO_K_GEN_SLEEP;
             pthread_mutex_lock(&mutex_cola_exec);
+             log_info(logger_kernel, "me meto en mutex: "); 
             proceso_data_io_gen_sleep->pcb = buscar_pcb_en_lista(planificador->cola_exec,io_gen_sleep->pid);
             pthread_mutex_unlock(&mutex_cola_exec);
             //transformo t_io_stdin_stdout en t_io_direcciones_fisicas y lo paso como data del t_proceso_data

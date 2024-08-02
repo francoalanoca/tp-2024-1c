@@ -156,6 +156,7 @@ void finalizar_proceso(t_planificador* planificador, t_pcb* proceso) {
     log_info(logger_kernel, "PID: %s -PROCESO LIBERADO",pid_string);
     liberar_memoria_pcb(proceso);
     planificador->grado_multiprogramacion_actual--;
+    sem_post(&sem_cpu_libre);
 
 }
 
@@ -243,7 +244,7 @@ void poner_en_cola_exit(t_pcb* proceso){
     log_info(logger_kernel, "entro en poner A COLA EXIT"); //despues borra
     pthread_mutex_lock(&mutex_cola_exec);
     list_remove(planificador->cola_exec, indice_proceso_a_finalizar);
-    pthread_mutex_unlock(&mutex_cola_ready);
+    pthread_mutex_unlock(&mutex_cola_exec);
     
     pthread_mutex_lock(&mutex_cola_exit);
     list_add(planificador->cola_exit, proceso);
