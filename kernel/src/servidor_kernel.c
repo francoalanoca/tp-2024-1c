@@ -242,6 +242,7 @@ t_interfaz_pid* deserializar_interfaz_pid(t_list*  lista_paquete ){
 }
 
 void desbloquear_y_agregar_a_ready(t_planificador* planificador,int pid,char* nombre_interfaz){
+     if  ( planificador->planificacion_detenida == false ) {            
             log_info(logger_kernel, "PLANIFICADOR ALGORITMO %d", planificador->algoritmo);
             pthread_mutex_lock(&mutex_cola_blocked);
              t_pcb* proceso =  desbloquear_proceso_io(planificador,pid,nombre_interfaz);
@@ -260,7 +261,7 @@ void desbloquear_y_agregar_a_ready(t_planificador* planificador,int pid,char* no
                         pthread_mutex_unlock(&mutex_cola_ready);
                         sem_post(&sem_prioridad_io);
                 }	 
-    
+    }	
 }
 
 t_pcb * desbloquear_proceso_io(t_planificador* planificadorloco,int pid,char* nombre_interfaz){
