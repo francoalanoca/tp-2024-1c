@@ -136,28 +136,27 @@ void finalizar_proceso(t_planificador* planificador, t_pcb* proceso) {
      sprintf(pid_string, "%d", proceso->pid); //itoa(proceso->pid, pid_string, 10);
      log_info(logger_kernel, "PID: %s -proceso a liberar recursos",pid_string);
     t_proceso_recurso_diccionario* proceso_recurso  = dictionary_get(procesos_recursos,pid_string);
-    for (int i = 0; i < list_size(proceso_recurso->nombres_recursos); i++)
-    {
-        //buscar en que indice de la tabla general de recursos esta
-        uint32_t indice_recurso_buscado = buscar_indice_recurso(cfg_kernel->RECURSOS,list_get(proceso_recurso->nombres_recursos,i)); 
-        
-        //sumo cant instancias correspondientes a lista de instancias global del recurso correspondiente
-        uint32_t instancias_generales_actuales ;
-        uint32_t instancias_proceso ;
-        instancias_generales_actuales = list_get(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_buscado);
-        instancias_proceso = list_get(proceso_recurso->instancias_recursos,i);
-        list_replace(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_buscado,instancias_generales_actuales + instancias_proceso);
-    }
-    
-    //borrar valor del diccionario para pid correspondiente
-    dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
-    free(proceso);
-     planificador->grado_multiprogramacion_actual--;
-    if (!list_is_empty(planificador->cola_new) && !planificador->planificacion_detenida) {
-        t_pcb* proceso_nuevo = list_remove(planificador->cola_new, 0);
-        list_add(planificador->cola_ready, proceso_nuevo);
-        planificador->grado_multiprogramacion_actual++;
-    }
+    if (proceso_recurso != NULL && !list_is_empty(proceso_recurso->nombres_recursos)) {
+            for (int i = 0; i < list_size(proceso_recurso->nombres_recursos); i++)
+            {
+                //buscar en que indice de la tabla general de recursos esta
+                uint32_t indice_recurso_buscado = buscar_indice_recurso(cfg_kernel->RECURSOS,list_get(proceso_recurso->nombres_recursos,i)); 
+                
+                //sumo cant instancias correspondientes a lista de instancias global del recurso correspondiente
+                uint32_t instancias_generales_actuales ;
+                uint32_t instancias_proceso ;
+                instancias_generales_actuales = list_get(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_buscado);
+                instancias_proceso = list_get(proceso_recurso->instancias_recursos,i);
+                list_replace(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_buscado,instancias_generales_actuales + instancias_proceso);
+            }
+            
+            //borrar valor del diccionario para pid correspondiente
+            dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
+     }       
+    log_info(logger_kernel, "PID: %s -PROCESO LIBERADO",pid_string);
+    liberar_memoria_pcb(proceso);
+    planificador->grado_multiprogramacion_actual--;
+
 }
 
 // Crea un nuevo proceso
@@ -174,7 +173,7 @@ void eliminar_proceso(t_planificador* planificador, t_pcb* proceso) {
     sem_wait(&sem_confirmacion_memoria);
     // Finalizar el proceso en el planificador
     finalizar_proceso(planificador, proceso);
-    log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: EXIT", proceso->pid);
+    
 }
 
 uint32_t encontrar_indice_proceso_pid(t_list * lista_procesos , t_pcb* pcb) {
@@ -221,6 +220,7 @@ void liberar_proceso_memoria(uint32_t pid){
 
     // Enviar el paquete a la memoria
     enviar_paquete(paquete_memoria, conexion_memoria);
+    eliminar_paquete(paquete_memoria);
 }
 
 bool list_contains(t_list* lista_de_procesos, uint32_t pid){
@@ -427,9 +427,7 @@ void mandar_proceso_a_finalizar(t_pcb* proceso_finalizar){
   
 
    eliminar_proceso(planificador,proceso_finalizar);
-   printf("ELIMINE PROCESO\n");
-   liberar_memoria_pcb(proceso_finalizar);
-   printf("LIBERE MEMORIA PCB\n");
+   
 }
 
 uint32_t buscar_indice_recurso(t_list* lista_recursos,char* nombre_recurso){
