@@ -302,11 +302,21 @@ void f_ejecutar_script(char* path) {
             linea[read - 1] = '\0';
         }
 
+        char* tokens[2];
+        int token_count = 0;
+
+        char* token = strtok(linea, " ");
+        while (token != NULL && token_count < 2) {
+            tokens[token_count++] = token;
+            token = strtok(NULL, " ");
+        }
+
+
         log_info(logger_kernel, "Ejecutando comando: %s", linea);
 
         // Validamos y ejecutamos cada línea del archivo
-        if (validacion_de_instruccion_de_consola(linea)) {
-            atender_instruccion_validada(linea);
+        if (validacion_de_instruccion_de_consola(tokens)) {
+            atender_instruccion_validada(tokens);
         } else {
             log_error(logger_kernel, "Comando no reconocido en el script: %s", linea);
         }
