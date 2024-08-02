@@ -345,11 +345,16 @@ void lanzar_interrupcion_fin_quantum (void* args) {
     int pid = args_fin_q->pid;
     t_paquete* paquete;
     uint32_t motivo = FIN_QUANTUM;
+    uint tam_interfaz = 12;
+    char* interfaz = malloc(tam_interfaz);
+    strcpy(interfaz,"SIN INTERFAZ");
    
     sleep(quantum / 1000);   
     paquete = crear_paquete(INTERRUPCION_KERNEL); 
     agregar_a_paquete(paquete, &pid, sizeof(uint32_t));
     agregar_a_paquete(paquete, &motivo, sizeof(uint32_t));   
+    agregar_a_paquete(paquete, &tam_interfaz, sizeof(uint32_t)); 
+    agregar_a_paquete(paquete, interfaz, tam_interfaz); 
     enviar_paquete(paquete, conexion_cpu_interrupt);  
     log_info(logger_kernel, "Enviando interrupcion FIN de QUANTUM\n");
      eliminar_paquete(paquete);

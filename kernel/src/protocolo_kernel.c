@@ -96,7 +96,7 @@ t_list* lista_paquete;
                pthread_mutex_lock(&mutex_cola_ready);
                list_add(planificador->cola_ready,  proceso_interrumpido->pcb); // envolver con mutex 
                pthread_mutex_unlock(&mutex_cola_ready);
-               free(proceso_interrumpido);// crear funcion para liberar pcb
+               //free(proceso_interrumpido);// crear funcion para liberar pcb
             }         
             break;
 

@@ -273,7 +273,7 @@ void atender_memoria (int *socket_mr) {
                     }
                     default:
                     {
-                        log_error(logger_cpu, "Operacion invalida enviada desde Memoria:%d",cop);
+                        log_warning(logger_cpu, "Operacion invalida enviada desde Memoria:%d",cop);
                         break;
                     }
                     break;
@@ -368,9 +368,12 @@ log_info(logger_cpu, "va a escuchar");
 
 t_proceso_interrumpido *proceso_interrumpido_deserializar(t_list*  lista_paquete_proceso_interrumpido) {
     t_proceso_interrumpido *proceso_interrumpido_nuevo = malloc(sizeof(t_proceso_interrumpido));
+    uint32_t tam_interfaz;
     proceso_interrumpido_nuevo->pcb =  malloc(sizeof(t_pcb));
     proceso_interrumpido_nuevo->pcb->pid = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 0);
     proceso_interrumpido_nuevo->motivo_interrupcion = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 1);	
+    tam_interfaz = *(uint32_t*)list_get(lista_paquete_proceso_interrumpido, 2);
+    proceso_interrumpido_nuevo->interfaz = malloc(tam_interfaz);	
     proceso_interrumpido_nuevo->interfaz = list_get(lista_paquete_proceso_interrumpido, 3);	
     log_info(logger_cpu, "interfaz recibida %s",list_get(lista_paquete_proceso_interrumpido, 3));
      log_info(logger_cpu, "interfaz recibida y guardada %s",proceso_interrumpido_nuevo->interfaz);
