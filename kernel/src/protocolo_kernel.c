@@ -348,11 +348,9 @@ t_list* lista_paquete;
             t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_stdout_write->nombre_interfaz);
             if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_STDOUT_WRITE)){
 
-               
-                  int valor_sem;
-                  sem_getvalue(&sem_io_fs_libre, &valor_sem);   
-                  log_info(logger_kernel,"VALOR SEMAFORO sem_io_fs_libre %d",valor_sem);
-               
+                  
+
+                 
                   sem_wait(&sem_io_fs_libre);
                   sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
                   // preparo la estructura para mandar a  cola de bloqueados correspondiente
@@ -407,7 +405,7 @@ t_list* lista_paquete;
       }
       
       //mandar_interrupcion_a_cpu();
-      liberar_memoria_t_io_stdin_stdout(io_stdout_write);
+      //liberar_memoria_t_io_stdin_stdout(io_stdout_write);
 
       break;
    
@@ -415,15 +413,13 @@ t_list* lista_paquete;
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_CREATE_A_KERNEL desde CPU");
       lista_paquete = recibir_paquete(socket_dispatch);
       
-      t_io_crear_archivo* io_crear_archivo = malloc(sizeof(t_io_crear_archivo));
-      io_crear_archivo = deserializar_io_crear_archivo(lista_paquete);
+      t_io_crear_archivo* io_crear_archivo = deserializar_io_crear_archivo(lista_paquete);
       if(dictionary_has_key(interfaces,io_crear_archivo->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
-            interfaz_encontrada = dictionary_get(interfaces,io_crear_archivo->nombre_interfaz);
+         t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_crear_archivo->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_CREATE)){
             enviar_interrupcion_a_cpu(io_crear_archivo->pid,INTERRUPCION_IO,io_crear_archivo->nombre_interfaz,conexion_cpu_interrupt);
             sem_wait(&sem_io_fs_libre);
-
+            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
             t_proceso_data* proceso_data_io_crear_archivo = malloc(sizeof(t_proceso_data));
             proceso_data_io_crear_archivo->op = IO_FS_CREATE;
@@ -450,7 +446,7 @@ t_list* lista_paquete;
             t_proceso_data* a_enviar_a_io_fs_create = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
             pthread_mutex_lock(&mutex_envio_io);
-            enviar_gestionar_archivo(a_enviar_a_io_fs_create->data,socket_servidor,a_enviar_a_io_fs_create->op);
+            enviar_gestionar_archivo(io_create_archivo_a_bloquear,socket_servidor,a_enviar_a_io_fs_create->op);
             pthread_mutex_unlock(&mutex_envio_io);
             liberar_memoria_t_proceso_data(proceso_data_io_crear_archivo);
             liberar_memoria_t_io_gestion_archivo(io_create_archivo_a_bloquear);
@@ -476,15 +472,13 @@ t_list* lista_paquete;
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_DELETE_A_KERNEL desde CPU");
       lista_paquete = recibir_paquete(socket_dispatch);
       
-      t_io_crear_archivo* io_delete_archivo = malloc(sizeof(t_io_crear_archivo));
-      io_delete_archivo = deserializar_io_crear_archivo(lista_paquete);
+      t_io_crear_archivo* io_delete_archivo = deserializar_io_crear_archivo(lista_paquete);
       if(dictionary_has_key(interfaces,io_delete_archivo->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
-            interfaz_encontrada = dictionary_get(interfaces,io_delete_archivo->nombre_interfaz);
+         t_interfaz_diccionario* interfaz_encontrada  = dictionary_get(interfaces,io_delete_archivo->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_DELETE)){
             enviar_interrupcion_a_cpu(io_delete_archivo->pid,INTERRUPCION_IO,io_delete_archivo->nombre_interfaz,conexion_cpu_interrupt);
             sem_wait(&sem_io_fs_libre);
-
+               sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
             t_proceso_data* proceso_data_io_delete_archivo = malloc(sizeof(t_proceso_data));
             proceso_data_io_delete_archivo->op = IO_FS_DELETE;
@@ -511,7 +505,7 @@ t_list* lista_paquete;
             t_proceso_data* a_enviar_a_io_fs_delete = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
             pthread_mutex_lock(&mutex_envio_io);
-            enviar_gestionar_archivo(a_enviar_a_io_fs_delete->data,socket_servidor,a_enviar_a_io_fs_delete->op);
+            enviar_gestionar_archivo(io_delete_archivo_a_bloquear,socket_servidor,a_enviar_a_io_fs_delete->op);
             pthread_mutex_unlock(&mutex_envio_io);
             liberar_memoria_t_proceso_data(proceso_data_io_delete_archivo);
             liberar_memoria_t_io_gestion_archivo(io_delete_archivo_a_bloquear);
@@ -536,16 +530,14 @@ t_list* lista_paquete;
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_TRUNCATE_A_KERNEL desde CPU");
       lista_paquete = recibir_paquete(socket_dispatch);
       
-      t_io_fs_truncate* io_truncate_archivo = malloc(sizeof(t_io_fs_truncate));
-      io_truncate_archivo = deserializar_io_truncate_archivo(lista_paquete);
+      t_io_fs_truncate* io_truncate_archivo = deserializar_io_truncate_archivo(lista_paquete);
 
       if(dictionary_has_key(interfaces,io_truncate_archivo->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
-            interfaz_encontrada = dictionary_get(interfaces,io_truncate_archivo->nombre_interfaz);
+         t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_truncate_archivo->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_TRUNCATE)){
             enviar_interrupcion_a_cpu(io_truncate_archivo->pid,INTERRUPCION_IO,io_truncate_archivo->nombre_interfaz,conexion_cpu_interrupt);
             sem_wait(&sem_io_fs_libre);
-
+               sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
             t_proceso_data* proceso_data_io_truncate_archivo = malloc(sizeof(t_proceso_data));
             proceso_data_io_truncate_archivo->op = IO_FS_TRUNCATE;
@@ -574,7 +566,7 @@ t_list* lista_paquete;
             t_proceso_data* a_enviar_a_io_fs_truncate = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
             pthread_mutex_lock(&mutex_envio_io);
-            enviar_gestionar_archivo(a_enviar_a_io_fs_truncate->data,socket_servidor,a_enviar_a_io_fs_truncate->op);
+            enviar_gestionar_archivo(io_truncate_archivo_a_bloquear,socket_servidor,a_enviar_a_io_fs_truncate->op);
             pthread_mutex_unlock(&mutex_envio_io);
             liberar_memoria_t_proceso_data(proceso_data_io_truncate_archivo);
             liberar_memoria_t_io_gestion_archivo(io_truncate_archivo_a_bloquear);
@@ -600,15 +592,13 @@ t_list* lista_paquete;
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_WRITE_A_KERNEL desde CPU");
       lista_paquete = recibir_paquete(socket_dispatch);
       
-      t_io_fs_write* io_write_archivo = malloc(sizeof(t_io_fs_write));
-      io_write_archivo = deserializar_io_write_archivo(lista_paquete);
+      t_io_fs_write* io_write_archivo = deserializar_io_write_archivo(lista_paquete);
       if(dictionary_has_key(interfaces,io_write_archivo->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
-            interfaz_encontrada = dictionary_get(interfaces,io_write_archivo->nombre_interfaz);
+         t_interfaz_diccionario* interfaz_encontrada = dictionary_get(interfaces,io_write_archivo->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_WRITE)){
             enviar_interrupcion_a_cpu(io_write_archivo->pid,INTERRUPCION_IO,io_write_archivo->nombre_interfaz,conexion_cpu_interrupt);
             sem_wait(&sem_io_fs_libre);
-
+            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
             t_proceso_data* proceso_data_io_write_archivo = malloc(sizeof(t_proceso_data));
             proceso_data_io_write_archivo->op = IO_FS_WRITE;
@@ -637,7 +627,7 @@ t_list* lista_paquete;
             t_proceso_data* a_enviar_a_io_fs_write = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
             pthread_mutex_lock(&mutex_envio_io);
-            enviar_io_readwrite(a_enviar_a_io_fs_write->data,socket_servidor,a_enviar_a_io_fs_write->op);
+            enviar_io_readwrite(io_write_archivo_a_bloquear,socket_servidor,a_enviar_a_io_fs_write->op);
             pthread_mutex_unlock(&mutex_envio_io);
             liberar_memoria_t_proceso_data(proceso_data_io_write_archivo);
             liberar_memoria_t_io_readwrite_archivo(io_write_archivo_a_bloquear);
@@ -664,16 +654,14 @@ t_list* lista_paquete;
       log_info(logger_kernel,"Recibo SOLICITUD_IO_FS_READ_A_KERNEL desde CPU");
       lista_paquete = recibir_paquete(socket_dispatch);
       
-      t_io_fs_write* io_read_archivo = malloc(sizeof(t_io_fs_write));
-      io_read_archivo = deserializar_io_write_archivo(lista_paquete);
+      t_io_fs_write* io_read_archivo = deserializar_io_write_archivo(lista_paquete);
 
       if(dictionary_has_key(interfaces,io_read_archivo->nombre_interfaz)){
-         t_interfaz_diccionario* interfaz_encontrada = malloc(sizeof(t_interfaz_diccionario));
-            interfaz_encontrada = dictionary_get(interfaces,io_read_archivo->nombre_interfaz);
+         t_interfaz_diccionario* interfaz_encontrada  = dictionary_get(interfaces,io_read_archivo->nombre_interfaz);
          if(interfaz_permite_operacion(interfaz_encontrada->tipo,IO_FS_READ)){
             enviar_interrupcion_a_cpu(io_read_archivo->pid,INTERRUPCION_IO,io_read_archivo->nombre_interfaz,conexion_cpu_interrupt);
             sem_wait(&sem_io_fs_libre);
-
+            sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
             // preparo la estructura para mandar a  cola de bloqueados correspondiente
             t_proceso_data* proceso_data_io_read_archivo = malloc(sizeof(t_proceso_data));
             proceso_data_io_read_archivo->op = IO_FS_READ;
@@ -704,7 +692,7 @@ t_list* lista_paquete;
             t_proceso_data* a_enviar_a_io_fs_read = list_get(dictionary_get(planificador->cola_blocked,interfaz_encontrada->nombre),0);//Obtengo el primer valor(es decir el primero que llego) de la lista de bloqueados correspondiente
             //enviar_io_stdin_read(io_stdin_read,socket_servidor);
             pthread_mutex_lock(&mutex_envio_io);
-            enviar_io_readwrite(a_enviar_a_io_fs_read->data,socket_servidor,a_enviar_a_io_fs_read->op);
+            enviar_io_readwrite(io_read_archivo_a_bloquear,socket_servidor,a_enviar_a_io_fs_read->op);
             pthread_mutex_unlock(&mutex_envio_io);
             liberar_memoria_t_proceso_data(proceso_data_io_read_archivo);
             liberar_memoria_t_io_readwrite_archivo(io_read_archivo_a_bloquear);
