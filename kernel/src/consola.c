@@ -129,6 +129,7 @@ void atender_instruccion_validada(char** comando_consola){
        // planificador = inicializar_planificador(algortimo, cfg_kernel->QUANTUM, cfg_kernel->GRADO_MULTIPROGRAMACION ); 
         if(planificador->planificacion_detenida){
             printf("ENTRE A IF INICIAR_PLANIFICACION\n");
+            planificador->planificacion_detenida = false;
             sem_post(&sem_planificar);
         // Hilo para mantener la ejecución andando y no deneter la consola}
 
