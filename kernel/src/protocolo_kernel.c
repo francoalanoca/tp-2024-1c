@@ -435,10 +435,12 @@ t_list* lista_paquete;
             
             //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
 
-            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
-            
-               actualizar_quantum(proceso_data_stdout_write->pcb);
-            } 
+             if(cronometro != NULL){
+               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+               
+                  actualizar_quantum(proceso_data_stdout_write->pcb);
+               } 
+            }
             log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_stdout_write->pcb->pid);
                      
             bloquear_proceso(planificador,proceso_data_stdout_write,interfaz_encontrada->nombre);
@@ -497,11 +499,12 @@ t_list* lista_paquete;
             
             
             //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
-
-            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
-            
-               actualizar_quantum(proceso_data_io_crear_archivo->pcb);
-            } 
+             if(cronometro != NULL){
+               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+               
+                  actualizar_quantum(proceso_data_io_crear_archivo->pcb);
+               } 
+            }
             log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_crear_archivo->pcb->pid);
                      
             bloquear_proceso(planificador,proceso_data_io_crear_archivo,interfaz_encontrada->nombre);
@@ -557,11 +560,12 @@ t_list* lista_paquete;
             
             
             //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
-
-            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
-            
-               actualizar_quantum(proceso_data_io_delete_archivo->pcb);
-            } 
+             if(cronometro != NULL){
+               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+               
+                  actualizar_quantum(proceso_data_io_delete_archivo->pcb);
+               } 
+            }
             log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_delete_archivo->pcb->pid);
                      
             bloquear_proceso(planificador,proceso_data_io_delete_archivo,interfaz_encontrada->nombre);
@@ -619,10 +623,12 @@ t_list* lista_paquete;
             
             //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
 
-            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
-            
-               actualizar_quantum(proceso_data_io_truncate_archivo->pcb);
-            } 
+             if(cronometro != NULL){
+               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+               
+                  actualizar_quantum(proceso_data_io_truncate_archivo->pcb);
+               } 
+            }
             log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_truncate_archivo->pcb->pid);
                      
             bloquear_proceso(planificador,proceso_data_io_truncate_archivo,interfaz_encontrada->nombre);
@@ -747,10 +753,12 @@ t_list* lista_paquete;
             
             //sem_wait(&sem_interrupcion_atendida);// agregar antes de los bloques de io en TODOS
 
-            if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
-            
-               actualizar_quantum(proceso_data_io_read_archivo->pcb);
-            } 
+             if(cronometro != NULL){
+               if (temporal_gettime(cronometro) > 0) { // verifico si hay un cronometro andando
+               
+                  actualizar_quantum(proceso_data_io_read_archivo->pcb);
+               } 
+            }
             log_info(logger_kernel, "PID: %u - Estado Anterior: EJECUTANDO - Estado Actual: BLOQUEADO",  proceso_data_io_read_archivo->pcb->pid);
                      
             bloquear_proceso(planificador,proceso_data_io_read_archivo,interfaz_encontrada->nombre);
