@@ -150,20 +150,20 @@ t_list* lista_paquete;
       log_info(logger_kernel,"Recibo ENVIO_WAIT_A_KERNEL desde CPU");
       lista_paquete = recibir_paquete(socket_dispatch);
       
-      t_recurso* recurso_recibido_wait = malloc(sizeof(t_recurso));
-      recurso_recibido_wait = deserializar_recurso(lista_paquete);
+      t_recurso* recurso_recibido_wait = deserializar_recurso(lista_paquete);
+       log_info(logger_kernel,"Recurso recibido %s",recurso_recibido_wait->nombre_recurso);
       uint32_t indice_recurso_wait = buscar_indice_recurso(cfg_kernel->RECURSOS,recurso_recibido_wait->nombre_recurso);
       if(indice_recurso_wait != NULL){
-         uint32_t valor_indice_recurso = list_get(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_wait);
+         uint32_t valor_indice_recurso = cfg_kernel->INSTANCIAS_RECURSOS[indice_recurso_wait];
          if(valor_indice_recurso != 0){
-            list_replace(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_wait,valor_indice_recurso - 1);
+            actualizar_instancias_recurso(cfg_kernel->INSTANCIAS_RECURSOS,indice_recurso_wait,-1);
+            
             if(dictionary_has_key(procesos_recursos,recurso_recibido_wait->pcb->pid)){//El proceso ya tenia instancias de ese recurso
                //en el id correspondiente sumar uno a la instancia del recurso correspondiente
                char* pid_string = malloc(sizeof(recurso_recibido_wait->pcb->pid));
                pid_string = sprintf(pid_string, "%u", recurso_recibido_wait->pcb->pid);
-               t_proceso_recurso_diccionario* registro_actual_diccionario = malloc(sizeof(t_proceso_recurso_diccionario));
-               registro_actual_diccionario = dictionary_get(procesos_recursos,pid_string);
-               uint32_t indice_recurso_buscado = buscar_indice_recurso(registro_actual_diccionario->nombres_recursos,recurso_recibido_wait->nombre_recurso);
+               t_proceso_recurso_diccionario* registro_actual_diccionario = dictionary_get(procesos_recursos,pid_string);
+               uint32_t indice_recurso_buscado = buscar_indice_recurso_lista(registro_actual_diccionario->nombres_recursos,recurso_recibido_wait->nombre_recurso);
                uint32_t valor_instancias_actual = list_get(registro_actual_diccionario->instancias_recursos,indice_recurso_buscado);
                list_replace(registro_actual_diccionario->instancias_recursos,indice_recurso_buscado,valor_instancias_actual + 1);
                dictionary_remove_and_destroy(procesos_recursos,pid_string,free);//TODO: reemplazar free por funcion que borre la esttructura y las listas que lo componen
@@ -727,7 +727,7 @@ t_list* lista_paquete;
       break;
    }
 
-   list_destroy(lista_paquete); // 0j0 CON EESTA LINEA
+   //list_destroy(lista_paquete); // 0j0 CON EESTA LINEA
 }
 
 }
@@ -831,6 +831,8 @@ bool interfaz_permite_operacion(t_tipo_interfaz_enum tipo_interfaz, tipo_instruc
  t_recurso* deserializar_recurso(t_list*  lista_paquete ){
 
     t_recurso* recurso = malloc(sizeof(t_recurso));
+     recurso->pcb = malloc(sizeof(t_pcb));
+
     recurso->pcb->pid = *(uint32_t*)list_get(lista_paquete, 0);
     recurso->pcb->program_counter = *(uint32_t*)list_get(lista_paquete, 1); 
     recurso->pcb->path_length = *(uint32_t*)list_get(lista_paquete, 2); 
