@@ -446,17 +446,19 @@ void mandar_proceso_a_finalizar_comando(int pid){
    
 }
 
-uint32_t buscar_indice_recurso(t_list* lista_recursos,char* nombre_recurso){
-   uint32_t indice_encontrado = malloc(sizeof(uint32_t));
-   indice_encontrado = NULL;
+uint32_t buscar_indice_recurso(char** lista_recursos,char* nombre_recurso){
+    int indice_encontrado = 0;
+ 
+      while (lista_recursos[indice_encontrado] != NULL) {
+        // Comparar el nombre del recurso actual con el nombre buscado
+        if (strcmp(lista_recursos[indice_encontrado], nombre_recurso) == 0) {
+            log_info(logger_kernel,"Indice encontrado %d",indice_encontrado);
+            return indice_encontrado;
+        }
+        indice_encontrado++;
+    }
 
-   for (size_t i = 0; i < lista_recursos->elements_count; i++)
-   {
-      if(strcmp(list_get(lista_recursos,i), nombre_recurso) == 0){
-         indice_encontrado = i;
-      }
-   }
-   return indice_encontrado;
+   return NULL;
 }
 
 int encontrar_indice_proceso_data_por_pid(t_list * lista_procesos_data , int pid ) {
@@ -468,3 +470,30 @@ int encontrar_indice_proceso_data_por_pid(t_list * lista_procesos_data , int pid
     }
     return NULL;
 }
+
+void actualizar_instancias_recurso(char** instancias_recursos, int indice_recurso_wait, int cantidad) {
+
+    int instancias_actuales = atoi(instancias_recursos[indice_recurso_wait]);    
+ 
+    instancias_actuales += cantidad;
+      
+    char buffer[12];
+    sprintf(buffer, "%d", instancias_actuales);
+    
+
+    free(instancias_recursos[indice_recurso_wait]); 
+    instancias_recursos[indice_recurso_wait] = strdup(buffer);  
+}
+
+uint32_t  buscar_indice_recurso_lista (t_list* lista_recursos,char* nombre_recurso){
+   uint32_t indice_encontrado ;
+   indice_encontrado = NULL;
+
+   for (size_t i = 0; i < lista_recursos->elements_count; i++)
+   {
+      if(strcmp(list_get(lista_recursos,i), nombre_recurso) == 0){
+         indice_encontrado = i;
+      }
+   }
+   return indice_encontrado;
+}   

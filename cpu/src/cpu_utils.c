@@ -1149,7 +1149,6 @@ void solicitar_wait_kernel(t_pcb* pcb,uint32_t recurso_tamanio ,char* recurso, i
         t_paquete* paquete_wait_kernel;
    
         paquete_wait_kernel = crear_paquete(ENVIO_WAIT_A_KERNEL); 
-        
         agregar_a_paquete(paquete_wait_kernel,  &pcb->pid,  sizeof(uint32_t));         
         agregar_a_paquete(paquete_wait_kernel, &pcb->program_counter, sizeof(uint32_t));  
         agregar_a_paquete(paquete_wait_kernel, &pcb->path_length, sizeof(uint32_t)); 
